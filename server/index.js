@@ -13,8 +13,7 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
-import { testConnection as testDbConnection } from './config/database.js';
-import { testConnection as testSupabaseConnection } from './config/supabase.js';
+import { connectDB, testConnection as testMongoConnection } from './config/mongodb.js';
 import { apiRateLimit } from './middleware/auth.js';
 
 // Import routes
@@ -135,9 +134,9 @@ app.use('/api/*', (req, res) => {
 // Start server
 const startServer = async () => {
   try {
-    // Test database connections
-    await testDbConnection();
-    await testSupabaseConnection();
+    // Connect to MongoDB
+    await connectDB();
+    await testMongoConnection();
     
     // Ensure upload directories exist
     const uploadDirs = [
