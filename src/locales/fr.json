@@ -1,0 +1,137 @@
+{
+  "header": {
+    "home": "Accueil",
+    "services": "Services",
+    "portfolio": "Projets",
+    "about": "À propos",
+    "contact": "Contact",
+    "training": "Formation"
+  },
+  "hero": {
+    "title": "Solutions Digitales & Formation Professionnelle",
+    "subtitle": "Expertise technique et transmission des compétences",
+    "cta": {
+      "project": "Démarrer un projet",
+      "training": "Rechercher une formation"
+    },
+    "badges": {
+      "digital": "Services Numériques",
+      "training": "Formation Certifiée Qualiopi"
+    }
+  },
+  "services": {
+    "title": "Nos Services",
+    "subtitle": "Des solutions adaptées à vos besoins",
+    "web": {
+      "title": "Développement Web",
+      "description": "Sites vitrines, e-commerce et applications web progressives avec les technologies les plus récentes."
+    },
+    "mobile": {
+      "title": "Applications Mobiles",
+      "description": "Applications natives et cross-platform pour iOS et Android avec une expérience utilisateur optimale."
+    },
+    "enterprise": {
+      "title": "Solutions Entreprise",
+      "description": "Logiciels sur mesure, automatisation de processus et intégrations de systèmes."
+    },
+    "cloud": {
+      "title": "Services Cloud",
+      "description": "Migration, architecture et déploiement d'applications dans le cloud avec sécurité et performance."
+    },
+    "training": {
+      "title": "Formation Professionnelle",
+      "description": "Formation certifiante Qualiopi en développement web, mobile et DevOps. Programmes sur mesure pour entreprises et particuliers."
+    }
+  },
+  "portfolio": {
+    "title": "Nos Projets",
+    "subtitle": "Découvrez nos réalisations",
+    "viewProject": "Voir le projet",
+    "projects": {
+      "1": {
+        "title": "Plateforme E-commerce",
+        "description": "Solution complète avec gestion des stocks, paiements sécurisés et expérience client optimisée.",
+        "tag": "Web"
+      },
+      "2": {
+        "title": "Application de Gestion",
+        "description": "Système ERP personnalisé pour optimiser les processus d'entreprise et améliorer la productivité.",
+        "tag": "Entreprise"
+      },
+      "3": {
+        "title": "Application Mobile",
+        "description": "Application de livraison avec géolocalisation et système de paiement intégré.",
+        "tag": "Mobile"
+      },
+      "4": {
+        "title": "Infrastructure Cloud",
+        "description": "Migration et optimisation d'infrastructure pour une scalabilité maximale et des coûts réduits.",
+        "tag": "Cloud"
+      }
+    }
+  },
+  "about": {
+    "title": "Notre Expertise",
+    "subtitle": "Une équipe passionnée",
+    "description": "Avec plus de 10 ans d'expérience, notre équipe d'experts combine créativité et rigueur technique pour transformer vos idées en solutions numériques performantes.",
+    "expertise": {
+      "1": {
+        "title": "Développement Front-End",
+        "value": "90%"
+      },
+      "2": {
+        "title": "Développement Back-End",
+        "value": "95%"
+      },
+      "3": {
+        "title": "UX/UI Design",
+        "value": "85%"
+      },
+      "4": {
+        "title": "DevOps & Cloud",
+        "value": "90%"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Témoignages",
+    "subtitle": "Ce que disent nos clients",
+    "items": {
+      "1": {
+        "text": "L'équipe a transformé notre vision en une solution numérique qui a dépassé toutes nos attentes. Professionnalisme et expertise technique exceptionnels.",
+        "author": "Marie Dupont",
+        "position": "Directrice Marketing, TechCorp"
+      },
+      "2": {
+        "text": "Nous avons été impressionnés par leur capacité à comprendre nos besoins métier et à y répondre avec des solutions innovantes et efficaces.",
+        "author": "Jean Martin",
+        "position": "CEO, InnovSoft"
+      },
+      "3": {
+        "text": "Leur accompagnement a été précieux tout au long du projet. Ils ont su s'adapter à nos contraintes et proposer des solutions pertinentes.",
+        "author": "Sophie Lefebvre",
+        "position": "CTO, DataFuture"
+      }
+    }
+  },
+  "contact": {
+    "title": "Contactez-nous",
+    "subtitle": "Parlons de votre projet",
+    "name": "Nom",
+    "email": "Email",
+    "phone": "Téléphone",
+    "message": "Message",
+    "subject": "Sujet",
+    "submit": "Envoyer",
+    "success": "Message envoyé avec succès! Nous vous contacterons bientôt.",
+    "error": "Une erreur est survenue. Veuillez réessayer."
+  },
+  "footer": {
+    "company": "© 2025 DELIVERY Digital Technology. Tous droits réservés.",
+    "links": {
+      "privacy": "Politique de confidentialité",
+      "terms": "Conditions d'utilisation",
+      "sitemap": "Plan du site"
+    }
+  }
+}

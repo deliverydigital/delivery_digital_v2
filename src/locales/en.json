@@ -1,0 +1,137 @@
+{
+  "header": {
+    "home": "Home",
+    "services": "Services",
+    "portfolio": "Projects",
+    "about": "About",
+    "contact": "Contact",
+    "training": "Training"
+  },
+  "hero": {
+    "title": "Digital Solutions & Professional Training",
+    "subtitle": "Technical expertise and skills transmission",
+    "cta": {
+      "project": "Start a project",
+      "training": "Find training"
+    },
+    "badges": {
+      "digital": "Digital Services",
+      "training": "Qualiopi Certified Training"
+    }
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Solutions tailored to your needs",
+    "web": {
+      "title": "Web Development",
+      "description": "Showcase websites, e-commerce platforms and progressive web applications with the latest technologies."
+    },
+    "mobile": {
+      "title": "Mobile Applications",
+      "description": "Native and cross-platform applications for iOS and Android with optimal user experience."
+    },
+    "enterprise": {
+      "title": "Enterprise Solutions",
+      "description": "Custom software, process automation and system integrations."
+    },
+    "cloud": {
+      "title": "Cloud Services",
+      "description": "Migration, architecture and deployment of applications in the cloud with security and performance."
+    },
+    "training": {
+      "title": "Professional Training",
+      "description": "Qualiopi-certified training in web development, mobile and DevOps. Custom programs for companies and individuals."
+    }
+  },
+  "portfolio": {
+    "title": "Our Projects",
+    "subtitle": "Discover our achievements",
+    "viewProject": "View project",
+    "projects": {
+      "1": {
+        "title": "E-commerce Platform",
+        "description": "Complete solution with inventory management, secure payments and optimized customer experience.",
+        "tag": "Web"
+      },
+      "2": {
+        "title": "Management Application",
+        "description": "Custom ERP system to optimize business processes and improve productivity.",
+        "tag": "Enterprise"
+      },
+      "3": {
+        "title": "Mobile Application",
+        "description": "Delivery application with geolocation and integrated payment system.",
+        "tag": "Mobile"
+      },
+      "4": {
+        "title": "Cloud Infrastructure",
+        "description": "Infrastructure migration and optimization for maximum scalability and reduced costs.",
+        "tag": "Cloud"
+      }
+    }
+  },
+  "about": {
+    "title": "Our Expertise",
+    "subtitle": "A passionate team",
+    "description": "With over 10 years of experience, our team of experts combines creativity and technical rigor to transform your ideas into high-performing digital solutions.",
+    "expertise": {
+      "1": {
+        "title": "Front-End Development",
+        "value": "90%"
+      },
+      "2": {
+        "title": "Back-End Development",
+        "value": "95%"
+      },
+      "3": {
+        "title": "UX/UI Design",
+        "value": "85%"
+      },
+      "4": {
+        "title": "DevOps & Cloud",
+        "value": "90%"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Testimonials",
+    "subtitle": "What our clients say",
+    "items": {
+      "1": {
+        "text": "The team transformed our vision into a digital solution that exceeded all our expectations. Exceptional professionalism and technical expertise.",
+        "author": "Mary Smith",
+        "position": "Marketing Director, TechCorp"
+      },
+      "2": {
+        "text": "We were impressed by their ability to understand our business needs and respond with innovative and effective solutions.",
+        "author": "John Davis",
+        "position": "CEO, InnovSoft"
+      },
+      "3": {
+        "text": "Their support was valuable throughout the project. They were able to adapt to our constraints and offer relevant solutions.",
+        "author": "Sarah Johnson",
+        "position": "CTO, DataFuture"
+      }
+    }
+  },
+  "contact": {
+    "title": "Contact us",
+    "subtitle": "Let's talk about your project",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "message": "Message",
+    "subject": "Subject",
+    "submit": "Send",
+    "success": "Message sent successfully! We will contact you soon.",
+    "error": "An error occurred. Please try again."
+  },
+  "footer": {
+    "company": "© 2025 DELIVERY Digital Technology. All rights reserved.",
+    "links": {
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Use",
+      "sitemap": "Sitemap"
+    }
+  }
+}
