@@ -10,6 +10,7 @@ import TechnologyGuide from './components/TechnologyGuide';
 import Training from './components/Training';
 import ProjectSubmission from './components/ProjectSubmission';
 import AdminDashboard from './components/AdminDashboard';
+import LegalModals from './components/LegalModals';
 import { useAuth } from './hooks/useApi';
 
 function App() {
@@ -52,6 +53,7 @@ function App() {
       <Footer />
       <ScrollToTop />
       <ProjectSubmission />
+      <LegalModals />
     </div>
   );
 }

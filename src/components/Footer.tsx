@@ -187,13 +187,19 @@ const Footer = () => {
             </div>
             <div className="flex flex-wrap gap-4 md:justify-end">
               {legalLinks.map((link) => (
-                <a
+                <button
                   key={link.label}
-                  href={link.link}
-                  className="text-gray-400 hover:text-white text-sm transition-colors"
+                  onClick={() => {
+                    const modalType = link.label === 'Politique de confidentialité' ? 'privacy' :
+                                    link.label === 'Conditions d\'utilisation' ? 'terms' :
+                                    link.label === 'Plan du site' ? 'sitemap' :
+                                    link.label === 'Mentions légales' ? 'legal' : 'privacy';
+                    window.dispatchEvent(new CustomEvent('openLegalModal', { detail: modalType }));
+                  }}
+                  className="text-gray-400 hover:text-white text-sm transition-colors cursor-pointer"
                 >
                   {link.label}
-                </a>
+                </button>
               ))}
             </div>
           </div>
