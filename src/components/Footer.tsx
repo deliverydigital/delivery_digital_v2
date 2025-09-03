@@ -200,11 +200,11 @@ const Footer = () => {
           
           <div className="text-sm text-gray-500 border-t border-gray-800 pt-4 mt-4">
             <p>
-              DELIVERY Digital Technology - SASU au capital de 1000€ - SIRET: 123 456 789 00001
+              DELIVERY Digital Nice - 470 promenade des anglais 06200 Nice
               <br />
-              Organisme de formation enregistré sous le numéro 93060123456
+              Siret 90294519500029 - NAF 6201Z - RCS 902 945 195
               <br />
-              Certification Qualiopi N°123456 pour les actions de formation
+              Déclaration d'activité enregistrée sous le numéro 93061064306 auprès du Préfet de la Région de Provence-Alpes-Côte d'Azur
             </p>
           </div>
         </div>
