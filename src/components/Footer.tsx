@@ -183,7 +183,7 @@ const Footer = () => {
         <div className="pt-8 mt-8 border-t border-gray-800">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div className="text-gray-500">
-              © {currentYear} DELIVERY Digital Technology. Tous droits réservés.
+              © {currentYear} DELIVERY Digital Nice. Tous droits réservés.
             </div>
             <div className="flex flex-wrap gap-4 md:justify-end">
               {legalLinks.map((link) => (
