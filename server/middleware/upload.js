@@ -2,7 +2,6 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { query } from '../config/database.js';
 
 // Ensure upload directories exist
 const ensureDirectoryExists = (dirPath) => {
@@ -116,33 +115,6 @@ const handleUploadError = (error, req, res, next) => {
   next(error);
 };
 
-// Helper function to save file metadata to database
-const saveFileMetadata = async (file, entityType, entityId, uploadedBy) => {
-  try {
-    const result = await query(
-      `INSERT INTO file_uploads 
-       (filename, original_name, file_type, file_size, file_path, uploaded_by, entity_type, entity_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING *`,
-      [
-        file.filename,
-        file.originalname,
-        file.mimetype,
-        file.size,
-        file.path,
-        uploadedBy,
-        entityType,
-        entityId
-      ]
-    );
-    
-    return result.rows[0];
-  } catch (error) {
-    console.error('Error saving file metadata:', error);
-    throw error;
-  }
-};
-
 // Helper function to delete file
 const deleteFile = async (filePath) => {
   try {
@@ -171,7 +143,6 @@ const uploadGeneral = upload.array('files', 10);
 export {
   upload,
   handleUploadError,
-  saveFileMetadata,
   deleteFile,
   getFileUrl,
   uploadProjectFiles,
