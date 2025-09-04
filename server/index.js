@@ -134,7 +134,7 @@ app.use('/api/*', (req, res) => {
 // Start server
 const startServer = async () => {
   try {
-    // Connect to MongoDB
+    // Connect to MongoDB (this will handle the connection gracefully)
     await connectDB();
     await testMongoConnection();
     

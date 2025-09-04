@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import { supabase } from '../config/supabase.js';
+import { User } from '../models/index.js';
+import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { validateUserUpdate, validateUUID, validatePagination } from '../middleware/validation.js';
 import { uploadProfileImage, handleUploadError } from '../middleware/upload.js';
@@ -12,20 +13,18 @@ router.use(authenticate);
 // Get current user profile
 router.get('/profile', async (req, res) => {
   try {
-    const { data: user, error } = await supabase
-      .from('users')
-      .select(`
-        id, email, name, company, phone, role, status,
-        email_verified, last_login, created_at,
-        clients (
-          company_size, industry, website, address, city,
-          postal_code, country, preferred_language, communication_preferences
-        )
-      `)
-      .eq('id', req.user.id)
-      .single();
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
 
-    if (error || !user) {
+    const user = await User.findById(req.user.id)
+      .select('-password_hash -password_reset_token -email_verification_token');
+
+    if (!user) {
       return res.status(404).json({
         success: false,
         error: 'User not found'
@@ -34,7 +33,21 @@ router.get('/profile', async (req, res) => {
 
     res.json({
       success: true,
-      data: { user }
+      data: { 
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          company: user.company,
+          phone: user.phone,
+          role: user.role,
+          status: user.status,
+          email_verified: user.email_verified,
+          last_login: user.last_login,
+          created_at: user.createdAt,
+          client_info: user.client_info
+        }
+      }
     });
 
   } catch (error) {
@@ -49,20 +62,31 @@ router.get('/profile', async (req, res) => {
 // Get all clients (admin only)
 router.get('/clients', authorize('admin'), async (req, res) => {
   try {
-    const { data: clients, error } = await supabase
-      .from('users')
-      .select(`
-        id, email, name, company, phone, status, created_at, last_login,
-        clients (*)
-      `)
-      .eq('role', 'client')
-      .order('created_at', { ascending: false });
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
 
-    if (error) throw error;
+    const clients = await User.findByRole('client')
+      .select('-password_hash -password_reset_token -email_verification_token')
+      .sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      clients: clients || []
+      clients: clients.map(client => ({
+        id: client._id,
+        email: client.email,
+        name: client.name,
+        company: client.company,
+        phone: client.phone,
+        status: client.status,
+        created_at: client.createdAt,
+        last_login: client.last_login,
+        client_info: client.client_info
+      }))
     });
 
   } catch (error) {
@@ -80,77 +104,65 @@ router.put('/profile', uploadProfileImage, handleUploadError, validateUserUpdate
     const updates = req.body;
     const userId = req.user.id;
 
-    // Update user table
-    const userUpdates = {};
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Update allowed fields
     const userAllowedFields = ['name', 'company', 'phone'];
-    
+    const clientAllowedFields = [
+      'company_size', 'industry', 'website', 'address', 'city',
+      'postal_code', 'country', 'preferred_language', 'communication_preferences'
+    ];
+
+    // Update user fields
     for (const [key, value] of Object.entries(updates)) {
       if (userAllowedFields.includes(key) && value !== undefined) {
-        userUpdates[key] = value;
+        user[key] = value;
       }
-    }
-
-    if (Object.keys(userUpdates).length > 0) {
-      userUpdates.updated_at = new Date().toISOString();
-      
-      const { error: userError } = await supabase
-        .from('users')
-        .update(userUpdates)
-        .eq('id', userId);
-
-      if (userError) throw userError;
-    }
-
-    // Update client table if user is a client
-    if (req.user.role === 'client') {
-      const clientUpdates = {};
-      const clientAllowedFields = [
-        'company_size', 'industry', 'website', 'address', 'city',
-        'postal_code', 'country', 'preferred_language', 'communication_preferences'
-      ];
-
-      for (const [key, value] of Object.entries(updates)) {
-        if (clientAllowedFields.includes(key) && value !== undefined) {
-          if (key === 'communication_preferences') {
-            clientUpdates[key] = value;
-          } else {
-            clientUpdates[key] = value;
-          }
+      // Update client_info for client-specific fields
+      if (clientAllowedFields.includes(key) && value !== undefined) {
+        if (!user.client_info) {
+          user.client_info = {};
         }
-      }
-
-      if (Object.keys(clientUpdates).length > 0) {
-        clientUpdates.updated_at = new Date().toISOString();
-        
-        const { error: clientError } = await supabase
-          .from('clients')
-          .update(clientUpdates)
-          .eq('id', userId);
-
-        if (clientError) throw clientError;
+        user.client_info[key] = value;
       }
     }
 
-    // Get updated user data
-    const { data: updatedUser, error: fetchError } = await supabase
-      .from('users')
-      .select(`
-        id, email, name, company, phone, role, status,
-        email_verified, last_login, created_at,
-        clients (
-          company_size, industry, website, address, city,
-          postal_code, country, preferred_language, communication_preferences
-        )
-      `)
-      .eq('id', userId)
-      .single();
-
-    if (fetchError) throw fetchError;
+    // Save updated user
+    await user.save();
 
     res.json({
       success: true,
       message: 'Profile updated successfully',
-      data: { user: updatedUser }
+      data: { 
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          company: user.company,
+          phone: user.phone,
+          role: user.role,
+          status: user.status,
+          email_verified: user.email_verified,
+          last_login: user.last_login,
+          created_at: user.createdAt,
+          client_info: user.client_info
+        }
+      }
     });
 
   } catch (error) {
@@ -181,14 +193,17 @@ router.put('/password', async (req, res) => {
       });
     }
 
-    // Get current password hash
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('password_hash')
-      .eq('id', req.user.id)
-      .single();
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
 
-    if (error || !user) {
+    // Get user with password hash
+    const user = await User.findById(req.user.id).select('+password_hash');
+    if (!user) {
       return res.status(404).json({
         success: false,
         error: 'User not found'
@@ -205,19 +220,11 @@ router.put('/password', async (req, res) => {
     }
 
     // Hash new password
-    const saltRounds = 12;
-    const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
+    const newPasswordHash = await User.hashPassword(newPassword);
 
-    // Update password
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({
-        password_hash: newPasswordHash,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', req.user.id);
-
-    if (updateError) throw updateError;
+    // Update user password
+    user.password_hash = newPasswordHash;
+    await user.save();
 
     res.json({
       success: true,
