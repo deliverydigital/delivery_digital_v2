@@ -8,8 +8,8 @@ import {
   Utensils, Leaf, Code, Database, Cloud, Server, Smartphone,
   Laptop, Globe, Upload, PlusCircle, Info, HelpCircle
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import Auth from './Auth';
+import { useAuth, useProjects } from '../hooks/useApi';
 
 interface DigitalClientSpaceProps {
   isOpen: boolean;
@@ -18,11 +18,9 @@ interface DigitalClientSpaceProps {
 
 const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
   const [activeTab, setActiveTab] = useState<'projects' | 'submit' | 'account'>('submit');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const { projects, loading, submitProject } = useProjects(user?.id);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -35,61 +33,13 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
   });
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
-  const fileInputRef = useState<HTMLInputElement | null>(null);
+  const [fileInputRef] = useState<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    // Check if user is already authenticated
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setIsAuthenticated(true);
-        setUser(session.user);
-        fetchProjects(session.user.id);
-      }
-    };
-
-    if (isOpen) {
-      checkUser();
+    if (isOpen && isAuthenticated && user) {
+      // Projects will be loaded automatically by the useProjects hook
     }
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        setIsAuthenticated(true);
-        setUser(session.user);
-        fetchProjects(session.user.id);
-      } else {
-        setIsAuthenticated(false);
-        setUser(null);
-        setProjects([]);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [isOpen]);
-
-  const fetchProjects = async (userId: string) => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select(`
-          *,
-          project_attachments(*)
-        `)
-        .eq('client_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isOpen, isAuthenticated, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,58 +53,20 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
     setErrorMessage('');
 
     try {
-      // Insert project into Supabase
-      const { data: project, error } = await supabase
-        .from('projects')
-        .insert([
-          {
-            client_id: user.id,
-            title: formData.title,
-            description: formData.description,
-            type: formData.type,
-            budget_range: formData.budget,
-            timeline: formData.timeline,
-            figma_url: formData.figmaUrl,
-            gitlab_url: formData.gitlabUrl,
-            status: 'submitted'
-          }
-        ])
-        .select()
-        .single();
+      // Submit project using the API service
+      const result = await submitProject({
+        title: formData.title,
+        description: formData.description,
+        type: formData.type,
+        budget: formData.budget,
+        timeline: formData.timeline,
+        figmaUrl: formData.figmaUrl,
+        gitlabUrl: formData.gitlabUrl,
+        attachments: formData.files
+      });
 
-      if (error) throw error;
-
-      // Upload attachments if any
-      if (formData.files.length > 0 && project) {
-        for (const file of formData.files) {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-          const filePath = `projects/${project.id}/${fileName}`;
-
-          // Upload file to Supabase Storage
-          const { error: uploadError } = await supabase.storage
-            .from('project_attachments')
-            .upload(filePath, file);
-
-          if (uploadError) throw uploadError;
-
-          // Add file reference to project_attachments table
-          const { error: attachmentError } = await supabase
-            .from('project_attachments')
-            .insert([
-              {
-                project_id: project.id,
-                filename: fileName,
-                original_name: file.name,
-                file_type: file.type,
-                file_size: file.size,
-                file_path: filePath,
-                uploaded_by: user.id
-              }
-            ]);
-
-          if (attachmentError) throw attachmentError;
-        }
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to submit project');
       }
 
       setFormStatus('success');
@@ -171,7 +83,6 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
           gitlabUrl: '',
           files: []
         });
-        fetchProjects(user.id);
         setActiveTab('projects');
         setFormStatus('idle');
       }, 2000);
@@ -194,14 +105,10 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
-    // The auth state change listener will update the state
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setIsAuthenticated(false);
-    setUser(null);
-    setProjects([]);
+    logout();
   };
 
   const getStatusColor = (status: string) => {
@@ -345,11 +252,11 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                         <div>
                           <span className="text-gray-500 text-sm">Type:</span>
-                          <span className="text-gray-900 ml-2 text-sm">{project.type}</span>
+                          <span className="text-gray-900 ml-2 text-sm capitalize">{project.type}</span>
                         </div>
                         <div>
                           <span className="text-gray-500 text-sm">Budget:</span>
-                          <span className="text-gray-900 ml-2 text-sm">{project.budget_range}</span>
+                          <span className="text-gray-900 ml-2 text-sm capitalize">{project.budget}</span>
                         </div>
                         <div>
                           <span className="text-gray-500 text-sm">Délai:</span>
@@ -358,19 +265,19 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                         <div>
                           <span className="text-gray-500 text-sm">Soumis le:</span>
                           <span className="text-gray-900 ml-2 text-sm">
-                            {new Date(project.created_at).toLocaleDateString('fr-FR')}
+                            {new Date(project.submittedAt).toLocaleDateString('fr-FR')}
                           </span>
                         </div>
                       </div>
 
-                      {project.project_attachments && project.project_attachments.length > 0 && (
+                      {project.attachments && project.attachments.length > 0 && (
                         <div className="mt-4">
                           <h4 className="text-sm font-medium text-gray-900 mb-2">Pièces jointes:</h4>
                           <div className="flex flex-wrap gap-2">
-                            {project.project_attachments.map((attachment) => (
-                              <div key={attachment.id} className="flex items-center bg-gray-100 rounded-lg px-3 py-1">
+                            {project.attachments.map((attachment, index) => (
+                              <div key={index} className="flex items-center bg-gray-100 rounded-lg px-3 py-1">
                                 <FileText className="h-4 w-4 text-gray-500 mr-2" />
-                                <span className="text-sm text-gray-700">{attachment.original_name}</span>
+                                <span className="text-sm text-gray-700">{attachment.name}</span>
                               </div>
                             ))}
                           </div>
@@ -528,7 +435,6 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                             className="sr-only"
                             multiple
                             onChange={handleFileChange}
-                            ref={fileInputRef}
                           />
                         </label>
                         <p className="pl-1">ou glisser-déposer</p>
