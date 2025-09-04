@@ -135,6 +135,9 @@ app.use('/api/*', (req, res) => {
 // Start server
 const startServer = async () => {
   try {
+    console.log('🚀 Starting DELIVERY Digital server...');
+    console.log('🔧 Environment:', process.env.NODE_ENV || 'development');
+    
     // Connect to MongoDB (this will handle the connection gracefully)
     try {
       await connectDB();
@@ -142,17 +145,20 @@ const startServer = async () => {
       console.log('✅ MongoDB connection successful');
     } catch (dbError) {
       console.warn('⚠️ MongoDB connection failed, continuing without database:', dbError.message);
+      console.warn('⚠️ Check your .env file and ensure MongoDB is running');
+      console.warn('⚠️ Expected MONGO_URI format: mongodb://username:password@host:port/database');
     }
     
     // Create dummy users for testing (only if MongoDB is available)
     try {
-      if (mongoose.connection.readyState === 1) {
+      if (isMongoAvailable()) {
         await createDummyUsers();
+        console.log('✅ Dummy users created/verified');
       } else {
         console.log('⚠️ Skipping dummy user creation - MongoDB not available');
       }
     } catch (error) {
-      console.log('⚠️ Could not create dummy users (they may already exist):', error.message);
+      console.log('⚠️ Could not create dummy users:', error.message);
     }
     
     // Ensure upload directories exist

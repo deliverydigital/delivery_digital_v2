@@ -18,6 +18,7 @@ const mongoOptions = {
 const connectDB = async () => {
   try {
     console.log('🔄 Connecting to MongoDB...');
+    console.log('📍 MongoDB URI:', MONGO_URI.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@')); // Hide credentials in logs
     
     const conn = await mongoose.connect(MONGO_URI, mongoOptions);
     
@@ -27,10 +28,16 @@ const connectDB = async () => {
     return conn;
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
+    console.error('🔍 Error details:', {
+      name: error.name,
+      code: error.code,
+      codeName: error.codeName
+    });
     
     // In development, we might want to continue without DB
     if (process.env.NODE_ENV !== 'production') {
       console.warn('⚠️ Running in development mode without MongoDB connection');
+      console.warn('⚠️ Some features may not work properly without database');
       return null;
     }
     
@@ -82,7 +89,15 @@ const testConnection = async () => {
 
 // Helper function to check if MongoDB is available
 const isMongoAvailable = () => {
-  return mongoose.connection.readyState === 1;
+  const state = mongoose.connection.readyState;
+  console.log('🔍 MongoDB connection state:', {
+    state,
+    meaning: state === 0 ? 'disconnected' : 
+             state === 1 ? 'connected' : 
+             state === 2 ? 'connecting' : 
+             state === 3 ? 'disconnecting' : 'unknown'
+  });
+  return state === 1;
 };
 
 export {
