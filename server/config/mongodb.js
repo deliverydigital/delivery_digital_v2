@@ -34,15 +34,13 @@ const connectDB = async () => {
       codeName: error.codeName
     });
     
-    // In development, we might want to continue without DB
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('⚠️ Running in development mode without MongoDB connection');
-      console.warn('⚠️ Some features may not work properly without database');
-      return null;
-    }
+    // Always continue without DB in development, log warning
+    console.warn('⚠️ Running without MongoDB connection');
+    console.warn('⚠️ Some features may not work properly without database');
+    console.warn('⚠️ Check your .env file and MongoDB connection string');
     
-    // In production, exit the process
-    process.exit(1);
+    // Don't exit the process, just return null
+    return null;
   }
 };
 

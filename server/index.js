@@ -141,8 +141,12 @@ const startServer = async () => {
     // Connect to MongoDB (this will handle the connection gracefully)
     try {
       await connectDB();
-      await testMongoConnection();
-      console.log('✅ MongoDB connection successful');
+      if (isMongoAvailable()) {
+        await testMongoConnection();
+        console.log('✅ MongoDB connection successful');
+      } else {
+        console.log('⚠️ MongoDB not available, continuing without database');
+      }
     } catch (dbError) {
       console.warn('⚠️ MongoDB connection failed, continuing without database:', dbError.message);
       console.warn('⚠️ Check your .env file and ensure MongoDB is running');
@@ -181,14 +185,21 @@ const startServer = async () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
+      console.log(`🔗 Health Check: http://localhost:${PORT}/health`);
       
       if (process.env.NODE_ENV !== 'production') {
         console.log(`🌐 Frontend URL: http://localhost:5173`);
       }
+      
+      console.log('✅ Server startup completed successfully');
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
-    process.exit(1);
+    console.error('❌ Server will not start due to critical error');
+    // Don't exit in development to allow for debugging
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    }
   }
 };
 
