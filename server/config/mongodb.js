@@ -16,7 +16,7 @@ const mongoOptions = {
 // Connect to MongoDB
 const connectDB = async () => {
   try {
-    console.log('🔄 Connecting to MongoDB...');
+    console.log('🔄 Connecting to MongoDB...',MONGO_URI);
     
     const conn = await mongoose.connect(MONGO_URI, mongoOptions);
     
