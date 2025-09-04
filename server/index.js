@@ -136,12 +136,21 @@ app.use('/api/*', (req, res) => {
 const startServer = async () => {
   try {
     // Connect to MongoDB (this will handle the connection gracefully)
-    await connectDB();
-    await testMongoConnection();
-    
-    // Create dummy users for testing
     try {
-      await createDummyUsers();
+      await connectDB();
+      await testMongoConnection();
+      console.log('✅ MongoDB connection successful');
+    } catch (dbError) {
+      console.warn('⚠️ MongoDB connection failed, continuing without database:', dbError.message);
+    }
+    
+    // Create dummy users for testing (only if MongoDB is available)
+    try {
+      if (mongoose.connection.readyState === 1) {
+        await createDummyUsers();
+      } else {
+        console.log('⚠️ Skipping dummy user creation - MongoDB not available');
+      }
     } catch (error) {
       console.log('⚠️ Could not create dummy users (they may already exist):', error.message);
     }

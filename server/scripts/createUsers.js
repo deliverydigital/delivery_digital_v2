@@ -8,8 +8,11 @@ dotenv.config();
 
 const createDummyUsers = async () => {
   try {
-    console.log('🔄 Connecting to MongoDB...');
-    await connectDB();
+    // Check if MongoDB is already connected
+    if (mongoose.connection.readyState !== 1) {
+      console.log('🔄 MongoDB not connected, attempting connection...');
+      await connectDB();
+    }
 
     console.log('🔄 Creating dummy users...');
 
@@ -88,7 +91,8 @@ const createDummyUsers = async () => {
     console.log('👤 Client: marie.dupont@techcorp.fr / password123');
     console.log('🔧 Admin: admin@deliverydigital.fr / password123');
     
-    process.exit(0);
+    // Don't exit the process when called from server startup
+    return true;
 
   } catch (error) {
     console.error('❌ Error creating dummy users:', error);
@@ -97,7 +101,8 @@ const createDummyUsers = async () => {
       console.error('Validation errors:', Object.values(error.errors).map(err => err.message));
     }
     
-    process.exit(1);
+    // Don't exit the process when called from server startup
+    throw error;
   }
 };
 
