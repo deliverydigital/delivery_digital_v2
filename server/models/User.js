@@ -102,7 +102,6 @@ const userSchema = new Schema({
 });
 
 // Indexes for better performance
-userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ status: 1 });
 userSchema.index({ 'client_info.company': 1 });
