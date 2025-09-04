@@ -12,6 +12,8 @@
     "server:dev": "nodemon server/index.js",
     "db:migrate": "node server/scripts/migrate.js",
     "db:seed": "node server/scripts/seed.js",
+    "db:setup": "node server/scripts/setup-local-db.js",
+    "mongodb:install": "node server/scripts/install-mongodb.js",
     "start": "npm run server"
   },
   "dependencies": {
