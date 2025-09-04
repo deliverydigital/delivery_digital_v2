@@ -380,8 +380,3 @@ export class ApiService {
     }
   }
 }
-
-// Remove demo data initialization since we're using real backend
-export const initializeDemoData = () => {
-  // No longer needed - backend handles data
-};

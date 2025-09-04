@@ -14,7 +14,6 @@ import { useTasks } from '../hooks/useTasks';
 import Auth from './Auth';
 import TaskBoard from './TaskBoard';
 import { supabase } from '../lib/supabase';
-
 const AdminDashboard = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const { projects, updateProject } = useProjects();

@@ -40,7 +40,7 @@ app.use(helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:", "blob:"],
       scriptSrc: ["'self'"],
-      connectSrc: ["'self'", "ws:", "wss:", process.env.SUPABASE_URL],
+      connectSrc: ["'self'", "ws:", "wss:"],
     },
   },
   crossOriginEmbedderPolicy: false
