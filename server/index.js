@@ -28,6 +28,7 @@ import notificationRoutes from './routes/notifications.js';
 import analyticsRoutes from './routes/analytics.js';
 import quotesRoutes from './routes/quotes.js';
 import { createDummyUsers } from './scripts/createUsers.js';
+import { execSync } from 'child_process';
 
 const app = express();
 const PORT = process.env.PORT || 3008;
@@ -138,6 +139,9 @@ const startServer = async () => {
     console.log('🚀 Starting DELIVERY Digital server...');
     console.log('🔧 Environment:', process.env.NODE_ENV || 'development');
     
+    // Auto-setup MongoDB if needed
+    await autoSetupMongoDB();
+    
     // Connect to MongoDB (this will handle the connection gracefully)
     try {
       console.log('🔄 Attempting MongoDB connection...');
@@ -201,6 +205,55 @@ const startServer = async () => {
     if (process.env.NODE_ENV === 'production') {
       process.exit(1);
     }
+  }
+};
+
+// Auto-setup MongoDB function
+const autoSetupMongoDB = async () => {
+  try {
+    console.log('🔧 Auto-setup MongoDB...');
+    
+    // Check if MongoDB is accessible
+    const isMongoAccessible = await checkMongoDBAccessibility();
+    
+    if (!isMongoAccessible) {
+      console.log('📦 MongoDB not accessible, attempting auto-setup...');
+      
+      // Try to run the setup script
+      try {
+        console.log('🔄 Running MongoDB setup script...');
+        execSync('node server/scripts/setup-local-db.js', { 
+          stdio: 'inherit',
+          timeout: 30000 // 30 second timeout
+        });
+        console.log('✅ MongoDB setup script completed');
+      } catch (setupError) {
+        console.log('⚠️ MongoDB setup script failed:', setupError.message);
+        console.log('💡 You may need to install MongoDB manually or check your cloud connection');
+      }
+    } else {
+      console.log('✅ MongoDB is accessible, skipping auto-setup');
+    }
+  } catch (error) {
+    console.log('⚠️ Auto-setup MongoDB failed:', error.message);
+    console.log('🔄 Continuing with server startup...');
+  }
+};
+
+// Check if MongoDB is accessible
+const checkMongoDBAccessibility = async () => {
+  try {
+    // Quick connection test with short timeout
+    const mongoose = await import('mongoose');
+    const testConnection = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/delivery_digital', {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000
+    });
+    
+    await testConnection.connection.close();
+    return true;
+  } catch (error) {
+    return false;
   }
 };
 
