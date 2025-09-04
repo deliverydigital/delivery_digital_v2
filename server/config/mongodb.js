@@ -9,8 +9,10 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/delivery_d
 // Connection options
 const mongoOptions = {
   maxPoolSize: 10, // Maintain up to 10 socket connections
-  serverSelectionTimeoutMS: 30000, // Keep trying to send operations for 30 seconds
+  serverSelectionTimeoutMS: 10000, // Keep trying to send operations for 10 seconds
   socketTimeoutMS: 45000 , // Close sockets after 45 seconds of inactivity
+  connectTimeoutMS: 10000, // Give up initial connection after 10 seconds
+  family: 4, // Use IPv4, skip trying IPv6
   retryWrites: true,
   w: 'majority',
   appName: 'DeliveryDigital'
@@ -21,9 +23,15 @@ const connectDB = async () => {
   try {
     console.log('🔄 Connecting to MongoDB...');
     console.log('📍 MongoDB URI pattern:', MONGO_URI.includes('mongodb+srv') ? 'Cloud Atlas' : 'Local MongoDB');
-    console.log('📍 Connection timeout:', mongoOptions.serverSelectionTimeoutMS + 'ms');
+    console.log('📍 Connection timeout:', mongoOptions.connectTimeoutMS + 'ms');
     
-    const conn = await mongoose.connect(MONGO_URI, mongoOptions);
+    // Add a race condition with manual timeout
+    const connectionPromise = mongoose.connect(MONGO_URI, mongoOptions);
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Connection timeout after 10 seconds')), 10000);
+    });
+    
+    const conn = await Promise.race([connectionPromise, timeoutPromise]);
     
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     console.log(`📊 Database: ${conn.connection.name}`);

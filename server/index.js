@@ -140,28 +140,30 @@ const startServer = async () => {
     
     // Connect to MongoDB (this will handle the connection gracefully)
     try {
+      console.log('🔄 Attempting MongoDB connection...');
       await connectDB();
       
-      // Wait a moment for connection to stabilize
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Check connection state immediately
+      console.log('🔍 Checking MongoDB connection state...');
       
       if (mongoose.connection.readyState === 1) {
-        await testMongoConnection();
         console.log('✅ MongoDB connection successful');
+        await testMongoConnection();
         
         // Create dummy users only if MongoDB is connected
         try {
           await createDummyUsers();
           console.log('✅ Dummy users created/verified');
         } catch (userError) {
-          console.log('⚠️ Could not create dummy users:', userError.message);
+          console.warn('⚠️ Could not create dummy users:', userError.message);
         }
       } else {
-        console.log('⚠️ MongoDB not connected, continuing without database');
-        console.log('⚠️ Database-dependent features will be unavailable');
+        console.warn('⚠️ MongoDB not connected, continuing without database');
+        console.warn('⚠️ Database-dependent features will be unavailable');
       }
     } catch (dbError) {
-      console.warn('⚠️ MongoDB connection failed, continuing without database:', dbError.message);
+      console.warn('⚠️ MongoDB connection failed:', dbError.message);
+      console.warn('⚠️ Continuing without database - API endpoints will return 503 errors');
     }
     
     // Ensure upload directories exist
