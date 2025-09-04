@@ -1,5 +1,6 @@
 import express from 'express';
-import { supabase } from '../config/supabase.js';
+import { Project, User } from '../models/index.js';
+import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize, authorizeOwnerOrAdmin } from '../middleware/auth.js';
 import { validateProjectCreation, validateProjectUpdate, validateUUID, validatePagination } from '../middleware/validation.js';
 import { uploadProjectFiles, handleUploadError } from '../middleware/upload.js';
@@ -12,44 +13,71 @@ router.use(authenticate);
 router.get('/', validatePagination, async (req, res) => {
   try {
     const { page = 1, limit = 10, status, priority } = req.query;
-    const offset = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-    let query = supabase
-      .from('projects')
-      .select(`
-        *,
-        users:client_id (name, email, company),
-        assigned_user:assigned_to (name)
-      `)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    let query = {};
 
     // If not admin, only show user's projects
     if (req.user.role !== 'admin') {
-      query = query.eq('client_id', req.user.id);
+      query.client_id = req.user.id;
     }
 
     // Add filters
     if (status) {
-      query = query.eq('status', status);
+      query.status = status;
     }
     if (priority) {
-      query = query.eq('priority', priority);
+      query.priority = priority;
     }
 
-    const { data: projects, error, count } = await query;
+    const projects = await Project.find(query)
+      .populate('client_id', 'name email company')
+      .populate('assigned_to', 'name email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
 
-    if (error) throw error;
+    const total = await Project.countDocuments(query);
 
     res.json({
       success: true,
       data: {
-        projects: projects || [],
+        projects: projects.map(project => ({
+          id: project._id,
+          clientId: project.client_id._id,
+          clientName: project.client_id.name,
+          title: project.title,
+          description: project.description,
+          type: project.type,
+          status: project.status,
+          priority: project.priority,
+          budget_range: project.budget_range,
+          estimated_budget: project.estimated_budget,
+          timeline: project.timeline,
+          start_date: project.start_date,
+          end_date: project.end_date,
+          completion_percentage: project.completion_percentage,
+          assigned_to: project.assigned_to,
+          figma_url: project.figma_url,
+          gitlab_url: project.gitlab_url,
+          notes: project.notes,
+          attachments: project.attachments,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt
+        })),
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
-          total: count || 0,
-          pages: Math.ceil((count || 0) / limit)
+          total,
+          pages: Math.ceil(total / limit)
         }
       }
     });
@@ -68,18 +96,19 @@ router.get('/:id', validateUUID, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data: project, error } = await supabase
-      .from('projects')
-      .select(`
-        *,
-        users:client_id (name, email, company),
-        assigned_user:assigned_to (name),
-        project_attachments (*)
-      `)
-      .eq('id', id)
-      .single();
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
 
-    if (error || !project) {
+    const project = await Project.findById(id)
+      .populate('client_id', 'name email company')
+      .populate('assigned_to', 'name email');
+
+    if (!project) {
       return res.status(404).json({
         success: false,
         error: 'Project not found'
@@ -87,7 +116,7 @@ router.get('/:id', validateUUID, async (req, res) => {
     }
 
     // Check authorization for non-admin users
-    if (req.user.role !== 'admin' && project.client_id !== req.user.id) {
+    if (req.user.role !== 'admin' && project.client_id._id.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -96,7 +125,32 @@ router.get('/:id', validateUUID, async (req, res) => {
 
     res.json({
       success: true,
-      data: { project }
+      data: { 
+        project: {
+          id: project._id,
+          clientId: project.client_id._id,
+          clientName: project.client_id.name,
+          title: project.title,
+          description: project.description,
+          type: project.type,
+          status: project.status,
+          priority: project.priority,
+          budget_range: project.budget_range,
+          estimated_budget: project.estimated_budget,
+          timeline: project.timeline,
+          start_date: project.start_date,
+          end_date: project.end_date,
+          completion_percentage: project.completion_percentage,
+          assigned_to: project.assigned_to,
+          figma_url: project.figma_url,
+          gitlab_url: project.gitlab_url,
+          notes: project.notes,
+          attachments: project.attachments,
+          milestones: project.milestones,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt
+        }
+      }
     });
 
   } catch (error) {
@@ -127,59 +181,84 @@ router.post('/', uploadProjectFiles, handleUploadError, validateProjectCreation,
       technical_specs
     } = req.body;
 
-    // Create project
-    const { data: project, error } = await supabase
-      .from('projects')
-      .insert([{
-        client_id: req.user.id,
-        title,
-        description,
-        type,
-        budget_range,
-        estimated_budget: estimated_budget ? parseFloat(estimated_budget) : null,
-        timeline,
-        start_date,
-        end_date,
-        figma_url,
-        gitlab_url,
-        notes,
-        requirements: requirements ? JSON.parse(requirements) : null,
-        technical_specs: technical_specs ? JSON.parse(technical_specs) : null
-      }])
-      .select()
-      .single();
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
 
-    if (error) throw error;
+    // Create project data
+    const projectData = {
+      client_id: req.user.id,
+      title,
+      description,
+      type,
+      budget_range,
+      estimated_budget: estimated_budget ? parseFloat(estimated_budget) : undefined,
+      timeline,
+      start_date: start_date ? new Date(start_date) : undefined,
+      end_date: end_date ? new Date(end_date) : undefined,
+      figma_url,
+      gitlab_url,
+      notes,
+      requirements: requirements ? JSON.parse(requirements) : undefined,
+      technical_specs: technical_specs ? JSON.parse(technical_specs) : undefined,
+      attachments: []
+    };
 
-    // Save file attachments if any
+    // Add file attachments if any
     if (req.files && req.files.length > 0) {
-      const attachments = req.files.map(file => ({
-        project_id: project.id,
+      projectData.attachments = req.files.map(file => ({
         filename: file.filename,
         original_name: file.originalname,
         file_type: file.mimetype,
         file_size: file.size,
         file_path: file.path,
-        uploaded_by: req.user.id
+        uploaded_by: req.user.id,
+        uploaded_at: new Date()
       }));
-
-      const { error: attachmentError } = await supabase
-        .from('project_attachments')
-        .insert(attachments);
-
-      if (attachmentError) {
-        console.error('Error saving attachments:', attachmentError);
-      }
     }
+
+    const project = new Project(projectData);
+    await project.save();
+
+    // Populate the created project
+    await project.populate('client_id', 'name email company');
 
     res.status(201).json({
       success: true,
       message: 'Project created successfully',
-      project
+      project: {
+        id: project._id,
+        clientId: project.client_id._id,
+        clientName: project.client_id.name,
+        title: project.title,
+        description: project.description,
+        type: project.type,
+        status: project.status,
+        priority: project.priority,
+        budget_range: project.budget_range,
+        estimated_budget: project.estimated_budget,
+        timeline: project.timeline,
+        attachments: project.attachments,
+        createdAt: project.createdAt
+      }
     });
 
   } catch (error) {
     console.error('Create project error:', error);
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: validationErrors
+      });
+    }
+
     res.status(500).json({
       success: false,
       error: 'Failed to create project'
@@ -193,14 +272,17 @@ router.put('/:id', validateUUID, validateProjectUpdate, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
 
-    // Check if project exists and user has permission
-    const { data: existingProject, error: checkError } = await supabase
-      .from('projects')
-      .select('client_id')
-      .eq('id', id)
-      .single();
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
 
-    if (checkError || !existingProject) {
+    // Find project
+    const project = await Project.findById(id);
+    if (!project) {
       return res.status(404).json({
         success: false,
         error: 'Project not found'
@@ -208,37 +290,161 @@ router.put('/:id', validateUUID, validateProjectUpdate, async (req, res) => {
     }
 
     // Check authorization
-    if (req.user.role !== 'admin' && existingProject.client_id !== req.user.id) {
+    if (req.user.role !== 'admin' && project.client_id.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
       });
     }
 
-    // Update project
-    const { data: project, error } = await supabase
-      .from('projects')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single();
+    // Update allowed fields
+    const allowedFields = [
+      'title', 'description', 'status', 'priority', 'budget_range', 'estimated_budget',
+      'timeline', 'start_date', 'end_date', 'completion_percentage', 'assigned_to',
+      'figma_url', 'gitlab_url', 'notes', 'requirements', 'technical_specs'
+    ];
 
-    if (error) throw error;
+    // Clients can only update certain fields
+    const clientAllowedFields = ['description', 'figma_url', 'gitlab_url', 'notes'];
+    const fieldsToCheck = req.user.role === 'admin' ? allowedFields : clientAllowedFields;
+
+    for (const [key, value] of Object.entries(updates)) {
+      if (fieldsToCheck.includes(key) && value !== undefined) {
+        if (key === 'start_date' || key === 'end_date') {
+          project[key] = value ? new Date(value) : undefined;
+        } else if (key === 'requirements' || key === 'technical_specs') {
+          project[key] = typeof value === 'string' ? JSON.parse(value) : value;
+        } else {
+          project[key] = value;
+        }
+      }
+    }
+
+    await project.save();
+    await project.populate('client_id', 'name email company');
+    await project.populate('assigned_to', 'name email');
 
     res.json({
       success: true,
       message: 'Project updated successfully',
-      project
+      project: {
+        id: project._id,
+        clientId: project.client_id._id,
+        clientName: project.client_id.name,
+        title: project.title,
+        description: project.description,
+        type: project.type,
+        status: project.status,
+        priority: project.priority,
+        budget_range: project.budget_range,
+        estimated_budget: project.estimated_budget,
+        timeline: project.timeline,
+        completion_percentage: project.completion_percentage,
+        assigned_to: project.assigned_to,
+        figma_url: project.figma_url,
+        gitlab_url: project.gitlab_url,
+        notes: project.notes,
+        attachments: project.attachments,
+        updatedAt: project.updatedAt
+      }
     });
 
   } catch (error) {
     console.error('Update project error:', error);
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: validationErrors
+      });
+    }
+
     res.status(500).json({
       success: false,
       error: 'Failed to update project'
+    });
+  }
+});
+
+// Delete project (admin only)
+router.delete('/:id', validateUUID, authorize('admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    const project = await Project.findByIdAndDelete(id);
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Project deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete project error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete project'
+    });
+  }
+});
+
+// Get projects by client (admin only)
+router.get('/client/:clientId', validateUUID, authorize('admin'), async (req, res) => {
+  try {
+    const { clientId } = req.params;
+
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    const projects = await Project.findByClient(clientId);
+
+    res.json({
+      success: true,
+      data: { 
+        projects: projects.map(project => ({
+          id: project._id,
+          clientId: project.client_id._id,
+          clientName: project.client_id.name,
+          title: project.title,
+          description: project.description,
+          type: project.type,
+          status: project.status,
+          priority: project.priority,
+          budget_range: project.budget_range,
+          timeline: project.timeline,
+          completion_percentage: project.completion_percentage,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt
+        }))
+      }
+    });
+
+  } catch (error) {
+    console.error('Get client projects error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch client projects'
     });
   }
 });

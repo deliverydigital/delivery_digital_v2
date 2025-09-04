@@ -1,5 +1,6 @@
 import express from 'express';
-import { query } from '../config/database.js';
+import { User } from '../models/index.js';
+import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { validateUUID, validatePagination } from '../middleware/validation.js';
 const router = express.Router();
@@ -7,57 +8,63 @@ const router = express.Router();
 // Apply authentication to all routes
 router.use(authenticate);
 
+// Notification Schema (using localStorage for demo)
+const getNotifications = () => {
+  try {
+    const notifications = localStorage.getItem('notifications');
+    return notifications ? JSON.parse(notifications) : [];
+  } catch (error) {
+    console.error('Error reading notifications:', error);
+    return [];
+  }
+};
+
+const saveNotifications = (notifications) => {
+  try {
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+  } catch (error) {
+    console.error('Error saving notifications:', error);
+  }
+};
+
 // Get user notifications
 router.get('/', validatePagination, async (req, res) => {
   try {
     const { page = 1, limit = 20, type, is_read } = req.query;
-    const offset = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-    let whereClause = 'WHERE user_id = $1';
-    let queryParams = [req.user.id];
-    let paramCount = 1;
+    let notifications = getNotifications();
+
+    // Filter by user
+    notifications = notifications.filter(n => n.user_id === req.user.id);
 
     // Add type filter
     if (type) {
-      whereClause += ` AND type = $${++paramCount}`;
-      queryParams.push(type);
+      notifications = notifications.filter(n => n.type === type);
     }
 
     // Add read status filter
     if (is_read !== undefined) {
-      whereClause += ` AND is_read = $${++paramCount}`;
-      queryParams.push(is_read === 'true');
+      notifications = notifications.filter(n => n.is_read === (is_read === 'true'));
     }
 
-    // Add expiration filter
-    whereClause += ` AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)`;
+    // Filter out expired notifications
+    const now = new Date();
+    notifications = notifications.filter(n => 
+      !n.expires_at || new Date(n.expires_at) > now
+    );
 
-    const notificationsQuery = `
-      SELECT *
-      FROM notifications
-      ${whereClause}
-      ORDER BY created_at DESC
-      LIMIT $${++paramCount} OFFSET $${++paramCount}
-    `;
+    // Sort by creation date (newest first)
+    notifications.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-    queryParams.push(limit, offset);
-
-    const result = await query(notificationsQuery, queryParams);
-
-    // Get total count
-    const countQuery = `
-      SELECT COUNT(*) as total
-      FROM notifications
-      ${whereClause}
-    `;
-
-    const countResult = await query(countQuery, queryParams.slice(0, -2));
-    const total = parseInt(countResult.rows[0].total);
+    // Pagination
+    const total = notifications.length;
+    const paginatedNotifications = notifications.slice(skip, skip + parseInt(limit));
 
     res.json({
       success: true,
       data: {
-        notifications: result.rows,
+        notifications: paginatedNotifications,
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
@@ -79,17 +86,18 @@ router.get('/', validatePagination, async (req, res) => {
 // Get unread notifications count
 router.get('/unread/count', async (req, res) => {
   try {
-    const result = await query(
-      `SELECT COUNT(*) as count
-       FROM notifications
-       WHERE user_id = $1 AND is_read = false 
-       AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)`,
-      [req.user.id]
-    );
+    const notifications = getNotifications();
+    const now = new Date();
+    
+    const count = notifications.filter(n => 
+      n.user_id === req.user.id && 
+      !n.is_read && 
+      (!n.expires_at || new Date(n.expires_at) > now)
+    ).length;
 
     res.json({
       success: true,
-      data: { count: parseInt(result.rows[0].count) }
+      data: { count }
     });
 
   } catch (error) {
@@ -106,25 +114,26 @@ router.put('/:id/read', validateUUID, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await query(
-      `UPDATE notifications 
-       SET is_read = true, read_at = CURRENT_TIMESTAMP
-       WHERE id = $1 AND user_id = $2
-       RETURNING *`,
-      [id, req.user.id]
+    const notifications = getNotifications();
+    const notificationIndex = notifications.findIndex(n => 
+      n.id === id && n.user_id === req.user.id
     );
 
-    if (result.rows.length === 0) {
+    if (notificationIndex === -1) {
       return res.status(404).json({
         success: false,
         error: 'Notification not found'
       });
     }
 
+    notifications[notificationIndex].is_read = true;
+    notifications[notificationIndex].read_at = new Date();
+    saveNotifications(notifications);
+
     res.json({
       success: true,
       message: 'Notification marked as read',
-      data: { notification: result.rows[0] }
+      data: { notification: notifications[notificationIndex] }
     });
 
   } catch (error) {
@@ -139,18 +148,23 @@ router.put('/:id/read', validateUUID, async (req, res) => {
 // Mark all notifications as read
 router.put('/read-all', async (req, res) => {
   try {
-    const result = await query(
-      `UPDATE notifications 
-       SET is_read = true, read_at = CURRENT_TIMESTAMP
-       WHERE user_id = $1 AND is_read = false
-       RETURNING COUNT(*) as updated_count`,
-      [req.user.id]
-    );
+    const notifications = getNotifications();
+    let updatedCount = 0;
+
+    notifications.forEach(notification => {
+      if (notification.user_id === req.user.id && !notification.is_read) {
+        notification.is_read = true;
+        notification.read_at = new Date();
+        updatedCount++;
+      }
+    });
+
+    saveNotifications(notifications);
 
     res.json({
       success: true,
       message: 'All notifications marked as read',
-      data: { updated_count: result.rowCount }
+      data: { updated_count: updatedCount }
     });
 
   } catch (error) {
@@ -174,21 +188,45 @@ router.post('/', authorize('admin'), async (req, res) => {
       });
     }
 
-    const result = await query(
-      `INSERT INTO notifications 
-       (user_id, title, message, type, priority, action_url, metadata, expires_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING *`,
-      [
-        user_id, title, message, type, priority || 'normal',
-        action_url, metadata ? JSON.stringify(metadata) : null, expires_at
-      ]
-    );
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    // Verify user exists
+    const user = await User.findById(user_id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    const notification = {
+      id: `notification-${Date.now()}`,
+      user_id,
+      title,
+      message,
+      type,
+      priority: priority || 'normal',
+      action_url,
+      metadata: metadata || null,
+      expires_at: expires_at ? new Date(expires_at) : null,
+      is_read: false,
+      created_at: new Date()
+    };
+
+    const notifications = getNotifications();
+    notifications.push(notification);
+    saveNotifications(notifications);
 
     res.status(201).json({
       success: true,
       message: 'Notification created successfully',
-      data: { notification: result.rows[0] }
+      data: { notification }
     });
 
   } catch (error) {
@@ -212,39 +250,53 @@ router.post('/broadcast', authorize('admin'), async (req, res) => {
       });
     }
 
-    // Get users to notify
-    let usersQuery = 'SELECT id FROM users WHERE status = $1';
-    let queryParams = ['active'];
-
-    if (user_roles && user_roles.length > 0) {
-      usersQuery += ` AND role = ANY($2)`;
-      queryParams.push(user_roles);
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
     }
 
-    const usersResult = await query(usersQuery, queryParams);
+    // Get users to notify
+    let query = { status: 'active' };
+    if (user_roles && user_roles.length > 0) {
+      query.role = { $in: user_roles };
+    }
+
+    const users = await User.find(query).select('_id');
 
     // Create notifications for all users
-    const notifications = [];
-    for (const user of usersResult.rows) {
-      const result = await query(
-        `INSERT INTO notifications 
-         (user_id, title, message, type, priority, action_url, metadata, expires_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         RETURNING *`,
-        [
-          user.id, title, message, type, priority || 'normal',
-          action_url, metadata ? JSON.stringify(metadata) : null, expires_at
-        ]
-      );
-      notifications.push(result.rows[0]);
-    }
+    const notifications = getNotifications();
+    const newNotifications = [];
+
+    users.forEach(user => {
+      const notification = {
+        id: `notification-${Date.now()}-${user._id}`,
+        user_id: user._id.toString(),
+        title,
+        message,
+        type,
+        priority: priority || 'normal',
+        action_url,
+        metadata: metadata || null,
+        expires_at: expires_at ? new Date(expires_at) : null,
+        is_read: false,
+        created_at: new Date()
+      };
+      
+      notifications.push(notification);
+      newNotifications.push(notification);
+    });
+
+    saveNotifications(notifications);
 
     res.status(201).json({
       success: true,
-      message: `Notification sent to ${notifications.length} users`,
+      message: `Notification sent to ${newNotifications.length} users`,
       data: { 
-        notifications_sent: notifications.length,
-        sample_notification: notifications[0] || null
+        notifications_sent: newNotifications.length,
+        sample_notification: newNotifications[0] || null
       }
     });
 
@@ -262,17 +314,19 @@ router.delete('/:id', validateUUID, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await query(
-      'DELETE FROM notifications WHERE id = $1 AND user_id = $2 RETURNING id',
-      [id, req.user.id]
+    const notifications = getNotifications();
+    const filteredNotifications = notifications.filter(n => 
+      !(n.id === id && n.user_id === req.user.id)
     );
 
-    if (result.rows.length === 0) {
+    if (notifications.length === filteredNotifications.length) {
       return res.status(404).json({
         success: false,
         error: 'Notification not found'
       });
     }
+
+    saveNotifications(filteredNotifications);
 
     res.json({
       success: true,
@@ -291,15 +345,18 @@ router.delete('/:id', validateUUID, async (req, res) => {
 // Delete all read notifications
 router.delete('/read/all', async (req, res) => {
   try {
-    const result = await query(
-      'DELETE FROM notifications WHERE user_id = $1 AND is_read = true RETURNING COUNT(*) as deleted_count',
-      [req.user.id]
+    const notifications = getNotifications();
+    const filteredNotifications = notifications.filter(n => 
+      !(n.user_id === req.user.id && n.is_read)
     );
+
+    const deletedCount = notifications.length - filteredNotifications.length;
+    saveNotifications(filteredNotifications);
 
     res.json({
       success: true,
       message: 'All read notifications deleted',
-      data: { deleted_count: result.rowCount }
+      data: { deleted_count: deletedCount }
     });
 
   } catch (error) {

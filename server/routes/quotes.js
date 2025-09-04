@@ -1,26 +1,71 @@
 import express from 'express';
+import { User, Project } from '../models/index.js';
+import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize } from '../middleware/auth.js';
-import { supabase } from '../config/supabase.js';
 
 const router = express.Router();
+
+// Quote storage (using localStorage for demo)
+const getQuotes = () => {
+  try {
+    const quotes = localStorage.getItem('quotes');
+    return quotes ? JSON.parse(quotes) : [];
+  } catch (error) {
+    console.error('Error reading quotes:', error);
+    return [];
+  }
+};
+
+const saveQuotes = (quotes) => {
+  try {
+    localStorage.setItem('quotes', JSON.stringify(quotes));
+  } catch (error) {
+    console.error('Error saving quotes:', error);
+  }
+};
 
 // Get all quotes (admin only)
 router.get('/', authenticate, authorize('admin'), async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('quotes')
-      .select(`
-        *,
-        users:client_id (name, email, company),
-        projects:project_id (title)
-      `)
-      .order('created_at', { ascending: false });
+    const quotes = getQuotes();
 
-    if (error) throw error;
+    // Populate client and project information
+    const quotesWithDetails = await Promise.all(
+      quotes.map(async (quote) => {
+        let clientInfo = null;
+        let projectInfo = null;
+
+        if (isMongoAvailable()) {
+          if (quote.client_id) {
+            const client = await User.findById(quote.client_id).select('name email company');
+            if (client) {
+              clientInfo = {
+                name: client.name,
+                email: client.email,
+                company: client.company
+              };
+            }
+          }
+
+          if (quote.project_id) {
+            const project = await Project.findById(quote.project_id).select('title');
+            if (project) {
+              projectInfo = { title: project.title };
+            }
+          }
+        }
+
+        return {
+          ...quote,
+          users: clientInfo,
+          projects: projectInfo
+        };
+      })
+    );
 
     res.json({
       success: true,
-      data: data || []
+      data: quotesWithDetails
     });
   } catch (error) {
     console.error('Error fetching quotes:', error);
@@ -44,20 +89,31 @@ router.get('/client/:clientId', authenticate, async (req, res) => {
       });
     }
 
-    const { data, error } = await supabase
-      .from('quotes')
-      .select(`
-        *,
-        projects:project_id (title)
-      `)
-      .eq('client_id', clientId)
-      .order('created_at', { ascending: false });
+    const quotes = getQuotes();
+    const clientQuotes = quotes.filter(q => q.client_id === clientId);
 
-    if (error) throw error;
+    // Populate project information
+    const quotesWithProjects = await Promise.all(
+      clientQuotes.map(async (quote) => {
+        let projectInfo = null;
+
+        if (isMongoAvailable() && quote.project_id) {
+          const project = await Project.findById(quote.project_id).select('title');
+          if (project) {
+            projectInfo = { title: project.title };
+          }
+        }
+
+        return {
+          ...quote,
+          projects: projectInfo
+        };
+      })
+    );
 
     res.json({
       success: true,
-      data: data || []
+      data: quotesWithProjects
     });
   } catch (error) {
     console.error('Error fetching client quotes:', error);
@@ -73,29 +129,57 @@ router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data, error } = await supabase
-      .from('quotes')
-      .select(`
-        *,
-        users:client_id (name, email, company),
-        projects:project_id (title)
-      `)
-      .eq('id', id)
-      .single();
+    const quotes = getQuotes();
+    const quote = quotes.find(q => q.id === id);
 
-    if (error) throw error;
+    if (!quote) {
+      return res.status(404).json({
+        success: false,
+        error: 'Quote not found'
+      });
+    }
 
     // Check if user is admin or the client
-    if (req.user.role !== 'admin' && req.user.id !== data.client_id) {
+    if (req.user.role !== 'admin' && req.user.id !== quote.client_id) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
       });
     }
 
+    // Populate client and project information
+    let clientInfo = null;
+    let projectInfo = null;
+
+    if (isMongoAvailable()) {
+      if (quote.client_id) {
+        const client = await User.findById(quote.client_id).select('name email company');
+        if (client) {
+          clientInfo = {
+            name: client.name,
+            email: client.email,
+            company: client.company
+          };
+        }
+      }
+
+      if (quote.project_id) {
+        const project = await Project.findById(quote.project_id).select('title');
+        if (project) {
+          projectInfo = { title: project.title };
+        }
+      }
+    }
+
+    const quoteWithDetails = {
+      ...quote,
+      users: clientInfo,
+      projects: projectInfo
+    };
+
     res.json({
       success: true,
-      data
+      data: quoteWithDetails
     });
   } catch (error) {
     console.error('Error fetching quote:', error);
@@ -128,37 +212,58 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       });
     }
 
+    // Check if MongoDB is available and validate client/project
+    if (isMongoAvailable()) {
+      const client = await User.findById(clientId);
+      if (!client) {
+        return res.status(404).json({
+          success: false,
+          error: 'Client not found'
+        });
+      }
+
+      if (projectId) {
+        const project = await Project.findById(projectId);
+        if (!project) {
+          return res.status(404).json({
+            success: false,
+            error: 'Project not found'
+          });
+        }
+      }
+    }
+
     // Calculate totals
     const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.quantity) * parseFloat(item.unitPrice)), 0);
     const taxAmount = subtotal * (taxRate / 100);
     const totalAmount = subtotal + taxAmount;
 
-    const { data, error } = await supabase
-      .from('quotes')
-      .insert([
-        {
-          client_id: clientId,
-          project_id: projectId || null,
-          title,
-          description,
-          status: 'draft',
-          valid_until: validUntil,
-          subtotal,
-          tax_rate: taxRate,
-          tax_amount: taxAmount,
-          total_amount: totalAmount,
-          currency,
-          notes,
-          items
-        }
-      ])
-      .select();
+    const newQuote = {
+      id: `quote-${Date.now()}`,
+      client_id: clientId,
+      project_id: projectId || null,
+      title,
+      description,
+      status: 'draft',
+      valid_until: validUntil,
+      subtotal,
+      tax_rate: taxRate,
+      tax_amount: taxAmount,
+      total_amount: totalAmount,
+      currency,
+      notes,
+      items,
+      created_at: new Date(),
+      updated_at: new Date()
+    };
 
-    if (error) throw error;
+    const quotes = getQuotes();
+    quotes.push(newQuote);
+    saveQuotes(quotes);
 
     res.status(201).json({
       success: true,
-      data: data[0]
+      data: newQuote
     });
   } catch (error) {
     console.error('Error creating quote:', error);
@@ -184,44 +289,47 @@ router.put('/:id', authenticate, authorize('admin'), async (req, res) => {
       projectId
     } = req.body;
 
-    // Calculate totals if items are provided
-    let updates = {
-      title,
-      description,
-      valid_until: validUntil,
-      currency,
-      notes,
-      project_id: projectId || null,
-      updated_at: new Date()
-    };
+    const quotes = getQuotes();
+    const quoteIndex = quotes.findIndex(q => q.id === id);
 
+    if (quoteIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'Quote not found'
+      });
+    }
+
+    const quote = quotes[quoteIndex];
+
+    // Update fields
+    if (title !== undefined) quote.title = title;
+    if (description !== undefined) quote.description = description;
+    if (validUntil !== undefined) quote.valid_until = validUntil;
+    if (currency !== undefined) quote.currency = currency;
+    if (notes !== undefined) quote.notes = notes;
+    if (projectId !== undefined) quote.project_id = projectId;
+
+    // Recalculate totals if items are provided
     if (items && Array.isArray(items)) {
       const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.quantity) * parseFloat(item.unitPrice)), 0);
-      const tax_rate = taxRate || 20.00;
+      const tax_rate = taxRate || quote.tax_rate || 20.00;
       const taxAmount = subtotal * (tax_rate / 100);
       const totalAmount = subtotal + taxAmount;
 
-      updates = {
-        ...updates,
-        items,
-        subtotal,
-        tax_rate,
-        tax_amount: taxAmount,
-        total_amount: totalAmount
-      };
+      quote.items = items;
+      quote.subtotal = subtotal;
+      quote.tax_rate = tax_rate;
+      quote.tax_amount = taxAmount;
+      quote.total_amount = totalAmount;
     }
 
-    const { data, error } = await supabase
-      .from('quotes')
-      .update(updates)
-      .eq('id', id)
-      .select();
-
-    if (error) throw error;
+    quote.updated_at = new Date();
+    quotes[quoteIndex] = quote;
+    saveQuotes(quotes);
 
     res.json({
       success: true,
-      data: data[0]
+      data: quote
     });
   } catch (error) {
     console.error('Error updating quote:', error);
@@ -245,17 +353,23 @@ router.patch('/:id/status', authenticate, authorize('admin'), async (req, res) =
       });
     }
 
-    const { data, error } = await supabase
-      .from('quotes')
-      .update({ status, updated_at: new Date() })
-      .eq('id', id)
-      .select();
+    const quotes = getQuotes();
+    const quoteIndex = quotes.findIndex(q => q.id === id);
 
-    if (error) throw error;
+    if (quoteIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'Quote not found'
+      });
+    }
+
+    quotes[quoteIndex].status = status;
+    quotes[quoteIndex].updated_at = new Date();
+    saveQuotes(quotes);
 
     res.json({
       success: true,
-      data: data[0]
+      data: quotes[quoteIndex]
     });
   } catch (error) {
     console.error('Error updating quote status:', error);
@@ -271,14 +385,8 @@ router.post('/:id/convert-to-invoice', authenticate, authorize('admin'), async (
   try {
     const { id } = req.params;
     
-    // Get the quote
-    const { data: quote, error: quoteError } = await supabase
-      .from('quotes')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (quoteError) throw quoteError;
+    const quotes = getQuotes();
+    const quote = quotes.find(q => q.id === id);
     
     if (!quote) {
       return res.status(404).json({
@@ -291,61 +399,39 @@ router.post('/:id/convert-to-invoice', authenticate, authorize('admin'), async (
     const date = new Date();
     const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
     
-    // Get count of invoices to generate sequential number
-    const { count, error: countError } = await supabase
-      .from('invoices')
-      .select('*', { count: 'exact', head: true });
-    
-    if (countError) throw countError;
-    
-    const invoiceNumber = `INV-${dateStr}-${(count + 1).toString().padStart(3, '0')}`;
+    // Get existing invoices to generate sequential number
+    const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    const invoiceNumber = `INV-${dateStr}-${(invoices.length + 1).toString().padStart(3, '0')}`;
     
     // Create invoice
-    const { data: invoice, error: invoiceError } = await supabase
-      .from('invoices')
-      .insert([
-        {
-          invoice_number: invoiceNumber,
-          client_id: quote.client_id,
-          project_id: quote.project_id,
-          status: 'draft',
-          issue_date: new Date().toISOString().slice(0, 10),
-          due_date: new Date(date.setDate(date.getDate() + 30)).toISOString().slice(0, 10),
-          subtotal: quote.subtotal,
-          tax_rate: quote.tax_rate,
-          tax_amount: quote.tax_amount,
-          total_amount: quote.total_amount,
-          currency: quote.currency,
-          notes: quote.notes
-        }
-      ])
-      .select()
-      .single();
+    const invoice = {
+      id: `invoice-${Date.now()}`,
+      invoice_number: invoiceNumber,
+      client_id: quote.client_id,
+      project_id: quote.project_id,
+      status: 'draft',
+      issue_date: new Date().toISOString().slice(0, 10),
+      due_date: new Date(date.setDate(date.getDate() + 30)).toISOString().slice(0, 10),
+      subtotal: quote.subtotal,
+      tax_rate: quote.tax_rate,
+      tax_amount: quote.tax_amount,
+      total_amount: quote.total_amount,
+      currency: quote.currency,
+      notes: quote.notes,
+      items: quote.items,
+      created_at: new Date(),
+      updated_at: new Date()
+    };
     
-    if (invoiceError) throw invoiceError;
-    
-    // Create invoice items
-    const invoiceItems = quote.items.map(item => ({
-      invoice_id: invoice.id,
-      description: item.description,
-      quantity: item.quantity,
-      unit_price: item.unitPrice,
-      total_price: item.totalPrice
-    }));
-    
-    const { error: itemsError } = await supabase
-      .from('invoice_items')
-      .insert(invoiceItems);
-    
-    if (itemsError) throw itemsError;
+    // Save invoice
+    invoices.push(invoice);
+    localStorage.setItem('invoices', JSON.stringify(invoices));
     
     // Update quote status to accepted
-    const { error: updateError } = await supabase
-      .from('quotes')
-      .update({ status: 'accepted', updated_at: new Date() })
-      .eq('id', id);
-    
-    if (updateError) throw updateError;
+    const quoteIndex = quotes.findIndex(q => q.id === id);
+    quotes[quoteIndex].status = 'accepted';
+    quotes[quoteIndex].updated_at = new Date();
+    saveQuotes(quotes);
     
     res.json({
       success: true,
@@ -369,12 +455,17 @@ router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { error } = await supabase
-      .from('quotes')
-      .delete()
-      .eq('id', id);
+    const quotes = getQuotes();
+    const filteredQuotes = quotes.filter(q => q.id !== id);
 
-    if (error) throw error;
+    if (quotes.length === filteredQuotes.length) {
+      return res.status(404).json({
+        success: false,
+        error: 'Quote not found'
+      });
+    }
+
+    saveQuotes(filteredQuotes);
 
     res.json({
       success: true,

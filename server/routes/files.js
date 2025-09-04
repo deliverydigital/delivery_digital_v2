@@ -1,7 +1,8 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { query } from '../config/database.js';
+import { Project, User } from '../models/index.js';
+import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { uploadGeneral, handleUploadError, deleteFile } from '../middleware/upload.js';
 import { validateUUID } from '../middleware/validation.js';
@@ -9,6 +10,25 @@ const router = express.Router();
 
 // Apply authentication to all routes
 router.use(authenticate);
+
+// File metadata storage (using localStorage for demo)
+const getFileMetadata = () => {
+  try {
+    const files = localStorage.getItem('fileMetadata');
+    return files ? JSON.parse(files) : [];
+  } catch (error) {
+    console.error('Error reading file metadata:', error);
+    return [];
+  }
+};
+
+const saveFileMetadata = (files) => {
+  try {
+    localStorage.setItem('fileMetadata', JSON.stringify(files));
+  } catch (error) {
+    console.error('Error saving file metadata:', error);
+  }
+};
 
 // Upload files
 router.post('/upload', uploadGeneral, handleUploadError, async (req, res) => {
@@ -23,30 +43,29 @@ router.post('/upload', uploadGeneral, handleUploadError, async (req, res) => {
     }
 
     const uploadedFiles = [];
+    const fileMetadata = getFileMetadata();
 
     for (const file of req.files) {
-      const result = await query(
-        `INSERT INTO file_uploads 
-         (filename, original_name, file_type, file_size, file_path, uploaded_by, entity_type, entity_id, is_public)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-         RETURNING *`,
-        [
-          file.filename,
-          file.originalname,
-          file.mimetype,
-          file.size,
-          file.path,
-          req.user.id,
-          entity_type,
-          entity_id,
-          is_public === 'true'
-        ]
-      );
+      const fileRecord = {
+        id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        filename: file.filename,
+        original_name: file.originalname,
+        file_type: file.mimetype,
+        file_size: file.size,
+        file_path: file.path,
+        uploaded_by: req.user.id,
+        entity_type,
+        entity_id,
+        is_public: is_public === 'true',
+        created_at: new Date()
+      };
 
-      const fileRecord = result.rows[0];
       fileRecord.url = `${req.protocol}://${req.get('host')}/api/files/${fileRecord.id}`;
+      fileMetadata.push(fileRecord);
       uploadedFiles.push(fileRecord);
     }
+
+    saveFileMetadata(fileMetadata);
 
     res.status(201).json({
       success: true,
@@ -68,19 +87,15 @@ router.get('/:id', validateUUID, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const fileResult = await query(
-      'SELECT * FROM file_uploads WHERE id = $1',
-      [id]
-    );
+    const fileMetadata = getFileMetadata();
+    const file = fileMetadata.find(f => f.id === id);
 
-    if (fileResult.rows.length === 0) {
+    if (!file) {
       return res.status(404).json({
         success: false,
         error: 'File not found'
       });
     }
-
-    const file = fileResult.rows[0];
 
     // Check if file is public or user has access
     if (!file.is_public) {
@@ -88,13 +103,16 @@ router.get('/:id', validateUUID, async (req, res) => {
       if (req.user.role !== 'admin' && file.uploaded_by !== req.user.id) {
         // Check if user has access to the entity this file belongs to
         if (file.entity_type === 'project') {
-          const projectCheck = await query(
-            'SELECT client_id FROM projects WHERE id = $1',
-            [file.entity_id]
-          );
-          
-          if (projectCheck.rows.length === 0 || 
-              (req.user.role !== 'admin' && projectCheck.rows[0].client_id !== req.user.id)) {
+          // Check if MongoDB is available
+          if (!isMongoAvailable()) {
+            return res.status(503).json({
+              success: false,
+              error: 'Database service unavailable'
+            });
+          }
+
+          const project = await Project.findById(file.entity_id);
+          if (!project || (req.user.role !== 'admin' && project.client_id.toString() !== req.user.id)) {
             return res.status(403).json({
               success: false,
               error: 'Access denied'
@@ -140,31 +158,30 @@ router.get('/:id/download', validateUUID, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const fileResult = await query(
-      'SELECT * FROM file_uploads WHERE id = $1',
-      [id]
-    );
+    const fileMetadata = getFileMetadata();
+    const file = fileMetadata.find(f => f.id === id);
 
-    if (fileResult.rows.length === 0) {
+    if (!file) {
       return res.status(404).json({
         success: false,
         error: 'File not found'
       });
     }
 
-    const file = fileResult.rows[0];
-
     // Check access permissions (same logic as above)
     if (!file.is_public) {
       if (req.user.role !== 'admin' && file.uploaded_by !== req.user.id) {
         if (file.entity_type === 'project') {
-          const projectCheck = await query(
-            'SELECT client_id FROM projects WHERE id = $1',
-            [file.entity_id]
-          );
-          
-          if (projectCheck.rows.length === 0 || 
-              (req.user.role !== 'admin' && projectCheck.rows[0].client_id !== req.user.id)) {
+          // Check if MongoDB is available
+          if (!isMongoAvailable()) {
+            return res.status(503).json({
+              success: false,
+              error: 'Database service unavailable'
+            });
+          }
+
+          const project = await Project.findById(file.entity_id);
+          if (!project || (req.user.role !== 'admin' && project.client_id.toString() !== req.user.id)) {
             return res.status(403).json({
               success: false,
               error: 'Access denied'
@@ -212,19 +229,23 @@ router.get('/entity/:type/:id', validateUUID, async (req, res) => {
 
     // Check access based on entity type
     if (type === 'project') {
-      const projectCheck = await query(
-        'SELECT client_id FROM projects WHERE id = $1',
-        [id]
-      );
-      
-      if (projectCheck.rows.length === 0) {
+      // Check if MongoDB is available
+      if (!isMongoAvailable()) {
+        return res.status(503).json({
+          success: false,
+          error: 'Database service unavailable'
+        });
+      }
+
+      const project = await Project.findById(id);
+      if (!project) {
         return res.status(404).json({
           success: false,
           error: 'Project not found'
         });
       }
 
-      if (req.user.role !== 'admin' && projectCheck.rows[0].client_id !== req.user.id) {
+      if (req.user.role !== 'admin' && project.client_id.toString() !== req.user.id) {
         return res.status(403).json({
           success: false,
           error: 'Access denied'
@@ -232,18 +253,11 @@ router.get('/entity/:type/:id', validateUUID, async (req, res) => {
       }
     }
 
-    const filesResult = await query(
-      `SELECT 
-        f.*,
-        u.name as uploaded_by_name
-       FROM file_uploads f
-       LEFT JOIN users u ON f.uploaded_by = u.id
-       WHERE f.entity_type = $1 AND f.entity_id = $2
-       ORDER BY f.created_at DESC`,
-      [type, id]
-    );
+    const fileMetadata = getFileMetadata();
+    const files = fileMetadata.filter(f => f.entity_type === type && f.entity_id === id);
 
-    const files = filesResult.rows.map(file => ({
+    // Add URLs to files
+    const filesWithUrls = files.map(file => ({
       ...file,
       url: `${req.protocol}://${req.get('host')}/api/files/${file.id}`,
       download_url: `${req.protocol}://${req.get('host')}/api/files/${file.id}/download`
@@ -251,7 +265,7 @@ router.get('/entity/:type/:id', validateUUID, async (req, res) => {
 
     res.json({
       success: true,
-      data: { files }
+      data: { files: filesWithUrls }
     });
 
   } catch (error) {
@@ -268,19 +282,17 @@ router.delete('/:id', validateUUID, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const fileResult = await query(
-      'SELECT * FROM file_uploads WHERE id = $1',
-      [id]
-    );
+    const fileMetadata = getFileMetadata();
+    const fileIndex = fileMetadata.findIndex(f => f.id === id);
 
-    if (fileResult.rows.length === 0) {
+    if (fileIndex === -1) {
       return res.status(404).json({
         success: false,
         error: 'File not found'
       });
     }
 
-    const file = fileResult.rows[0];
+    const file = fileMetadata[fileIndex];
 
     // Check permissions - only file owner or admin can delete
     if (req.user.role !== 'admin' && file.uploaded_by !== req.user.id) {
@@ -290,8 +302,9 @@ router.delete('/:id', validateUUID, async (req, res) => {
       });
     }
 
-    // Delete file from database
-    await query('DELETE FROM file_uploads WHERE id = $1', [id]);
+    // Remove from metadata
+    fileMetadata.splice(fileIndex, 1);
+    saveFileMetadata(fileMetadata);
 
     // Delete file from disk
     await deleteFile(file.file_path);
@@ -315,36 +328,30 @@ router.get('/:id/metadata', validateUUID, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const fileResult = await query(
-      `SELECT 
-        f.*,
-        u.name as uploaded_by_name
-       FROM file_uploads f
-       LEFT JOIN users u ON f.uploaded_by = u.id
-       WHERE f.id = $1`,
-      [id]
-    );
+    const fileMetadata = getFileMetadata();
+    const file = fileMetadata.find(f => f.id === id);
 
-    if (fileResult.rows.length === 0) {
+    if (!file) {
       return res.status(404).json({
         success: false,
         error: 'File not found'
       });
     }
 
-    const file = fileResult.rows[0];
-
     // Check access permissions
     if (!file.is_public) {
       if (req.user.role !== 'admin' && file.uploaded_by !== req.user.id) {
         if (file.entity_type === 'project') {
-          const projectCheck = await query(
-            'SELECT client_id FROM projects WHERE id = $1',
-            [file.entity_id]
-          );
-          
-          if (projectCheck.rows.length === 0 || 
-              (req.user.role !== 'admin' && projectCheck.rows[0].client_id !== req.user.id)) {
+          // Check if MongoDB is available
+          if (!isMongoAvailable()) {
+            return res.status(503).json({
+              success: false,
+              error: 'Database service unavailable'
+            });
+          }
+
+          const project = await Project.findById(file.entity_id);
+          if (!project || (req.user.role !== 'admin' && project.client_id.toString() !== req.user.id)) {
             return res.status(403).json({
               success: false,
               error: 'Access denied'
@@ -360,14 +367,14 @@ router.get('/:id/metadata', validateUUID, async (req, res) => {
     }
 
     // Remove file_path from response for security
-    delete file.file_path;
+    const { file_path, ...safeFile } = file;
 
-    file.url = `${req.protocol}://${req.get('host')}/api/files/${file.id}`;
-    file.download_url = `${req.protocol}://${req.get('host')}/api/files/${file.id}/download`;
+    safeFile.url = `${req.protocol}://${req.get('host')}/api/files/${file.id}`;
+    safeFile.download_url = `${req.protocol}://${req.get('host')}/api/files/${file.id}/download`;
 
     res.json({
       success: true,
-      data: { file }
+      data: { file: safeFile }
     });
 
   } catch (error) {
