@@ -101,5 +101,5 @@ const createDummyUsers = async () => {
   }
 };
 
-// Run the script
-createDummyUsers();
+// Export the function for use in other modules
+export { createDummyUsers };

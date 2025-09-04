@@ -27,6 +27,7 @@ import fileRoutes from './routes/files.js';
 import notificationRoutes from './routes/notifications.js';
 import analyticsRoutes from './routes/analytics.js';
 import quotesRoutes from './routes/quotes.js';
+import { createDummyUsers } from './scripts/createUsers.js';
 
 const app = express();
 const PORT = process.env.PORT || 3008;
@@ -137,6 +138,13 @@ const startServer = async () => {
     // Connect to MongoDB (this will handle the connection gracefully)
     await connectDB();
     await testMongoConnection();
+    
+    // Create dummy users for testing
+    try {
+      await createDummyUsers();
+    } catch (error) {
+      console.log('⚠️ Could not create dummy users (they may already exist):', error.message);
+    }
     
     // Ensure upload directories exist
     const uploadDirs = [
