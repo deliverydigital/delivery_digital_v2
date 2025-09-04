@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { supabase } from '../config/supabase.js';
+import { User } from '../models/index.js';
+import { isMongoAvailable } from '../config/mongodb.js';
 import rateLimit from 'express-rate-limit';
 
 // JWT secret from environment
@@ -31,22 +32,36 @@ const authenticate = async (req, res, next) => {
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     const decoded = verifyToken(token);
     
-    // Get user from Supabase
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, email, name, company, role, status')
-      .eq('id', decoded.userId)
-      .eq('status', 'active')
-      .single();
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({ 
+        success: false, 
+        error: 'Database service unavailable' 
+      });
+    }
+    
+    // Get user from MongoDB
+    const user = await User.findById(decoded.userId)
+      .select('_id email name company role status')
+      .where('status').equals('active');
 
-    if (error || !user) {
+    if (!user) {
       return res.status(401).json({ 
         success: false, 
         error: 'Invalid token or user not found' 
       });
     }
 
-    req.user = user;
+    // Convert MongoDB document to plain object for consistency
+    req.user = {
+      id: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      company: user.company,
+      role: user.role,
+      status: user.status
+    };
+    
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
