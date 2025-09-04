@@ -9,37 +9,65 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/delivery_d
 // Connection options
 const mongoOptions = {
   maxPoolSize: 10, // Maintain up to 10 socket connections
-  serverSelectionTimeoutMS: 15000, // Keep trying to send operations for 5 seconds
+  serverSelectionTimeoutMS: 30000, // Keep trying to send operations for 30 seconds
   socketTimeoutMS: 45000 , // Close sockets after 45 seconds of inactivity
-    tlsAllowInvalidCertificates: true,  // TEMPORARY TEST ONLY
+  retryWrites: true,
+  w: 'majority',
+  appName: 'DeliveryDigital'
 };
 
 // Connect to MongoDB
 const connectDB = async () => {
   try {
     console.log('🔄 Connecting to MongoDB...');
-    console.log('📍 MongoDB URI:', MONGO_URI.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@')); // Hide credentials in logs
+    console.log('📍 MongoDB URI pattern:', MONGO_URI.includes('mongodb+srv') ? 'Cloud Atlas' : 'Local MongoDB');
+    console.log('📍 Connection timeout:', mongoOptions.serverSelectionTimeoutMS + 'ms');
     
     const conn = await mongoose.connect(MONGO_URI, mongoOptions);
     
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     console.log(`📊 Database: ${conn.connection.name}`);
+    console.log(`🔗 Connection state: ${conn.connection.readyState}`);
     
     return conn;
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error.message);
+    console.error('❌ MongoDB connection failed');
+    console.error('🔍 Error type:', error.name);
+    console.error('🔍 Error message:', error.message);
+    
+    if (error.name === 'MongoServerSelectionError') {
+      console.error('🔍 Server selection failed - possible causes:');
+      console.error('   • Network connectivity issues');
+      console.error('   • Incorrect connection string');
+      console.error('   • Database server not accessible');
+      console.error('   • Firewall blocking connection');
+    }
+    
+    if (error.name === 'MongoParseError') {
+      console.error('🔍 Connection string parse error - check your MONGO_URI format');
+    }
+    
+    if (error.code === 'ENOTFOUND') {
+      console.error('🔍 DNS resolution failed - check your internet connection and MongoDB host');
+    }
+    
     console.error('🔍 Error details:', {
       name: error.name,
       code: error.code,
-      codeName: error.codeName
+      codeName: error.codeName,
+      reason: error.reason
     });
     
-    // Always continue without DB in development, log warning
-    console.warn('⚠️ Running without MongoDB connection');
-    console.warn('⚠️ Some features may not work properly without database');
-    console.warn('⚠️ Check your .env file and MongoDB connection string');
+    console.error('💡 Troubleshooting tips:');
+    console.error('   1. Check your .env file has the correct MONGO_URI');
+    console.error('   2. Verify your MongoDB Atlas cluster is running');
+    console.error('   3. Check your IP is whitelisted in MongoDB Atlas');
+    console.error('   4. Verify your database user credentials');
     
-    // Don't exit the process, just return null
+    // Continue without DB in development
+    console.warn('⚠️ Running without MongoDB connection');
+    console.warn('⚠️ API endpoints requiring database will return 503 errors');
+    
     return null;
   }
 };

@@ -141,28 +141,27 @@ const startServer = async () => {
     // Connect to MongoDB (this will handle the connection gracefully)
     try {
       await connectDB();
-      if (isMongoAvailable()) {
+      
+      // Wait a moment for connection to stabilize
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      if (mongoose.connection.readyState === 1) {
         await testMongoConnection();
         console.log('✅ MongoDB connection successful');
+        
+        // Create dummy users only if MongoDB is connected
+        try {
+          await createDummyUsers();
+          console.log('✅ Dummy users created/verified');
+        } catch (userError) {
+          console.log('⚠️ Could not create dummy users:', userError.message);
+        }
       } else {
-        console.log('⚠️ MongoDB not available, continuing without database');
+        console.log('⚠️ MongoDB not connected, continuing without database');
+        console.log('⚠️ Database-dependent features will be unavailable');
       }
     } catch (dbError) {
       console.warn('⚠️ MongoDB connection failed, continuing without database:', dbError.message);
-      console.warn('⚠️ Check your .env file and ensure MongoDB is running');
-      console.warn('⚠️ Expected MONGO_URI format: mongodb://username:password@host:port/database');
-    }
-    
-    // Create dummy users for testing (only if MongoDB is available)
-    try {
-      if (isMongoAvailable()) {
-        await createDummyUsers();
-        console.log('✅ Dummy users created/verified');
-      } else {
-        console.log('⚠️ Skipping dummy user creation - MongoDB not available');
-      }
-    } catch (error) {
-      console.log('⚠️ Could not create dummy users:', error.message);
     }
     
     // Ensure upload directories exist
