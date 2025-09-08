@@ -235,12 +235,23 @@ export class ApiService {
 
   static async getClientProjects(clientId: string): Promise<Project[]> {
     try {
-      // For demo purposes, return projects from localStorage
+      // Try to fetch from API first
+      try {
+        const response = await this.makeRequest(`/projects`);
+        if (response.success && response.data && response.data.projects) {
+          return response.data.projects;
+        }
+      } catch (apiError) {
+        console.log('API call failed, falling back to demo data:', apiError.message);
+      }
+      
+      // Fallback to demo projects from localStorage
       const demoProjects = localStorage.getItem('demoProjects');
       if (demoProjects) {
         const projects = JSON.parse(demoProjects);
         return projects.filter((project: Project) => project.clientId === clientId);
       }
+      
       return [];
     } catch (error) {
       console.error('Error fetching client projects:', error);
@@ -250,11 +261,22 @@ export class ApiService {
 
   static async getAllProjects(): Promise<Project[]> {
     try {
-      // For demo purposes, return all projects from localStorage
+      // Try to fetch from API first
+      try {
+        const response = await this.makeRequest('/projects');
+        if (response.success && response.data && response.data.projects) {
+          return response.data.projects;
+        }
+      } catch (apiError) {
+        console.log('API call failed, falling back to demo data:', apiError.message);
+      }
+      
+      // Fallback to demo projects from localStorage
       const demoProjects = localStorage.getItem('demoProjects');
       if (demoProjects) {
         return JSON.parse(demoProjects);
       }
+      
       return [];
     } catch (error) {
       console.error('Error fetching all projects:', error);

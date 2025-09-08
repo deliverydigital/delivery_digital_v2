@@ -20,7 +20,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
   const [activeTab, setActiveTab] = useState<'projects' | 'submit' | 'account'>('submit');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
-  const { projects, loading, submitProject } = useProjects(user?.id);
+  const { projects, loading, submitProject } = useProjects(isAuthenticated ? user?.id : undefined);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -36,10 +36,12 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
   const [fileInputRef] = useState<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (isOpen && isAuthenticated && user) {
-      // Projects will be loaded automatically by the useProjects hook
+    if (isOpen && isAuthenticated && user && activeTab === 'projects') {
+      // Force refresh projects when opening the projects tab
+      const event = new CustomEvent('refreshProjects');
+      window.dispatchEvent(event);
     }
-  }, [isOpen, isAuthenticated, user]);
+  }, [isOpen, isAuthenticated, user, activeTab]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

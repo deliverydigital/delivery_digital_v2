@@ -147,25 +147,36 @@ export const useProjects = (clientId?: string) => {
   const loadProjects = async () => {
     setLoading(true);
     try {
-      const data = clientId 
-        ? await ApiService.getClientProjects(clientId)
-        : await ApiService.getAllProjects();
+      let data;
+      if (clientId) {
+        data = await ApiService.getClientProjects(clientId);
+      } else {
+        // For admin view, load all projects
+        data = await ApiService.getAllProjects();
+      }
       setProjects(data);
     } catch (error) {
-      alert(2)
-      console.log('Erreur lors du chargement des projets:', error);
+      console.error('Erreur lors du chargement des projets:', error);
+      // Set empty array on error to prevent infinite loading
+      setProjects([]);
     }
     setLoading(false);
   };
 
   useEffect(() => {
-    if (clientId) {
-      loadProjects();
-    } else {
-      // For admin view, load all projects
+    if (clientId !== undefined) {
       loadProjects();
     }
   }, [clientId]);
+
+  useEffect(() => {
+    const handleRefreshProjects = () => {
+      loadProjects();
+    };
+
+    window.addEventListener('refreshProjects', handleRefreshProjects);
+    return () => window.removeEventListener('refreshProjects', handleRefreshProjects);
+  }, []);
 
   const submitProject = async (projectData: {
     title: string;
