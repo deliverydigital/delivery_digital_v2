@@ -76,7 +76,7 @@ export const useProjects = (clientId?: string) => {
         : await ApiService.getAllProjects();
       setProjects(data);
     } catch (error) {
-      console.error('Erreur lors du chargement des projets:', error);
+      console.log('Erreur lors du chargement des projets:', error);
     }
     setLoading(false);
   };
