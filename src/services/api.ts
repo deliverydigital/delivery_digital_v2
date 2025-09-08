@@ -100,7 +100,10 @@ export class ApiService {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch((error) => ({ console.log(error); message: 'Network error' }));
+      const errorData = await response.json().catch((error) => ({
+console.log(error)
+        return { message: 'Network error' }
+      }));
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
