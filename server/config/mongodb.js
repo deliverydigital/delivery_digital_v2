@@ -27,8 +27,7 @@ const mongoOptions = {
   // Additional options for cloud connections
   ssl: true,
   authSource: 'admin',
-  bufferCommands: false,
-  bufferMaxEntries: 0
+  bufferCommands: false
 };
 
 // Connect to MongoDB
