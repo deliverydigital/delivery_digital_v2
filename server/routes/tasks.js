@@ -2,7 +2,7 @@ import express from 'express';
 import { Task, Project, User } from '../models/index.js';
 import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize, authorizeOwnerOrAdmin } from '../middleware/auth.js';
-import { validateTaskCreation, validateTaskUpdate, validateUUID, validatePagination } from '../middleware/validation.js';
+import { validateTaskCreation, validateTaskUpdate, validateMongoId, validateMongoIdParam, validatePagination } from '../middleware/validation.js';
 import { uploadTaskFiles, handleUploadError } from '../middleware/upload.js';
 const router = express.Router();
 
@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(authenticate);
 
 // Get tasks for a project
-router.get('/project/:projectId', validateUUID, async (req, res) => {
+router.get('/project/:projectId', validateMongoIdParam('projectId'), async (req, res) => {
   try {
     const { projectId } = req.params;
     const { status, assigned_to, priority } = req.query;
@@ -89,7 +89,7 @@ router.get('/project/:projectId', validateUUID, async (req, res) => {
 });
 
 // Get single task with details
-router.get('/:id', validateUUID, async (req, res) => {
+router.get('/:id', validateMongoId, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -289,7 +289,7 @@ router.post('/', uploadTaskFiles, handleUploadError, validateTaskCreation, async
 });
 
 // Update task
-router.put('/:id', validateUUID, validateTaskUpdate, async (req, res) => {
+router.put('/:id', validateMongoId, validateTaskUpdate, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -390,7 +390,7 @@ router.put('/:id', validateUUID, validateTaskUpdate, async (req, res) => {
 });
 
 // Add comment to task
-router.post('/:id/comments', validateUUID, async (req, res) => {
+router.post('/:id/comments', validateMongoId, async (req, res) => {
   try {
     const { id } = req.params;
     const { content } = req.body;
@@ -461,7 +461,7 @@ router.post('/:id/comments', validateUUID, async (req, res) => {
 });
 
 // Add checklist item (admin only)
-router.post('/:id/checklist', validateUUID, authorize('admin'), async (req, res) => {
+router.post('/:id/checklist', validateMongoId, authorize('admin'), async (req, res) => {
   try {
     const { id } = req.params;
     const { title, position } = req.body;
@@ -519,7 +519,7 @@ router.post('/:id/checklist', validateUUID, authorize('admin'), async (req, res)
 });
 
 // Toggle checklist item
-router.put('/checklist/:taskId/:itemId', validateUUID, async (req, res) => {
+router.put('/checklist/:taskId/:itemId', validateMongoIdParam('taskId'), async (req, res) => {
   try {
     const { taskId, itemId } = req.params;
 
@@ -581,7 +581,7 @@ router.put('/checklist/:taskId/:itemId', validateUUID, async (req, res) => {
 });
 
 // Delete task (admin only)
-router.delete('/:id', validateUUID, authorize('admin'), async (req, res) => {
+router.delete('/:id', validateMongoId, authorize('admin'), async (req, res) => {
   try {
     const { id } = req.params;
 

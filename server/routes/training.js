@@ -2,7 +2,7 @@ import express from 'express';
 import { User } from '../models/index.js';
 import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize } from '../middleware/auth.js';
-import { validateTrainingSessionCreation, validateUUID, validatePagination } from '../middleware/validation.js';
+import { validateTrainingSessionCreation, validateStringId, validatePagination } from '../middleware/validation.js';
 import { uploadTrainingMaterials, handleUploadError } from '../middleware/upload.js';
 const router = express.Router();
 
@@ -77,7 +77,7 @@ router.get('/sessions', validatePagination, async (req, res) => {
 });
 
 // Get single training session
-router.get('/sessions/:id', validateUUID, async (req, res) => {
+router.get('/sessions/:id', validateStringId, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -191,7 +191,7 @@ router.post('/sessions', authorize('admin', 'trainer'), uploadTrainingMaterials,
 });
 
 // Register for training session
-router.post('/sessions/:id/register', validateUUID, async (req, res) => {
+router.post('/sessions/:id/register', validateStringId, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -273,7 +273,7 @@ router.post('/sessions/:id/register', validateUUID, async (req, res) => {
 });
 
 // Update training session (admin/trainer only)
-router.put('/sessions/:id', validateUUID, authorize('admin', 'trainer'), async (req, res) => {
+router.put('/sessions/:id', validateStringId, authorize('admin', 'trainer'), async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -338,7 +338,7 @@ router.put('/sessions/:id', validateUUID, authorize('admin', 'trainer'), async (
 });
 
 // Record attendance (admin/trainer only)
-router.post('/sessions/:id/attendance', validateUUID, authorize('admin', 'trainer'), async (req, res) => {
+router.post('/sessions/:id/attendance', validateStringId, authorize('admin', 'trainer'), async (req, res) => {
   try {
     const { id } = req.params;
     const { participant_id, date, present, arrival_time, departure_time, signature_data } = req.body;
@@ -416,7 +416,7 @@ router.post('/sessions/:id/attendance', validateUUID, authorize('admin', 'traine
 });
 
 // Submit evaluation
-router.post('/sessions/:id/evaluations', validateUUID, async (req, res) => {
+router.post('/sessions/:id/evaluations', validateStringId, async (req, res) => {
   try {
     const { id } = req.params;
     const { evaluation_type, questions, responses, score } = req.body;
@@ -566,7 +566,7 @@ router.get('/my-sessions', async (req, res) => {
 
 // Update participant status (admin/trainer only)
 router.put('/sessions/:sessionId/participants/:participantId', 
-  validateUUID, 
+  validateStringId, 
   authorize('admin', 'trainer'), 
   async (req, res) => {
     try {
@@ -632,7 +632,7 @@ router.put('/sessions/:sessionId/participants/:participantId',
 );
 
 // Delete training session (admin only)
-router.delete('/sessions/:id', validateUUID, authorize('admin'), async (req, res) => {
+router.delete('/sessions/:id', validateStringId, authorize('admin'), async (req, res) => {
   try {
     const { id } = req.params;
 

@@ -2,7 +2,7 @@ import express from 'express';
 import { Project, User } from '../models/index.js';
 import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize, authorizeOwnerOrAdmin } from '../middleware/auth.js';
-import { validateProjectCreation, validateProjectUpdate, validateUUID, validatePagination } from '../middleware/validation.js';
+import { validateProjectCreation, validateProjectUpdate, validateMongoId, validateMongoIdParam, validatePagination } from '../middleware/validation.js';
 import { uploadProjectFiles, handleUploadError } from '../middleware/upload.js';
 const router = express.Router();
 
@@ -92,7 +92,7 @@ router.get('/', validatePagination, async (req, res) => {
 });
 
 // Get single project
-router.get('/:id', validateUUID, async (req, res) => {
+router.get('/:id', validateMongoId, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -267,7 +267,7 @@ router.post('/', uploadProjectFiles, handleUploadError, validateProjectCreation,
 });
 
 // Update project
-router.put('/:id', validateUUID, validateProjectUpdate, async (req, res) => {
+router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -369,7 +369,7 @@ router.put('/:id', validateUUID, validateProjectUpdate, async (req, res) => {
 });
 
 // Delete project (admin only)
-router.delete('/:id', validateUUID, authorize('admin'), async (req, res) => {
+router.delete('/:id', validateMongoId, authorize('admin'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -405,7 +405,7 @@ router.delete('/:id', validateUUID, authorize('admin'), async (req, res) => {
 });
 
 // Get projects by client (admin only)
-router.get('/client/:clientId', validateUUID, authorize('admin'), async (req, res) => {
+router.get('/client/:clientId', validateMongoIdParam('clientId'), authorize('admin'), async (req, res) => {
   try {
     const { clientId } = req.params;
 

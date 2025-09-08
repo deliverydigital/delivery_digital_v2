@@ -5,7 +5,7 @@ import { Project, User } from '../models/index.js';
 import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { uploadGeneral, handleUploadError, deleteFile } from '../middleware/upload.js';
-import { validateUUID } from '../middleware/validation.js';
+import { validateStringId, validateMongoIdParam } from '../middleware/validation.js';
 const router = express.Router();
 
 // Apply authentication to all routes
@@ -83,7 +83,7 @@ router.post('/upload', uploadGeneral, handleUploadError, async (req, res) => {
 });
 
 // Get file by ID
-router.get('/:id', validateUUID, async (req, res) => {
+router.get('/:id', validateStringId, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -154,7 +154,7 @@ router.get('/:id', validateUUID, async (req, res) => {
 });
 
 // Download file
-router.get('/:id/download', validateUUID, async (req, res) => {
+router.get('/:id/download', validateStringId, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -223,7 +223,7 @@ router.get('/:id/download', validateUUID, async (req, res) => {
 });
 
 // Get files for an entity
-router.get('/entity/:type/:id', validateUUID, async (req, res) => {
+router.get('/entity/:type/:id', validateMongoIdParam('id'), async (req, res) => {
   try {
     const { type, id } = req.params;
 
@@ -278,7 +278,7 @@ router.get('/entity/:type/:id', validateUUID, async (req, res) => {
 });
 
 // Delete file
-router.delete('/:id', validateUUID, async (req, res) => {
+router.delete('/:id', validateStringId, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -324,7 +324,7 @@ router.delete('/:id', validateUUID, async (req, res) => {
 });
 
 // Get file metadata
-router.get('/:id/metadata', validateUUID, async (req, res) => {
+router.get('/:id/metadata', validateStringId, async (req, res) => {
   try {
     const { id } = req.params;
 

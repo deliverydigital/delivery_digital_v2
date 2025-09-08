@@ -13,6 +13,29 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
+// MongoDB ObjectId validation
+const validateMongoId = [
+  param('id')
+    .matches(/^[0-9a-fA-F]{24}$/)
+    .withMessage('Invalid MongoDB ObjectId format'),
+  handleValidationErrors
+];
+
+const validateMongoIdParam = (paramName) => [
+  param(paramName)
+    .matches(/^[0-9a-fA-F]{24}$/)
+    .withMessage(`Invalid MongoDB ObjectId format for ${paramName}`),
+  handleValidationErrors
+];
+
+// Custom string ID validation (for localStorage-based entities)
+const validateStringId = [
+  param('id')
+    .isString()
+    .isLength({ min: 1 })
+    .withMessage('Invalid ID format'),
+  handleValidationErrors
+];
 // User validation rules
 const validateUserRegistration = [
   body('email')
@@ -279,6 +302,9 @@ const validateSearch = [
 
 export {
   handleValidationErrors,
+  validateMongoId,
+  validateMongoIdParam,
+  validateStringId,
   validateUserRegistration,
   validateUserLogin,
   validateUserUpdate,

@@ -2,7 +2,7 @@ import express from 'express';
 import { Message, Project, User } from '../models/index.js';
 import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize, authorizeOwnerOrAdmin } from '../middleware/auth.js';
-import { validateMessageCreation, validateUUID, validatePagination } from '../middleware/validation.js';
+import { validateMessageCreation, validateMongoId, validateMongoIdParam, validatePagination } from '../middleware/validation.js';
 import { uploadMessageFiles, handleUploadError } from '../middleware/upload.js';
 const router = express.Router();
 
@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(authenticate);
 
 // Get messages for a project
-router.get('/project/:projectId', validateUUID, validatePagination, async (req, res) => {
+router.get('/project/:projectId', validateMongoIdParam('projectId'), validatePagination, async (req, res) => {
   try {
     const { projectId } = req.params;
     const { page = 1, limit = 20 } = req.query;
@@ -86,7 +86,7 @@ router.get('/project/:projectId', validateUUID, validatePagination, async (req, 
 });
 
 // Get single message with attachments
-router.get('/:id', validateUUID, async (req, res) => {
+router.get('/:id', validateMongoId, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -258,7 +258,7 @@ router.post('/', uploadMessageFiles, handleUploadError, validateMessageCreation,
 });
 
 // Mark message as read
-router.put('/:id/read', validateUUID, async (req, res) => {
+router.put('/:id/read', validateMongoId, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -424,7 +424,7 @@ router.get('/', authorize('admin'), validatePagination, async (req, res) => {
 });
 
 // Delete message (admin only)
-router.delete('/:id', validateUUID, authorize('admin'), async (req, res) => {
+router.delete('/:id', validateMongoId, authorize('admin'), async (req, res) => {
   try {
     const { id } = req.params;
 
