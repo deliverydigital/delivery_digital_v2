@@ -1,6 +1,82 @@
 import { useState, useEffect } from 'react';
 import { ApiService, User, Project, Message, Client } from '../services/api';
 
+// Initialize demo projects
+const initializeDemoProjects = () => {
+  const existingProjects = localStorage.getItem('demoProjects');
+  if (!existingProjects) {
+    const demoProjects = [
+      {
+        id: 'project-1',
+        clientId: 'client-1',
+        clientName: 'Marie Dupont',
+        title: 'Site E-commerce Boutique Mode',
+        description: 'Création d\'un site e-commerce complet avec catalogue produits, panier, paiement sécurisé et gestion des commandes.',
+        type: 'web',
+        status: 'in_progress',
+        priority: 'high',
+        budget: 'medium',
+        timeline: 'normal',
+        submittedAt: new Date('2024-01-15'),
+        lastUpdate: new Date('2024-01-28'),
+        attachments: [
+          { name: 'maquettes-boutique.pdf', type: 'application/pdf', url: '#' },
+          { name: 'logo-boutique.png', type: 'image/png', url: '#' }
+        ],
+        figmaUrl: 'https://figma.com/design/boutique-mode',
+        gitlabUrl: '',
+        notes: 'Projet prioritaire avec deadline serrée'
+      },
+      {
+        id: 'project-2',
+        clientId: 'client-1',
+        clientName: 'Marie Dupont',
+        title: 'Application Mobile Livraison',
+        description: 'Application mobile de livraison de repas avec géolocalisation, suivi en temps réel et paiement intégré.',
+        type: 'mobile',
+        status: 'reviewing',
+        priority: 'medium',
+        budget: 'large',
+        timeline: 'flexible',
+        submittedAt: new Date('2024-01-20'),
+        lastUpdate: new Date('2024-01-25'),
+        attachments: [
+          { name: 'specifications-mobile.pdf', type: 'application/pdf', url: '#' },
+          { name: 'wireframes.sketch', type: 'application/sketch', url: '#' }
+        ],
+        figmaUrl: 'https://figma.com/design/app-livraison',
+        gitlabUrl: '',
+        notes: 'En attente de validation des spécifications techniques'
+      },
+      {
+        id: 'project-3',
+        clientId: 'client-1',
+        clientName: 'Marie Dupont',
+        title: 'Système de Gestion Interne',
+        description: 'Développement d\'un ERP sur mesure pour la gestion des stocks, commandes et facturation.',
+        type: 'enterprise',
+        status: 'submitted',
+        priority: 'low',
+        budget: 'enterprise',
+        timeline: 'longterm',
+        submittedAt: new Date('2024-01-25'),
+        lastUpdate: new Date('2024-01-25'),
+        attachments: [
+          { name: 'cahier-charges-erp.pdf', type: 'application/pdf', url: '#' }
+        ],
+        figmaUrl: '',
+        gitlabUrl: '',
+        notes: 'Projet à long terme, analyse des besoins en cours'
+      }
+    ];
+    
+    localStorage.setItem('demoProjects', JSON.stringify(demoProjects));
+  }
+};
+
+// Initialize demo projects on module load
+initializeDemoProjects();
+
 // Hook pour l'authentification
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);

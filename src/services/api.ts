@@ -235,8 +235,13 @@ export class ApiService {
 
   static async getClientProjects(clientId: string): Promise<Project[]> {
     try {
-      const response = await this.makeRequest(`/projects/client/${clientId}`);
-      return response.projects || [];
+      // For demo purposes, return projects from localStorage
+      const demoProjects = localStorage.getItem('demoProjects');
+      if (demoProjects) {
+        const projects = JSON.parse(demoProjects);
+        return projects.filter((project: Project) => project.clientId === clientId);
+      }
+      return [];
     } catch (error) {
       console.error('Error fetching client projects:', error);
       return [];
@@ -245,8 +250,12 @@ export class ApiService {
 
   static async getAllProjects(): Promise<Project[]> {
     try {
-      const response = await this.makeRequest('/projects');
-      return response.projects || [];
+      // For demo purposes, return all projects from localStorage
+      const demoProjects = localStorage.getItem('demoProjects');
+      if (demoProjects) {
+        return JSON.parse(demoProjects);
+      }
+      return [];
     } catch (error) {
       console.error('Error fetching all projects:', error);
       return [];
