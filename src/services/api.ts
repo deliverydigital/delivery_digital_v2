@@ -61,6 +61,11 @@ export interface User {
   isAuthenticated: boolean;
 }
 
+// Get API base URL from environment
+const getApiBaseUrl = (): string => {
+  return import.meta.env.VITE_API_URL || 'http://localhost:3008';
+};
+
 // API Service
 export class ApiService {
   static getAuthToken(): string | null {
@@ -78,6 +83,7 @@ export class ApiService {
 
   private static async makeRequest(url: string, options: RequestInit = {}): Promise<any> {
     const token = this.getAuthToken();
+    const baseUrl = getApiBaseUrl();
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -87,7 +93,7 @@ export class ApiService {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(`/api${url}`, {
+    const response = await fetch(`${baseUrl}/api${url}`, {
       ...options,
       headers,
     });
@@ -201,7 +207,8 @@ export class ApiService {
       });
 
       const token = this.getAuthToken();
-      const response = await fetch('/api/projects', {
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/projects`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -272,7 +279,8 @@ export class ApiService {
       });
 
       const token = this.getAuthToken();
-      const response = await fetch('/api/messages', {
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/messages`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
