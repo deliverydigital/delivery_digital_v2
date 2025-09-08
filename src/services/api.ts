@@ -86,6 +86,7 @@ export class ApiService {
     const baseUrl = getApiBaseUrl();
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
+      'bypass-tunnel-reminder' : 'true',
       ...options.headers,
     };
 
