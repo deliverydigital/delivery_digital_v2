@@ -13,10 +13,13 @@ router.use(authRateLimit);
 // Register new user
 router.post('/register', validateUserRegistration, async (req, res) => {
   try {
+    console.log('🔄 Registration attempt for:', req.body.email);
+    
     const { email, password, name, company, phone } = req.body;
 
     // Check if MongoDB is available
     if (!isMongoAvailable()) {
+      console.log('❌ MongoDB not available for registration');
       return res.status(503).json({
         success: false,
         error: 'Database service unavailable'
@@ -24,8 +27,10 @@ router.post('/register', validateUserRegistration, async (req, res) => {
     }
 
     // Check if user already exists
+    console.log('🔍 Checking if user exists:', email);
     const existingUser = await User.findByEmail(email);
     if (existingUser) {
+      console.log('❌ User already exists:', email);
       return res.status(400).json({
         success: false,
         error: 'User with this email already exists'
@@ -33,9 +38,11 @@ router.post('/register', validateUserRegistration, async (req, res) => {
     }
 
     // Hash password
+    console.log('🔐 Hashing password for:', email);
     const passwordHash = await User.hashPassword(password);
 
     // Create user
+    console.log('👤 Creating user:', email);
     const userData = {
       email,
       password_hash: passwordHash,
@@ -53,6 +60,7 @@ router.post('/register', validateUserRegistration, async (req, res) => {
     // Generate JWT token
     const token = generateToken(user._id.toString());
 
+    console.log('✅ Registration successful for:', email);
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -97,10 +105,13 @@ router.post('/register', validateUserRegistration, async (req, res) => {
 // Login user
 router.post('/login', validateUserLogin, async (req, res) => {
   try {
+    console.log('🔄 Login attempt for:', req.body.email);
+    
     const { email, password } = req.body;
 
     // Check if MongoDB is available
     if (!isMongoAvailable()) {
+      console.log('❌ MongoDB not available for login');
       return res.status(503).json({
         success: false,
         error: 'Database service unavailable'
@@ -108,8 +119,10 @@ router.post('/login', validateUserLogin, async (req, res) => {
     }
 
     // Find user by email
+    console.log('🔍 Looking for user:', email);
     const user = await User.findByEmail(email);
     if (!user) {
+      console.log('❌ User not found:', email);
       return res.status(401).json({
         success: false,
         error: 'Invalid email or password'
@@ -118,6 +131,7 @@ router.post('/login', validateUserLogin, async (req, res) => {
 
     // Check if user is active
     if (user.status !== 'active') {
+      console.log('❌ User not active:', email, 'Status:', user.status);
       return res.status(401).json({
         success: false,
         error: 'Account is not active'
@@ -125,8 +139,10 @@ router.post('/login', validateUserLogin, async (req, res) => {
     }
 
     // Verify password
+    console.log('🔐 Verifying password for:', email);
     const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
+      console.log('❌ Invalid password for:', email);
       return res.status(401).json({
         success: false,
         error: 'Invalid email or password'
@@ -140,6 +156,7 @@ router.post('/login', validateUserLogin, async (req, res) => {
     // Generate JWT token
     const token = generateToken(user._id.toString());
 
+    console.log('✅ Login successful for:', email);
     res.json({
       success: true,
       message: 'Login successful',
