@@ -136,6 +136,7 @@ app.use('/api/*', (req, res) => {
 // Start server
 const startServer = async () => {
   try {
+    global.mongoStartTime = Date.now();
     console.log('🚀 Starting DELIVERY Digital server...');
     console.log('🔧 Environment:', process.env.NODE_ENV || 'development');
     
