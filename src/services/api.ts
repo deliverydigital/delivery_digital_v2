@@ -87,6 +87,7 @@ export class ApiService {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       'bypass-tunnel-reminder' :'true',
+      'User-Agent' : 'User-Agent',
       ...options.headers,
     };
 
