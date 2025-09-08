@@ -86,9 +86,8 @@ export class ApiService {
     const baseUrl = getApiBaseUrl();
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      'bypass-tunnel-reminder' :'true',
-      'User-Agent' : 'User-Agent',
       ...options.headers,
+      'bypass-tunnel-reminder' :'true',
     };
 
     if (token) {
