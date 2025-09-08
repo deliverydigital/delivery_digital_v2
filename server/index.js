@@ -214,7 +214,7 @@ const autoSetupMongoDB = async () => {
     console.log('🔧 Auto-setup MongoDB...');
     
     // Check if MongoDB is accessible
-    const isMongoAccessible = await checkMongoDBAccessibility();
+    const isMongoAccessible = false; // await checkMongoDBAccessibility();
     
     if (!isMongoAccessible) {
       console.log('📦 MongoDB not accessible, attempting auto-setup...');
