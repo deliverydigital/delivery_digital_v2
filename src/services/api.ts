@@ -87,7 +87,7 @@ export class ApiService {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
-      'bypass-tunnel-reminder' :'true',
+      'bypass-tunnel-reminder' :'true'
     };
 
     if (token) {
