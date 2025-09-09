@@ -132,7 +132,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
     logout();
   };
 
-  console.log('isAuthenticated------->',isAuthenticated)
+  console.log('isAuthenticated------->',user,isAuthenticated)
 
   const getStatusColor = (status: string) => {
     switch (status) {
