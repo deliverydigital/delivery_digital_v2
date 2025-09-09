@@ -25,6 +25,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
     title: '',
     description: '',
     type: 'web',
+    customType: '',
     budget: 'medium',
     timeline: 'normal',
     figmaUrl: '',
@@ -59,7 +60,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
       const result = await submitProject({
         title: formData.title,
         description: formData.description,
-        type: formData.type,
+        type: formData.type === 'other' ? formData.customType : formData.type,
         budget: formData.budget,
         timeline: formData.timeline,
         figmaUrl: formData.figmaUrl,
@@ -79,6 +80,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
           title: '',
           description: '',
           type: 'web',
+          customType: '',
           budget: 'medium',
           timeline: 'normal',
           figmaUrl: '',
@@ -336,6 +338,16 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                       <option value="cloud">Services Cloud</option>
                       <option value="other">Autre</option>
                     </select>
+                    {formData.type === 'other' && (
+                      <input
+                        type="text"
+                        value={formData.customType}
+                        onChange={(e) => setFormData({ ...formData, customType: e.target.value })}
+                        className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Précisez le type de projet..."
+                        required={formData.type === 'other'}
+                      />
+                    )}
                   </div>
                 </div>
 
