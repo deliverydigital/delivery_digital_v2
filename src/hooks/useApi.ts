@@ -81,6 +81,7 @@ initializeDemoProjects();
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [forceUpdate, setForceUpdate] = useState(0);
 
   useEffect(() => {
     // Check for current user on mount
@@ -99,7 +100,13 @@ export const useAuth = () => {
       }
     };
 
+    // Listen for custom auth events
+    const handleAuthChange = () => {
+      checkCurrentUser();
+      setForceUpdate(prev => prev + 1);
+    };
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('authStateChanged', handleAuthChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
@@ -108,6 +115,8 @@ export const useAuth = () => {
     const result = await ApiService.login(email, password);
     if (result.success && result.user) {
       setUser(result.user);
+      // Dispatch auth state change event
+      window.dispatchEvent(new CustomEvent('authStateChanged'));
     }
     setLoading(false);
     return result;
@@ -118,6 +127,8 @@ export const useAuth = () => {
     const result = await ApiService.register(userData);
     if (result.success && result.user) {
       setUser(result.user);
+      // Dispatch auth state change event
+      window.dispatchEvent(new CustomEvent('authStateChanged'));
     }
     setLoading(false);
     return result;
@@ -126,6 +137,8 @@ export const useAuth = () => {
   const logout = () => {
     ApiService.logout();
     setUser(null);
+    // Dispatch auth state change event
+    window.dispatchEvent(new CustomEvent('authStateChanged'));
   };
 
   return {
@@ -172,6 +185,7 @@ export const useProjects = (clientId?: string) => {
   useEffect(() => {
     const handleRefreshProjects = () => {
       loadProjects();
+      window.removeEventListener('authStateChanged', handleAuthChange);
     };
 
     window.addEventListener('refreshProjects', handleRefreshProjects);

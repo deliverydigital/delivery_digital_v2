@@ -55,7 +55,13 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
       window.dispatchEvent(event);
     };
 
+    const handleAuthStateChanged = () => {
+      // Force re-render when auth state changes
+      setAuthKey(prev => prev + 1);
+    };
     window.addEventListener('userLoggedIn', handleUserLoggedIn);
+    window.addEventListener('authStateChanged', handleAuthStateChanged);
+      window.removeEventListener('authStateChanged', handleAuthStateChanged);
     return () => window.removeEventListener('userLoggedIn', handleUserLoggedIn);
   }, []);
 

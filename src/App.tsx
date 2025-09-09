@@ -17,6 +17,7 @@ function App() {
   const { i18n } = useTranslation();
   const { user, isAuthenticated, isAdmin } = useAuth();
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [authKey, setAuthKey] = useState(0);
 
   useEffect(() => {
     document.title = i18n.language === 'fr' 
@@ -34,6 +35,15 @@ function App() {
     }
   }, []);
 
+  // Listen for auth state changes
+  useEffect(() => {
+    const handleAuthStateChanged = () => {
+      setAuthKey(prev => prev + 1);
+    };
+
+    window.addEventListener('authStateChanged', handleAuthStateChanged);
+    return () => window.removeEventListener('authStateChanged', handleAuthStateChanged);
+  }, []);
   // Admin Dashboard - only show if explicitly requested via URL
   if (showAdminDashboard) {
     if (isAuthenticated && isAdmin) {
