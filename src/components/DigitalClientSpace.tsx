@@ -25,7 +25,6 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
     title: '',
     description: '',
     type: 'web',
-    customType: '',
     budget: 'medium',
     timeline: 'normal',
     figmaUrl: '',
@@ -44,6 +43,21 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
     }
   }, [isOpen, isAuthenticated, user, activeTab]);
 
+  // Listen for login events to refresh the component
+  useEffect(() => {
+    const handleUserLoggedIn = () => {
+      // Small delay to ensure auth state is updated
+      setTimeout(() => {
+        if (activeTab === 'projects') {
+          window.location.reload();
+        }
+      }, 100);
+    };
+
+    window.addEventListener('userLoggedIn', handleUserLoggedIn);
+    return () => window.removeEventListener('userLoggedIn', handleUserLoggedIn);
+  }, [activeTab]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -60,7 +74,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
       const result = await submitProject({
         title: formData.title,
         description: formData.description,
-        type: formData.type === 'other' ? formData.customType : formData.type,
+        type: formData.type,
         budget: formData.budget,
         timeline: formData.timeline,
         figmaUrl: formData.figmaUrl,
@@ -80,7 +94,6 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
           title: '',
           description: '',
           type: 'web',
-          customType: '',
           budget: 'medium',
           timeline: 'normal',
           figmaUrl: '',
@@ -109,6 +122,8 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
+    // Force refresh of the component state
+    window.location.reload();
   };
 
   const handleLogout = async () => {
@@ -338,16 +353,6 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                       <option value="cloud">Services Cloud</option>
                       <option value="other">Autre</option>
                     </select>
-                    {formData.type === 'other' && (
-                      <input
-                        type="text"
-                        value={formData.customType}
-                        onChange={(e) => setFormData({ ...formData, customType: e.target.value })}
-                        className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Précisez le type de projet..."
-                        required={formData.type === 'other'}
-                      />
-                    )}
                   </div>
                 </div>
 
