@@ -61,8 +61,10 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
     };
     window.addEventListener('userLoggedIn', handleUserLoggedIn);
     window.addEventListener('authStateChanged', handleAuthStateChanged);
+    return () => {
+      window.removeEventListener('userLoggedIn', handleUserLoggedIn);
       window.removeEventListener('authStateChanged', handleAuthStateChanged);
-    return () => window.removeEventListener('userLoggedIn', handleUserLoggedIn);
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -185,7 +185,6 @@ export const useProjects = (clientId?: string) => {
   useEffect(() => {
     const handleRefreshProjects = () => {
       loadProjects();
-      window.removeEventListener('authStateChanged', handleAuthChange);
     };
 
     window.addEventListener('refreshProjects', handleRefreshProjects);
