@@ -132,6 +132,8 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
     logout();
   };
 
+  console.log('isAuthenticated------->',isAuthenticated)
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'submitted': return 'bg-blue-100 text-blue-800';
