@@ -31,7 +31,7 @@ const ProjectSubmission = () => {
             className="btn btn-primary shadow-lg"
           >
             <Plus className="h-5 w-5 mr-2" />
-            Solutions Digitales
+            Démarrer un projet
           </button>
         </motion.div>
       </section>
