@@ -303,7 +303,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                         <div>
                           <span className="text-gray-500 text-sm">Soumis le:</span>
                           <span className="text-gray-900 ml-2 text-sm">
-                            {new Date(project.submittedAt).toLocaleDateString('fr-FR')}
+                            {project.submittedAt ? new Date(project.submittedAt).toLocaleDateString('fr-FR') : 'Date non disponible'}
                           </span>
                         </div>
                       </div>
