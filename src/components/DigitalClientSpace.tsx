@@ -366,8 +366,30 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={5}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    minLength={10}
+                    maxLength={5000}
                     required
                   ></textarea>
+                  <div className="mt-1 flex justify-between items-center">
+                    <div className="text-sm text-gray-500">
+                      {formData.description.length < 10 ? (
+                        <span className="text-red-500">
+                          Minimum 10 caractères requis ({10 - formData.description.length} restants)
+                        </span>
+                      ) : formData.description.length > 5000 ? (
+                        <span className="text-red-500">
+                          Trop de caractères ({formData.description.length - 5000} en trop)
+                        </span>
+                      ) : (
+                        <span className="text-green-600">
+                          Description valide
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {formData.description.length}/5000
+                    </div>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -496,9 +518,9 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    disabled={formStatus === 'submitting'}
+                    disabled={formStatus === 'submitting' || formData.description.length < 10 || formData.description.length > 5000}
                     className={`bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center ${
-                      formStatus === 'submitting' ? 'opacity-70 cursor-not-allowed' : ''
+                      (formStatus === 'submitting' || formData.description.length < 10 || formData.description.length > 5000) ? 'opacity-70 cursor-not-allowed' : ''
                     }`}
                   >
                     {formStatus === 'submitting' ? (
