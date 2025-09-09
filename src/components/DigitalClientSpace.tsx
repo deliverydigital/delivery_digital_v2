@@ -34,6 +34,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [fileInputRef] = useState<HTMLInputElement | null>(null);
+  const [authKey, setAuthKey] = useState(0); // Force re-render after auth
 
   useEffect(() => {
     if (isOpen && isAuthenticated && user && activeTab === 'projects') {
@@ -46,16 +47,17 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
   // Listen for login events to refresh the component
   useEffect(() => {
     const handleUserLoggedIn = () => {
-      // Force re-render by updating a state variable
-      setActiveTab(prev => prev === 'projects' ? 'submit' : 'projects');
-      setTimeout(() => {
-        setActiveTab('projects');
-      }, 50);
+      // Force re-render and switch to projects tab
+      setAuthKey(prev => prev + 1);
+      setActiveTab('projects');
+      // Trigger projects refresh
+      const event = new CustomEvent('refreshProjects');
+      window.dispatchEvent(event);
     };
 
     window.addEventListener('userLoggedIn', handleUserLoggedIn);
     return () => window.removeEventListener('userLoggedIn', handleUserLoggedIn);
-  }, [activeTab]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,8 +123,9 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
-    // The component will automatically refresh due to the useAuth hook
-    // and the userLoggedIn event listener
+    // Switch to projects tab after successful login
+    setActiveTab('projects');
+    setAuthKey(prev => prev + 1);
   };
 
   const handleLogout = async () => {
@@ -220,7 +223,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
           </nav>
         </div>
 
-        <div className="p-6">
+        <div key={authKey} className="p-6">
           {/* Projects Tab */}
           {activeTab === 'projects' && isAuthenticated && (
             <div className="space-y-6">
@@ -587,11 +590,13 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
           )}
 
           {/* Not authenticated message */}
-          {!isAuthenticated && activeTab === 'projects' && (
+          {!isAuthenticated && (activeTab === 'projects' || activeTab === 'account') && (
             <div className="text-center py-12">
               <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Connexion requise</h3>
-              <p className="text-gray-600 mb-6">Veuillez vous connecter pour voir vos projets.</p>
+              <p className="text-gray-600 mb-6">
+                {activeTab === 'projects' ? 'Veuillez vous connecter pour voir vos projets.' : 'Veuillez vous connecter pour accéder à votre compte.'}
+              </p>
               <button
                 onClick={() => setShowAuthModal(true)}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
