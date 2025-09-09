@@ -44,6 +44,8 @@ const Auth = ({ isOpen, onClose, onSuccess }: AuthProps) => {
           onClose();
           setSuccess(false);
           setFormData({ name: '', company: '', email: '', password: '' });
+          // Dispatch custom event to notify components of login
+          window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: result.user }));
         }, 1500);
       } else {
         // Register using the custom backend API
@@ -64,6 +66,8 @@ const Auth = ({ isOpen, onClose, onSuccess }: AuthProps) => {
           onClose();
           setSuccess(false);
           setFormData({ name: '', company: '', email: '', password: '' });
+          // Dispatch custom event to notify components of login
+          window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: result.user }));
         }, 1500);
       }
     } catch (err) {

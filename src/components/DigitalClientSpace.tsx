@@ -46,12 +46,11 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
   // Listen for login events to refresh the component
   useEffect(() => {
     const handleUserLoggedIn = () => {
-      // Small delay to ensure auth state is updated
+      // Force re-render by updating a state variable
+      setActiveTab(prev => prev === 'projects' ? 'submit' : 'projects');
       setTimeout(() => {
-        if (activeTab === 'projects') {
-          window.location.reload();
-        }
-      }, 100);
+        setActiveTab('projects');
+      }, 50);
     };
 
     window.addEventListener('userLoggedIn', handleUserLoggedIn);
@@ -122,8 +121,8 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
-    // Force refresh of the component state
-    window.location.reload();
+    // The component will automatically refresh due to the useAuth hook
+    // and the userLoggedIn event listener
   };
 
   const handleLogout = async () => {
