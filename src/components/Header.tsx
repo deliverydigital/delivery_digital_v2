@@ -181,10 +181,10 @@ const Header = () => {
                         <div className="font-medium">Solutions Digitales</div>
                         <div className="text-sm text-gray-500">Gérer vos projets</div>
                       </div>
+                    </button>
                         </div>
                       </>
                     )}
-                    </button>
                   </div>
                 )}
               </div>
