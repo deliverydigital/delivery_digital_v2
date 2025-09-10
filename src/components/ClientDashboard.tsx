@@ -17,7 +17,7 @@ const ClientDashboard = () => {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   
   const { projects, loading: projectsLoading, refreshProjects } = useProjects(user?.id);
-  const { messages, loading: messagesLoading, refreshMessages } = useMessages();
+  const { messages, loading: messagesLoading, refreshMessages } = useMessages(selectedProject || undefined, user?.role);
   const { tasks, loading: tasksLoading, refreshTasks } = useTasks(selectedProject || '');
 
   useEffect(() => {

@@ -239,26 +239,33 @@ export const useProjects = (clientId?: string, page: number = 1, limit: number =
 };
 
 // Hook pour les messages
-export const useMessages = (projectId?: string) => {
+export const useMessages = (projectId?: string, userRole?: string) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadMessages = async () => {
     setLoading(true);
     try {
-      const data = projectId 
-        ? await ApiService.getProjectMessages(projectId)
-        : await ApiService.getAllMessages();
+      let data;
+      if (projectId) {
+        data = await ApiService.getProjectMessages(projectId);
+      } else if (userRole === 'admin') {
+        data = await ApiService.getAllMessages();
+      } else {
+        // For non-admin users without a specific project, return empty array
+        data = [];
+      }
       setMessages(data);
     } catch (error) {
       console.error('Erreur lors du chargement des messages:', error);
+      setMessages([]);
     }
     setLoading(false);
   };
 
   useEffect(() => {
     loadMessages();
-  }, [projectId]);
+  }, [projectId, userRole]);
 
   const sendMessage = async (messageData: {
     projectId: string;
