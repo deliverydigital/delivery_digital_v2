@@ -406,6 +406,81 @@ const AdminDashboard = () => {
     setShowAuthModal(false);
   };
 
+  // Time Tracker Component
+  const TimeTracker = ({ taskId }: { taskId: string }) => {
+    const [isTracking, setIsTracking] = useState(false);
+    const [elapsedTime, setElapsedTime] = useState(0);
+    const [startTime, setStartTime] = useState<Date | null>(null);
+
+    useEffect(() => {
+      let interval: NodeJS.Timeout;
+      
+      if (isTracking && startTime) {
+        interval = setInterval(() => {
+          const now = new Date();
+          const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+          setElapsedTime(elapsed);
+        }, 1000);
+      }
+
+      return () => {
+        if (interval) {
+          clearInterval(interval);
+        }
+      };
+    }, [isTracking, startTime]);
+
+    const handleStartStop = () => {
+      if (isTracking) {
+        // Stop tracking
+        setIsTracking(false);
+        setStartTime(null);
+        setElapsedTime(0);
+      } else {
+        // Start tracking
+        setIsTracking(true);
+        setStartTime(new Date());
+        setElapsedTime(0);
+      }
+    };
+
+    const formatElapsedTime = (seconds: number) => {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      
+      if (hours > 0) {
+        return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      }
+      return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    return (
+      <button
+        onClick={handleStartStop}
+        className={`flex items-center transition-colors ${
+          isTracking ? 'text-red-400 hover:text-red-300' : 'text-green-400 hover:text-green-300'
+        }`}
+        title={isTracking ? 'Arrêter le chrono' : 'Démarrer le chrono'}
+      >
+        {isTracking ? (
+          <div className="flex items-center">
+            <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse mr-1"></div>
+            {formatElapsedTime(elapsedTime)}
+          </div>
+        ) : (
+          formatElapsedTime(elapsedTime)
+        )}
+      </button>
+    );
+  };
+
+  const formatTime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  };
+
   // Show auth modal if not authenticated
   if (!isAuthenticated) {
     return (
