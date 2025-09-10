@@ -41,7 +41,7 @@ const AdminDashboard = () => {
 
     const {projects, pagination, updateProject} = useProjects(undefined, currentPage, itemsPerPage);
     const {clients: allClients, loading: clientsDataLoading, refreshClients} = useClients();
-    const {stats} = useStatistics();
+    const {stats, refreshStats} = useStatistics();
 
     const [activeTab, setActiveTab] = useState<'overview' | 'clients' | 'projects' | 'tasks' | 'messages' | 'quotes' | 'settings'>('overview');
     const [searchQuery, setSearchQuery] = useState('');
@@ -85,7 +85,7 @@ const AdminDashboard = () => {
     // Load data on component mount
     useEffect(() => {
         refreshClients();
-        loadStatistics();
+        refreshStats();
         loadQuotes();
     }, []);
 
