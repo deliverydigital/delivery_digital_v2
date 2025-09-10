@@ -12,7 +12,8 @@ import {
 import { useAuth, useProjects, useMessages, useClients, useStatistics } from '../hooks/useApi';
 import { useTasks } from '../hooks/useTasks';
 import Auth from './Auth';
-import TaskBoard from './TaskBoard';
+ TrendingUp, BarChart3, PieChart, Activity, Workflow
+} from 'lucide-react';
 import { supabase } from '../lib/supabase';
 const AdminDashboard = () => {
   const { user, logout, isAuthenticated } = useAuth();
