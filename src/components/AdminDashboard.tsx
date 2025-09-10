@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, MessageCircle, FolderOpen, Settings, LogOut, Search,
   ChevronRight, FileText, Image as ImageIcon, ExternalLink,
-  Clock, CheckCircle, AlertTriangle, X, Edit, Trash2, Send,
+import { useAuth, useProjects, useStatistics, useClients } from '../hooks/useApi';
   Filter, Download, Eye, User, Building2, Mail, Phone,
   Calendar, Tag, DollarSign, Star, Archive, Bell, Plus,
   MoreVertical, Reply, Forward, Paperclip, Save, RefreshCw,
@@ -18,6 +18,7 @@ const AdminDashboard = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const { clients, loading: clientsLoading, refreshClients } = useClients();
   
   const { projects, pagination, updateProject } = useProjects(undefined, currentPage, itemsPerPage);
   const { messages, sendMessage } = useMessages();
@@ -65,7 +66,7 @@ const AdminDashboard = () => {
 
   // Load data on component mount
   useEffect(() => {
-    loadClients();
+    refreshClients();
     loadStatistics();
     loadQuotes();
   }, []);
