@@ -23,7 +23,7 @@ const AdminDashboard = () => {
   const { clients, loading: clientsLoading, refreshClients } = useClients();
   
   const { projects, pagination, updateProject } = useProjects(undefined, currentPage, itemsPerPage);
-  const { clients, loading: clientsLoading, refreshClients } = useClients();
+ const { clients: allClients, loading: clientsLoading, refreshClients } = useClients();
   const { stats } = useStatistics();
   
   const [activeTab, setActiveTab] = useState<'overview' | 'clients' | 'projects' | 'tasks' | 'messages' | 'quotes' | 'settings'>('overview');
