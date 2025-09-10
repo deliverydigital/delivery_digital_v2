@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, MessageCircle, FolderOpen, Settings, LogOut, Search,
   ChevronRight, FileText, Image as ImageIcon, ExternalLink,
-import { useAuth, useProjects, useStatistics, useClients } from '../hooks/useApi';
   Filter, Download, Eye, User, Building2, Mail, Phone,
   Calendar, Tag, DollarSign, Star, Archive, Bell, Plus,
   MoreVertical, Reply, Forward, Paperclip, Save, RefreshCw,
-  Home, Kanban, FileCheck, CreditCard, Calculator, Receipt
-} from 'lucide-react';
+  Clock, CheckCircle, AlertTriangle, X, Edit, Trash2, Send,
+  Briefcase, CreditCard, Shield, Award, BookOpen, Target,
+  TrendingUp, BarChart3, PieChart, Activity, Workflow,
 import { useAuth, useProjects, useMessages, useClients, useStatistics } from '../hooks/useApi';
 import { useTasks } from '../hooks/useTasks';
 import Auth from './Auth';
