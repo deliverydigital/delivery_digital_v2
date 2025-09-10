@@ -107,7 +107,10 @@ export const useAuth = () => {
     };
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('authStateChanged', handleAuthChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('authStateChanged', handleAuthChange);
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -192,13 +195,12 @@ export const useProjects = (clientId?: string, page: number = 1, limit: number =
     if (clientId !== undefined || clientId === undefined) {
       loadProjects();
     }
-  }, [clientId, page, limit]);
 
     const handleRefreshProjects = () => loadProjects();
 
     window.addEventListener('refreshProjects', handleRefreshProjects);
     return () => window.removeEventListener('refreshProjects', handleRefreshProjects);
-  }, [page, limit]);
+  }, [clientId, page, limit]);
 
   const submitProject = async (projectData: {
     title: string;
