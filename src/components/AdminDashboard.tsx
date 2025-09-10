@@ -705,8 +705,8 @@ const AdminDashboard = () => {
                     </div>
                     <div className="mt-4 flex items-center justify-between text-sm text-gray-400">
                       <span>{client.projectsCount} projet(s)</span>
-                      <span>Inscrit le {client.joinDate.toLocaleDateString('fr-FR')}</span>
-                      <span>Dernière activité: {client.lastActivity.toLocaleDateString('fr-FR')}</span>
+                      <span>Inscrit le {client?.joinDate?.toLocaleDateString('fr-FR')}</span>
+                      <span>Dernière activité: {client?.lastActivity?.toLocaleDateString('fr-FR')}</span>
                     </div>
                   </div>
                 ))}
@@ -809,8 +809,8 @@ const AdminDashboard = () => {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4 text-sm text-gray-400">
-                        <span>Soumis le {project.submittedAt.toLocaleDateString('fr-FR')}</span>
-                        <span>Mis à jour le {project.lastUpdate.toLocaleDateString('fr-FR')}</span>
+                        <span>Soumis le {project?.submittedAt?.toLocaleDateString('fr-FR')}</span>
+                        <span>Mis à jour le {project?.lastUpdate?.toLocaleDateString('fr-FR')}</span>
                         {project.attachments.length > 0 && (
                           <span className="flex items-center">
                             <Paperclip className="h-4 w-4 mr-1" />
