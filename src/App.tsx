@@ -10,6 +10,7 @@ import TechnologyGuide from './components/TechnologyGuide';
 import Training from './components/Training';
 import ProjectSubmission from './components/ProjectSubmission';
 import AdminDashboard from './components/AdminDashboard';
+import ClientDashboard from './components/ClientDashboard';
 import LegalModals from './components/LegalModals';
 import { useAuth } from './hooks/useApi';
 
@@ -48,6 +49,8 @@ function App() {
   if (showAdminDashboard) {
     if (isAuthenticated && isAdmin) {
       return <AdminDashboard />;
+    } else if (isAuthenticated && !isAdmin) {
+      return <ClientDashboard />;
     } else {
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
