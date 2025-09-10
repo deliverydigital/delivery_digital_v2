@@ -597,7 +597,7 @@ const ClientDashboard = () => {
                   <select
                     value={selectedProject || ''}
                     onChange={(e) => setSelectedProject(e.target.value || null)}
-                    className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
                   >
                     <option value="">Tous les projets</option>
                     {projects.map((project) => (
@@ -666,10 +666,16 @@ const ClientDashboard = () => {
                           Progression: {task.completionPercentage}%
                         </div>
                         <div className="flex items-center space-x-2">
-                          <button className="text-blue-400 hover:text-blue-300 transition-colors">
+                          <button 
+                            className="text-blue-400 hover:text-blue-300 transition-colors"
+                            title="Messages de la tâche"
+                          >
                             <MessageCircle className="h-4 w-4" />
                           </button>
-                          <button className="text-green-400 hover:text-green-300 transition-colors">
+                          <button 
+                            className="text-green-400 hover:text-green-300 transition-colors"
+                            title="Voir les détails"
+                          >
                             <Eye className="h-4 w-4" />
                           </button>
                         </div>
