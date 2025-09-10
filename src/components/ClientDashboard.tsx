@@ -17,6 +17,8 @@ const ClientDashboard = () => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [tasksError, setTasksError] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<any | null>(null);
+  const [showTaskModal, setShowTaskModal] = useState(false);
   
   const { projects, loading: projectsLoading, refreshProjects } = useProjects(user?.id);
   const { messages, loading: messagesLoading, refreshMessages } = useMessages(selectedProject || undefined, user?.role);
@@ -716,6 +718,10 @@ const ClientDashboard = () => {
                             <MessageCircle className="h-4 w-4" />
                           </button>
                           <button 
+                            onClick={() => {
+                              setSelectedTask(task);
+                              setShowTaskModal(true);
+                            }}
                             className="text-green-400 hover:text-green-300 transition-colors"
                             title="Voir les détails"
                           >
@@ -872,6 +878,187 @@ const ClientDashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Task Detail Modal */}
+      {showTaskModal && selectedTask && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+              <div className="flex items-center">
+                <CheckCircle className="h-6 w-6 text-green-400 mr-2" />
+                <h3 className="text-xl font-bold text-white">{selectedTask.title}</h3>
+              </div>
+              <button
+                onClick={() => {
+                  setShowTaskModal(false);
+                  setSelectedTask(null);
+                }}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Task Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-lg font-medium text-white mb-4">Informations</h4>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Statut:</span>
+                      <span className={`px-2 py-1 rounded text-xs ${getTaskStatusColor(selectedTask.status)}`}>
+                        {getTaskStatusText(selectedTask.status)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Priorité:</span>
+                      <span className="text-white capitalize">{selectedTask.priority}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Assigné à:</span>
+                      <span className="text-white">{selectedTask.assignedTo || 'Non assigné'}</span>
+                    </div>
+                    {selectedTask.dueDate && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Échéance:</span>
+                        <span className="text-white">{new Date(selectedTask.dueDate).toLocaleDateString('fr-FR')}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Progression:</span>
+                      <span className="text-white">{selectedTask.completionPercentage}%</span>
+                    </div>
+                    {selectedTask.estimatedHours && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Heures estimées:</span>
+                        <span className="text-white">{selectedTask.estimatedHours}h</span>
+                      </div>
+                    )}
+                    {selectedTask.actualHours > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Heures réelles:</span>
+                        <span className="text-white">{selectedTask.actualHours}h</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-lg font-medium text-white mb-4">Description</h4>
+                  <p className="text-gray-300 bg-gray-700 p-4 rounded-lg">
+                    {selectedTask.description || 'Aucune description disponible'}
+                  </p>
+                  
+                  {selectedTask.tags && selectedTask.tags.length > 0 && (
+                    <div className="mt-4">
+                      <h5 className="text-sm font-medium text-gray-400 mb-2">Tags:</h5>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedTask.tags.map((tag, index) => (
+                          <span key={index} className="px-2 py-1 bg-primary-900/20 text-primary-400 rounded text-xs">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-400 text-sm">Progression</span>
+                  <span className="text-white text-sm">{selectedTask.completionPercentage}%</span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div 
+                    className="bg-primary-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${selectedTask.completionPercentage}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Checklist */}
+              {selectedTask.checklist && selectedTask.checklist.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-medium text-white mb-4">Checklist</h4>
+                  <div className="space-y-2 bg-gray-700 p-4 rounded-lg">
+                    {selectedTask.checklist.map((item) => (
+                      <div key={item.id} className="flex items-center">
+                        <CheckCircle className={`h-4 w-4 mr-3 ${item.completed ? 'text-green-400' : 'text-gray-500'}`} />
+                        <span className={`${item.completed ? 'text-gray-400 line-through' : 'text-gray-300'}`}>
+                          {item.title}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Comments */}
+              {selectedTask.comments && selectedTask.comments.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-medium text-white mb-4">Commentaires</h4>
+                  <div className="space-y-4 bg-gray-700 p-4 rounded-lg max-h-64 overflow-y-auto">
+                    {selectedTask.comments.map((comment) => (
+                      <div key={comment.id} className="border-b border-gray-600 pb-3 last:border-b-0">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="text-white font-medium">{comment.author}</span>
+                          <span className="text-gray-400 text-xs">
+                            {new Date(comment.timestamp).toLocaleDateString('fr-FR')}
+                          </span>
+                        </div>
+                        <p className="text-gray-300 text-sm">{comment.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Attachments */}
+              {selectedTask.attachments && selectedTask.attachments.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-medium text-white mb-4">Pièces jointes</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {selectedTask.attachments.map((attachment, index) => (
+                      <div key={index} className="flex items-center bg-gray-700 rounded-lg p-3">
+                        <FileText className="h-5 w-5 text-primary-400 mr-3" />
+                        <div className="flex-1">
+                          <p className="text-white text-sm">{attachment.name}</p>
+                          <p className="text-gray-400 text-xs">
+                            {new Date(attachment.uploadedAt).toLocaleDateString('fr-FR')}
+                          </p>
+                        </div>
+                        <button className="text-blue-400 hover:text-blue-300">
+                          <Download className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-700 flex justify-end">
+              <button
+                onClick={() => {
+                  setShowTaskModal(false);
+                  setSelectedTask(null);
+                }}
+                className="btn btn-secondary"
+              >
+                Fermer
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
