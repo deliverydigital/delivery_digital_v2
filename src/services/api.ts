@@ -101,8 +101,8 @@ export class ApiService {
 
     if (!response.ok) {
       const errorData = await response.json().catch((error) => {
-        console.log(error)
-        return { message: 'Network error' }
+        console.log(error);
+        return { message: 'Network error' };
       });
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
@@ -233,11 +233,11 @@ export class ApiService {
     }
   }
 
-  static async getClientProjects(clientId: string): Promise<Project[]> {
+  static async getClientProjects(clientId: string, page: number = 1, limit: number = 10): Promise<Project[]> {
     try {
       // Try to fetch from API first
       try {
-        const response = await this.makeRequest(`/projects`);
+        const response = await this.makeRequest(`/projects?page=${page}&limit=${limit}`);
         if (response.success && response.data && response.data.projects) {
           return response.data.projects;
         }
@@ -335,11 +335,11 @@ export class ApiService {
       const token = this.getAuthToken();
       const baseUrl = getApiBaseUrl();
       const response = await fetch(`${baseUrl}/api/messages`, {
-  static async getClientProjects(clientId: string, page: number = 1, limit: number = 10): Promise<Project[]> {
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        const response = await this.makeRequest(`/projects?page=${page}&limit=${limit}`);
+        body: formData,
       });
 
       if (!response.ok) {
