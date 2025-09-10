@@ -161,6 +161,7 @@ const ClientDashboard = () => {
       setTasks([]);
       setTasksLoading(false);
     }
+  }, [projects, selectedProject]);
 
   const handleLogout = () => {
     logout();
