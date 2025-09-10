@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import Logo from './Logo';
 import TrainingClientSpace from './TrainingClientSpace';
+import Auth from './Auth';
+import { useAuth } from '../hooks/useApi';
 
 const Header = () => {
   const { t, i18n } = useTranslation();
@@ -11,6 +13,8 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [showClientMenu, setShowClientMenu] = useState(false);
   const [showTrainingClientSpace, setShowTrainingClientSpace] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
 
   const toggleMenu = () => setIsOpen(!isOpen);
   
@@ -18,6 +22,15 @@ const Header = () => {
     i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr');
   };
 
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    setShowClientMenu(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setShowClientMenu(false);
+  };
   useEffect(() => {
     const handleScroll = () => {
       const isScrolled = window.scrollY > 10;
@@ -70,10 +83,10 @@ const Header = () => {
                 <button
                   onMouseEnter={() => setShowClientMenu(true)}
                   onMouseLeave={() => setShowClientMenu(false)}
-                  className="btn btn-primary flex items-center"
+                  className={`btn ${isAuthenticated ? 'btn-secondary' : 'btn-primary'} flex items-center`}
                 >
                   <LogIn className="h-5 w-5 mr-2" />
-                  Espace Client
+                  {isAuthenticated ? user?.name || 'Mon Compte' : 'Espace Client'}
                 </button>
                 
                 {showClientMenu && (
@@ -82,6 +95,65 @@ const Header = () => {
                     onMouseEnter={() => setShowClientMenu(true)}
                     onMouseLeave={() => setShowClientMenu(false)}
                   >
+                    {isAuthenticated ? (
+                      <>
+                        <div className="px-4 py-3 border-b border-gray-200">
+                          <div className="font-medium text-gray-900">{user?.name}</div>
+                          <div className="text-sm text-gray-500">{user?.email}</div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setShowClientMenu(false);
+                            setShowTrainingClientSpace(true);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <GraduationCap className="h-5 w-5 mr-3 text-green-600" />
+                          <div>
+                            <div className="font-medium">Formation Professionnelle</div>
+                            <div className="text-sm text-gray-400">Accès aux formations</div>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowClientMenu(false);
+                            const event = new CustomEvent('openDigitalClientSpace');
+                            window.dispatchEvent(event);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <Code className="h-5 w-5 mr-3 text-blue-600" />
+                          <div>
+                            <div className="font-medium">Solutions Digitales</div>
+                            <div className="text-sm text-gray-400">Gérer vos projets</div>
+                          </div>
+                        </button>
+                        <div className="border-t border-gray-200 mt-2 pt-2">
+                          <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <LogIn className="h-5 w-5 mr-3" />
+                            <div className="font-medium">Se déconnecter</div>
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => {
+                            setShowClientMenu(false);
+                            setShowAuthModal(true);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <LogIn className="h-5 w-5 mr-3 text-blue-600" />
+                          <div>
+                            <div className="font-medium">Se connecter / S'inscrire</div>
+                            <div className="text-sm text-gray-400">Accéder à votre espace</div>
+                          </div>
+                        </button>
+                        <div className="border-t border-gray-200 mt-2 pt-2">
                     <button
                       onClick={() => {
                         setShowClientMenu(false);
@@ -109,6 +181,9 @@ const Header = () => {
                         <div className="font-medium">Solutions Digitales</div>
                         <div className="text-sm text-gray-500">Gérer vos projets</div>
                       </div>
+                        </div>
+                      </>
+                    )}
                     </button>
                   </div>
                 )}
@@ -162,6 +237,16 @@ const Header = () => {
                   <button
                     onClick={() => {
                       toggleMenu();
+                      setShowAuthModal(true);
+                    }}
+                    className="flex items-center py-2 text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    <LogIn className="h-5 w-5 mr-2" />
+                    Se connecter / S'inscrire
+                  </button>
+                  <button
+                    onClick={() => {
+                      toggleMenu();
                       setShowTrainingClientSpace(true);
                     }}
                     className="flex items-center py-2 text-green-600 hover:text-green-700 transition-colors"
@@ -191,6 +276,13 @@ const Header = () => {
       <TrainingClientSpace
         isOpen={showTrainingClientSpace}
         onClose={() => setShowTrainingClientSpace(false)}
+      />
+
+      {/* Auth Modal */}
+      <Auth
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
       />
     </>
   );
