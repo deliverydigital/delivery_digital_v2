@@ -8,23 +8,133 @@ import {
   Search, Filter, RefreshCw, Bell, Home
 } from 'lucide-react';
 import { useAuth, useProjects, useMessages } from '../hooks/useApi';
-import { useTasks } from '../hooks/useTasks';
 
 const ClientDashboard = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'tasks' | 'messages' | 'settings'>('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
   
   const { projects, loading: projectsLoading, refreshProjects } = useProjects(user?.id);
   const { messages, loading: messagesLoading, refreshMessages } = useMessages(selectedProject || undefined, user?.role);
-  const { tasks, loading: tasksLoading, refreshTasks } = useTasks(selectedProject || '');
+
+  // Load tasks for client
+  const loadTasks = async () => {
+    setTasksLoading(true);
+    try {
+      const allTasks = [];
+      
+      if (selectedProject) {
+        // Load tasks for specific project
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3008'}/api/tasks/project/${selectedProject}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            'Content-Type': 'application/json',
+            'bypass-tunnel-reminder': 'true'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data.tasks) {
+            allTasks.push(...data.data.tasks.map(transformTaskFromAPI));
+          }
+        }
+      } else {
+        // Load tasks for all client projects
+        for (const project of projects) {
+          try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3008'}/api/tasks/project/${project.id}`, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                'Content-Type': 'application/json',
+                'bypass-tunnel-reminder': 'true'
+              }
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              if (data.success && data.data.tasks) {
+                allTasks.push(...data.data.tasks.map(transformTaskFromAPI));
+              }
+            }
+          } catch (error) {
+            console.error(`Error loading tasks for project ${project.id}:`, error);
+          }
+        }
+      }
+      
+      setTasks(allTasks);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+      setTasks([]);
+    }
+    setTasksLoading(false);
+  };
+
+  // Transform API task data to match expected format
+  const transformTaskFromAPI = (apiTask: any) => {
+    return {
+      id: apiTask.id,
+      title: apiTask.title,
+      description: apiTask.description || '',
+      status: apiTask.status,
+      priority: apiTask.priority,
+      assignedTo: apiTask.assignedToName,
+      dueDate: apiTask.dueDate ? new Date(apiTask.dueDate) : undefined,
+      projectId: apiTask.projectId,
+      clientId: apiTask.clientId || user?.id,
+      createdAt: new Date(apiTask.createdAt),
+      updatedAt: new Date(apiTask.updatedAt),
+      tags: apiTask.tags || [],
+      estimatedHours: apiTask.estimatedHours,
+      actualHours: apiTask.actualHours || 0,
+      completionPercentage: apiTask.completionPercentage || 0,
+      dependencies: apiTask.dependencies || [],
+      attachments: (apiTask.attachments || []).map((att: any) => ({
+        id: att._id || att.id,
+        name: att.original_name || att.name,
+        type: att.file_type || att.type,
+        url: att.file_path || att.url,
+        uploadedAt: new Date(att.uploaded_at || att.uploadedAt),
+        uploadedBy: att.uploaded_by || att.uploadedBy
+      })),
+      comments: (apiTask.comments || []).map((comment: any) => ({
+        id: comment._id || comment.id,
+        author: comment.authorName || comment.author,
+        authorRole: comment.authorRole || 'admin',
+        content: comment.content,
+        timestamp: new Date(comment.createdAt || comment.timestamp),
+        attachments: comment.attachments || []
+      })),
+      watchers: apiTask.watchers || [],
+      labels: apiTask.labels || [],
+      checklist: (apiTask.checklist || []).map((item: any) => ({
+        id: item._id || item.id,
+        title: item.title,
+        completed: item.completed,
+        createdAt: new Date(item.created_at || item.createdAt)
+      })),
+      timeTracking: apiTask.timeTracking || [],
+      history: apiTask.history || []
+    };
+  };
 
   useEffect(() => {
     // Refresh data when component mounts
     refreshProjects();
     refreshMessages();
+    loadTasks();
   }, []);
+
+  useEffect(() => {
+    // Reload tasks when projects change or selected project changes
+    if (projects.length > 0) {
+      loadTasks();
+    }
+  }, [projects, selectedProject]);
 
   const handleLogout = () => {
     logout();
