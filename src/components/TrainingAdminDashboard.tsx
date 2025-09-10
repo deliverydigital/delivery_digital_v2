@@ -816,7 +816,7 @@ const TrainingAdminDashboard = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-300">
-                            {session.startDate.toLocaleDateString('fr-FR')} - {session.endDate.toLocaleDateString('fr-FR')}
+                            {session.startDate ? session.startDate.toLocaleDateString('fr-FR') : 'N/A'} - {session.endDate ? session.endDate.toLocaleDateString('fr-FR') : 'N/A'}
                           </div>
                         </td>
                         <td className="px-6 py-4">
