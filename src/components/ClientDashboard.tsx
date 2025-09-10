@@ -16,6 +16,7 @@ const ClientDashboard = () => {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
+  const [tasksError, setTasksError] = useState<string | null>(null);
   
   const { projects, loading: projectsLoading, refreshProjects } = useProjects(user?.id);
   const { messages, loading: messagesLoading, refreshMessages } = useMessages(selectedProject || undefined, user?.role);
@@ -23,32 +24,49 @@ const ClientDashboard = () => {
   // Load tasks for client
   const loadTasks = async () => {
     setTasksLoading(true);
+    setTasksError(null);
     try {
       const allTasks = [];
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3008';
+      const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
       
       if (selectedProject) {
         // Load tasks for specific project
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3008'}/api/tasks/project/${selectedProject}`, {
+        console.log('Loading tasks for project:', selectedProject);
+        const response = await fetch(`${baseUrl}/api/tasks/project/${selectedProject}`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
             'bypass-tunnel-reminder': 'true'
           }
         });
         
+        console.log('Tasks API response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log('Tasks API response data:', data);
           if (data.success && data.data.tasks) {
             allTasks.push(...data.data.tasks.map(transformTaskFromAPI));
           }
+        } else {
+          const errorData = await response.json().catch(() => ({ message: 'Network error' }));
+          console.error('Tasks API error:', errorData);
+          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
       } else {
         // Load tasks for all client projects
+        console.log('Loading tasks for all projects:', projects.length);
         for (const project of projects) {
           try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3008'}/api/tasks/project/${project.id}`, {
+            console.log('Loading tasks for project:', project.id, project.title);
+            const response = await fetch(`${baseUrl}/api/tasks/project/${project.id}`, {
               headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
                 'bypass-tunnel-reminder': 'true'
               }
@@ -56,9 +74,12 @@ const ClientDashboard = () => {
             
             if (response.ok) {
               const data = await response.json();
+              console.log(`Tasks for project ${project.id}:`, data);
               if (data.success && data.data.tasks) {
                 allTasks.push(...data.data.tasks.map(transformTaskFromAPI));
               }
+            } else {
+              console.error(`Failed to load tasks for project ${project.id}:`, response.status);
             }
           } catch (error) {
             console.error(`Error loading tasks for project ${project.id}:`, error);
@@ -66,9 +87,11 @@ const ClientDashboard = () => {
         }
       }
       
+      console.log('Total tasks loaded:', allTasks.length);
       setTasks(allTasks);
     } catch (error) {
       console.error('Error loading tasks:', error);
+      setTasksError(error.message || 'Failed to load tasks');
       setTasks([]);
     }
     setTasksLoading(false);
@@ -133,8 +156,11 @@ const ClientDashboard = () => {
     // Reload tasks when projects change or selected project changes
     if (projects.length > 0) {
       loadTasks();
+    } else if (!projectsLoading && projects.length === 0) {
+      // If no projects and not loading, clear tasks
+      setTasks([]);
+      setTasksLoading(false);
     }
-  }, [projects, selectedProject]);
 
   const handleLogout = () => {
     logout();
@@ -594,6 +620,13 @@ const ClientDashboard = () => {
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-white">Mes Tâches</h2>
                 <div className="flex items-center space-x-4">
+                  <button
+                    onClick={loadTasks}
+                    className="btn btn-secondary"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Actualiser
+                  </button>
                   <select
                     value={selectedProject || ''}
                     onChange={(e) => setSelectedProject(e.target.value || null)}
@@ -608,6 +641,15 @@ const ClientDashboard = () => {
                   </select>
                 </div>
               </div>
+
+              {tasksError && (
+                <div className="bg-red-900/20 border border-red-500/20 rounded-lg p-4">
+                  <div className="flex items-center text-red-400">
+                    <AlertTriangle className="h-5 w-5 mr-2" />
+                    <span>Erreur: {tasksError}</span>
+                  </div>
+                </div>
+              )}
 
               {tasksLoading ? (
                 <div className="text-center py-12">
