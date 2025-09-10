@@ -9,14 +9,14 @@ import {
     ExternalLink,
     Eye,
     FileText,
-    FolderOpen,
-    Image as ImageIcon,
+    FolderOpen, Home,
+    Image as ImageIcon, Kanban,
     LogOut,
     Mail,
     MessageCircle,
     Paperclip,
     Phone,
-    Plus,
+    Plus, Receipt,
     RefreshCw,
     Reply,
     Save,
@@ -30,14 +30,16 @@ import {
     X
 } from 'lucide-react';
 
-import {useAuth, useClients, useProjects, useStatistics} from '../hooks/useApi';
+import {useAuth, useClients, useMessages, useProjects, useStatistics} from '../hooks/useApi';
 import Auth from './Auth';
+import TaskBoard from "./TaskBoard.tsx";
 
 const AdminDashboard = () => {
     const {user, logout, isAuthenticated} = useAuth();
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const {clients, loading: clientsLoading} = useClients();
+    const { messages, sendMessage } = useMessages();
 
     const {projects, pagination, updateProject} = useProjects(undefined, currentPage, itemsPerPage);
     const {clients: allClients, loading: clientsDataLoading, refreshClients} = useClients();
