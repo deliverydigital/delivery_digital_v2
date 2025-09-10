@@ -82,7 +82,6 @@ const Header = () => {
               <div className="relative">
                 <button
                   onMouseEnter={() => setShowClientMenu(true)}
-                  onMouseLeave={() => setShowClientMenu(false)}
                   className={`btn ${isAuthenticated ? 'btn-secondary' : 'btn-primary'} flex items-center`}
                 >
                   <LogIn className="h-5 w-5 mr-2" />
@@ -91,10 +90,12 @@ const Header = () => {
                 
                 {showClientMenu && (
                   <div 
-                    className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50"
+                    className="absolute top-full right-0 mt-1 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50"
                     onMouseEnter={() => setShowClientMenu(true)}
                     onMouseLeave={() => setShowClientMenu(false)}
                   >
+                    {/* Invisible bridge to prevent hover gap */}
+                    <div className="absolute -top-1 left-0 right-0 h-1 bg-transparent"></div>
                     {isAuthenticated ? (
                       <>
                         <div className="px-4 py-3 border-b border-gray-200">
@@ -267,6 +268,12 @@ const Header = () => {
                   </button>
                 </div>
               </div>
+              
+              {/* Add mouse leave handler to the parent div */}
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                onMouseLeave={() => setShowClientMenu(false)}
+              ></div>
             </motion.div>
           )}
         </div>
