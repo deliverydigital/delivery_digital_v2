@@ -5,7 +5,7 @@ import {
   Plus, Clock, CheckCircle, AlertTriangle, Eye, 
   FileText, Calendar, TrendingUp, BarChart3,
   ChevronRight, Download, Upload, Edit, Trash2,
-  Search, Filter, RefreshCw, Bell, Home
+  Search, Filter, RefreshCw, Bell, Home, X
 } from 'lucide-react';
 import { useAuth, useProjects, useMessages } from '../hooks/useApi';
 
