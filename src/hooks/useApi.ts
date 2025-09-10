@@ -153,21 +153,33 @@ export const useAuth = () => {
 };
 
 // Hook pour les projets
-export const useProjects = (clientId?: string) => {
+export const useProjects = (clientId?: string, page: number = 1, limit: number = 10) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 0
+  });
 
   const loadProjects = async () => {
     setLoading(true);
     try {
       let data;
+      let paginationData;
       if (clientId) {
-        data = await ApiService.getClientProjects(clientId);
+        data = await ApiService.getClientProjects(clientId, page, limit);
       } else {
         // For admin view, load all projects
-        data = await ApiService.getAllProjects();
+        const response = await ApiService.getAllProjects(page, limit);
+        data = response.projects || response;
+        paginationData = response.pagination;
       }
       setProjects(data);
+      if (paginationData) {
+        setPagination(paginationData);
+      }
     } catch (error) {
       console.error('Erreur lors du chargement des projets:', error);
       // Set empty array on error to prevent infinite loading
@@ -177,19 +189,16 @@ export const useProjects = (clientId?: string) => {
   };
 
   useEffect(() => {
-    if (clientId !== undefined) {
+    if (clientId !== undefined || clientId === undefined) {
       loadProjects();
     }
-  }, [clientId]);
+  }, [clientId, page, limit]);
 
-  useEffect(() => {
-    const handleRefreshProjects = () => {
-      loadProjects();
-    };
+    const handleRefreshProjects = () => loadProjects();
 
     window.addEventListener('refreshProjects', handleRefreshProjects);
     return () => window.removeEventListener('refreshProjects', handleRefreshProjects);
-  }, []);
+  }, [page, limit]);
 
   const submitProject = async (projectData: {
     title: string;
@@ -218,10 +227,12 @@ export const useProjects = (clientId?: string) => {
 
   return {
     projects,
+    pagination,
     loading,
     submitProject,
     updateProject,
-    refreshProjects: loadProjects
+    refreshProjects: loadProjects,
+    loadPage: (newPage: number) => loadProjects()
   };
 };
 

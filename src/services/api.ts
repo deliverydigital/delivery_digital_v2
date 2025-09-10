@@ -249,7 +249,10 @@ export class ApiService {
       const demoProjects = localStorage.getItem('demoProjects');
       if (demoProjects) {
         const projects = JSON.parse(demoProjects);
-        return projects.filter((project: Project) => project.clientId === clientId);
+        const clientProjects = projects.filter((project: Project) => project.clientId === clientId);
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        return clientProjects.slice(startIndex, endIndex);
       }
       
       return [];
@@ -259,13 +262,16 @@ export class ApiService {
     }
   }
 
-  static async getAllProjects(): Promise<Project[]> {
+  static async getAllProjects(page: number = 1, limit: number = 10): Promise<{ projects: Project[]; pagination?: any }> {
     try {
       // Try to fetch from API first
       try {
-        const response = await this.makeRequest('/projects');
+        const response = await this.makeRequest(`/projects?page=${page}&limit=${limit}`);
         if (response.success && response.data && response.data.projects) {
-          return response.data.projects;
+          return {
+            projects: response.data.projects,
+            pagination: response.data.pagination
+          };
         }
       } catch (apiError) {
         console.log('API call failed, falling back to demo data:', apiError.message);
@@ -274,13 +280,26 @@ export class ApiService {
       // Fallback to demo projects from localStorage
       const demoProjects = localStorage.getItem('demoProjects');
       if (demoProjects) {
-        return JSON.parse(demoProjects);
+        const projects = JSON.parse(demoProjects);
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedProjects = projects.slice(startIndex, endIndex);
+        
+        return {
+          projects: paginatedProjects,
+          pagination: {
+            page,
+            limit,
+            total: projects.length,
+            pages: Math.ceil(projects.length / limit)
+          }
+        };
       }
       
-      return [];
+      return { projects: [] };
     } catch (error) {
       console.error('Error fetching all projects:', error);
-      return [];
+      return { projects: [] };
     }
   }
 
@@ -316,11 +335,11 @@ export class ApiService {
       const token = this.getAuthToken();
       const baseUrl = getApiBaseUrl();
       const response = await fetch(`${baseUrl}/api/messages`, {
-        method: 'POST',
+  static async getClientProjects(clientId: string, page: number = 1, limit: number = 10): Promise<Project[]> {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        body: formData,
+        const response = await this.makeRequest(`/projects?page=${page}&limit=${limit}`);
       });
 
       if (!response.ok) {
