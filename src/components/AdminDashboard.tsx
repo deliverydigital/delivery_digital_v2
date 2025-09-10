@@ -16,7 +16,10 @@ import TaskBoard from './TaskBoard';
 import { supabase } from '../lib/supabase';
 const AdminDashboard = () => {
   const { user, logout, isAuthenticated } = useAuth();
-  const { projects, updateProject } = useProjects();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  
+  const { projects, pagination, updateProject } = useProjects(undefined, currentPage, itemsPerPage);
   const { messages, sendMessage } = useMessages();
   const { clients } = useClients();
   const { stats } = useStatistics();
@@ -64,6 +67,41 @@ const AdminDashboard = () => {
       fetchQuotes();
     }
   }, [activeTab]);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
+  const renderPagination = (paginationData: any) => {
+    if (!paginationData || paginationData.pages <= 1) return null;
+
+    return (
+      <div className="flex items-center justify-between mt-6">
+        <div className="text-sm text-gray-400">
+          Affichage de {((paginationData.page - 1) * paginationData.limit) + 1} à {Math.min(paginationData.page * paginationData.limit, paginationData.total)} sur {paginationData.total} résultats
+        </div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => handlePageChange(paginationData.page - 1)}
+            disabled={paginationData.page <= 1}
+            className="px-3 py-1 bg-gray-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
+          >
+            Précédent
+          </button>
+          <span className="text-gray-300">
+            Page {paginationData.page} sur {paginationData.pages}
+          </span>
+          <button
+            onClick={() => handlePageChange(paginationData.page + 1)}
+            disabled={paginationData.page >= paginationData.pages}
+            className="px-3 py-1 bg-gray-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
+          >
+            Suivant
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   const fetchQuotes = async () => {
     try {
@@ -872,6 +910,7 @@ const AdminDashboard = () => {
                   </div>
                 ))}
               </div>
+              {renderPagination(pagination)}
             </div>
           )}
 
