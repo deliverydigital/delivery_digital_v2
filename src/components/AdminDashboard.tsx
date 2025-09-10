@@ -101,7 +101,7 @@ const AdminDashboard = () => {
     const loadQuotes = async () => {
         setQuotesLoading(true);
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3008'}/api/quotes`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/quotes`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
                     'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ const AdminDashboard = () => {
 
     const createQuote = async () => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3008'}/api/quotes`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/quotes`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
