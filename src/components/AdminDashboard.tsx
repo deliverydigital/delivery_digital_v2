@@ -38,21 +38,23 @@ const AdminDashboard = () => {
   const [filterPriority, setFilterPriority] = useState<string>('all');
   
   // Quotes state
-  const [quotes, setQuotes] = useState<any[]>([]);
-  const [loadingQuotes, setLoadingQuotes] = useState(false);
   const [showCreateQuoteModal, setShowCreateQuoteModal] = useState(false);
-  const [showQuoteDetails, setShowQuoteDetails] = useState(false);
-  const [selectedQuote, setSelectedQuote] = useState<any>(null);
+  const [selectedQuote, setSelectedQuote] = useState(null);
+  const [quotes, setQuotes] = useState([]);
+  const [quotesLoading, setQuotesLoading] = useState(false);
   const [quoteFormData, setQuoteFormData] = useState({
     clientId: '',
     projectId: '',
     title: '',
     description: '',
     validUntil: '',
-    items: [{ description: '', quantity: 1, unitPrice: 0, totalPrice: 0 }],
-    taxRate: 20,
+    items: [{ description: '', quantity: 1, unitPrice: 0 }],
+    taxRate: 20.00,
+    currency: 'EUR',
     notes: ''
   });
+  const [loadingQuotes, setLoadingQuotes] = useState(false);
+  const [showQuoteDetails, setShowQuoteDetails] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -61,12 +63,116 @@ const AdminDashboard = () => {
     }
   }, [isAuthenticated]);
 
+  // Load data on component mount
+  useEffect(() => {
+    loadClients();
+    loadStatistics();
+    loadQuotes();
+  }, []);
+
   // Fetch quotes when tab changes to quotes
   useEffect(() => {
     if (activeTab === 'quotes') {
       fetchQuotes();
     }
   }, [activeTab]);
+
+  const loadQuotes = async () => {
+    setQuotesLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3008'}/api/quotes`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json',
+          'bypass-tunnel-reminder': 'true'
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setQuotes(result.data || []);
+      } else {
+        console.error('Failed to load quotes:', response.statusText);
+        setQuotes([]);
+      }
+    } catch (error) {
+      console.error('Error loading quotes:', error);
+      setQuotes([]);
+    }
+    setQuotesLoading(false);
+  };
+
+  const createQuote = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3008'}/api/quotes`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json',
+          'bypass-tunnel-reminder': 'true'
+        },
+        body: JSON.stringify(quoteFormData)
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setQuotes(prev => [...prev, result.data]);
+        setShowCreateQuoteModal(false);
+        // Reset form
+        setQuoteFormData({
+          clientId: '',
+          projectId: '',
+          title: '',
+          description: '',
+          validUntil: '',
+          items: [{ description: '', quantity: 1, unitPrice: 0 }],
+          taxRate: 20.00,
+          currency: 'EUR',
+          notes: ''
+        });
+      } else {
+        console.error('Failed to create quote:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error creating quote:', error);
+    }
+  };
+
+  const addQuoteItem = () => {
+    setQuoteFormData({
+      ...quoteFormData,
+      items: [...quoteFormData.items, { description: '', quantity: 1, unitPrice: 0 }]
+    });
+  };
+
+  const updateQuoteItem = (index: number, field: string, value: any) => {
+    const newItems = [...quoteFormData.items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setQuoteFormData({
+      ...quoteFormData,
+      items: newItems
+    });
+  };
+
+  const removeQuoteItem = (index: number) => {
+    if (quoteFormData.items.length > 1) {
+      const newItems = quoteFormData.items.filter((_, i) => i !== index);
+      setQuoteFormData({
+        ...quoteFormData,
+        items: newItems
+      });
+    }
+  };
+
+  const calculateQuoteTotal = () => {
+    const subtotal = quoteFormData.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const taxAmount = subtotal * (quoteFormData.taxRate / 100);
+    return {
+      subtotal,
+      taxAmount,
+      total: subtotal + taxAmount
+    };
+  };
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -126,50 +232,6 @@ const AdminDashboard = () => {
       console.error('Error fetching quotes:', error);
     } finally {
       setLoadingQuotes(false);
-    }
-  };
-
-  const createQuote = async () => {
-    try {
-      // Calculate total prices for each item
-      const items = quoteFormData.items.map(item => ({
-        ...item,
-        totalPrice: parseFloat(item.quantity.toString()) * parseFloat(item.unitPrice.toString())
-      }));
-
-      const response = await fetch('/api/quotes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          clientId: quoteFormData.clientId,
-          projectId: quoteFormData.projectId || null,
-          title: quoteFormData.title,
-          description: quoteFormData.description,
-          validUntil: quoteFormData.validUntil,
-          items,
-          taxRate: parseFloat(quoteFormData.taxRate.toString()),
-          notes: quoteFormData.notes
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        setShowCreateQuoteModal(false);
-        resetQuoteForm();
-        fetchQuotes();
-      } else {
-        throw new Error(data.error || 'Failed to create quote');
-      }
-    } catch (error) {
-      console.error('Error creating quote:', error);
-      alert('Failed to create quote. Please try again.');
     }
   };
 
@@ -270,54 +332,6 @@ const AdminDashboard = () => {
       taxRate: 20,
       notes: ''
     });
-  };
-
-  const addQuoteItem = () => {
-    setQuoteFormData({
-      ...quoteFormData,
-      items: [
-        ...quoteFormData.items,
-        { description: '', quantity: 1, unitPrice: 0, totalPrice: 0 }
-      ]
-    });
-  };
-
-  const removeQuoteItem = (index: number) => {
-    const newItems = [...quoteFormData.items];
-    newItems.splice(index, 1);
-    setQuoteFormData({
-      ...quoteFormData,
-      items: newItems.length > 0 ? newItems : [{ description: '', quantity: 1, unitPrice: 0, totalPrice: 0 }]
-    });
-  };
-
-  const updateQuoteItem = (index: number, field: string, value: any) => {
-    const newItems = [...quoteFormData.items];
-    newItems[index] = {
-      ...newItems[index],
-      [field]: value
-    };
-
-    // Update total price if quantity or unit price changes
-    if (field === 'quantity' || field === 'unitPrice') {
-      newItems[index].totalPrice = newItems[index].quantity * newItems[index].unitPrice;
-    }
-
-    setQuoteFormData({
-      ...quoteFormData,
-      items: newItems
-    });
-  };
-
-  const calculateQuoteTotal = () => {
-    const subtotal = quoteFormData.items.reduce((sum, item) => {
-      return sum + (parseFloat(item.quantity.toString()) * parseFloat(item.unitPrice.toString()));
-    }, 0);
-    
-    const taxAmount = subtotal * (parseFloat(quoteFormData.taxRate.toString()) / 100);
-    const total = subtotal + taxAmount;
-    
-    return { subtotal, taxAmount, total };
   };
 
   const getStatusColor = (status: string) => {
@@ -1038,6 +1052,7 @@ const AdminDashboard = () => {
                 <button
                   onClick={() => setShowCreateQuoteModal(true)}
                   className="btn btn-primary"
+                  disabled={clients.length === 0}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Nouveau Devis
@@ -1484,9 +1499,7 @@ const AdminDashboard = () => {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-white">
-                Créer un nouveau devis
-              </h3>
+              <h3 className="text-xl font-bold text-white">Créer un nouveau devis</h3>
               <button
                 onClick={() => setShowCreateQuoteModal(false)}
                 className="text-gray-400 hover:text-white transition-colors"
@@ -1504,7 +1517,7 @@ const AdminDashboard = () => {
                   <select
                     value={quoteFormData.clientId}
                     onChange={(e) => setQuoteFormData({ ...quoteFormData, clientId: e.target.value })}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     required
                   >
                     <option value="">Sélectionner un client</option>
@@ -1522,16 +1535,14 @@ const AdminDashboard = () => {
                   <select
                     value={quoteFormData.projectId}
                     onChange={(e) => setQuoteFormData({ ...quoteFormData, projectId: e.target.value })}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
-                    <option value="">Aucun projet</option>
-                    {projects
-                      .filter(p => !quoteFormData.clientId || p.clientId === quoteFormData.clientId)
-                      .map((project) => (
-                        <option key={project.id} value={project.id}>
-                          {project.title}
-                        </option>
-                      ))}
+                    <option value="">Aucun projet spécifique</option>
+                    {projects.filter(p => p.clientId === quoteFormData.clientId).map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.title}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -1545,7 +1556,7 @@ const AdminDashboard = () => {
                     type="text"
                     value={quoteFormData.title}
                     onChange={(e) => setQuoteFormData({ ...quoteFormData, title: e.target.value })}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     required
                   />
                 </div>
@@ -1557,7 +1568,7 @@ const AdminDashboard = () => {
                     type="date"
                     value={quoteFormData.validUntil}
                     onChange={(e) => setQuoteFormData({ ...quoteFormData, validUntil: e.target.value })}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     required
                   />
                 </div>
@@ -1571,28 +1582,62 @@ const AdminDashboard = () => {
                   value={quoteFormData.description}
                   onChange={(e) => setQuoteFormData({ ...quoteFormData, description: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
+              {/* Quote Items */}
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <h4 className="text-lg font-medium text-white">Éléments du devis</h4>
+                  <label className="block text-sm font-medium text-gray-300">
+                    Éléments du devis *
+                  </label>
                   <button
                     type="button"
                     onClick={addQuoteItem}
-                    className="text-primary-400 hover:text-primary-300 flex items-center text-sm"
+                    className="text-primary-400 hover:text-primary-300 text-sm flex items-center"
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Ajouter un élément
                   </button>
                 </div>
-
+                
                 <div className="space-y-4">
                   {quoteFormData.items.map((item, index) => (
-                    <div key={index} className="bg-gray-700 p-4 rounded-lg">
-                      <div className="flex justify-between items-center mb-4">
-                        <h5 className="text-white font-medium">Élément #{index + 1}</h5>
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-800 rounded-lg">
+                      <div className="md:col-span-2">
+                        <input
+                          type="text"
+                          value={item.description}
+                          onChange={(e) => updateQuoteItem(index, 'description', e.target.value)}
+                          placeholder="Description de l'élément"
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => updateQuoteItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                          placeholder="Quantité"
+                          min="0"
+                          step="0.01"
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+                          required
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          value={item.unitPrice}
+                          onChange={(e) => updateQuoteItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                          placeholder="Prix unitaire"
+                          min="0"
+                          step="0.01"
+                          className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+                          required
+                        />
                         {quoteFormData.items.length > 1 && (
                           <button
                             type="button"
@@ -1603,55 +1648,26 @@ const AdminDashboard = () => {
                           </button>
                         )}
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Description *
-                          </label>
-                          <input
-                            type="text"
-                            value={item.description}
-                            onChange={(e) => updateQuoteItem(index, 'description', e.target.value)}
-                            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Quantité *
-                          </label>
-                          <input
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) => updateQuoteItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                            min="0.01"
-                            step="0.01"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Prix unitaire (€) *
-                          </label>
-                          <input
-                            type="number"
-                            value={item.unitPrice}
-                            onChange={(e) => updateQuoteItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                            min="0"
-                            step="0.01"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="mt-2 text-right">
-                        <span className="text-sm text-gray-300">
-                          Total: {(item.quantity * item.unitPrice).toLocaleString('fr-FR')} €
-                        </span>
-                      </div>
                     </div>
                   ))}
+                </div>
+
+                {/* Quote Total */}
+                <div className="mt-6 p-4 bg-gray-800 rounded-lg">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-gray-300">
+                      <span>Sous-total:</span>
+                      <span>{calculateQuoteTotal().subtotal.toFixed(2)} €</span>
+                    </div>
+                    <div className="flex justify-between text-gray-300">
+                      <span>TVA ({quoteFormData.taxRate}%):</span>
+                      <span>{calculateQuoteTotal().taxAmount.toFixed(2)} €</span>
+                    </div>
+                    <div className="flex justify-between text-white font-bold text-lg border-t border-gray-700 pt-2">
+                      <span>Total:</span>
+                      <span>{calculateQuoteTotal().total.toFixed(2)} €</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1663,38 +1679,40 @@ const AdminDashboard = () => {
                   <input
                     type="number"
                     value={quoteFormData.taxRate}
-                    onChange={(e) => setQuoteFormData({ ...quoteFormData, taxRate: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    onChange={(e) => setQuoteFormData({ ...quoteFormData, taxRate: parseFloat(e.target.value) || 20 })}
                     min="0"
+                    max="100"
                     step="0.01"
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Notes
+                    Devise
                   </label>
-                  <textarea
-                    value={quoteFormData.notes}
-                    onChange={(e) => setQuoteFormData({ ...quoteFormData, notes: e.target.value })}
-                    rows={1}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                  />
+                  <select
+                    value={quoteFormData.currency}
+                    onChange={(e) => setQuoteFormData({ ...quoteFormData, currency: e.target.value })}
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="EUR">Euro (€)</option>
+                    <option value="USD">Dollar ($)</option>
+                    <option value="GBP">Livre (£)</option>
+                  </select>
                 </div>
               </div>
 
-              <div className="bg-gray-700 p-4 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-300">Sous-total:</span>
-                  <span className="text-white">{calculateQuoteTotal().subtotal.toLocaleString('fr-FR')} €</span>
-                </div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-300">TVA ({quoteFormData.taxRate}%):</span>
-                  <span className="text-white">{calculateQuoteTotal().taxAmount.toLocaleString('fr-FR')} €</span>
-                </div>
-                <div className="flex justify-between items-center font-bold">
-                  <span className="text-white">Total:</span>
-                  <span className="text-white text-lg">{calculateQuoteTotal().total.toLocaleString('fr-FR')} €</span>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Notes
+                </label>
+                <textarea
+                  value={quoteFormData.notes}
+                  onChange={(e) => setQuoteFormData({ ...quoteFormData, notes: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Notes additionnelles..."
+                />
               </div>
             </div>
 
@@ -1707,11 +1725,9 @@ const AdminDashboard = () => {
                 Annuler
               </button>
               <button
-                type="button"
                 onClick={createQuote}
                 className="btn btn-primary"
-                disabled={!quoteFormData.clientId || !quoteFormData.title || !quoteFormData.validUntil || 
-                          quoteFormData.items.some(item => !item.description || item.quantity <= 0 || item.unitPrice <= 0)}
+                disabled={!quoteFormData.title || !quoteFormData.clientId || !quoteFormData.validUntil || quoteFormData.items.some(item => !item.description || item.quantity <= 0 || item.unitPrice <= 0)}
               >
                 <Save className="h-4 w-4 mr-2" />
                 Créer le devis
