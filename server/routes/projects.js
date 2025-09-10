@@ -38,6 +38,8 @@ router.get('/', validatePagination, async (req, res) => {
       query.priority = priority;
     }
 
+    console.log('Query',req.user.role ,query);
+
     const projects = await Project.find(query)
       .populate('client_id', 'name email company')
       .populate('assigned_to', 'name email')
@@ -405,9 +407,11 @@ router.delete('/:id', validateMongoId, authorize('admin'), async (req, res) => {
 });
 
 // Get projects by client (admin only)
-router.get('/client/:clientId', validateMongoIdParam('clientId'), authorize('admin'), async (req, res) => {
+router.get('/client/:clientId', validateMongoIdParam('clientId'), authorize('admin', 'client'), async (req, res) => {
   try {
     const { clientId } = req.params;
+
+    console.log('ClientId',clientId);
 
     // Check if MongoDB is available
     if (!isMongoAvailable()) {

@@ -18,16 +18,16 @@ const logSafeURI = (uri) => {
 const mongoOptions = {
   maxPoolSize: 5, // Reduce connection pool for cloud
   serverSelectionTimeoutMS: 15000, // 15 seconds for server selection
-  socketTimeoutMS: 30000, // 30 seconds socket timeout
-  connectTimeoutMS: 15000, // 15 seconds connection timeout
+  socketTimeoutMS: 1000*30*2, // 30 seconds socket timeout
+  connectTimeoutMS: 1000*15*2, // 15 seconds connection timeout
   family: 4, // Use IPv4, skip trying IPv6
   retryWrites: true,
   w: 'majority',
   appName: 'DeliveryDigital',
   // Additional options for cloud connections
-  ssl: true,
-  authSource: 'admin',
-  bufferCommands: false
+  // ssl: true,
+  // authSource: 'admin',
+  // bufferCommands: false
 };
 
 // Connect to MongoDB

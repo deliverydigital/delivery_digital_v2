@@ -133,7 +133,7 @@ const getFileUrl = (req, filePath) => {
 };
 
 // Middleware for different upload types
-const uploadProjectFiles = upload.array('project_attachments', 10);
+const uploadProjectFiles = upload.array('attachments', 10);
 const uploadTaskFiles = upload.array('task_attachments', 5);
 const uploadMessageFiles = upload.array('message_attachments', 5);
 const uploadTrainingMaterials = upload.array('training_materials', 10);

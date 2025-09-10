@@ -52,10 +52,12 @@ app.use(helmet({
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? process.env.FRONTEND_URL 
-    : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
-  credentials: true,
+    : '*',
+  // credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  // allowedHeaders: ['Content-Type', 'Authorization']
   allowedHeaders: ['Content-Type', 'Authorization', 'bypass-tunnel-reminder']
+
 }));
 
 // Compression middleware
@@ -136,25 +138,24 @@ app.use('/api/*', (req, res) => {
 // Start server
 const startServer = async () => {
   try {
-    global.mongoStartTime = Date.now();
     console.log('🚀 Starting DELIVERY Digital server...');
     console.log('🔧 Environment:', process.env.NODE_ENV || 'development');
-    
+
     // Auto-setup MongoDB if needed
     await autoSetupMongoDB();
-    
+
     // Connect to MongoDB (this will handle the connection gracefully)
     try {
       console.log('🔄 Attempting MongoDB connection...');
       await connectDB();
-      
+
       // Check connection state immediately
       console.log('🔍 Checking MongoDB connection state...');
-      
+
       if (mongoose.connection.readyState === 1) {
         console.log('✅ MongoDB connection successful');
         await testMongoConnection();
-        
+
         // Create dummy users only if MongoDB is connected
         try {
           await createDummyUsers();
@@ -170,7 +171,7 @@ const startServer = async () => {
       console.warn('⚠️ MongoDB connection failed:', dbError.message);
       console.warn('⚠️ Continuing without database - API endpoints will return 503 errors');
     }
-    
+
     // Ensure upload directories exist
     const uploadDirs = [
       'uploads/projects',
@@ -180,23 +181,23 @@ const startServer = async () => {
       'uploads/profiles',
       'uploads/general'
     ];
-    
+
     uploadDirs.forEach(dir => {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
     });
-    
+
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
       console.log(`🔗 Health Check: http://localhost:${PORT}/health`);
-      
+
       if (process.env.NODE_ENV !== 'production') {
         console.log(`🌐 Frontend URL: http://localhost:5173`);
       }
-      
+
       console.log('✅ Server startup completed successfully');
     });
   } catch (error) {
@@ -213,19 +214,19 @@ const startServer = async () => {
 const autoSetupMongoDB = async () => {
   try {
     console.log('🔧 Auto-setup MongoDB...');
-    
+
     // Check if MongoDB is accessible
-    const isMongoAccessible = false; // await checkMongoDBAccessibility();
-    
+    // const isMongoAccessible = await checkMongoDBAccessibility();
+    const isMongoAccessible = true;
+
     if (!isMongoAccessible) {
       console.log('📦 MongoDB not accessible, attempting auto-setup...');
-      
+
       // Try to run the setup script
       try {
         console.log('🔄 Running MongoDB setup script...');
-        execSync('node server/scripts/setup-local-db.js', { 
+        execSync('node server/scripts/setup-local-db.js', {
           stdio: 'inherit',
-          timeout: 30000 // 30 second timeout
         });
         console.log('✅ MongoDB setup script completed');
       } catch (setupError) {
@@ -250,10 +251,11 @@ const checkMongoDBAccessibility = async () => {
       serverSelectionTimeoutMS: 5000,
       connectTimeoutMS: 5000
     });
-    
+
     await testConnection.connection.close();
     return true;
   } catch (error) {
+    console.log(error)
     return false;
   }
 };
