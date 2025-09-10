@@ -1,71 +1,52 @@
 import express from 'express';
-import { User, Project } from '../models/index.js';
+import { User, Project, Quote } from '../models/index.js';
 import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Quote storage (using localStorage for demo)
-const getQuotes = () => {
-  try {
-    const quotes = localStorage.getItem('quotes');
-    return quotes ? JSON.parse(quotes) : [];
-  } catch (error) {
-    console.error('Error reading quotes:', error);
-    return [];
-  }
-};
-
-const saveQuotes = (quotes) => {
-  try {
-    localStorage.setItem('quotes', JSON.stringify(quotes));
-  } catch (error) {
-    console.error('Error saving quotes:', error);
-  }
-};
-
 // Get all quotes (admin only)
 router.get('/', authenticate, authorize('admin'), async (req, res) => {
   try {
-    const quotes = getQuotes();
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
 
-    // Populate client and project information
-    const quotesWithDetails = await Promise.all(
-      quotes.map(async (quote) => {
-        let clientInfo = null;
-        let projectInfo = null;
-
-        if (isMongoAvailable()) {
-          if (quote.client_id) {
-            const client = await User.findById(quote.client_id).select('name email company');
-            if (client) {
-              clientInfo = {
-                name: client.name,
-                email: client.email,
-                company: client.company
-              };
-            }
-          }
-
-          if (quote.project_id) {
-            const project = await Project.findById(quote.project_id).select('title');
-            if (project) {
-              projectInfo = { title: project.title };
-            }
-          }
-        }
-
-        return {
-          ...quote,
-          users: clientInfo,
-          projects: projectInfo
-        };
-      })
-    );
+    const quotes = await Quote.find()
+      .populate('client_id', 'name email company')
+      .populate('project_id', 'title')
+      .sort({ created_at: -1 });
 
     res.json({
       success: true,
-      data: quotesWithDetails
+      data: quotes.map(quote => ({
+        id: quote._id,
+        client_id: quote.client_id._id,
+        project_id: quote.project_id?._id,
+        title: quote.title,
+        description: quote.description,
+        status: quote.status,
+        valid_until: quote.valid_until,
+        subtotal: quote.subtotal,
+        tax_rate: quote.tax_rate,
+        tax_amount: quote.tax_amount,
+        total_amount: quote.total_amount,
+        currency: quote.currency,
+        notes: quote.notes,
+        items: quote.items,
+        created_at: quote.created_at,
+        updated_at: quote.updated_at,
+        users: {
+          name: quote.client_id.name,
+          email: quote.client_id.email,
+          company: quote.client_id.company
+        },
+        projects: quote.project_id ? { title: quote.project_id.title } : null
+      }))
     });
   } catch (error) {
     console.error('Error fetching quotes:', error);
@@ -89,31 +70,39 @@ router.get('/client/:clientId', authenticate, async (req, res) => {
       });
     }
 
-    const quotes = getQuotes();
-    const clientQuotes = quotes.filter(q => q.client_id === clientId);
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
 
-    // Populate project information
-    const quotesWithProjects = await Promise.all(
-      clientQuotes.map(async (quote) => {
-        let projectInfo = null;
-
-        if (isMongoAvailable() && quote.project_id) {
-          const project = await Project.findById(quote.project_id).select('title');
-          if (project) {
-            projectInfo = { title: project.title };
-          }
-        }
-
-        return {
-          ...quote,
-          projects: projectInfo
-        };
-      })
-    );
+    const quotes = await Quote.find({ client_id: clientId })
+      .populate('project_id', 'title')
+      .sort({ created_at: -1 });
 
     res.json({
       success: true,
-      data: quotesWithProjects
+      data: quotes.map(quote => ({
+        id: quote._id,
+        client_id: quote.client_id,
+        project_id: quote.project_id?._id,
+        title: quote.title,
+        description: quote.description,
+        status: quote.status,
+        valid_until: quote.valid_until,
+        subtotal: quote.subtotal,
+        tax_rate: quote.tax_rate,
+        tax_amount: quote.tax_amount,
+        total_amount: quote.total_amount,
+        currency: quote.currency,
+        notes: quote.notes,
+        items: quote.items,
+        created_at: quote.created_at,
+        updated_at: quote.updated_at,
+        projects: quote.project_id ? { title: quote.project_id.title } : null
+      }))
     });
   } catch (error) {
     console.error('Error fetching client quotes:', error);
@@ -129,8 +118,17 @@ router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const quotes = getQuotes();
-    const quote = quotes.find(q => q.id === id);
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    const quote = await Quote.findById(id)
+      .populate('client_id', 'name email company')
+      .populate('project_id', 'title');
 
     if (!quote) {
       return res.status(404).json({
@@ -140,46 +138,39 @@ router.get('/:id', authenticate, async (req, res) => {
     }
 
     // Check if user is admin or the client
-    if (req.user.role !== 'admin' && req.user.id !== quote.client_id) {
+    if (req.user.role !== 'admin' && req.user.id !== quote.client_id._id.toString()) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
       });
     }
 
-    // Populate client and project information
-    let clientInfo = null;
-    let projectInfo = null;
-
-    if (isMongoAvailable()) {
-      if (quote.client_id) {
-        const client = await User.findById(quote.client_id).select('name email company');
-        if (client) {
-          clientInfo = {
-            name: client.name,
-            email: client.email,
-            company: client.company
-          };
-        }
-      }
-
-      if (quote.project_id) {
-        const project = await Project.findById(quote.project_id).select('title');
-        if (project) {
-          projectInfo = { title: project.title };
-        }
-      }
-    }
-
-    const quoteWithDetails = {
-      ...quote,
-      users: clientInfo,
-      projects: projectInfo
-    };
-
     res.json({
       success: true,
-      data: quoteWithDetails
+      data: {
+        id: quote._id,
+        client_id: quote.client_id._id,
+        project_id: quote.project_id?._id,
+        title: quote.title,
+        description: quote.description,
+        status: quote.status,
+        valid_until: quote.valid_until,
+        subtotal: quote.subtotal,
+        tax_rate: quote.tax_rate,
+        tax_amount: quote.tax_amount,
+        total_amount: quote.total_amount,
+        currency: quote.currency,
+        notes: quote.notes,
+        items: quote.items,
+        created_at: quote.created_at,
+        updated_at: quote.updated_at,
+        users: {
+          name: quote.client_id.name,
+          email: quote.client_id.email,
+          company: quote.client_id.company
+        },
+        projects: quote.project_id ? { title: quote.project_id.title } : null
+      }
     });
   } catch (error) {
     console.error('Error fetching quote:', error);
@@ -212,24 +203,31 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       });
     }
 
-    // Check if MongoDB is available and validate client/project
-    if (isMongoAvailable()) {
-      const client = await User.findById(clientId);
-      if (!client) {
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    // Validate client exists
+    const client = await User.findById(clientId);
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        error: 'Client not found'
+      });
+    }
+
+    // Validate project if provided
+    if (projectId) {
+      const project = await Project.findById(projectId);
+      if (!project) {
         return res.status(404).json({
           success: false,
-          error: 'Client not found'
+          error: 'Project not found'
         });
-      }
-
-      if (projectId) {
-        const project = await Project.findById(projectId);
-        if (!project) {
-          return res.status(404).json({
-            success: false,
-            error: 'Project not found'
-          });
-        }
       }
     }
 
@@ -238,8 +236,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
     const taxAmount = subtotal * (taxRate / 100);
     const totalAmount = subtotal + taxAmount;
 
-    const newQuote = {
-      id: `quote-${Date.now()}`,
+    const quoteData = {
       client_id: clientId,
       project_id: projectId || null,
       title,
@@ -252,18 +249,44 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       total_amount: totalAmount,
       currency,
       notes,
-      items,
-      created_at: new Date(),
-      updated_at: new Date()
+      items
     };
 
-    const quotes = getQuotes();
-    quotes.push(newQuote);
-    saveQuotes(quotes);
+    const quote = new Quote(quoteData);
+    await quote.save();
+
+    // Populate the created quote
+    await quote.populate('client_id', 'name email company');
+    if (quote.project_id) {
+      await quote.populate('project_id', 'title');
+    }
 
     res.status(201).json({
       success: true,
-      data: newQuote
+      data: {
+        id: quote._id,
+        client_id: quote.client_id._id,
+        project_id: quote.project_id?._id,
+        title: quote.title,
+        description: quote.description,
+        status: quote.status,
+        valid_until: quote.valid_until,
+        subtotal: quote.subtotal,
+        tax_rate: quote.tax_rate,
+        tax_amount: quote.tax_amount,
+        total_amount: quote.total_amount,
+        currency: quote.currency,
+        notes: quote.notes,
+        items: quote.items,
+        created_at: quote.created_at,
+        updated_at: quote.updated_at,
+        users: {
+          name: quote.client_id.name,
+          email: quote.client_id.email,
+          company: quote.client_id.company
+        },
+        projects: quote.project_id ? { title: quote.project_id.title } : null
+      }
     });
   } catch (error) {
     console.error('Error creating quote:', error);
@@ -289,17 +312,21 @@ router.put('/:id', authenticate, authorize('admin'), async (req, res) => {
       projectId
     } = req.body;
 
-    const quotes = getQuotes();
-    const quoteIndex = quotes.findIndex(q => q.id === id);
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
 
-    if (quoteIndex === -1) {
+    const quote = await Quote.findById(id);
+    if (!quote) {
       return res.status(404).json({
         success: false,
         error: 'Quote not found'
       });
     }
-
-    const quote = quotes[quoteIndex];
 
     // Update fields
     if (title !== undefined) quote.title = title;
@@ -312,7 +339,7 @@ router.put('/:id', authenticate, authorize('admin'), async (req, res) => {
     // Recalculate totals if items are provided
     if (items && Array.isArray(items)) {
       const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.quantity) * parseFloat(item.unitPrice)), 0);
-      const tax_rate = taxRate || quote.tax_rate || 20.00;
+      const tax_rate = taxRate !== undefined ? taxRate : quote.tax_rate;
       const taxAmount = subtotal * (tax_rate / 100);
       const totalAmount = subtotal + taxAmount;
 
@@ -323,13 +350,40 @@ router.put('/:id', authenticate, authorize('admin'), async (req, res) => {
       quote.total_amount = totalAmount;
     }
 
-    quote.updated_at = new Date();
-    quotes[quoteIndex] = quote;
-    saveQuotes(quotes);
+    await quote.save();
+
+    // Populate the updated quote
+    await quote.populate('client_id', 'name email company');
+    if (quote.project_id) {
+      await quote.populate('project_id', 'title');
+    }
 
     res.json({
       success: true,
-      data: quote
+      data: {
+        id: quote._id,
+        client_id: quote.client_id._id,
+        project_id: quote.project_id?._id,
+        title: quote.title,
+        description: quote.description,
+        status: quote.status,
+        valid_until: quote.valid_until,
+        subtotal: quote.subtotal,
+        tax_rate: quote.tax_rate,
+        tax_amount: quote.tax_amount,
+        total_amount: quote.total_amount,
+        currency: quote.currency,
+        notes: quote.notes,
+        items: quote.items,
+        created_at: quote.created_at,
+        updated_at: quote.updated_at,
+        users: {
+          name: quote.client_id.name,
+          email: quote.client_id.email,
+          company: quote.client_id.company
+        },
+        projects: quote.project_id ? { title: quote.project_id.title } : null
+      }
     });
   } catch (error) {
     console.error('Error updating quote:', error);
@@ -353,23 +407,32 @@ router.patch('/:id/status', authenticate, authorize('admin'), async (req, res) =
       });
     }
 
-    const quotes = getQuotes();
-    const quoteIndex = quotes.findIndex(q => q.id === id);
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
 
-    if (quoteIndex === -1) {
+    const quote = await Quote.findById(id);
+    if (!quote) {
       return res.status(404).json({
         success: false,
         error: 'Quote not found'
       });
     }
 
-    quotes[quoteIndex].status = status;
-    quotes[quoteIndex].updated_at = new Date();
-    saveQuotes(quotes);
+    quote.status = status;
+    await quote.save();
 
     res.json({
       success: true,
-      data: quotes[quoteIndex]
+      data: {
+        id: quote._id,
+        status: quote.status,
+        updated_at: quote.updated_at
+      }
     });
   } catch (error) {
     console.error('Error updating quote status:', error);
@@ -385,8 +448,15 @@ router.post('/:id/convert-to-invoice', authenticate, authorize('admin'), async (
   try {
     const { id } = req.params;
     
-    const quotes = getQuotes();
-    const quote = quotes.find(q => q.id === id);
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+    
+    const quote = await Quote.findById(id);
     
     if (!quote) {
       return res.status(404).json({
@@ -399,13 +469,12 @@ router.post('/:id/convert-to-invoice', authenticate, authorize('admin'), async (
     const date = new Date();
     const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
     
-    // Get existing invoices to generate sequential number
-    const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
-    const invoiceNumber = `INV-${dateStr}-${(invoices.length + 1).toString().padStart(3, '0')}`;
+    // Get existing invoices count to generate sequential number
+    const invoiceCount = await Invoice.countDocuments();
+    const invoiceNumber = `INV-${dateStr}-${(invoiceCount + 1).toString().padStart(3, '0')}`;
     
-    // Create invoice
-    const invoice = {
-      id: `invoice-${Date.now()}`,
+    // Create invoice data
+    const invoiceData = {
       invoice_number: invoiceNumber,
       client_id: quote.client_id,
       project_id: quote.project_id,
@@ -418,25 +487,38 @@ router.post('/:id/convert-to-invoice', authenticate, authorize('admin'), async (
       total_amount: quote.total_amount,
       currency: quote.currency,
       notes: quote.notes,
-      items: quote.items,
-      created_at: new Date(),
-      updated_at: new Date()
+      items: quote.items
     };
     
-    // Save invoice
-    invoices.push(invoice);
-    localStorage.setItem('invoices', JSON.stringify(invoices));
+    // Create and save invoice
+    const invoice = new Invoice(invoiceData);
+    await invoice.save();
     
     // Update quote status to accepted
-    const quoteIndex = quotes.findIndex(q => q.id === id);
-    quotes[quoteIndex].status = 'accepted';
-    quotes[quoteIndex].updated_at = new Date();
-    saveQuotes(quotes);
+    quote.status = 'accepted';
+    await quote.save();
     
     res.json({
       success: true,
       data: {
-        invoice,
+        invoice: {
+          id: invoice._id,
+          invoice_number: invoice.invoice_number,
+          client_id: invoice.client_id,
+          project_id: invoice.project_id,
+          status: invoice.status,
+          issue_date: invoice.issue_date,
+          due_date: invoice.due_date,
+          subtotal: invoice.subtotal,
+          tax_rate: invoice.tax_rate,
+          tax_amount: invoice.tax_amount,
+          total_amount: invoice.total_amount,
+          currency: invoice.currency,
+          notes: invoice.notes,
+          items: invoice.items,
+          created_at: invoice.created_at,
+          updated_at: invoice.updated_at
+        },
         message: 'Quote successfully converted to invoice'
       }
     });
@@ -455,17 +537,21 @@ router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
   try {
     const { id } = req.params;
 
-    const quotes = getQuotes();
-    const filteredQuotes = quotes.filter(q => q.id !== id);
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
 
-    if (quotes.length === filteredQuotes.length) {
+    const quote = await Quote.findByIdAndDelete(id);
+    if (!quote) {
       return res.status(404).json({
         success: false,
         error: 'Quote not found'
       });
     }
-
-    saveQuotes(filteredQuotes);
 
     res.json({
       success: true,
