@@ -63,7 +63,7 @@ export interface User {
 
 // Get API base URL from environment
 const getApiBaseUrl = (): string => {
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3008';
+  const apiUrl = import.meta.env.VITE_API_URL || '';
   console.log('🔗 API Base URL:', apiUrl);
   return apiUrl;
 };
