@@ -645,6 +645,51 @@ const ClientDashboard = () => {
                 </div>
               </div>
 
+              {/* Task Statistics Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="bg-gray-800 rounded-lg p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-400 text-sm">Total</p>
+                      <p className="text-2xl font-bold text-white">{tasks.length}</p>
+                    </div>
+                    <CheckCircle className="h-8 w-8 text-blue-400" />
+                  </div>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-400 text-sm">En cours</p>
+                      <p className="text-2xl font-bold text-white">
+                        {tasks.filter(t => t.status === 'in_progress').length}
+                      </p>
+                    </div>
+                    <Clock className="h-8 w-8 text-purple-400" />
+                  </div>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-400 text-sm">Terminées</p>
+                      <p className="text-2xl font-bold text-white">
+                        {tasks.filter(t => t.status === 'done').length}
+                      </p>
+                    </div>
+                    <CheckCircle className="h-8 w-8 text-green-400" />
+                  </div>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-400 text-sm">En retard</p>
+                      <p className="text-2xl font-bold text-white">
+                        {tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done').length}
+                      </p>
+                    </div>
+                    <AlertTriangle className="h-8 w-8 text-red-400" />
+                  </div>
+                </div>
+              </div>
               {tasksError && (
                 <div className="bg-red-900/20 border border-red-500/20 rounded-lg p-4">
                   <div className="flex items-center text-red-400">
@@ -660,87 +705,205 @@ const ClientDashboard = () => {
                   <p className="mt-4 text-gray-400">Chargement des tâches...</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {tasks.map((task) => (
-                    <div key={task.id} className="bg-gray-800 rounded-lg p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-bold text-white mb-2">{task.title}</h3>
-                          <p className="text-gray-400 mb-2">{task.description}</p>
-                          
-                          <div className="flex items-center space-x-4 text-sm">
-                            <span className="text-gray-500">Assigné à:</span>
-                            <span className="text-white">{task.assignedTo || 'Non assigné'}</span>
-                            {task.dueDate && (
-                              <>
-                                <span className="text-gray-500">Échéance:</span>
-                                <span className="text-white">{new Date(task.dueDate).toLocaleDateString('fr-FR')}</span>
-                              </>
-                            )}
-                          </div>
+                <div className="bg-gray-800 rounded-lg overflow-hidden">
+                  <div className="p-6 border-b border-gray-700">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-bold text-white">Tableau des Tâches</h3>
+                      <div className="flex items-center space-x-4">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Rechercher une tâche..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-64 px-4 py-2 pl-10 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400"
+                          />
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         </div>
-                        
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTaskStatusColor(task.status)}`}>
-                          {getTaskStatusText(task.status)}
-                        </span>
+                        <select 
+                          className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                          onChange={(e) => {
+                            // Filter by status
+                          }}
+                        >
+                          <option value="all">Tous les statuts</option>
+                          <option value="todo">À faire</option>
+                          <option value="in_progress">En cours</option>
+                          <option value="review">En révision</option>
+                          <option value="done">Terminé</option>
+                        </select>
                       </div>
+                    </div>
+                  </div>
 
-                      {task.checklist && task.checklist.length > 0 && (
-                        <div className="mb-4">
-                          <h4 className="text-sm font-medium text-white mb-2">Checklist:</h4>
-                          <div className="space-y-1">
-                            {task.checklist.slice(0, 3).map((item) => (
-                              <div key={item.id} className="flex items-center text-sm">
-                                <CheckCircle className={`h-4 w-4 mr-2 ${item.completed ? 'text-green-400' : 'text-gray-500'}`} />
-                                <span className={item.completed ? 'text-gray-400 line-through' : 'text-gray-300'}>
-                                  {item.title}
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-700">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Tâche
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Statut
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Priorité
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Assigné à
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Échéance
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Progression
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-700">
+                        {tasks
+                          .filter(task => 
+                            !searchQuery || 
+                            task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            task.description.toLowerCase().includes(searchQuery.toLowerCase())
+                          )
+                          .map((task) => (
+                          <tr key={task.id} className="hover:bg-gray-700/50 transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="flex items-start">
+                                <div className="flex-1">
+                                  <div className="text-sm font-medium text-white">{task.title}</div>
+                                  <div className="text-sm text-gray-400 mt-1 max-w-xs truncate">
+                                    {task.description}
+                                  </div>
+                                  {task.tags && task.tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-2">
+                                      {task.tags.slice(0, 3).map((tag, index) => (
+                                        <span
+                                          key={index}
+                                          className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-900/50 text-primary-300"
+                                        >
+                                          {tag}
+                                        </span>
+                                      ))}
+                                      {task.tags.length > 3 && (
+                                        <span className="text-xs text-gray-500">+{task.tags.length - 3}</span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTaskStatusColor(task.status)}`}>
+                                {getTaskStatusText(task.status)}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                task.priority === 'urgent' ? 'bg-red-900/50 text-red-300' :
+                                task.priority === 'high' ? 'bg-orange-900/50 text-orange-300' :
+                                task.priority === 'medium' ? 'bg-yellow-900/50 text-yellow-300' :
+                                'bg-gray-900/50 text-gray-300'
+                              }`}>
+                                {task.priority === 'urgent' ? 'Urgent' :
+                                 task.priority === 'high' ? 'Haute' :
+                                 task.priority === 'medium' ? 'Moyenne' : 'Basse'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center">
+                                {task.assignedTo ? (
+                                  <>
+                                    <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium mr-3">
+                                      {task.assignedTo.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="text-sm text-gray-300">{task.assignedTo}</div>
+                                  </>
+                                ) : (
+                                  <span className="text-sm text-gray-500">Non assigné</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              {task.dueDate ? (
+                                <div className="text-sm text-gray-300">
+                                  {new Date(task.dueDate).toLocaleDateString('fr-FR')}
+                                  {new Date(task.dueDate) < new Date() && task.status !== 'done' && (
+                                    <span className="ml-2 text-red-400 text-xs">(En retard)</span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-sm text-gray-500">Pas d'échéance</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center">
+                                <div className="w-full bg-gray-700 rounded-full h-2 mr-3">
+                                  <div 
+                                    className="bg-primary-500 h-2 rounded-full transition-all duration-300"
+                                    style={{ width: `${task.completionPercentage}%` }}
+                                  />
+                                </div>
+                                <span className="text-sm text-gray-300 min-w-[3rem]">
+                                  {task.completionPercentage}%
                                 </span>
                               </div>
-                            ))}
-                            {task.checklist.length > 3 && (
-                              <p className="text-xs text-gray-500 ml-6">
-                                +{task.checklist.length - 3} autres éléments
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center space-x-2">
+                                <button 
+                                  onClick={() => {
+                                    setSelectedTask(task);
+                                    setShowTaskModal(true);
+                                  }}
+                                  className="text-blue-400 hover:text-blue-300 transition-colors p-1 rounded hover:bg-gray-700"
+                                  title="Voir les détails"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </button>
+                                <button 
+                                  className="text-green-400 hover:text-green-300 transition-colors p-1 rounded hover:bg-gray-700"
+                                  title="Commentaires"
+                                >
+                                  <MessageCircle className="h-4 w-4" />
+                                </button>
+                                {task.attachments && task.attachments.length > 0 && (
+                                  <button 
+                                    className="text-purple-400 hover:text-purple-300 transition-colors p-1 rounded hover:bg-gray-700"
+                                    title={`${task.attachments.length} pièce(s) jointe(s)`}
+                                  >
+                                    <FileText className="h-4 w-4" />
+                                  </button>
+                                )}
+                                {task.checklist && task.checklist.length > 0 && (
+                                  <button 
+                                    className="text-yellow-400 hover:text-yellow-300 transition-colors p-1 rounded hover:bg-gray-700"
+                                    title={`${task.checklist.filter(c => c.completed).length}/${task.checklist.length} éléments complétés`}
+                                  >
+                                    <CheckCircle className="h-4 w-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
-                      <div className="flex justify-between items-center">
-                        <div className="text-sm text-gray-400">
-                          Progression: {task.completionPercentage}%
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <button 
-                            className="text-blue-400 hover:text-blue-300 transition-colors"
-                            title="Messages de la tâche"
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                          </button>
-                          <button 
-                            onClick={() => {
-                              setSelectedTask(task);
-                              setShowTaskModal(true);
-                            }}
-                            className="text-green-400 hover:text-green-300 transition-colors"
-                            title="Voir les détails"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {tasks.length === 0 && !tasksLoading && (
-                    <div className="text-center py-12 bg-gray-800 rounded-lg">
-                      <CheckCircle className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-white mb-2">Aucune tâche</h3>
-                      <p className="text-gray-400">
-                        {selectedProject ? 'Aucune tâche pour ce projet' : 'Aucune tâche assignée'}
-                      </p>
-                    </div>
-                  )}
+              {tasks.length === 0 && !tasksLoading && (
+                <div className="text-center py-12 bg-gray-800 rounded-lg">
+                  <CheckCircle className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">Aucune tâche</h3>
+                  <p className="text-gray-400">
+                    {selectedProject ? 'Aucune tâche pour ce projet' : 'Aucune tâche assignée'}
+                  </p>
                 </div>
               )}
             </div>
@@ -906,9 +1069,9 @@ const ClientDashboard = () => {
 
             <div className="p-6 space-y-6">
               {/* Task Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div>
-                  <h4 className="text-lg font-medium text-white mb-4">Informations</h4>
+                  <h4 className="text-lg font-medium text-white mb-4">Informations Générales</h4>
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Statut:</span>
@@ -918,21 +1081,54 @@ const ClientDashboard = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Priorité:</span>
-                      <span className="text-white capitalize">{selectedTask.priority}</span>
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        selectedTask.priority === 'urgent' ? 'bg-red-900/50 text-red-300' :
+                        selectedTask.priority === 'high' ? 'bg-orange-900/50 text-orange-300' :
+                        selectedTask.priority === 'medium' ? 'bg-yellow-900/50 text-yellow-300' :
+                        'bg-gray-900/50 text-gray-300'
+                      }`}>
+                        {selectedTask.priority === 'urgent' ? 'Urgent' :
+                         selectedTask.priority === 'high' ? 'Haute' :
+                         selectedTask.priority === 'medium' ? 'Moyenne' : 'Basse'}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Assigné à:</span>
-                      <span className="text-white">{selectedTask.assignedTo || 'Non assigné'}</span>
+                      <div className="flex items-center">
+                        {selectedTask.assignedTo ? (
+                          <>
+                            <div className="w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center text-white text-xs font-medium mr-2">
+                              {selectedTask.assignedTo.charAt(0).toUpperCase()}
+                            </div>
+                            <span className="text-white">{selectedTask.assignedTo}</span>
+                          </>
+                        ) : (
+                          <span className="text-gray-500">Non assigné</span>
+                        )}
+                      </div>
                     </div>
                     {selectedTask.dueDate && (
                       <div className="flex justify-between">
                         <span className="text-gray-400">Échéance:</span>
-                        <span className="text-white">{new Date(selectedTask.dueDate).toLocaleDateString('fr-FR')}</span>
+                        <div className="text-right">
+                          <div className="text-white">{new Date(selectedTask.dueDate).toLocaleDateString('fr-FR')}</div>
+                          {new Date(selectedTask.dueDate) < new Date() && selectedTask.status !== 'done' && (
+                            <div className="text-red-400 text-xs">En retard</div>
+                          )}
+                        </div>
                       </div>
                     )}
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Progression:</span>
-                      <span className="text-white">{selectedTask.completionPercentage}%</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Progression:</span>
+                        <span className="text-white">{selectedTask.completionPercentage}%</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div 
+                          className="bg-primary-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${selectedTask.completionPercentage}%` }}
+                        />
+                      </div>
                     </div>
                     {selectedTask.estimatedHours && (
                       <div className="flex justify-between">
@@ -946,6 +1142,14 @@ const ClientDashboard = () => {
                         <span className="text-white">{selectedTask.actualHours}h</span>
                       </div>
                     )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Créée le:</span>
+                      <span className="text-white text-sm">{new Date(selectedTask.createdAt).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Modifiée le:</span>
+                      <span className="text-white text-sm">{new Date(selectedTask.updatedAt).toLocaleDateString('fr-FR')}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -968,19 +1172,33 @@ const ClientDashboard = () => {
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* Progress Bar */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-400 text-sm">Progression</span>
-                  <span className="text-white text-sm">{selectedTask.completionPercentage}%</span>
-                </div>
-                <div className="w-full bg-gray-700 rounded-full h-2">
-                  <div 
-                    className="bg-primary-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${selectedTask.completionPercentage}%` }}
-                  />
+
+                <div>
+                  <h4 className="text-lg font-medium text-white mb-4">Activité Récente</h4>
+                  <div className="bg-gray-700 p-4 rounded-lg space-y-3">
+                    <div className="flex items-center text-sm">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full mr-3"></div>
+                      <span className="text-gray-300">Tâche créée</span>
+                      <span className="text-gray-500 ml-auto">{new Date(selectedTask.createdAt).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                    {selectedTask.updatedAt && selectedTask.updatedAt.getTime() !== selectedTask.createdAt.getTime() && (
+                      <div className="flex items-center text-sm">
+                        <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
+                        <span className="text-gray-300">Dernière modification</span>
+                        <span className="text-gray-500 ml-auto">{new Date(selectedTask.updatedAt).toLocaleDateString('fr-FR')}</span>
+                      </div>
+                    )}
+                    {selectedTask.comments && selectedTask.comments.length > 0 && (
+                      <div className="flex items-center text-sm">
+                        <div className="w-2 h-2 bg-purple-400 rounded-full mr-3"></div>
+                        <span className="text-gray-300">{selectedTask.comments.length} commentaire(s)</span>
+                        <span className="text-gray-500 ml-auto">
+                          {new Date(selectedTask.comments[selectedTask.comments.length - 1].timestamp).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -988,15 +1206,34 @@ const ClientDashboard = () => {
               {selectedTask.checklist && selectedTask.checklist.length > 0 && (
                 <div>
                   <h4 className="text-lg font-medium text-white mb-4">Checklist</h4>
-                  <div className="space-y-2 bg-gray-700 p-4 rounded-lg">
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-sm text-gray-400">
+                        {selectedTask.checklist.filter(item => item.completed).length} / {selectedTask.checklist.length} complétés
+                      </span>
+                      <div className="w-24 bg-gray-600 rounded-full h-2">
+                        <div 
+                          className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                          style={{ 
+                            width: `${selectedTask.checklist.length > 0 ? 
+                              (selectedTask.checklist.filter(item => item.completed).length / selectedTask.checklist.length) * 100 : 0}%` 
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
                     {selectedTask.checklist.map((item) => (
-                      <div key={item.id} className="flex items-center">
+                      <div key={item.id} className="flex items-center p-2 hover:bg-gray-600 rounded transition-colors">
                         <CheckCircle className={`h-4 w-4 mr-3 ${item.completed ? 'text-green-400' : 'text-gray-500'}`} />
-                        <span className={`${item.completed ? 'text-gray-400 line-through' : 'text-gray-300'}`}>
+                        <span className={`flex-1 ${item.completed ? 'text-gray-400 line-through' : 'text-gray-300'}`}>
                           {item.title}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {new Date(item.createdAt).toLocaleDateString('fr-FR')}
                         </span>
                       </div>
                     ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1005,18 +1242,45 @@ const ClientDashboard = () => {
               {selectedTask.comments && selectedTask.comments.length > 0 && (
                 <div>
                   <h4 className="text-lg font-medium text-white mb-4">Commentaires</h4>
-                  <div className="space-y-4 bg-gray-700 p-4 rounded-lg max-h-64 overflow-y-auto">
+                  <div className="bg-gray-700 rounded-lg">
+                    <div className="p-4 border-b border-gray-600">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-400">{selectedTask.comments.length} commentaire(s)</span>
+                        <button className="text-primary-400 hover:text-primary-300 text-sm">
+                          Ajouter un commentaire
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-4 space-y-4 max-h-64 overflow-y-auto">
                     {selectedTask.comments.map((comment) => (
-                      <div key={comment.id} className="border-b border-gray-600 pb-3 last:border-b-0">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="text-white font-medium">{comment.author}</span>
-                          <span className="text-gray-400 text-xs">
-                            {new Date(comment.timestamp).toLocaleDateString('fr-FR')}
-                          </span>
+                      <div key={comment.id} className="bg-gray-600 rounded-lg p-3">
+                        <div className="flex items-start mb-2">
+                          <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-medium mr-3">
+                            {comment.author.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-white font-medium">{comment.author}</span>
+                              <div className="flex items-center space-x-2">
+                                <span className={`px-2 py-0.5 rounded text-xs ${
+                                  comment.authorRole === 'admin' ? 'bg-red-900/50 text-red-300' :
+                                  comment.authorRole === 'developer' ? 'bg-blue-900/50 text-blue-300' :
+                                  'bg-green-900/50 text-green-300'
+                                }`}>
+                                  {comment.authorRole === 'admin' ? 'Admin' :
+                                   comment.authorRole === 'developer' ? 'Développeur' : 'Client'}
+                                </span>
+                                <span className="text-gray-400 text-xs">
+                                  {new Date(comment.timestamp).toLocaleDateString('fr-FR')}
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-gray-300 text-sm">{comment.content}</p>
+                          </div>
                         </div>
-                        <p className="text-gray-300 text-sm">{comment.content}</p>
                       </div>
                     ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1025,27 +1289,42 @@ const ClientDashboard = () => {
               {selectedTask.attachments && selectedTask.attachments.length > 0 && (
                 <div>
                   <h4 className="text-lg font-medium text-white mb-4">Pièces jointes</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <div className="grid grid-cols-1 gap-3">
                     {selectedTask.attachments.map((attachment, index) => (
-                      <div key={index} className="flex items-center bg-gray-700 rounded-lg p-3">
-                        <FileText className="h-5 w-5 text-primary-400 mr-3" />
+                      <div key={index} className="flex items-center bg-gray-600 rounded-lg p-3 hover:bg-gray-500 transition-colors">
+                        <div className="bg-primary-900/50 p-2 rounded mr-3">
+                          <FileText className="h-5 w-5 text-primary-400" />
+                        </div>
                         <div className="flex-1">
                           <p className="text-white text-sm">{attachment.name}</p>
-                          <p className="text-gray-400 text-xs">
-                            {new Date(attachment.uploadedAt).toLocaleDateString('fr-FR')}
-                          </p>
+                          <div className="flex items-center space-x-2 text-xs text-gray-400">
+                            <span>Ajouté le {new Date(attachment.uploadedAt).toLocaleDateString('fr-FR')}</span>
+                            {attachment.uploadedBy && (
+                              <span>• par {attachment.uploadedBy}</span>
+                            )}
+                          </div>
                         </div>
-                        <button className="text-blue-400 hover:text-blue-300">
+                        <button className="text-blue-400 hover:text-blue-300 p-2 rounded hover:bg-gray-700 transition-colors">
                           <Download className="h-4 w-4" />
                         </button>
                       </div>
                     ))}
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="p-6 border-t border-gray-700 flex justify-end">
+            <div className="p-6 border-t border-gray-700 flex justify-between items-center">
+              <div className="text-sm text-gray-400">
+                ID: {selectedTask.id}
+              </div>
+              <div className="flex space-x-3">
+                <button className="btn btn-secondary">
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Ajouter un commentaire
+                </button>
               <button
                 onClick={() => {
                   setShowTaskModal(false);
@@ -1055,6 +1334,7 @@ const ClientDashboard = () => {
               >
                 Fermer
               </button>
+              </div>
             </div>
           </motion.div>
         </div>
