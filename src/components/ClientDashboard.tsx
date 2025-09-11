@@ -10,11 +10,11 @@ import TaskBoard from './TaskBoard';
 const ClientDashboard = () => {
   const { user, logout } = useAuth();
   const { projects, loading: projectsLoading } = useProjects(user?.id);
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [activeSubTab, setActiveSubTab] = useState('kanban');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -23,13 +23,16 @@ const ClientDashboard = () => {
     assignee: 'all'
   });
 
-  const { tasks, loading: tasksLoading, error: tasksError, refreshTasks } = useTasks(selectedProject?.id || '');
+  // Only load tasks if we have a selected project and user is authenticated
+  const { tasks, loading: tasksLoading, error: tasksError, refreshTasks } = useTasks(
+    (selectedProject?.id && user) ? selectedProject.id : ''
+  );
 
   useEffect(() => {
-    if (projects.length > 0 && !selectedProject) {
+    if (projects.length > 0 && !selectedProject && user) {
       setSelectedProject(projects[0]);
     }
-  }, [projects, selectedProject]);
+  }, [projects, selectedProject, user]);
 
   const handleLogout = () => {
     logout();

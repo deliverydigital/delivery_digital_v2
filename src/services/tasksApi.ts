@@ -574,6 +574,11 @@ export class TasksApiService {
     }
   }
 
+  // Public method to get demo tasks
+  static getDemoTasks(projectId: string): Task[] {
+    return this.getFallbackTasks(projectId);
+  }
+
   private static calculateStatistics(tasks: Task[]): TaskStatistics {
     const now = new Date();
 

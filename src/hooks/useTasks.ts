@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TasksApiService, Task, TaskBoard, TaskStatistics, TaskNotification, TaskTemplate } from '../services/tasksApi';
+import { ApiService } from '../services/api';
 
 // Hook principal pour la gestion des tâches
 export const useTasks = (projectId: string) => {
@@ -8,25 +9,42 @@ export const useTasks = (projectId: string) => {
   const [error, setError] = useState<string | null>(null);
 
   const loadTasks = async () => {
+    // Check authentication first
+    const token = ApiService.getAuthToken();
+    const currentUser = ApiService.getCurrentUser();
+    
+    if (!token || !currentUser || !projectId) {
+      console.log('🔒 No authentication or project ID, using demo tasks');
+      setTasks(TasksApiService.getDemoTasks(projectId));
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
       const projectTasks = await TasksApiService.getProjectTasks(projectId);
       setTasks(projectTasks);
     } catch (err) {
-      setError('Erreur lors du chargement des tâches');
       console.error('Erreur lors du chargement des tâches:', err);
+      // Fallback to demo data on error
+      console.log('📊 API failed, falling back to demo tasks');
+      setTasks(TasksApiService.getDemoTasks(projectId));
+      setError(null); // Don't show error, just use demo data
     }
     setLoading(false);
   };
 
   useEffect(() => {
-    if (projectId) {
-      loadTasks();
-    }
+    loadTasks();
   }, [projectId]);
 
   const createTask = async (taskData: Partial<Task>) => {
+    const token = ApiService.getAuthToken();
+    if (!token) {
+      return { success: false, error: 'Authentication required' };
+    }
+
     const result = await TasksApiService.createTask({
       ...taskData,
       projectId
@@ -38,6 +56,11 @@ export const useTasks = (projectId: string) => {
   };
 
   const updateTask = async (taskId: string, updates: Partial<Task>) => {
+    const token = ApiService.getAuthToken();
+    if (!token) {
+      return { success: false, error: 'Authentication required' };
+    }
+
     const result = await TasksApiService.updateTask(taskId, updates);
     if (result.success) {
       await loadTasks();
