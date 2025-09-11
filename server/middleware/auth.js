@@ -163,7 +163,7 @@ const authRateLimit = createRateLimit(
 
 const apiRateLimit = createRateLimit(
   15 * 60 * 1000, // 15 minutes
-  100, // limit each IP to 100 requests per windowMs
+  500, // limit each IP to 500 requests per windowMs
   'Too many API requests, please try again later'
 );
 
