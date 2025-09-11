@@ -1,52 +1,33 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  User, Mail, Phone, Building2, Calendar, Clock, 
-  MapPin, Users, Euro, CheckCircle, AlertCircle, 
-  FileText, Download, Star, Send, Briefcase, 
-  CreditCard, Shield, Award, BookOpen, Target, ExternalLink,
-  Plus, MessageCircle, FolderOpen, Settings, LogOut, Search, 
-  ChevronRight, Image as ImageIcon, Edit, Trash2, Eye, 
-  Filter, MoreVertical, Reply, Forward, Paperclip, Save, 
-  RefreshCw, Home, Kanban, GraduationCap, Code, UserCheck, 
-  FileSignature, ClipboardList, BarChart3, TrendingUp, Zap, 
-  Link, Upload, Database, Globe, Bell, X, ArrowRight, ArrowLeft,
-  Hash, Clock3, User2, Calendar as CalendarIcon, Flag, 
-  CheckSquare, MessageSquare, Paperclip as AttachIcon,
-  ChevronDown, ChevronUp, Copy, Archive, Pin, Tag,
-  Timer, PlayCircle, PauseCircle, StopCircle, RotateCcw
+  Users, MessageCircle, FolderOpen, Settings, LogOut, Search, ChevronRight, FileText, Image as ImageIcon, ExternalLink, Clock, CheckCircle, AlertTriangle, X, Edit, Trash2, Send, Filter, Download, Eye, User, Building2, Mail, Phone, Calendar, Tag, DollarSign, Star, Archive, Bell, Plus, MoreVertical, Reply, Forward, Paperclip, Save, RefreshCw, Home, Kanban, GraduationCap, Code, BookOpen, UserCheck, FileSignature, ClipboardList, BarChart3, TrendingUp, Zap, Link, Upload, Database, Globe, Shield, Award, Target, PieChart, Activity, Workflow, UserPlus, FileCheck, QrCode, Printer, Calculator, CreditCard, Briefcase, School, AlignCenterVertical as Certificate, Users2, MessageSquare, UploadCloud as CloudUpload, HardDrive, Folder, Share2, Lock, Key, Monitor, Smartphone, Server, Cloud, Cpu, Network, ClipboardCheck, List
 } from 'lucide-react';
 import { useAuth, useProjects } from '../hooks/useApi';
 import { useTasks } from '../hooks/useTasks';
+import TaskBoard from './TaskBoard';
 
 const ClientDashboard = () => {
   const { user, logout } = useAuth();
   const { projects, loading: projectsLoading } = useProjects(user?.id);
-  
-  const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'tasks' | 'messages' | 'settings'>('overview');
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
-  const [selectedTask, setSelectedTask] = useState<any>(null);
-  const [showTaskDetail, setShowTaskDetail] = useState(false);
-  const [taskView, setTaskView] = useState<'kanban' | 'list'>('kanban');
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [activeSubTab, setActiveSubTab] = useState('kanban');
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [showTaskModal, setShowTaskModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    status: 'all',
+    priority: 'all',
+    assignee: 'all'
+  });
 
-  // Use tasks hook for the selected project
-  const { 
-    tasks, 
-    loading: tasksLoading, 
-    error: tasksError,
-    addComment,
-    updateTask,
-    refreshTasks 
-  } = useTasks(selectedProject || '');
+  const { tasks, loading: tasksLoading, error: tasksError, refreshTasks } = useTasks(selectedProject?.id || '');
 
-  // Set first project as selected by default
   useEffect(() => {
     if (projects.length > 0 && !selectedProject) {
-      setSelectedProject(projects[0].id);
+      setSelectedProject(projects[0]);
     }
   }, [projects, selectedProject]);
 
@@ -55,18 +36,18 @@ const ClientDashboard = () => {
     window.location.href = '/';
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status) => {
     switch (status) {
-      case 'todo': return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'review': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'done': return 'bg-green-100 text-green-800 border-green-200';
-      case 'blocked': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'todo': return 'bg-gray-100 text-gray-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'review': return 'bg-yellow-100 text-yellow-800';
+      case 'done': return 'bg-green-100 text-green-800';
+      case 'blocked': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority) => {
     switch (priority) {
       case 'low': return 'text-green-600';
       case 'medium': return 'text-yellow-600';
@@ -76,7 +57,7 @@ const ClientDashboard = () => {
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status) => {
     switch (status) {
       case 'todo': return 'À faire';
       case 'in_progress': return 'En cours';
@@ -87,7 +68,7 @@ const ClientDashboard = () => {
     }
   };
 
-  const getPriorityText = (priority: string) => {
+  const getPriorityText = (priority) => {
     switch (priority) {
       case 'low': return 'Faible';
       case 'medium': return 'Moyenne';
@@ -101,131 +82,23 @@ const ClientDashboard = () => {
     const matchesSearch = !searchQuery || 
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
-    const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
     
-    return matchesSearch && matchesStatus && matchesPriority;
+    const matchesStatus = filters.status === 'all' || task.status === filters.status;
+    const matchesPriority = filters.priority === 'all' || task.priority === filters.priority;
+    const matchesAssignee = filters.assignee === 'all' || task.assignedTo === filters.assignee;
+
+    return matchesSearch && matchesStatus && matchesPriority && matchesAssignee;
   });
 
-  const tasksByStatus = {
-    todo: filteredTasks.filter(t => t.status === 'todo'),
-    in_progress: filteredTasks.filter(t => t.status === 'in_progress'),
-    review: filteredTasks.filter(t => t.status === 'review'),
-    done: filteredTasks.filter(t => t.status === 'done'),
-    blocked: filteredTasks.filter(t => t.status === 'blocked')
+  const taskStats = {
+    total: tasks.length,
+    todo: tasks.filter(t => t.status === 'todo').length,
+    in_progress: tasks.filter(t => t.status === 'in_progress').length,
+    review: tasks.filter(t => t.status === 'review').length,
+    done: tasks.filter(t => t.status === 'done').length,
+    blocked: tasks.filter(t => t.status === 'blocked').length,
+    overdue: tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done').length
   };
-
-  const TaskCard = ({ task }: { task: any }) => (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all cursor-pointer"
-      onClick={() => {
-        setSelectedTask(task);
-        setShowTaskDetail(true);
-      }}
-    >
-      <div className="flex items-start justify-between mb-3">
-        <h4 className="font-medium text-gray-900 text-sm line-clamp-2">{task.title}</h4>
-        <div className="flex items-center space-x-1 ml-2">
-          <Flag className={`h-4 w-4 ${getPriorityColor(task.priority)}`} />
-        </div>
-      </div>
-      
-      {task.description && (
-        <p className="text-gray-600 text-xs mb-3 line-clamp-2">{task.description}</p>
-      )}
-
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          {task.assignedTo && (
-            <div className="flex items-center">
-              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                {task.assignedTo.charAt(0).toUpperCase()}
-              </div>
-            </div>
-          )}
-          {task.tags && task.tags.length > 0 && (
-            <div className="flex space-x-1">
-              {task.tags.slice(0, 2).map((tag, index) => (
-                <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                  {tag}
-                </span>
-              ))}
-              {task.tags.length > 2 && (
-                <span className="text-xs text-gray-400">+{task.tags.length - 2}</span>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {task.dueDate && (
-        <div className="flex items-center text-xs text-gray-500 mb-2">
-          <CalendarIcon className="h-3 w-3 mr-1" />
-          <span>{new Date(task.dueDate).toLocaleDateString('fr-FR')}</span>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3 text-xs text-gray-500">
-          {task.comments && task.comments.length > 0 && (
-            <div className="flex items-center">
-              <MessageSquare className="h-3 w-3 mr-1" />
-              <span>{task.comments.length}</span>
-            </div>
-          )}
-          {task.attachments && task.attachments.length > 0 && (
-            <div className="flex items-center">
-              <AttachIcon className="h-3 w-3 mr-1" />
-              <span>{task.attachments.length}</span>
-            </div>
-          )}
-          {task.checklist && task.checklist.length > 0 && (
-            <div className="flex items-center">
-              <CheckSquare className="h-3 w-3 mr-1" />
-              <span>{task.checklist.filter(item => item.completed).length}/{task.checklist.length}</span>
-            </div>
-          )}
-        </div>
-        
-        {task.completionPercentage > 0 && (
-          <div className="w-16">
-            <div className="w-full bg-gray-200 rounded-full h-1">
-              <div 
-                className="bg-blue-500 h-1 rounded-full transition-all"
-                style={{ width: `${task.completionPercentage}%` }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-    </motion.div>
-  );
-
-  const KanbanColumn = ({ title, status, tasks, color }: { title: string; status: string; tasks: any[]; color: string }) => (
-    <div className="bg-gray-50 rounded-lg p-4 min-h-[600px]">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center">
-          <div className={`w-3 h-3 rounded-full mr-2`} style={{ backgroundColor: color }}></div>
-          <h3 className="font-medium text-gray-900">{title}</h3>
-          <span className="ml-2 bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">
-            {tasks.length}
-          </span>
-        </div>
-      </div>
-      
-      <div className="space-y-3">
-        <AnimatePresence>
-          {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} />
-          ))}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
 
   const TaskDetailModal = () => {
     if (!selectedTask) return null;
@@ -236,241 +109,437 @@ const ClientDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
-          className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+          className="bg-gray-900 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
         >
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+          <div className="p-6 border-b border-gray-800 flex justify-between items-center">
             <div className="flex items-center">
-              <div className={`w-3 h-3 rounded-full mr-3 ${getStatusColor(selectedTask.status).split(' ')[0]}`}></div>
-              <h3 className="text-xl font-bold text-gray-900">{selectedTask.title}</h3>
+              <div className={`w-3 h-3 rounded-full mr-3 ${
+                selectedTask.priority === 'urgent' ? 'bg-red-500' :
+                selectedTask.priority === 'high' ? 'bg-orange-500' :
+                selectedTask.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+              }`}></div>
+              <h3 className="text-xl font-bold text-white">{selectedTask.title}</h3>
             </div>
             <button
-              onClick={() => setShowTaskDetail(false)}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={() => {
+                setShowTaskModal(false);
+                setSelectedTask(null);
+              }}
+              className="text-gray-400 hover:text-white transition-colors"
             >
               <X className="h-6 w-6" />
             </button>
           </div>
 
-          <div className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main Content */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Description */}
-                {selectedTask.description && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Description</h4>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-gray-700 whitespace-pre-wrap">{selectedTask.description}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Checklist */}
-                {selectedTask.checklist && selectedTask.checklist.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Liste de contrôle</h4>
-                    <div className="space-y-2">
-                      {selectedTask.checklist.map((item: any) => (
-                        <div key={item.id} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                          <CheckSquare className={`h-4 w-4 mr-3 ${item.completed ? 'text-green-500' : 'text-gray-400'}`} />
-                          <span className={`flex-1 ${item.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                            {item.title}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {new Date(item.createdAt).toLocaleDateString('fr-FR')}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-3 text-sm text-gray-600">
-                      {selectedTask.checklist.filter((item: any) => item.completed).length} / {selectedTask.checklist.length} terminé(s)
-                    </div>
-                  </div>
-                )}
-
-                {/* Comments */}
+          <div className="p-6 space-y-6">
+            {/* Task Info Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Commentaires ({selectedTask.comments?.length || 0})</h4>
-                  <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {selectedTask.comments && selectedTask.comments.length > 0 ? (
-                      selectedTask.comments.map((comment: any) => (
-                        <div key={comment.id} className="flex space-x-3 p-4 bg-gray-50 rounded-lg">
-                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                            {comment.author.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <span className="font-medium text-gray-900">{comment.author}</span>
-                              <span className={`px-2 py-1 rounded text-xs ${
-                                comment.authorRole === 'admin' ? 'bg-purple-100 text-purple-800' :
-                                comment.authorRole === 'developer' ? 'bg-blue-100 text-blue-800' :
-                                'bg-green-100 text-green-800'
-                              }`}>
-                                {comment.authorRole === 'admin' ? 'Admin' :
-                                 comment.authorRole === 'developer' ? 'Développeur' : 'Client'}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                {new Date(comment.timestamp).toLocaleString('fr-FR')}
-                              </span>
-                            </div>
-                            <p className="text-gray-700 text-sm">{comment.content}</p>
-                            {comment.attachments && comment.attachments.length > 0 && (
-                              <div className="mt-2 space-y-1">
-                                {comment.attachments.map((attachment: any, index: number) => (
-                                  <div key={index} className="flex items-center text-xs text-blue-600">
-                                    <AttachIcon className="h-3 w-3 mr-1" />
-                                    <span>{attachment.name}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
+                  <label className="text-sm font-medium text-gray-400">Statut</label>
+                  <div className="mt-1">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedTask.status)}`}>
+                      {getStatusText(selectedTask.status)}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-400">Priorité</label>
+                  <div className={`mt-1 font-medium ${getPriorityColor(selectedTask.priority)}`}>
+                    {getPriorityText(selectedTask.priority)}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-400">Assigné à</label>
+                  <div className="mt-1 flex items-center">
+                    {selectedTask.assignedTo ? (
+                      <>
+                        <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold mr-2">
+                          {selectedTask.assignedTo.charAt(0).toUpperCase()}
                         </div>
-                      ))
+                        <span className="text-white">{selectedTask.assignedTo}</span>
+                      </>
                     ) : (
-                      <p className="text-gray-500 text-center py-8">Aucun commentaire pour le moment</p>
+                      <span className="text-gray-400">Non assigné</span>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Sidebar */}
-              <div className="space-y-6">
-                {/* Task Info */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-4">Informations</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-sm text-gray-500">Statut</span>
-                      <div className="mt-1">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(selectedTask.status)}`}>
-                          {getStatusText(selectedTask.status)}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <span className="text-sm text-gray-500">Priorité</span>
-                      <div className="mt-1 flex items-center">
-                        <Flag className={`h-4 w-4 mr-2 ${getPriorityColor(selectedTask.priority)}`} />
-                        <span className="text-sm text-gray-900">{getPriorityText(selectedTask.priority)}</span>
-                      </div>
-                    </div>
-
-                    {selectedTask.assignedTo && (
-                      <div>
-                        <span className="text-sm text-gray-500">Assigné à</span>
-                        <div className="mt-1 flex items-center">
-                          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium mr-2">
-                            {selectedTask.assignedTo.charAt(0).toUpperCase()}
-                          </div>
-                          <span className="text-sm text-gray-900">{selectedTask.assignedTo}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedTask.dueDate && (
-                      <div>
-                        <span className="text-sm text-gray-500">Échéance</span>
-                        <div className="mt-1 flex items-center">
-                          <CalendarIcon className="h-4 w-4 mr-2 text-gray-400" />
-                          <span className="text-sm text-gray-900">
-                            {new Date(selectedTask.dueDate).toLocaleDateString('fr-FR')}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    <div>
-                      <span className="text-sm text-gray-500">Progression</span>
-                      <div className="mt-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-gray-600">{selectedTask.completionPercentage}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-500 h-2 rounded-full transition-all"
-                            style={{ width: `${selectedTask.completionPercentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {(selectedTask.estimatedHours || selectedTask.actualHours) && (
-                      <div>
-                        <span className="text-sm text-gray-500">Temps</span>
-                        <div className="mt-1 space-y-1">
-                          {selectedTask.estimatedHours && (
-                            <div className="flex items-center text-xs text-gray-600">
-                              <Clock3 className="h-3 w-3 mr-1" />
-                              <span>Estimé: {selectedTask.estimatedHours}h</span>
-                            </div>
-                          )}
-                          {selectedTask.actualHours && (
-                            <div className="flex items-center text-xs text-gray-600">
-                              <Timer className="h-3 w-3 mr-1" />
-                              <span>Réel: {selectedTask.actualHours}h</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-400">Échéance</label>
+                  <div className="mt-1 text-white">
+                    {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString('fr-FR') : 'Non définie'}
                   </div>
                 </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-400">Progression</label>
+                  <div className="mt-1">
+                    <div className="flex items-center">
+                      <div className="flex-1 bg-gray-700 rounded-full h-2 mr-3">
+                        <div 
+                          className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${selectedTask.completionPercentage || 0}%` }}
+                        />
+                      </div>
+                      <span className="text-white text-sm font-medium">
+                        {selectedTask.completionPercentage || 0}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-400">Temps</label>
+                  <div className="mt-1 text-white text-sm">
+                    {selectedTask.estimatedHours ? `${selectedTask.estimatedHours}h estimées` : 'Non estimé'}
+                    {selectedTask.actualHours && ` / ${selectedTask.actualHours}h réelles`}
+                  </div>
+                </div>
+              </div>
 
-                {/* Tags */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-400">Créé le</label>
+                  <div className="mt-1 text-white">
+                    {new Date(selectedTask.createdAt).toLocaleDateString('fr-FR')}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-400">Mis à jour</label>
+                  <div className="mt-1 text-white">
+                    {new Date(selectedTask.updatedAt).toLocaleDateString('fr-FR')}
+                  </div>
+                </div>
                 {selectedTask.tags && selectedTask.tags.length > 0 && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-3">Tags</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedTask.tags.map((tag: string, index: number) => (
-                        <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                          #{tag}
+                  <div>
+                    <label className="text-sm font-medium text-gray-400">Tags</label>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {selectedTask.tags.map((tag, index) => (
+                        <span key={index} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-900/50 text-blue-400 border border-blue-500/20">
+                          {tag}
                         </span>
                       ))}
                     </div>
                   </div>
                 )}
-
-                {/* Attachments */}
-                {selectedTask.attachments && selectedTask.attachments.length > 0 && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-3">Pièces jointes</h4>
-                    <div className="space-y-2">
-                      {selectedTask.attachments.map((attachment: any) => (
-                        <div key={attachment.id} className="flex items-center p-2 bg-white rounded border">
-                          <FileText className="h-4 w-4 text-gray-400 mr-2" />
-                          <span className="flex-1 text-sm text-gray-900 truncate">{attachment.name}</span>
-                          <button className="text-blue-600 hover:text-blue-800 ml-2">
-                            <Download className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Activity */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-3">Activité</h4>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                      <span>Créé le {new Date(selectedTask.createdAt).toLocaleDateString('fr-FR')}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                      <span>Mis à jour le {new Date(selectedTask.updatedAt).toLocaleDateString('fr-FR')}</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
+
+            {/* Description */}
+            {selectedTask.description && (
+              <div>
+                <label className="text-sm font-medium text-gray-400">Description</label>
+                <div className="mt-2 p-4 bg-gray-800 rounded-lg">
+                  <p className="text-gray-300 whitespace-pre-wrap">{selectedTask.description}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Checklist */}
+            {selectedTask.checklist && selectedTask.checklist.length > 0 && (
+              <div>
+                <label className="text-sm font-medium text-gray-400">Checklist</label>
+                <div className="mt-2 space-y-2">
+                  {selectedTask.checklist.map((item, index) => (
+                    <div key={index} className="flex items-center p-3 bg-gray-800 rounded-lg">
+                      <CheckCircle className={`h-5 w-5 mr-3 ${item.completed ? 'text-green-400' : 'text-gray-500'}`} />
+                      <span className={`flex-1 ${item.completed ? 'text-gray-400 line-through' : 'text-white'}`}>
+                        {item.title}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Comments */}
+            {selectedTask.comments && selectedTask.comments.length > 0 && (
+              <div>
+                <label className="text-sm font-medium text-gray-400">Commentaires ({selectedTask.comments.length})</label>
+                <div className="mt-2 space-y-3 max-h-64 overflow-y-auto">
+                  {selectedTask.comments.map((comment, index) => (
+                    <div key={index} className="p-4 bg-gray-800 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3">
+                            {comment.author.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <span className="text-white font-medium">{comment.author}</span>
+                            <span className={`ml-2 px-2 py-0.5 rounded text-xs ${
+                              comment.authorRole === 'client' ? 'bg-blue-900/50 text-blue-400' :
+                              comment.authorRole === 'admin' ? 'bg-purple-900/50 text-purple-400' :
+                              'bg-green-900/50 text-green-400'
+                            }`}>
+                              {comment.authorRole === 'client' ? 'Client' :
+                               comment.authorRole === 'admin' ? 'Admin' : 'Développeur'}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-gray-400 text-sm">
+                          {new Date(comment.timestamp).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
+                      <p className="text-gray-300">{comment.content}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Attachments */}
+            {selectedTask.attachments && selectedTask.attachments.length > 0 && (
+              <div>
+                <label className="text-sm font-medium text-gray-400">Pièces jointes ({selectedTask.attachments.length})</label>
+                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {selectedTask.attachments.map((attachment, index) => (
+                    <div key={index} className="flex items-center p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors">
+                      <FileText className="h-5 w-5 text-blue-400 mr-3" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-medium truncate">{attachment.name}</p>
+                        <p className="text-gray-400 text-xs">
+                          {attachment.uploadedBy} • {new Date(attachment.uploadedAt).toLocaleDateString('fr-FR')}
+                        </p>
+                      </div>
+                      <button className="text-blue-400 hover:text-blue-300 ml-2">
+                        <Download className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>
     );
   };
+
+  const TaskCard = ({ task }) => (
+    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-all cursor-pointer group">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center">
+          <div className={`w-3 h-3 rounded-full mr-2 ${
+            task.priority === 'urgent' ? 'bg-red-500' :
+            task.priority === 'high' ? 'bg-orange-500' :
+            task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+          }`}></div>
+          <h4 className="text-white font-medium text-sm line-clamp-2">{task.title}</h4>
+        </div>
+        <button
+          onClick={() => {
+            setSelectedTask(task);
+            setShowTaskModal(true);
+          }}
+          className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white transition-all"
+        >
+          <Eye className="h-4 w-4" />
+        </button>
+      </div>
+
+      {task.description && (
+        <p className="text-gray-400 text-xs mb-3 line-clamp-2">{task.description}</p>
+      )}
+
+      <div className="flex items-center justify-between mb-3">
+        {task.assignedTo && (
+          <div className="flex items-center">
+            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+              {task.assignedTo.charAt(0).toUpperCase()}
+            </div>
+          </div>
+        )}
+        {task.dueDate && (
+          <div className={`text-xs ${
+            new Date(task.dueDate) < new Date() && task.status !== 'done' 
+              ? 'text-red-400' 
+              : 'text-gray-400'
+          }`}>
+            {new Date(task.dueDate).toLocaleDateString('fr-FR')}
+          </div>
+        )}
+      </div>
+
+      {task.tags && task.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-3">
+          {task.tags.slice(0, 3).map((tag, index) => (
+            <span key={index} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-900/30 text-blue-400">
+              {tag}
+            </span>
+          ))}
+          {task.tags.length > 3 && (
+            <span className="text-gray-400 text-xs">+{task.tags.length - 3}</span>
+          )}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3 text-gray-400">
+          {task.comments && task.comments.length > 0 && (
+            <div className="flex items-center">
+              <MessageCircle className="h-4 w-4 mr-1" />
+              <span className="text-xs">{task.comments.length}</span>
+            </div>
+          )}
+          {task.attachments && task.attachments.length > 0 && (
+            <div className="flex items-center">
+              <Paperclip className="h-4 w-4 mr-1" />
+              <span className="text-xs">{task.attachments.length}</span>
+            </div>
+          )}
+        </div>
+        {task.completionPercentage > 0 && (
+          <div className="text-xs text-gray-400">
+            {task.completionPercentage}%
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const KanbanBoard = () => {
+    const columns = [
+      { id: 'todo', name: 'À faire', color: 'border-gray-600' },
+      { id: 'in_progress', name: 'En cours', color: 'border-blue-600' },
+      { id: 'review', name: 'En révision', color: 'border-yellow-600' },
+      { id: 'done', name: 'Terminé', color: 'border-green-600' }
+    ];
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {columns.map((column) => {
+          const columnTasks = filteredTasks.filter(task => task.status === column.id);
+          
+          return (
+            <div key={column.id} className={`bg-gray-800 rounded-lg border-t-4 ${column.color}`}>
+              <div className="p-4 border-b border-gray-700">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-white font-medium">{column.name}</h3>
+                  <span className="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded-full">
+                    {columnTasks.length}
+                  </span>
+                </div>
+              </div>
+              <div className="p-4 space-y-3 min-h-[400px]">
+                {columnTasks.map((task) => (
+                  <TaskCard key={task.id} task={task} />
+                ))}
+                {columnTasks.length === 0 && (
+                  <div className="text-center text-gray-500 py-8">
+                    <ClipboardList className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Aucune tâche</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const ListView = () => (
+    <div className="bg-gray-800 rounded-lg overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-700">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Tâche</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Statut</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Priorité</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Assigné à</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Échéance</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Progression</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-700">
+            {filteredTasks.map((task) => (
+              <tr key={task.id} className="hover:bg-gray-700/50">
+                <td className="px-6 py-4">
+                  <div>
+                    <div className="text-sm font-medium text-white">{task.title}</div>
+                    {task.description && (
+                      <div className="text-sm text-gray-400 line-clamp-1">{task.description}</div>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                    {getStatusText(task.status)}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center">
+                    <div className={`w-3 h-3 rounded-full mr-2 ${
+                      task.priority === 'urgent' ? 'bg-red-500' :
+                      task.priority === 'high' ? 'bg-orange-500' :
+                      task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}></div>
+                    <span className={`text-sm ${getPriorityColor(task.priority)}`}>
+                      {getPriorityText(task.priority)}
+                    </span>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  {task.assignedTo ? (
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold mr-2">
+                        {task.assignedTo.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-gray-300 text-sm">{task.assignedTo}</span>
+                    </div>
+                  ) : (
+                    <span className="text-gray-500 text-sm">Non assigné</span>
+                  )}
+                </td>
+                <td className="px-6 py-4">
+                  <div className={`text-sm ${
+                    task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'done' 
+                      ? 'text-red-400' 
+                      : 'text-gray-300'
+                  }`}>
+                    {task.dueDate ? new Date(task.dueDate).toLocaleDateString('fr-FR') : 'Non définie'}
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center">
+                    <div className="w-16 bg-gray-700 rounded-full h-2 mr-2">
+                      <div 
+                        className="bg-blue-500 h-2 rounded-full"
+                        style={{ width: `${task.completionPercentage || 0}%` }}
+                      />
+                    </div>
+                    <span className="text-gray-300 text-xs">
+                      {task.completionPercentage || 0}%
+                    </span>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => {
+                        setSelectedTask(task);
+                        setShowTaskModal(true);
+                      }}
+                      className="text-blue-400 hover:text-blue-300"
+                      title="Voir les détails"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button className="text-green-400 hover:text-green-300" title="Commenter">
+                      <MessageCircle className="h-4 w-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -481,11 +550,7 @@ const ClientDashboard = () => {
             <h2 className="text-xl font-bold text-white mb-2">Espace Client</h2>
             <p className="text-sm text-gray-400">DELIVERY Digital Technology</p>
             {user && (
-              <div className="mt-4 p-3 bg-gray-700 rounded-lg">
-                <p className="text-white text-sm font-medium">{user.name}</p>
-                <p className="text-gray-400 text-xs">{user.email}</p>
-                <p className="text-gray-400 text-xs">{user.company}</p>
-              </div>
+              <p className="text-xs text-gray-500 mt-2">{user.name}</p>
             )}
           </div>
 
@@ -571,6 +636,235 @@ const ClientDashboard = () => {
 
         {/* Main Content */}
         <div className="flex-1 p-8">
+          {/* Tasks Tab */}
+          {activeTab === 'tasks' && (
+            <div>
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-bold text-white">Gestion des Tâches</h2>
+                <div className="flex items-center space-x-4">
+                  {/* Project Selector */}
+                  <select
+                    value={selectedProject?.id || ''}
+                    onChange={(e) => {
+                      const project = projects.find(p => p.id === e.target.value);
+                      setSelectedProject(project);
+                    }}
+                    className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                  >
+                    <option value="">Tous les projets</option>
+                    {projects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.title}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={refreshTasks}
+                    className="btn btn-secondary"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Actualiser
+                  </button>
+                </div>
+              </div>
+
+              {/* Task Statistics */}
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
+                <div className="bg-gray-800 rounded-lg p-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">{taskStats.total}</div>
+                    <div className="text-gray-400 text-sm">Total</div>
+                  </div>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-400">{taskStats.todo}</div>
+                    <div className="text-gray-400 text-sm">À faire</div>
+                  </div>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-400">{taskStats.in_progress}</div>
+                    <div className="text-gray-400 text-sm">En cours</div>
+                  </div>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-yellow-400">{taskStats.review}</div>
+                    <div className="text-gray-400 text-sm">En révision</div>
+                  </div>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-400">{taskStats.done}</div>
+                    <div className="text-gray-400 text-sm">Terminé</div>
+                  </div>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-400">{taskStats.blocked}</div>
+                    <div className="text-gray-400 text-sm">Bloqué</div>
+                  </div>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-500">{taskStats.overdue}</div>
+                    <div className="text-gray-400 text-sm">En retard</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* View Toggle and Filters */}
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center space-x-4">
+                  <div className="flex bg-gray-800 rounded-lg p-1">
+                    <button
+                      onClick={() => setActiveSubTab('kanban')}
+                      className={`flex items-center px-4 py-2 rounded-md transition-all ${
+                        activeSubTab === 'kanban'
+                          ? 'bg-primary-600 text-white'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <Kanban className="h-4 w-4 mr-2" />
+                      Kanban
+                    </button>
+                    <button
+                      onClick={() => setActiveSubTab('list')}
+                      className={`flex items-center px-4 py-2 rounded-md transition-all ${
+                        activeSubTab === 'list'
+                          ? 'bg-primary-600 text-white'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <List className="h-4 w-4 mr-2" />
+                      Liste
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Rechercher des tâches..."
+                      className="w-64 px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 text-sm"
+                    />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  </div>
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`btn ${showFilters ? 'btn-primary' : 'btn-secondary'}`}
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filtres
+                  </button>
+                </div>
+              </div>
+
+              {/* Filters Panel */}
+              <AnimatePresence>
+                {showFilters && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-gray-800 rounded-lg p-6 mb-6 overflow-hidden"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Statut</label>
+                        <select
+                          value={filters.status}
+                          onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm"
+                        >
+                          <option value="all">Tous les statuts</option>
+                          <option value="todo">À faire</option>
+                          <option value="in_progress">En cours</option>
+                          <option value="review">En révision</option>
+                          <option value="done">Terminé</option>
+                          <option value="blocked">Bloqué</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Priorité</label>
+                        <select
+                          value={filters.priority}
+                          onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm"
+                        >
+                          <option value="all">Toutes les priorités</option>
+                          <option value="low">Faible</option>
+                          <option value="medium">Moyenne</option>
+                          <option value="high">Haute</option>
+                          <option value="urgent">Urgente</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Assigné à</label>
+                        <select
+                          value={filters.assignee}
+                          onChange={(e) => setFilters({ ...filters, assignee: e.target.value })}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm"
+                        >
+                          <option value="all">Tous les assignés</option>
+                          {[...new Set(tasks.map(t => t.assignedTo).filter(Boolean))].map((assignee) => (
+                            <option key={assignee} value={assignee}>{assignee}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Task Content */}
+              {tasksLoading ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+                  <p className="mt-4 text-gray-400">Chargement des tâches...</p>
+                </div>
+              ) : tasksError ? (
+                <div className="text-center py-12 bg-gray-800 rounded-lg">
+                  <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">Erreur de chargement</h3>
+                  <p className="text-gray-400 mb-6">{tasksError}</p>
+                  <button
+                    onClick={refreshTasks}
+                    className="btn btn-primary"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Réessayer
+                  </button>
+                </div>
+              ) : !selectedProject ? (
+                <div className="text-center py-12 bg-gray-800 rounded-lg">
+                  <FolderOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">Aucun projet sélectionné</h3>
+                  <p className="text-gray-400">Sélectionnez un projet pour voir les tâches associées.</p>
+                </div>
+              ) : filteredTasks.length === 0 ? (
+                <div className="text-center py-12 bg-gray-800 rounded-lg">
+                  <ClipboardList className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">Aucune tâche</h3>
+                  <p className="text-gray-400">
+                    {searchQuery || filters.status !== 'all' || filters.priority !== 'all' || filters.assignee !== 'all'
+                      ? 'Aucune tâche ne correspond aux critères de recherche.'
+                      : 'Aucune tâche n\'a été créée pour ce projet.'}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {activeSubTab === 'kanban' && <KanbanBoard />}
+                  {activeSubTab === 'list' && <ListView />}
+                </>
+              )}
+            </div>
+          )}
+
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div>
@@ -581,8 +875,8 @@ const ClientDashboard = () => {
                 </div>
               </div>
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              {/* Overview Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-gray-800 rounded-lg p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -594,38 +888,22 @@ const ClientDashboard = () => {
                     <FolderOpen className="h-8 w-8 text-blue-400" />
                   </div>
                 </div>
-
                 <div className="bg-gray-800 rounded-lg p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-gray-400 text-sm">Tâches en cours</p>
-                      <p className="text-2xl font-bold text-white">
-                        {tasks.filter(t => t.status === 'in_progress').length}
-                      </p>
+                      <p className="text-2xl font-bold text-white">{taskStats.in_progress}</p>
                     </div>
-                    <ClipboardList className="h-8 w-8 text-green-400" />
+                    <ClipboardList className="h-8 w-8 text-purple-400" />
                   </div>
                 </div>
-
-                <div className="bg-gray-800 rounded-lg p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-400 text-sm">Tâches terminées</p>
-                      <p className="text-2xl font-bold text-white">
-                        {tasks.filter(t => t.status === 'done').length}
-                      </p>
-                    </div>
-                    <CheckCircle className="h-8 w-8 text-purple-400" />
-                  </div>
-                </div>
-
                 <div className="bg-gray-800 rounded-lg p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-gray-400 text-sm">Messages non lus</p>
-                      <p className="text-2xl font-bold text-white">3</p>
+                      <p className="text-2xl font-bold text-white">0</p>
                     </div>
-                    <MessageCircle className="h-8 w-8 text-yellow-400" />
+                    <MessageCircle className="h-8 w-8 text-green-400" />
                   </div>
                 </div>
               </div>
@@ -640,11 +918,10 @@ const ClientDashboard = () => {
                         <FolderOpen className="h-5 w-5 text-blue-400 mr-3" />
                         <div className="flex-1">
                           <p className="text-white text-sm font-medium">{project.title}</p>
-                          <p className="text-gray-400 text-xs">{project.type} - {getStatusText(project.status)}</p>
+                          <p className="text-gray-400 text-xs">
+                            {getStatusText(project.status)} • {new Date(project.lastUpdate).toLocaleDateString('fr-FR')}
+                          </p>
                         </div>
-                        <span className={`px-2 py-1 rounded text-xs ${getStatusColor(project.status)}`}>
-                          {getStatusText(project.status)}
-                        </span>
                       </div>
                     ))}
                   </div>
@@ -653,15 +930,22 @@ const ClientDashboard = () => {
                 <div className="bg-gray-800 rounded-lg p-6">
                   <h3 className="text-lg font-bold text-white mb-4">Tâches prioritaires</h3>
                   <div className="space-y-4">
-                    {tasks.filter(t => t.priority === 'high' || t.priority === 'urgent').slice(0, 5).map((task) => (
-                      <div key={task.id} className="flex items-center p-3 bg-gray-700 rounded-lg">
-                        <Flag className={`h-5 w-5 mr-3 ${getPriorityColor(task.priority)}`} />
-                        <div className="flex-1">
-                          <p className="text-white text-sm font-medium">{task.title}</p>
-                          <p className="text-gray-400 text-xs">{getPriorityText(task.priority)} - {getStatusText(task.status)}</p>
+                    {tasks
+                      .filter(t => t.priority === 'urgent' || t.priority === 'high')
+                      .slice(0, 5)
+                      .map((task) => (
+                        <div key={task.id} className="flex items-center p-3 bg-gray-700 rounded-lg">
+                          <div className={`w-3 h-3 rounded-full mr-3 ${
+                            task.priority === 'urgent' ? 'bg-red-500' : 'bg-orange-500'
+                          }`}></div>
+                          <div className="flex-1">
+                            <p className="text-white text-sm font-medium">{task.title}</p>
+                            <p className="text-gray-400 text-xs">
+                              {getStatusText(task.status)} • {getPriorityText(task.priority)}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </div>
               </div>
@@ -673,10 +957,6 @@ const ClientDashboard = () => {
             <div>
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-2xl font-bold text-white">Mes Projets</h2>
-                <button className="btn btn-primary">
-                  <Plus className="h-5 w-5 mr-2" />
-                  Nouveau Projet
-                </button>
               </div>
 
               {projectsLoading ? (
@@ -684,56 +964,36 @@ const ClientDashboard = () => {
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
                   <p className="mt-4 text-gray-400">Chargement des projets...</p>
                 </div>
+              ) : projects.length === 0 ? (
+                <div className="text-center py-12 bg-gray-800 rounded-lg">
+                  <FolderOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">Aucun projet</h3>
+                  <p className="text-gray-400">Vous n'avez pas encore de projet.</p>
+                </div>
               ) : (
-                <div className="grid gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {projects.map((project) => (
-                    <div key={project.id} className="bg-gray-800 rounded-lg p-6 hover:bg-gray-750 transition-colors">
+                    <div key={project.id} className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-gray-600 transition-all">
                       <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-white mb-2">{project.title}</h3>
-                          <p className="text-gray-400">{project.description}</p>
-                        </div>
+                        <h3 className="text-lg font-bold text-white">{project.title}</h3>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
                           {getStatusText(project.status)}
                         </span>
                       </div>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                        <div>
-                          <span className="text-gray-500 text-sm">Type:</span>
-                          <span className="text-gray-300 ml-2 text-sm capitalize">{project.type}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500 text-sm">Budget:</span>
-                          <span className="text-gray-300 ml-2 text-sm capitalize">{project.budget}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500 text-sm">Délai:</span>
-                          <span className="text-gray-300 ml-2 text-sm">{project.timeline}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500 text-sm">Soumis le:</span>
-                          <span className="text-gray-300 ml-2 text-sm">
-                            {new Date(project.submittedAt).toLocaleDateString('fr-FR')}
-                          </span>
-                        </div>
-                      </div>
-
+                      <p className="text-gray-400 text-sm mb-4 line-clamp-2">{project.description}</p>
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <button 
-                            onClick={() => setSelectedProject(project.id)}
-                            className="text-blue-400 hover:text-blue-300 transition-colors"
-                          >
-                            <Eye className="h-5 w-5" />
-                          </button>
-                          <button className="text-green-400 hover:text-green-300 transition-colors">
-                            <MessageCircle className="h-5 w-5" />
-                          </button>
+                        <div className="text-gray-400 text-sm">
+                          {new Date(project.lastUpdate).toLocaleDateString('fr-FR')}
                         </div>
-                        <span className="text-sm text-gray-400">
-                          Dernière mise à jour : {new Date(project.lastUpdate).toLocaleDateString('fr-FR')}
-                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedProject(project);
+                            setActiveTab('tasks');
+                          }}
+                          className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                        >
+                          Voir les tâches
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -742,343 +1002,16 @@ const ClientDashboard = () => {
             </div>
           )}
 
-          {/* Tasks Tab */}
-          {activeTab === 'tasks' && (
-            <div>
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-bold text-white">Gestion des Tâches</h2>
-                <div className="flex items-center space-x-4">
-                  <select
-                    value={selectedProject || ''}
-                    onChange={(e) => setSelectedProject(e.target.value || null)}
-                    className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                  >
-                    <option value="">Tous les projets</option>
-                    {projects.map((project) => (
-                      <option key={project.id} value={project.id}>
-                        {project.title}
-                      </option>
-                    ))}
-                  </select>
-                  
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => setTaskView('kanban')}
-                      className={`p-2 rounded-lg transition-colors ${
-                        taskView === 'kanban' ? 'bg-primary-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      <Kanban className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => setTaskView('list')}
-                      className={`p-2 rounded-lg transition-colors ${
-                        taskView === 'list' ? 'bg-primary-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      <ClipboardList className="h-5 w-5" />
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="btn btn-secondary"
-                  >
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filtres
-                  </button>
-
-                  <button
-                    onClick={refreshTasks}
-                    className="btn btn-secondary"
-                    disabled={tasksLoading}
-                  >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${tasksLoading ? 'animate-spin' : ''}`} />
-                    Actualiser
-                  </button>
-                </div>
-              </div>
-
-              {/* Filters */}
-              <AnimatePresence>
-                {showFilters && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mb-6 bg-gray-800 rounded-lg p-4"
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Recherche</label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Rechercher des tâches..."
-                            className="w-full px-4 py-2 pl-10 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400"
-                          />
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Statut</label>
-                        <select
-                          value={statusFilter}
-                          onChange={(e) => setStatusFilter(e.target.value)}
-                          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
-                        >
-                          <option value="all">Tous les statuts</option>
-                          <option value="todo">À faire</option>
-                          <option value="in_progress">En cours</option>
-                          <option value="review">En révision</option>
-                          <option value="done">Terminé</option>
-                          <option value="blocked">Bloqué</option>
-                        </select>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Priorité</label>
-                        <select
-                          value={priorityFilter}
-                          onChange={(e) => setPriorityFilter(e.target.value)}
-                          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
-                        >
-                          <option value="all">Toutes les priorités</option>
-                          <option value="low">Faible</option>
-                          <option value="medium">Moyenne</option>
-                          <option value="high">Haute</option>
-                          <option value="urgent">Urgente</option>
-                        </select>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Task Statistics */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-                <div className="bg-gray-800 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-400 text-xs">Total</p>
-                      <p className="text-xl font-bold text-white">{filteredTasks.length}</p>
-                    </div>
-                    <ClipboardList className="h-6 w-6 text-gray-400" />
-                  </div>
-                </div>
-                
-                <div className="bg-gray-800 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-400 text-xs">À faire</p>
-                      <p className="text-xl font-bold text-white">{tasksByStatus.todo.length}</p>
-                    </div>
-                    <Clock className="h-6 w-6 text-gray-400" />
-                  </div>
-                </div>
-                
-                <div className="bg-gray-800 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-400 text-xs">En cours</p>
-                      <p className="text-xl font-bold text-white">{tasksByStatus.in_progress.length}</p>
-                    </div>
-                    <PlayCircle className="h-6 w-6 text-blue-400" />
-                  </div>
-                </div>
-                
-                <div className="bg-gray-800 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-400 text-xs">En révision</p>
-                      <p className="text-xl font-bold text-white">{tasksByStatus.review.length}</p>
-                    </div>
-                    <Eye className="h-6 w-6 text-yellow-400" />
-                  </div>
-                </div>
-                
-                <div className="bg-gray-800 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-400 text-xs">Terminé</p>
-                      <p className="text-xl font-bold text-white">{tasksByStatus.done.length}</p>
-                    </div>
-                    <CheckCircle className="h-6 w-6 text-green-400" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Task Content */}
-              {tasksLoading ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-                  <p className="mt-4 text-gray-400">Chargement des tâches...</p>
-                </div>
-              ) : tasksError ? (
-                <div className="text-center py-12 bg-gray-800 rounded-lg">
-                  <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-white mb-2">Erreur de chargement</h3>
-                  <p className="text-gray-400 mb-4">{tasksError}</p>
-                  <button onClick={refreshTasks} className="btn btn-primary">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Réessayer
-                  </button>
-                </div>
-              ) : filteredTasks.length === 0 ? (
-                <div className="text-center py-12 bg-gray-800 rounded-lg">
-                  <ClipboardList className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-white mb-2">Aucune tâche</h3>
-                  <p className="text-gray-400">
-                    {selectedProject ? 'Aucune tâche pour ce projet.' : 'Aucune tâche trouvée.'}
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {taskView === 'kanban' ? (
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                      <KanbanColumn 
-                        title="À faire" 
-                        status="todo" 
-                        tasks={tasksByStatus.todo} 
-                        color="#6b7280" 
-                      />
-                      <KanbanColumn 
-                        title="En cours" 
-                        status="in_progress" 
-                        tasks={tasksByStatus.in_progress} 
-                        color="#3b82f6" 
-                      />
-                      <KanbanColumn 
-                        title="En révision" 
-                        status="review" 
-                        tasks={tasksByStatus.review} 
-                        color="#f59e0b" 
-                      />
-                      <KanbanColumn 
-                        title="Terminé" 
-                        status="done" 
-                        tasks={tasksByStatus.done} 
-                        color="#10b981" 
-                      />
-                      <KanbanColumn 
-                        title="Bloqué" 
-                        status="blocked" 
-                        tasks={tasksByStatus.blocked} 
-                        color="#ef4444" 
-                      />
-                    </div>
-                  ) : (
-                    <div className="bg-gray-800 rounded-lg overflow-hidden">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead className="bg-gray-700">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Tâche</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Statut</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Priorité</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Assigné</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Échéance</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Progression</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-700">
-                            {filteredTasks.map((task) => (
-                              <tr key={task.id} className="hover:bg-gray-700/50">
-                                <td className="px-6 py-4">
-                                  <div>
-                                    <div className="text-sm font-medium text-white">{task.title}</div>
-                                    {task.description && (
-                                      <div className="text-sm text-gray-400 truncate max-w-xs">
-                                        {task.description}
-                                      </div>
-                                    )}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(task.status)}`}>
-                                    {getStatusText(task.status)}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                  <div className="flex items-center">
-                                    <Flag className={`h-4 w-4 mr-2 ${getPriorityColor(task.priority)}`} />
-                                    <span className="text-sm text-gray-300">{getPriorityText(task.priority)}</span>
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                  {task.assignedTo ? (
-                                    <div className="flex items-center">
-                                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium mr-2">
-                                        {task.assignedTo.charAt(0).toUpperCase()}
-                                      </div>
-                                      <span className="text-sm text-gray-300">{task.assignedTo}</span>
-                                    </div>
-                                  ) : (
-                                    <span className="text-sm text-gray-500">Non assigné</span>
-                                  )}
-                                </td>
-                                <td className="px-6 py-4">
-                                  {task.dueDate ? (
-                                    <div className="text-sm text-gray-300">
-                                      {new Date(task.dueDate).toLocaleDateString('fr-FR')}
-                                    </div>
-                                  ) : (
-                                    <span className="text-sm text-gray-500">-</span>
-                                  )}
-                                </td>
-                                <td className="px-6 py-4">
-                                  <div className="flex items-center">
-                                    <div className="w-16 bg-gray-600 rounded-full h-2 mr-2">
-                                      <div 
-                                        className="bg-blue-500 h-2 rounded-full transition-all"
-                                        style={{ width: `${task.completionPercentage}%` }}
-                                      />
-                                    </div>
-                                    <span className="text-xs text-gray-300">{task.completionPercentage}%</span>
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                  <div className="flex items-center space-x-2">
-                                    <button
-                                      onClick={() => {
-                                        setSelectedTask(task);
-                                        setShowTaskDetail(true);
-                                      }}
-                                      className="text-blue-400 hover:text-blue-300 transition-colors"
-                                      title="Voir les détails"
-                                    >
-                                      <Eye className="h-4 w-4" />
-                                    </button>
-                                    <button
-                                      className="text-green-400 hover:text-green-300 transition-colors"
-                                      title="Commenter"
-                                    >
-                                      <MessageSquare className="h-4 w-4" />
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-
           {/* Messages Tab */}
           {activeTab === 'messages' && (
             <div>
-              <h2 className="text-2xl font-bold text-white mb-8">Messages</h2>
-              <div className="bg-gray-800 rounded-lg p-6">
-                <p className="text-gray-400">Fonctionnalité de messagerie en cours de développement...</p>
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-bold text-white">Messages</h2>
+              </div>
+              <div className="text-center py-12 bg-gray-800 rounded-lg">
+                <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-white mb-2">Messages</h3>
+                <p className="text-gray-400">Fonctionnalité de messagerie à venir.</p>
               </div>
             </div>
           )}
@@ -1086,9 +1019,29 @@ const ClientDashboard = () => {
           {/* Settings Tab */}
           {activeTab === 'settings' && (
             <div>
-              <h2 className="text-2xl font-bold text-white mb-8">Paramètres</h2>
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-bold text-white">Paramètres</h2>
+              </div>
               <div className="bg-gray-800 rounded-lg p-6">
-                <p className="text-gray-400">Paramètres du compte en cours de développement...</p>
+                <h3 className="text-lg font-bold text-white mb-4">Informations du compte</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-400">Nom</label>
+                    <div className="mt-1 text-white">{user?.name}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-400">Email</label>
+                    <div className="mt-1 text-white">{user?.email}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-400">Entreprise</label>
+                    <div className="mt-1 text-white">{user?.company || 'Non renseigné'}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-400">Rôle</label>
+                    <div className="mt-1 text-white capitalize">{user?.role}</div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -1097,7 +1050,7 @@ const ClientDashboard = () => {
 
       {/* Task Detail Modal */}
       <AnimatePresence>
-        {showTaskDetail && <TaskDetailModal />}
+        {showTaskModal && selectedTask && <TaskDetailModal />}
       </AnimatePresence>
     </div>
   );
