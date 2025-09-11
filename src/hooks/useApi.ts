@@ -127,11 +127,18 @@ export const useAuth = () => {
 
   const register = async (userData: { name: string; email: string; company: string; password: string }) => {
     setLoading(true);
+    console.log('🔄 useAuth register called with:', { ...userData, password: '[HIDDEN]' });
+    
     const result = await ApiService.register(userData);
+    console.log('📊 Registration result:', { success: result.success, error: result.error });
+    
     if (result.success && result.user) {
+      console.log('✅ Setting user in useAuth:', result.user);
       setUser(result.user);
       // Dispatch auth state change event
       window.dispatchEvent(new CustomEvent('authStateChanged'));
+    } else {
+      console.error('❌ Registration failed in useAuth:', result.error);
     }
     setLoading(false);
     return result;

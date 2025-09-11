@@ -31,13 +31,15 @@ const Auth = ({ isOpen, onClose, onSuccess }: AuthProps) => {
 
     try {
       if (isLogin) {
-        // Login using the custom backend API
+        console.log('🔄 Attempting login with:', formData.email);
         const result = await login(formData.email, formData.password);
         
         if (!result.success) {
+          console.error('❌ Login failed:', result.error);
           throw new Error(result.error || 'Login failed');
         }
         
+        console.log('✅ Login successful');
         setSuccess(true);
         setTimeout(() => {
           onSuccess();
@@ -48,18 +50,35 @@ const Auth = ({ isOpen, onClose, onSuccess }: AuthProps) => {
           onClose();
         }, 1500);
       } else {
-        // Register using the custom backend API
+        console.log('🔄 Attempting registration with:', formData.email);
+        
+        // Validate form data before sending
+        if (!formData.name.trim()) {
+          throw new Error('Le nom est requis');
+        }
+        if (!formData.email.trim()) {
+          throw new Error('L\'email est requis');
+        }
+        if (!formData.company.trim()) {
+          throw new Error('Le nom de l\'entreprise est requis');
+        }
+        if (formData.password.length < 8) {
+          throw new Error('Le mot de passe doit contenir au moins 8 caractères');
+        }
+        
         const result = await register({
-          name: formData.name,
-          email: formData.email,
-          company: formData.company,
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          company: formData.company.trim(),
           password: formData.password
         });
         
         if (!result.success) {
+          console.error('❌ Registration failed:', result.error);
           throw new Error(result.error || 'Registration failed');
         }
         
+        console.log('✅ Registration successful');
         setSuccess(true);
         setTimeout(() => {
           onSuccess();
@@ -72,7 +91,23 @@ const Auth = ({ isOpen, onClose, onSuccess }: AuthProps) => {
       }
     } catch (err) {
       console.error('Auth error:', err);
-      setError(err.message || 'Une erreur est survenue. Veuillez réessayer.');
+      let errorMessage = 'Une erreur est survenue. Veuillez réessayer.';
+      
+      if (err.message) {
+        if (err.message.includes('User with this email already exists')) {
+          errorMessage = 'Un compte avec cet email existe déjà. Essayez de vous connecter.';
+        } else if (err.message.includes('Invalid email or password')) {
+          errorMessage = 'Email ou mot de passe incorrect.';
+        } else if (err.message.includes('Database service unavailable')) {
+          errorMessage = 'Service temporairement indisponible. Veuillez réessayer dans quelques instants.';
+        } else if (err.message.includes('Validation failed')) {
+          errorMessage = 'Données invalides. Vérifiez vos informations.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
     }
     setLoading(false);
   };
@@ -179,6 +214,7 @@ const Auth = ({ isOpen, onClose, onSuccess }: AuthProps) => {
                 onChange={handleChange}
                 className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="••••••••"
+                minLength={8}
                 required
               />
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -194,6 +230,11 @@ const Auth = ({ isOpen, onClose, onSuccess }: AuthProps) => {
                 )}
               </button>
             </div>
+            {!isLogin && (
+              <p className="mt-1 text-sm text-gray-500">
+                Minimum 8 caractères
+              </p>
+            )}
           </div>
 
           {isLogin && (

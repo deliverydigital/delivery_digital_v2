@@ -14,6 +14,7 @@ router.use(authRateLimit);
 router.post('/register', validateUserRegistration, async (req, res) => {
   try {
     console.log('🔄 Registration attempt for:', req.body.email);
+    console.log('📊 Request body:', { ...req.body, password: '[HIDDEN]' });
     
     const { email, password, name, company, phone } = req.body;
 
@@ -61,6 +62,8 @@ router.post('/register', validateUserRegistration, async (req, res) => {
     const token = generateToken(user._id.toString());
 
     console.log('✅ Registration successful for:', email);
+    console.log('📊 Sending response with user:', { id: user._id, email: user.email, name: user.name });
+    
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -69,6 +72,7 @@ router.post('/register', validateUserRegistration, async (req, res) => {
         email: user.email,
         name: user.name,
         company: user.company,
+        phone: user.phone,
         role: user.role
       },
       token
@@ -80,6 +84,7 @@ router.post('/register', validateUserRegistration, async (req, res) => {
     // Handle MongoDB validation errors
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
+      console.error('❌ Validation errors:', validationErrors);
       return res.status(400).json({
         success: false,
         error: 'Validation failed',
@@ -89,12 +94,14 @@ router.post('/register', validateUserRegistration, async (req, res) => {
 
     // Handle duplicate key error
     if (error.code === 11000) {
+      console.error('❌ Duplicate key error:', error);
       return res.status(400).json({
         success: false,
         error: 'User with this email already exists'
       });
     }
 
+    console.error('❌ Unexpected registration error:', error);
     res.status(500).json({
       success: false,
       error: 'Registration failed'

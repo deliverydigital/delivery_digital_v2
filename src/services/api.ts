@@ -63,7 +63,9 @@ export interface User {
 
 // Get API base URL from environment
 const getApiBaseUrl = (): string => {
-  return import.meta.env.VITE_API_URL || '';
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3008';
+  console.log('🔗 API Base URL:', apiUrl);
+  return apiUrl;
 };
 
 // API Service
@@ -84,6 +86,10 @@ export class ApiService {
   private static async makeRequest(url: string, options: RequestInit = {}): Promise<any> {
     const token = this.getAuthToken();
     const baseUrl = getApiBaseUrl();
+    
+    console.log('🔄 Making API request to:', `${baseUrl}/api${url}`);
+    console.log('📊 Request options:', { method: options.method || 'GET', hasToken: !!token });
+    
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -94,20 +100,37 @@ export class ApiService {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${baseUrl}/api${url}`, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch((error) => {
-        console.log(error);
-        return { message: 'Network error' };
+    try {
+      const response = await fetch(`${baseUrl}/api${url}`, {
+        ...options,
+        headers,
       });
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-    }
 
-    return response.json();
+      console.log('📊 Response status:', response.status, response.statusText);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch((error) => {
+          console.error('❌ Failed to parse error response:', error);
+          return { 
+            message: response.status === 503 ? 'Service temporarily unavailable' : 'Network error',
+            error: `HTTP ${response.status}: ${response.statusText}`
+          };
+        });
+        
+        console.error('❌ API Error:', errorData);
+        throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ API Response:', data);
+      return data;
+    } catch (fetchError) {
+      console.error('❌ Fetch error:', fetchError);
+      if (fetchError.name === 'TypeError' && fetchError.message.includes('fetch')) {
+        throw new Error('Impossible de contacter le serveur. Vérifiez que le serveur backend est démarré.');
+      }
+      throw fetchError;
+    }
   }
 
   // Authentication
@@ -137,12 +160,18 @@ export class ApiService {
 
   static async register(userData: { name: string; email: string; company: string; password: string }): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
+      console.log('🔄 ApiService.register called');
+      console.log('📊 Registration data:', { ...userData, password: '[HIDDEN]' });
+      
       const response = await this.makeRequest('/auth/register', {
         method: 'POST',
         body: JSON.stringify(userData),
       });
 
+      console.log('📊 Registration response:', response);
+      
       if (response.token && response.user) {
+        console.log('✅ Registration successful, setting token and user');
         this.setAuthToken(response.token);
         const user: User = {
           ...response.user,
@@ -152,10 +181,21 @@ export class ApiService {
         return { success: true, user };
       }
 
+      console.error('❌ Invalid response structure:', response);
       return { success: false, error: 'Invalid response from server' };
     } catch (error) {
       console.error('Registration error:', error);
-      return { success: false, error: error.message || 'Registration failed' };
+      
+      let errorMessage = 'Registration failed';
+      if (error.message) {
+        if (error.message.includes('fetch')) {
+          errorMessage = 'Impossible de contacter le serveur. Vérifiez votre connexion.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      return { success: false, error: errorMessage };
     }
   }
 
