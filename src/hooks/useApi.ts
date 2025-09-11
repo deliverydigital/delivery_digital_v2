@@ -174,6 +174,17 @@ export const useProjects = (clientId?: string, page: number = 1, limit: number =
   });
 
   const loadProjects = async () => {
+    // Check if user is authenticated before making API calls
+    const token = ApiService.getAuthToken();
+    const currentUser = ApiService.getCurrentUser();
+    
+    if (!token || !currentUser) {
+      console.log('🔒 User not authenticated, skipping API call');
+      setProjects([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       let data;
@@ -199,15 +210,23 @@ export const useProjects = (clientId?: string, page: number = 1, limit: number =
   };
 
   useEffect(() => {
-    if (clientId !== undefined || clientId === undefined) {
+    // Only load projects if we have authentication
+    const token = ApiService.getAuthToken();
+    const currentUser = ApiService.getCurrentUser();
+    
+    if (token && currentUser) {
       loadProjects();
+    } else {
+      console.log('🔒 No authentication found, not loading projects');
+      setProjects([]);
+      setLoading(false);
     }
 
     const handleRefreshProjects = () => loadProjects();
 
     window.addEventListener('refreshProjects', handleRefreshProjects);
     return () => window.removeEventListener('refreshProjects', handleRefreshProjects);
-  }, [clientId, page, limit]);
+  }, [clientId, page, limit, ApiService.getAuthToken()]);
 
   const submitProject = async (projectData: {
     title: string;
@@ -219,6 +238,12 @@ export const useProjects = (clientId?: string, page: number = 1, limit: number =
     gitlabUrl?: string;
     attachments: File[];
   }) => {
+    // Check authentication before submitting
+    const token = ApiService.getAuthToken();
+    if (!token) {
+      return { success: false, error: 'Authentication required' };
+    }
+
     const result = await ApiService.submitProject(projectData);
     if (result.success) {
       await loadProjects();
@@ -227,6 +252,12 @@ export const useProjects = (clientId?: string, page: number = 1, limit: number =
   };
 
   const updateProject = async (projectId: string, updates: Partial<Project>) => {
+    // Check authentication before updating
+    const token = ApiService.getAuthToken();
+    if (!token) {
+      return { success: false, error: 'Authentication required' };
+    }
+
     const result = await ApiService.updateProject(projectId, updates);
     if (result.success) {
       await loadProjects();

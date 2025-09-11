@@ -140,13 +140,6 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
     logout();
   };
 
-  useEffect(()=>{
-      console.log('isAuthenticated------->',user,isAuthenticated)
-
-    if(isAuthenticated){
-      console.log(isAuthenticated)
-    }
-  },[isAuthenticated])
 
 
   const getStatusColor = (status: string) => {

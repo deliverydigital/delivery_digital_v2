@@ -275,6 +275,13 @@ export class ApiService {
 
   static async getClientProjects(clientId: string, page: number = 1, limit: number = 10): Promise<Project[]> {
     try {
+      // Check authentication before making API call
+      const token = this.getAuthToken();
+      if (!token) {
+        console.log('🔒 No auth token, not making API call for client projects');
+        return [];
+      }
+
       // Try to fetch from API first
       try {
         const response = await this.makeRequest(`/projects?page=${page}&limit=${limit}`);
@@ -304,6 +311,13 @@ export class ApiService {
 
   static async getAllProjects(page: number = 1, limit: number = 10): Promise<{ projects: Project[]; pagination?: any }> {
     try {
+      // Check authentication before making API call
+      const token = this.getAuthToken();
+      if (!token) {
+        console.log('🔒 No auth token, not making API call for all projects');
+        return { projects: [] };
+      }
+
       // Try to fetch from API first
       try {
         const response = await this.makeRequest(`/projects?page=${page}&limit=${limit}`);
