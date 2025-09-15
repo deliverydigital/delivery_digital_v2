@@ -24,4 +24,3 @@ uploads/**
 *.sln
 *.sw?
 .env
-vite.config.ts
