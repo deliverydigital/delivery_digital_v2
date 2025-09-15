@@ -223,7 +223,7 @@ const TrainingClientSpace = ({ isOpen, onClose }: TrainingClientSpaceProps) => {
                   Connectez-vous pour accéder à votre formation, suivre votre progression et télécharger vos certificats.
                 </p>
                 <a
-                  href="https://app.deliverydigital.fr/login"
+                  href="https://app.deliverydigital.fr/student/login"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
