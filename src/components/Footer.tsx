@@ -87,7 +87,7 @@ const Footer = () => {
           icon: Clock,
           isInfo: true 
         },
-        {
+        /*{
           label: "Espace Client",
           icon: LogIn,
           link: "https://app.deliverydigital.fr/login",
@@ -98,7 +98,7 @@ const Footer = () => {
           icon: Settings,
           link: "/?admin=true",
           isAdmin: true
-        }
+        }*/
       ]
     }
   ];
