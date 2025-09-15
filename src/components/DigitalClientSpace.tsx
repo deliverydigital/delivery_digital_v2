@@ -193,19 +193,17 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
         {/* Navigation */}
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
-            {isAuthenticated && (
-              <button
-                onClick={() => setActiveTab('projects')}
-                className={`flex items-center py-4 px-2 border-b-2 font-medium text-sm ${
-                  activeTab === 'projects'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Briefcase className="h-4 w-4 mr-2" />
-                <span>Mes Projets</span>
-              </button>
-            )}
+            <button
+              onClick={() => setActiveTab('projects')}
+              className={`flex items-center py-4 px-2 border-b-2 font-medium text-sm ${
+                activeTab === 'projects'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Briefcase className="h-4 w-4 mr-2" />
+              <span>Mes Projets</span>
+            </button>
             <button
               onClick={() => setActiveTab('submit')}
               className={`flex items-center py-4 px-2 border-b-2 font-medium text-sm ${
@@ -217,25 +215,24 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
               <Send className="h-4 w-4 mr-2" />
               <span>Soumettre un Projet</span>
             </button>
-            {isAuthenticated && (
-              <button
-                onClick={() => setActiveTab('account')}
-                className={`flex items-center py-4 px-2 border-b-2 font-medium text-sm ${
-                  activeTab === 'account'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <User className="h-4 w-4 mr-2" />
-                <span>Mon Compte</span>
-              </button>
-            )}
+            <button
+              onClick={() => setActiveTab('account')}
+              className={`flex items-center py-4 px-2 border-b-2 font-medium text-sm ${
+                activeTab === 'account'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <User className="h-4 w-4 mr-2" />
+              <span>Mon Compte</span>
+            </button>
           </nav>
         </div>
 
         <div key={authKey} className="p-6">
           {/* Projects Tab */}
-          {activeTab === 'projects' && isAuthenticated && (
+          {activeTab === 'projects' && (
+            isAuthenticated ? (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-900">Mes Projets</h2>
@@ -319,6 +316,22 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                 </div>
               )}
             </div>
+            ) : (
+              <div className="text-center py-12">
+                <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Mes Projets</h3>
+                <p className="text-gray-600 mb-6">
+                  Connectez-vous pour voir et gérer vos projets en cours.
+                </p>
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Se connecter
+                </button>
+              </div>
+            )
           )}
 
           {/* Submit Project Tab */}
@@ -553,7 +566,8 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
           )}
 
           {/* Account Tab */}
-          {activeTab === 'account' && isAuthenticated && (
+          {activeTab === 'account' && (
+            isAuthenticated ? (
             <div className="space-y-6">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -597,24 +611,27 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                 </div>
               </div>
             </div>
-          )}
-
-          {/* Not authenticated message */}
-          {!isAuthenticated && (activeTab === 'projects' || activeTab === 'account') && (
-            <div className="text-center py-12">
-              <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Connexion requise</h3>
-              <p className="text-gray-600 mb-6">
-                {activeTab === 'projects' ? 'Veuillez vous connecter pour voir vos projets.' : 'Veuillez vous connecter pour accéder à votre compte.'}
-              </p>
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
-              >
-                <User className="h-4 w-4 mr-2" />
-                Se connecter
-              </button>
-            </div>
+            ) : (
+              <div className="text-center py-12">
+                <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Mon Compte</h3>
+                <p className="text-gray-600 mb-6">
+                  Connectez-vous pour accéder à votre espace personnel et gérer vos informations.
+                </p>
+                <div className="space-y-4">
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center text-lg font-medium"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Se connecter / S'inscrire
+                  </button>
+                  <p className="text-sm text-gray-500">
+                    Nouveau client ? Créez votre compte pour commencer
+                  </p>
+                </div>
+              </div>
+            )
           )}
         </div>
       </motion.div>
