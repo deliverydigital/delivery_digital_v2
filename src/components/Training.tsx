@@ -17,7 +17,7 @@ const Training = () => {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedProgram, setSelectedProgram] = useState('hygiene-security');
     const { documents, loading: documentsLoading, downloadDocument , } = useTrainingPrograms();
-    const { documents : docs, } = useTrainingDocuments();
+    const { documents : docs} = useTrainingDocuments();
 
     const { ref, inView } = useInView({
         threshold: 0.1,
@@ -806,11 +806,8 @@ const Training = () => {
                                     return <div className="mt-4 pt-4 border-t border-white/10">
                                         <button
                                             onClick={(e) => {
-                                                e.stopPropagation();
-                                                const link = document.createElement('a');
-                                                link.href = doc.download_url;
-                                                link.download = doc.filename;
-                                                link.click();
+                                                console.log(doc)
+                                                downloadDocument(doc.id, doc.program_id);
                                             }}
                                             className="flex items-center text-xs text-primary-400 hover:text-primary-300 transition-colors"
                                         >
