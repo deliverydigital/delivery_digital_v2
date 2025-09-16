@@ -27,7 +27,8 @@ import {
     Trash2,
     User,
     Users,
-    X
+    X,
+    Upload
 } from 'lucide-react';
 
 import {useAuth, useClients, useMessages, useProjects, useStatistics} from '../hooks/useApi';
@@ -45,7 +46,7 @@ const AdminDashboard = () => {
     const {clients: allClients, loading: clientsDataLoading, refreshClients} = useClients();
     const {stats, refreshStats} = useStatistics();
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'clients' | 'projects' | 'tasks' | 'messages' | 'quotes' | 'settings'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'clients' | 'projects' | 'tasks' | 'messages' | 'quotes' | 'training' | 'settings'>('overview');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedProject, setSelectedProject] = useState<any>(null);
     const [selectedClient, setSelectedClient] = useState<any>(null);
@@ -77,6 +78,28 @@ const AdminDashboard = () => {
     const [loadingQuotes, setLoadingQuotes] = useState(false);
     const [showQuoteDetails, setShowQuoteDetails] = useState(false);
 
+    // Training state
+    const [showUploadModal, setShowUploadModal] = useState(false);
+    const [selectedProgram, setSelectedProgram] = useState('');
+    const [trainingDocuments, setTrainingDocuments] = useState<{[key: string]: {name: string, url: string}[]}>({
+        'wordpress': [
+            { name: "Programme détaillé WordPress", url: "/downloads/wordpress-program.pdf" },
+            { name: "Guide d'installation", url: "/downloads/wordpress-installation.pdf" }
+        ],
+        'photoshop': [
+            { name: "Programme Photoshop", url: "/downloads/photoshop-program.pdf" },
+            { name: "Raccourcis clavier", url: "/downloads/photoshop-shortcuts.pdf" }
+        ],
+        'canva': [
+            { name: "Guide Canva", url: "/downloads/canva-guide.pdf" }
+        ],
+        'excel': [],
+        'dev-web-mobile': [],
+        'hygiene-security': [],
+        'nutrition': [],
+        'autocad-sketchup-revit': []
+    });
+
     // Check authentication on mount
     useEffect(() => {
         if (!isAuthenticated) {
@@ -97,6 +120,129 @@ const AdminDashboard = () => {
             fetchQuotes();
         }
     }, [activeTab]);
+
+    const addDocument = (programKey: string, name: string, url: string) => {
+        setTrainingDocuments(prev => ({
+            ...prev,
+            [programKey]: [...(prev[programKey] || []), { name, url }]
+        }));
+    };
+
+    const removeDocument = (programKey: string, index: number) => {
+        setTrainingDocuments(prev => ({
+            ...prev,
+            [programKey]: prev[programKey].filter((_, i) => i !== index)
+        }));
+    };
+
+    const UploadModal = () => {
+        const [uploadForm, setUploadForm] = useState({
+            program: selectedProgram || 'wordpress',
+            name: '',
+            file: null as File | null
+        });
+
+        const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            if (e.target.files && e.target.files[0]) {
+                setUploadForm(prev => ({ ...prev, file: e.target.files![0] }));
+            }
+        };
+
+        const handleUpload = (e: React.FormEvent) => {
+            e.preventDefault();
+            if (uploadForm.file && uploadForm.name) {
+                // In a real app, you would upload to a server
+                // For demo, we'll create a blob URL
+                const url = URL.createObjectURL(uploadForm.file);
+                addDocument(uploadForm.program, uploadForm.name, url);
+                setShowUploadModal(false);
+                setUploadForm({ program: 'wordpress', name: '', file: null });
+            }
+        };
+
+        return (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-md">
+                    <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+                        <h3 className="text-xl font-bold text-white">Télécharger un document</h3>
+                        <button
+                            onClick={() => setShowUploadModal(false)}
+                            className="text-gray-400 hover:text-white transition-colors"
+                        >
+                            <X className="h-6 w-6" />
+                        </button>
+                    </div>
+
+                    <form onSubmit={handleUpload} className="p-6 space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Formation
+                            </label>
+                            <select
+                                value={uploadForm.program}
+                                onChange={(e) => setUploadForm(prev => ({ ...prev, program: e.target.value }))}
+                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            >
+                                <option value="wordpress">WordPress</option>
+                                <option value="photoshop">Photoshop</option>
+                                <option value="canva">Canva</option>
+                                <option value="excel">Excel</option>
+                                <option value="dev-web-mobile">Développeur Web et Web Mobile</option>
+                                <option value="hygiene-security">Hygiène, Sécurité et Développement Durable</option>
+                                <option value="nutrition">Nutrition</option>
+                                <option value="autocad-sketchup-revit">AutoCAD, SketchUp, et Revit</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Nom du document
+                            </label>
+                            <input
+                                type="text"
+                                value={uploadForm.name}
+                                onChange={(e) => setUploadForm(prev => ({ ...prev, name: e.target.value }))}
+                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                placeholder="Ex: Programme détaillé"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Fichier PDF
+                            </label>
+                            <input
+                                type="file"
+                                accept=".pdf"
+                                onChange={handleFileChange}
+                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                required
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-4 pt-4">
+                            <button
+                                type="button"
+                                onClick={() => setShowUploadModal(false)}
+                                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={!uploadForm.file || !uploadForm.name}
+                                className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <Upload className="h-4 w-4 mr-2" />
+                                Télécharger
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        );
+    };
 
     const loadQuotes = async () => {
         setQuotesLoading(true);
@@ -658,6 +804,18 @@ const AdminDashboard = () => {
                         >
                             <Receipt className="h-5 w-5 mr-3"/>
                             Devis
+                        </button>
+
+                        <button
+                            onClick={() => setActiveTab('training')}
+                            className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
+                                activeTab === 'training'
+                                    ? 'bg-primary-600 text-white'
+                                    : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+                            }`}
+                        >
+                            <FileText className="h-5 w-5 mr-3"/>
+                            Formation
                         </button>
 
                         <button
@@ -1248,6 +1406,83 @@ const AdminDashboard = () => {
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {/* Training Tab */}
+                    {activeTab === 'training' && (
+                        <div className="space-y-6">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-2xl font-bold text-white">Gestion des Documents de Formation</h2>
+                                <button
+                                    onClick={() => setShowUploadModal(true)}
+                                    className="btn btn-primary"
+                                >
+                                    <Upload className="h-4 w-4 mr-2" />
+                                    Télécharger un document
+                                </button>
+                            </div>
+
+                            {/* Training Documents Management */}
+                            <div className="bg-gray-800 rounded-lg p-6">
+                                <h3 className="text-lg font-bold text-white mb-4">Documents par Formation</h3>
+                                
+                                <div className="space-y-6">
+                                    {Object.entries(trainingDocuments).map(([programKey, docs]) => (
+                                        <div key={programKey} className="border border-gray-700 rounded-lg p-4">
+                                            <div className="flex justify-between items-center mb-4">
+                                                <h4 className="text-white font-medium capitalize">
+                                                    {programKey.replace('-', ' ')}
+                                                </h4>
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedProgram(programKey);
+                                                        setShowUploadModal(true);
+                                                    }}
+                                                    className="text-blue-400 hover:text-blue-300 text-sm"
+                                                >
+                                                    <Plus className="h-4 w-4 mr-1 inline" />
+                                                    Ajouter
+                                                </button>
+                                            </div>
+                                            
+                                            <div className="space-y-2">
+                                                {docs.map((doc, index) => (
+                                                    <div key={index} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                                                        <div className="flex items-center">
+                                                            <FileText className="h-5 w-5 text-red-400 mr-3" />
+                                                            <span className="text-white text-sm">{doc.name}</span>
+                                                        </div>
+                                                        <div className="flex items-center space-x-2">
+                                                            <a
+                                                                href={doc.url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-blue-400 hover:text-blue-300"
+                                                                title="Télécharger"
+                                                            >
+                                                                <Download className="h-4 w-4" />
+                                                            </a>
+                                                            <button
+                                                                onClick={() => removeDocument(programKey, index)}
+                                                                className="text-red-400 hover:text-red-300"
+                                                                title="Supprimer"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {docs.length === 0 && (
+                                                    <p className="text-gray-400 text-sm text-center py-4">
+                                                        Aucun document pour cette formation
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     )}
 
@@ -2019,6 +2254,9 @@ const AdminDashboard = () => {
                     </div>
                 </div>
             )}
+
+            {/* Upload Modal */}
+            {showUploadModal && <UploadModal />}
         </div>
     );
 };
