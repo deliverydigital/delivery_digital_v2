@@ -736,24 +736,24 @@ const Training = () => {
               
               {/* Download PDF Button */}
               {/* Download PDF Button - Only show if documents exist */}
-              {(() => {
-                const currentProgramData = Object.values(programs).find(p => p.program_id === key);
-                const programDocs = currentProgramData?.documents || [];
-                return programDocs.length > 0 ? (
-                  <div className="mt-4 pt-4 border-t border-white/10">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        downloadDocument(programDocs[0].id, key);
-                      }}
-                      className="w-full flex items-center justify-center px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg text-blue-400 hover:text-blue-300 transition-all text-sm font-medium"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Télécharger PDF
-                    </button>
-                  </div>
-                ) : null;
-              })()}
+              {program.downloads && program.downloads.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // For now, trigger download of the first document
+                      const link = document.createElement('a');
+                      link.href = program.downloads[0].url;
+                      link.download = program.downloads[0].name;
+                      link.click();
+                    }}
+                    className="w-full flex items-center justify-center px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg text-blue-400 hover:text-blue-300 transition-all text-sm font-medium"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Télécharger PDF
+                  </button>
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
