@@ -93,7 +93,7 @@ export class ApiService {
     // Check if API base URL is available
     if (!baseUrl) {
       console.log('⚠️ No API base URL configured, skipping API call');
-      throw new Error('API service not available');
+      // throw new Error('API service not available');
     }
     
     const headers: HeadersInit = {
