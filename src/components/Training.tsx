@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { useTrainingDocuments } from '../hooks/useTrainingDocuments';
+import { useTrainingPrograms } from '../hooks/useTrainingPrograms';
 import { 
   Clock, Users, CheckCircle2, BookOpen, Search, Utensils, Leaf, Mail, Phone, 
   Accessibility, Calculator, Euro, Building2, PiggyBank, GraduationCap, 
