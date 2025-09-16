@@ -549,7 +549,7 @@ const AdminDashboard = () => {
                             ) : (
                                 <>
                                     <Upload className="h-4 w-4 mr-2" />
-                                    Télécharger
+                                    Sauvegarder
                                 </>
                             )}
                         </button>
