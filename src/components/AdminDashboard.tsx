@@ -115,6 +115,18 @@ const AdminDashboard = () => {
     });
     const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
     const [uploadError, setUploadError] = useState('');
+    const [showDocumentModal, setShowDocumentModal] = useState(false);
+    const [documentFormData, setDocumentFormData] = useState({
+        program_id: '',
+        program_name: '',
+        title: '',
+        description: '',
+        category: 'program',
+        tags: '',
+        version: '1.0',
+        files: [] as File[]
+    });
+    const [documentFormKey, setDocumentFormKey] = useState(0);
 
     // Check authentication on mount
     useEffect(() => {
@@ -171,6 +183,27 @@ const AdminDashboard = () => {
         { id: 'vente-omnicanal', name: 'Techniques de Vente Omnicanal' },
         { id: 'nutrition', name: 'Nutrition' }
     ];
+
+    const handleDocumentFormChange = (field: string, value: any) => {
+        setDocumentFormData(prev => {
+            const newData = { ...prev, [field]: value };
+            return newData;
+        });
+    };
+
+    const resetDocumentForm = () => {
+        setDocumentFormData({
+            program_id: '',
+            program_name: '',
+            title: '',
+            description: '',
+            category: 'program',
+            tags: '',
+            version: '1.0',
+            files: []
+        });
+        setDocumentFormKey(prev => prev + 1);
+    };
 
     const handleUploadSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -370,6 +403,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <form onSubmit={handleUploadSubmit} className="p-6 space-y-6">
+                    <input type="hidden" key={documentFormKey} />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -377,7 +411,10 @@ const AdminDashboard = () => {
                             </label>
                             <select
                                 value={uploadFormData.program_id}
-                                onChange={handleProgramChange}
+                                onChange={(e) => {
+                                    const selectedProgram = trainingPrograms.find(p => p.id === e.target.value);
+                                    handleProgramChange(e);
+                                }}
                                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 required
                             >
@@ -418,6 +455,7 @@ const AdminDashboard = () => {
                             className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                             placeholder="Ex: Programme détaillé WordPress"
                             required
+                            autoComplete="off"
                         />
                     </div>
 
@@ -431,6 +469,7 @@ const AdminDashboard = () => {
                             rows={3}
                             className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                             placeholder="Description du document..."
+                            autoComplete="off"
                         />
                     </div>
 
@@ -445,6 +484,7 @@ const AdminDashboard = () => {
                                 onChange={(e) => setUploadFormData({ ...uploadFormData, tags: e.target.value })}
                                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 placeholder="Ex: wordpress, guide, installation"
+                                autoComplete="off"
                             />
                         </div>
                         <div>
@@ -457,6 +497,7 @@ const AdminDashboard = () => {
                                 onChange={(e) => setUploadFormData({ ...uploadFormData, version: e.target.value })}
                                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 placeholder="1.0"
+                                autoComplete="off"
                             />
                         </div>
                     </div>
