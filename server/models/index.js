@@ -5,6 +5,7 @@ import Message from './Message.js';
 import Task from './Task.js';
 import Quote from './Quote.js';
 import Invoice from './Invoice.js';
+import TrainingDocument from './TrainingDocument.js';
 
 export {
   User,
@@ -12,7 +13,8 @@ export {
   Message,
   Task,
   Quote,
-  Invoice
+  Invoice,
+  TrainingDocument
 };
 
 // Export default object with all models
@@ -22,5 +24,6 @@ export default {
   Message,
   Task,
   Quote,
-  Invoice
+  Invoice,
+  TrainingDocument
 };
