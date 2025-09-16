@@ -16,7 +16,9 @@ const Training = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedProgram, setSelectedProgram] = useState('hygiene-security');
-    const { documents, loading: documentsLoading, downloadDocument } = useTrainingPrograms();
+    const { documents, loading: documentsLoading, downloadDocument , } = useTrainingPrograms();
+    const { documents : docs, } = useTrainingDocuments();
+
     const { ref, inView } = useInView({
         threshold: 0.1,
         triggerOnce: true,
@@ -796,24 +798,30 @@ const Training = () => {
                                 </div>
                             </div>
 
-                            {/* Download PDF Button - Only show if documents exist */}
-                            {program.downloads && program.downloads.length > 0 && (
-                                <div className="mt-4 pt-4 border-t border-white/10">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            const link = document.createElement('a');
-                                            link.href = program.downloads[0].url;
-                                            link.download = program.downloads[0].name;
-                                            link.click();
-                                        }}
-                                        className="flex items-center text-xs text-primary-400 hover:text-primary-300 transition-colors"
-                                    >
-                                        <Download className="h-4 w-4 mr-2" />
-                                        Télécharger PDF
-                                    </button>
-                                </div>
-                            )}
+                            {docs.map((doc) => {
+
+                                if(doc.category === 'program'  && doc.program_name === program.title){
+
+                                    console.log('doc',doc);
+                                    return <div className="mt-4 pt-4 border-t border-white/10">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                const link = document.createElement('a');
+                                                link.href = doc.download_url;
+                                                link.download = doc.filename;
+                                                link.click();
+                                            }}
+                                            className="flex items-center text-xs text-primary-400 hover:text-primary-300 transition-colors"
+                                        >
+                                            <Download className="h-4 w-4 mr-2" />
+                                            Télécharger PDF
+                                        </button>
+                                    </div>
+                                }
+
+                                return null;
+                            })}
                         </motion.div>
                     ))}
                 </div>
