@@ -37,6 +37,264 @@ import { useTrainingDocuments, useTrainingDocumentStats } from '../hooks/useTrai
 import Auth from './Auth';
 import TaskBoard from "./TaskBoard.tsx";
 
+// Define the upload form data type
+interface UploadDocumentFormDataType {
+  program_id: string;
+  program_name: string;
+  title: string;
+  description: string;
+  category: string;
+  tags: string;
+  version: string;
+  files: File[];
+}
+
+// Define the modal props interface
+interface UploadDocumentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  formData: UploadDocumentFormDataType;
+  setFormData: (data: UploadDocumentFormDataType) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  isSubmitting: boolean;
+  programs: any[];
+}
+
+// Move UploadDocumentModal outside of AdminDashboard component
+const UploadDocumentModal = ({ 
+  isOpen, 
+  onClose, 
+  formData, 
+  setFormData, 
+  onSubmit, 
+  isSubmitting, 
+  programs 
+}: UploadDocumentModalProps) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div
+        className="bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl"
+      >
+        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-white">Télécharger un document</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Programme de formation *
+              </label>
+              <select
+                value={formData.program_id}
+                onChange={(e) => {
+                  const selectedProgram = programs.find(p => p.id === e.target.value);
+                  setFormData({
+                    ...formData,
+                    program_id: e.target.value,
+                    program_name: selectedProgram?.title || ''
+                  });
+                }}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                required
+              >
+                <option value="">Sélectionner un programme</option>
+                {programs.map((program) => (
+                  <option key={program.id} value={program.id}>
+                    {program.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Catégorie
+              </label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="program">Programme</option>
+                <option value="guide">Guide</option>
+                <option value="certificate">Certificat</option>
+                <option value="evaluation">Évaluation</option>
+                <option value="other">Autre</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Titre du document *
+            </label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="Ex: Programme détaillé WordPress"
+              required
+              autoComplete="off"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Description
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="Description du document..."
+              rows={3}
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Tags (séparés par des virgules)
+              </label>
+              <input
+                type="text"
+                value={formData.tags}
+                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Ex: wordpress, guide, installation"
+                autoComplete="off"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Version
+              </label>
+              <input
+                type="text"
+                value={formData.version}
+                onChange={(e) => setFormData({ ...formData, version: e.target.value })}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="1.0"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Fichiers PDF *
+            </label>
+            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-700 border-dashed rounded-md hover:border-gray-600 transition-colors">
+              <div className="space-y-1 text-center">
+                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                <div className="flex text-sm text-gray-400">
+                  <label
+                    htmlFor="file-upload"
+                    className="relative cursor-pointer bg-gray-800 rounded-md font-medium text-primary-400 hover:text-primary-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500 px-3 py-1"
+                  >
+                    <span>Télécharger des fichiers PDF</span>
+                    <input
+                      id="file-upload"
+                      name="file-upload"
+                      type="file"
+                      className="sr-only"
+                      multiple
+                      accept=".pdf"
+                      onChange={(e) => {
+                        if (e.target.files) {
+                          setFormData({ ...formData, files: Array.from(e.target.files) });
+                        }
+                      }}
+                    />
+                  </label>
+                  <p className="pl-1">ou glisser-déposer</p>
+                </div>
+                <p className="text-xs text-gray-500">
+                  PDF uniquement, jusqu'à 10MB par fichier
+                </p>
+              </div>
+            </div>
+            {formData.files.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-gray-300 mb-2">
+                  Fichiers sélectionnés ({formData.files.length})
+                </h4>
+                <div className="space-y-2">
+                  {formData.files.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                      <div className="flex items-center">
+                        <FileText className="h-5 w-5 text-red-400 mr-3" />
+                        <div>
+                          <p className="text-white text-sm font-medium">{file.name}</p>
+                          <p className="text-gray-400 text-xs">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newFiles = formData.files.filter((_, i) => i !== index);
+                          setFormData({ ...formData, files: newFiles });
+                        }}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+              disabled={isSubmitting}
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting || !formData.program_id || !formData.title || formData.files.length === 0}
+              className={`btn ${
+                isSubmitting || !formData.program_id || !formData.title || formData.files.length === 0
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  : 'btn-primary'
+              }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                  Téléchargement...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Télécharger
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const AdminDashboard = () => {
     const {user, logout, isAuthenticated} = useAuth();
     const [currentPage, setCurrentPage] = useState(1);
@@ -103,7 +361,7 @@ const AdminDashboard = () => {
         'nutrition': [],
         'autocad-sketchup-revit': []
     });
-    const [uploadFormData, setUploadFormData] = useState({
+    const [uploadFormData, setUploadFormData] = useState<UploadDocumentFormDataType>({
         program_id: '',
         program_name: '',
         title: '',
@@ -384,221 +642,6 @@ const AdminDashboard = () => {
             </div>
         );
     };
-
-    const UploadDocumentModal = () => (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl">
-                <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-                    <h3 className="text-xl font-bold text-white">Télécharger un document</h3>
-                    <button
-                        onClick={() => {
-                            setShowUploadModal(false);
-                            setUploadStatus('idle');
-                            setUploadError('');
-                        }}
-                        className="text-gray-400 hover:text-white transition-colors"
-                    >
-                        <X className="h-6 w-6" />
-                    </button>
-                </div>
-
-                <form onSubmit={handleUploadSubmit} className="p-6 space-y-6">
-                    <input type="hidden" key={documentFormKey} />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Programme de formation *
-                            </label>
-                            <select
-                                value={uploadFormData.program_id}
-                                onChange={(e) => {
-                                    const selectedProgram = trainingPrograms.find(p => p.id === e.target.value);
-                                    handleProgramChange(e);
-                                }}
-                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                required
-                            >
-                                <option value="">Sélectionner un programme</option>
-                                {trainingPrograms.map((program) => (
-                                    <option key={program.id} value={program.id}>
-                                        {program.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Catégorie
-                            </label>
-                            <select
-                                value={uploadFormData.category}
-                                onChange={(e) => setUploadFormData({ ...uploadFormData, category: e.target.value })}
-                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                            >
-                                <option value="program">Programme</option>
-                                <option value="guide">Guide</option>
-                                <option value="certificate">Certificat</option>
-                                <option value="evaluation">Évaluation</option>
-                                <option value="other">Autre</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Titre du document *
-                        </label>
-                        <input
-                            type="text"
-                            value={uploadFormData.title}
-                            onChange={(e) => setUploadFormData({ ...uploadFormData, title: e.target.value })}
-                            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                            placeholder="Ex: Programme détaillé WordPress"
-                            required
-                            autoComplete="off"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Description
-                        </label>
-                        <textarea
-                            value={uploadFormData.description}
-                            onChange={(e) => setUploadFormData({ ...uploadFormData, description: e.target.value })}
-                            rows={3}
-                            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                            placeholder="Description du document..."
-                            autoComplete="off"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Tags (séparés par des virgules)
-                            </label>
-                            <input
-                                type="text"
-                                value={uploadFormData.tags}
-                                onChange={(e) => setUploadFormData({ ...uploadFormData, tags: e.target.value })}
-                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                placeholder="Ex: wordpress, guide, installation"
-                                autoComplete="off"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Version
-                            </label>
-                            <input
-                                type="text"
-                                value={uploadFormData.version}
-                                onChange={(e) => setUploadFormData({ ...uploadFormData, version: e.target.value })}
-                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                placeholder="1.0"
-                                autoComplete="off"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Fichiers PDF *
-                        </label>
-                        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-700 border-dashed rounded-lg">
-                            <div className="space-y-1 text-center">
-                                <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                                <div className="flex text-sm text-gray-400">
-                                    <label
-                                        htmlFor="document-upload"
-                                        className="relative cursor-pointer rounded-md font-medium text-primary-400 hover:text-primary-300"
-                                    >
-                                        <span>Télécharger des fichiers PDF</span>
-                                        <input
-                                            id="document-upload"
-                                            type="file"
-                                            className="sr-only"
-                                            multiple
-                                            accept=".pdf"
-                                            onChange={handleFileChange}
-                                        />
-                                    </label>
-                                </div>
-                                <p className="text-xs text-gray-500">PDF uniquement, jusqu'à 10MB par fichier</p>
-                            </div>
-                        </div>
-                        {uploadFormData.files.length > 0 && (
-                            <div className="mt-3">
-                                <p className="text-sm text-gray-300 mb-2">{uploadFormData.files.length} fichier(s) sélectionné(s):</p>
-                                <div className="space-y-2">
-                                    {uploadFormData.files.map((file, index) => (
-                                        <div key={index} className="flex items-center justify-between p-2 bg-gray-800 rounded">
-                                            <div className="flex items-center">
-                                                <FileText className="h-4 w-4 text-red-400 mr-2" />
-                                                <span className="text-white text-sm">{file.name}</span>
-                                                <span className="text-gray-400 text-xs ml-2">
-                                                    ({(file.size / 1024 / 1024).toFixed(1)} MB)
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {uploadError && (
-                        <div className="p-3 bg-red-900/50 border border-red-500/50 rounded-lg text-red-400 text-sm">
-                            {uploadError}
-                        </div>
-                    )}
-
-                    {uploadStatus === 'success' && (
-                        <div className="p-3 bg-green-900/50 border border-green-500/50 rounded-lg text-green-400 text-sm flex items-center">
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Documents téléchargés avec succès !
-                        </div>
-                    )}
-
-                    <div className="flex justify-end gap-4">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setShowUploadModal(false);
-                                setUploadStatus('idle');
-                                setUploadError('');
-                            }}
-                            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-                        >
-                            Annuler
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={uploadStatus === 'uploading' || !uploadFormData.program_id || !uploadFormData.title || uploadFormData.files.length === 0}
-                            className={`btn ${
-                                uploadStatus === 'uploading' || !uploadFormData.program_id || !uploadFormData.title || uploadFormData.files.length === 0
-                                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                    : 'btn-primary'
-                            }`}
-                        >
-                            {uploadStatus === 'uploading' ? (
-                                <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
-                                    Téléchargement...
-                                </>
-                            ) : (
-                                <>
-                                    <Upload className="h-4 w-4 mr-2" />
-                                    Sauvegarder
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
 
     const loadQuotes = async () => {
         setQuotesLoading(true);
@@ -2690,7 +2733,17 @@ const AdminDashboard = () => {
             )}
 
             {/* Upload Modal */}
-            {showUploadModal && <UploadDocumentModal />}
+            {showUploadModal && (
+                <UploadDocumentModal
+                    isOpen={showUploadModal}
+                    onClose={() => setShowUploadModal(false)}
+                    formData={uploadFormData}
+                    setFormData={setUploadFormData}
+                    onSubmit={handleUploadSubmit}
+                    isSubmitting={uploadStatus === 'uploading'}
+                    programs={trainingPrograms}
+                />
+            )}
         </div>
     );
 };
