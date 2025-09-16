@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { TrainingProgram, User } from '../models/index.js';
+import {TrainingDocument, TrainingProgram, User} from '../models/index.js';
 import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { uploadTrainingMaterials, handleUploadError, deleteFile } from '../middleware/upload.js';
@@ -299,15 +299,9 @@ router.get('/:programId/documents/:documentId/download', async (req, res) => {
       });
     }
 
-    const program = await TrainingProgram.findOne({ program_id: programId });
-    if (!program) {
-      return res.status(404).json({
-        success: false,
-        error: 'Training program not found'
-      });
-    }
+    console.log(await TrainingDocument.find());
 
-    const document = program.documents.id(documentId);
+    const document = await TrainingDocument.findOne({ program_id: programId , _id : documentId});
     if (!document) {
       return res.status(404).json({
         success: false,
@@ -331,7 +325,7 @@ router.get('/:programId/documents/:documentId/download', async (req, res) => {
     }
 
     // Increment download count
-    await program.incrementDownloadCount(documentId);
+    await document.incrementDownloadCount(documentId);
 
     // Set download headers
     res.setHeader('Content-Type', document.file_type);

@@ -97,10 +97,11 @@ const UploadDocumentModal = ({
                 value={formData.program_id}
                 onChange={(e) => {
                   const selectedProgram = programs.find(p => p.id === e.target.value);
+                  console.log(e.target.value, selectedProgram);
                   setFormData({
                     ...formData,
                     program_id: e.target.value,
-                    program_name: selectedProgram?.title || '',
+                    program_name: selectedProgram?.name || '',
                     title: formData.title || '' // Preserve existing title
                   });
                 }}
@@ -110,7 +111,7 @@ const UploadDocumentModal = ({
                 <option value="">Sélectionner un programme</option>
                 {programs.map((program) => (
                   <option key={program.id} value={program.id}>
-                    {program.title}
+                    {program.name}
                   </option>
                 ))}
               </select>
