@@ -737,7 +737,7 @@ const Training = () => {
               {/* Download PDF Button */}
               {/* Download PDF Button - Only show if documents exist */}
               {(() => {
-                const currentProgramData = programs.find(p => p.program_id === key);
+                const currentProgramData = Object.values(programs).find(p => p.program_id === key);
                 const programDocs = currentProgramData?.documents || [];
                 return programDocs.length > 0 ? (
                   <div className="mt-4 pt-4 border-t border-white/10">
