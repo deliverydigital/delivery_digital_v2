@@ -14,7 +14,7 @@ const Training = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProgram, setSelectedProgram] = useState('hygiene-security');
-  const { programs, documents, loading: documentsLoading, downloadDocument } = useTrainingPrograms();
+  const { documents, loading: documentsLoading, downloadDocument } = useTrainingPrograms();
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
