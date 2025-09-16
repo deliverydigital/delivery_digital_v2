@@ -29,6 +29,7 @@ import {
     Users,
     X,
     Upload
+ , GraduationCap
 } from 'lucide-react';
 
 import {useAuth, useClients, useMessages, useProjects, useStatistics} from '../hooks/useApi';
