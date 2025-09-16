@@ -100,7 +100,8 @@ const UploadDocumentModal = ({
                   setFormData({
                     ...formData,
                     program_id: e.target.value,
-                    program_name: selectedProgram?.title || ''
+                    program_name: selectedProgram?.title || '',
+                    title: formData.title || '' // Preserve existing title
                   });
                 }}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -466,13 +467,8 @@ const AdminDashboard = () => {
     const handleUploadSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!uploadFormData.files || uploadFormData.files.length === 0) {
+        if (uploadFormData.files.length === 0) {
             setUploadError('Veuillez sélectionner au moins un fichier');
-            return;
-        }
-
-        if (!uploadFormData.program_id || !uploadFormData.program_name) {
-            setUploadError('Veuillez sélectionner un programme de formation');
             return;
         }
 
