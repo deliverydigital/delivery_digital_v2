@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { useTrainingDocuments } from '../hooks/useTrainingDocuments';
@@ -8,10 +8,9 @@ import {
     Accessibility, Calculator, Euro, Building2, PiggyBank, GraduationCap,
     Code, Palette, Camera, Globe, FileSpreadsheet, Smartphone, ShoppingCart,
     Apple, Shield, Car, UserCheck, Languages, Wrench, Filter, ChevronDown,
-    Briefcase, Heart, Zap, PenTool, Layers, Target, TrendingUp, Download
+    Briefcase, Heart, Zap, PenTool, Layers, Target, TrendingUp, Download, FileText
 } from 'lucide-react';
 import { TrainingProgramsApiService } from '../services/trainingProgramsApi';
-import { useTrainingDocuments } from '../hooks/useTrainingDocuments';
 
 const Training = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -23,10 +22,11 @@ const Training = () => {
         triggerOnce: true,
     });
 
+    const [programDocuments, setProgramDocuments] = useState<{[key: string]: any[]}>({});
+    const [loadingDocuments, setLoadingDocuments] = useState<{[key: string]: boolean}>({});
+
     const programs = {
         'wordpress': {
-  const [programDocuments, setProgramDocuments] = useState<{[key: string]: any[]}>({});
-  const [loadingDocuments, setLoadingDocuments] = useState<{[key: string]: boolean}>({});
             title: "WordPress",
             duration: "35 heures",
             price: "1200€ par apprenant",
@@ -640,50 +640,67 @@ const Training = () => {
 
     const currentProgram = programs[selectedProgram];
 
-  // Load documents for a specific program
-  const loadProgramDocuments = async (programId: string) => {
-    if (programDocuments[programId] || loadingDocuments[programId]) {
-      return; // Already loaded or loading
-    }
+    // Load documents for a specific program
+    const loadProgramDocuments = async (programId: string) => {
+        if (programDocuments[programId] || loadingDocuments[programId]) {
+            return; // Already loaded or loading
+        }
 
-    setLoadingDocuments(prev => ({ ...prev, [programId]: true }));
-    
-    try {
-      const docs = await TrainingProgramsApiService.getProgramDocuments(programId);
-      setProgramDocuments(prev => ({ ...prev, [programId]: docs }));
-    } catch (error) {
-      console.error(`Error loading documents for ${programId}:`, error);
-      // Fallback to static downloads if API fails
-      const program = Object.values(programs).find(p => p.id === programId);
-      if (program?.downloads) {
-        setProgramDocuments(prev => ({ 
-          ...prev, 
-          [programId]: program.downloads.map(download => ({
-            id: `static-${Date.now()}-${Math.random()}`,
-            title: download.title,
-            document_type: 'program',
-            file_size: 1024000, // Default size
-            download_count: 0,
-            uploaded_at: new Date(),
-            download_url: '#' // Static placeholder
-          }))
-        }));
-      }
-    } finally {
-      setLoadingDocuments(prev => ({ ...prev, [programId]: false }));
-    }
-  };
+        setLoadingDocuments(prev => ({ ...prev, [programId]: true }));
+        
+        try {
+            const docs = await TrainingProgramsApiService.getProgramDocuments(programId);
+            setProgramDocuments(prev => ({ ...prev, [programId]: docs }));
+        } catch (error) {
+            console.error(`Error loading documents for ${programId}:`, error);
+            // Fallback to static downloads if API fails
+            const program = Object.values(programs).find(p => p.id === programId);
+            if (program?.downloads) {
+                setProgramDocuments(prev => ({ 
+                    ...prev, 
+                    [programId]: program.downloads.map(download => ({
+                        id: `static-${Date.now()}-${Math.random()}`,
+                        title: download.title,
+                        document_type: 'program',
+                        file_size: 1024000, // Default size
+                        download_count: 0,
+                        uploaded_at: new Date(),
+                        download_url: '#' // Static placeholder
+                    }))
+                }));
+            }
+        } finally {
+            setLoadingDocuments(prev => ({ ...prev, [programId]: false }));
+        }
+    };
 
-  // Load documents when a program is selected
-  useEffect(() => {
-    if (selectedProgram) {
-      loadProgramDocuments(selectedProgram);
-    }
-  }, [selectedProgram]);
+    // Load documents when a program is selected
+    useEffect(() => {
+        if (selectedProgram) {
+            loadProgramDocuments(selectedProgram);
+        }
+    }, [selectedProgram]);
+
+    const handleDownloadDocument = (documentId: string, programId: string) => {
+        try {
+            TrainingProgramsApiService.downloadDocument(documentId, programId);
+        } catch (error) {
+            console.error('Error downloading document:', error);
+            // Fallback for static downloads
+            const program = Object.values(programs).find(p => p.id === programId);
+            const staticDownload = program?.downloads?.find(d => d.title.includes(documentId));
+            if (staticDownload) {
+                // For demo purposes, show an alert
+                alert(`Téléchargement: ${staticDownload.title}\n\nCe document sera disponible une fois le système de gestion documentaire configuré.`);
+            }
+        }
+    };
+
+    const programDocs = programDocuments[selectedProgram || ''] || [];
+    const isLoadingDocs = loadingDocuments[selectedProgram || ''] || false;
 
     return (
         <section id="training" className="section bg-gradient-to-b from-gray-900 to-primary-950">
-    loadProgramDocuments(programId);
             <div ref={ref} className="container relative z-10">
                 <div className="text-center mb-12">
                     <motion.div
@@ -750,26 +767,11 @@ const Training = () => {
 
                 {/* Programs Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-  const handleDownloadDocument = (documentId: string, programId: string) => {
-    try {
-      TrainingProgramsApiService.downloadDocument(documentId, programId);
-    } catch (error) {
-      console.error('Error downloading document:', error);
-      // Fallback for static downloads
-      const program = Object.values(programs).find(p => p.id === programId);
-      const staticDownload = program?.downloads?.find(d => d.title.includes(documentId));
-      if (staticDownload) {
-        // For demo purposes, show an alert
-        alert(`Téléchargement: ${staticDownload.title}\n\nCe document sera disponible une fois le système de gestion documentaire configuré.`);
-      }
-    }
-  };
                     {filteredPrograms.map(([key, program]) => (
                         <motion.div
                             key={key}
                             initial={{ opacity: 0, y: 20 }}
-  const programDocs = programDocuments[selectedProgram || ''] || [];
-  const isLoadingDocs = loadingDocuments[selectedProgram || ''] || false;
+                            animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6 }}
                             className={`card p-6 cursor-pointer transition-all hover:scale-105 ${
                                 selectedProgram === key ? 'ring-2 ring-primary-500 bg-primary-900/20' : ''
@@ -794,31 +796,19 @@ const Training = () => {
                                 </div>
                             </div>
 
-                {isLoadingDocs ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Chargement des documents...</p>
-                  </div>
-                ) : programDocs.length > 0 ? (
-                            {/* Download PDF Button */}
                             {/* Download PDF Button - Only show if documents exist */}
-                            {console.log(program)}
                             {program.downloads && program.downloads.length > 0 && (
                                 <div className="mt-4 pt-4 border-t border-white/10">
                                     <button
-                            {doc.description && (
-                              <p className="text-sm text-gray-600 mb-2">{doc.description}</p>
-                            )}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                              <span>PDF • {(doc.file_size / 1024).toFixed(0)} KB</span>
-                              {doc.download_count > 0 && (
-                                <span className="ml-2">• {doc.download_count} téléchargements</span>
-                              )}
                                             const link = document.createElement('a');
                                             link.href = program.downloads[0].url;
                                             link.download = program.downloads[0].name;
-                            onClick={() => handleDownloadDocument(doc.id, selectedProgram!)}
+                                            link.click();
+                                        }}
+                                        className="flex items-center text-xs text-primary-400 hover:text-primary-300 transition-colors"
+                                    >
                                         <Download className="h-4 w-4 mr-2" />
                                         Télécharger PDF
                                     </button>
@@ -868,8 +858,8 @@ const Training = () => {
                                     <div className="flex items-center mb-2">
                                         <CheckCircle2 className="h-4 w-4 text-green-400 mr-2" />
                                         <span className="text-green-400 font-medium text-sm">
-                      Prise en charge OPCO 100%
-                    </span>
+                                            Prise en charge OPCO 100%
+                                        </span>
                                     </div>
                                     <p className="text-2xl font-bold text-white">
                                         {currentProgram.price}
@@ -982,13 +972,13 @@ const Training = () => {
                                                                 <span className="text-gray-400 text-xs">{document.description}</span>
                                                             )}
                                                             <div className="flex items-center mt-1 space-x-2">
-                                <span className="text-gray-500 text-xs">
-                                  {(document.file_size / 1024 / 1024).toFixed(1)} MB
-                                </span>
+                                                                <span className="text-gray-500 text-xs">
+                                                                    {(document.file_size / 1024 / 1024).toFixed(1)} MB
+                                                                </span>
                                                                 <span className="text-gray-500 text-xs">•</span>
                                                                 <span className="text-gray-500 text-xs">
-                                  {document.download_count} téléchargements
-                                </span>
+                                                                    {document.download_count} téléchargements
+                                                                </span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1027,6 +1017,53 @@ const Training = () => {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Dynamic Documents Section */}
+                            <div className="card p-6 mt-6">
+                                <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                                    <Download className="h-5 w-5 mr-2" />
+                                    Documents à télécharger
+                                </h4>
+                                
+                                {isLoadingDocs ? (
+                                    <div className="text-center py-8">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                                        <p className="text-gray-600">Chargement des documents...</p>
+                                    </div>
+                                ) : programDocs.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {programDocs.map((doc) => (
+                                            <div key={doc.id} className="p-4 bg-white/5 rounded-lg">
+                                                <h5 className="font-medium text-white mb-2">{doc.title}</h5>
+                                                {doc.description && (
+                                                    <p className="text-sm text-gray-600 mb-2">{doc.description}</p>
+                                                )}
+                                                <div className="flex items-center justify-between">
+                                                    <div className="text-sm text-gray-500">
+                                                        <span>PDF • {(doc.file_size / 1024).toFixed(0)} KB</span>
+                                                        {doc.download_count > 0 && (
+                                                            <span className="ml-2">• {doc.download_count} téléchargements</span>
+                                                        )}
+                                                    </div>
+                                                    <button
+                                                        className="btn btn-sm btn-primary"
+                                                        onClick={() => handleDownloadDocument(doc.id, selectedProgram!)}
+                                                    >
+                                                        <Download className="h-4 w-4 mr-1" />
+                                                        Télécharger
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-gray-500">
+                                        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                                        <p>Aucun document disponible pour cette formation</p>
+                                        <p className="text-sm mt-2">Les documents seront ajoutés prochainement</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="lg:col-span-2">
@@ -1043,8 +1080,8 @@ const Training = () => {
                                                         {module.title}
                                                     </h4>
                                                     <span className="text-primary-400 font-medium text-sm">
-                            {module.duration}
-                          </span>
+                                                        {module.duration}
+                                                    </span>
                                                 </div>
                                                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                                     {module.topics.map((topic, topicIndex) => (
@@ -1106,13 +1143,6 @@ const Training = () => {
                                     </a>
                                 </div>
                             </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Aucun document disponible pour cette formation</p>
-                    <p className="text-sm mt-2">Les documents seront ajoutés prochainement</p>
-                  </div>
-                )}
                             <p className="mt-4 text-sm text-gray-400">
                                 Notre équipe est à votre disposition pour répondre à toutes vos questions concernant l'accessibilité et l'adaptation de nos formations.
                             </p>
