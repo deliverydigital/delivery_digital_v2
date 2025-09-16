@@ -1321,6 +1321,13 @@ const AdminDashboard = () => {
                                     client.company.toLowerCase().includes(searchQuery.toLowerCase())
                                 ).map((client) => (
                                     <div key={client.id} className="bg-gray-800 rounded-lg p-6">
+                   <button
+                     onClick={() => setShowUploadModal(true)}
+                     className="btn btn-primary"
+                   >
+                     <Upload className="h-4 w-4 mr-2" />
+                     Télécharger PDF
+                   </button>
                                         <div className="flex justify-between items-start">
                                             <div className="flex items-start space-x-4">
                                                 <div
@@ -1336,6 +1343,15 @@ const AdminDashboard = () => {
                               <Mail className="h-4 w-4 mr-1"/>
                                 {client.email}
                             </span>
+                           <button
+                             onClick={() => {
+                               setSelectedProgram(programId);
+                               setShowUploadModal(true);
+                             }}
+                             className="text-blue-400 hover:text-blue-300 text-sm"
+                           >
+                             <Upload className="h-4 w-4" />
+                           </button>
                                                         {client.phone && (
                                                             <span className="flex items-center">
                                 <Phone className="h-4 w-4 mr-1"/>
