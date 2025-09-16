@@ -141,20 +141,6 @@ const Header = () => {
                       </>
                     ) : (
                       <>
-                        <button
-                          onClick={() => {
-                            setShowClientMenu(false);
-                            setShowAuthModal(true);
-                          }}
-                          className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <LogIn className="h-5 w-5 mr-3 text-blue-600" />
-                          <div>
-                            <div className="font-medium">Se connecter / S'inscrire</div>
-                            <div className="text-sm text-gray-400">Accéder à votre espace</div>
-                          </div>
-                        </button>
-                        <div className="border-t border-gray-200 mt-2 pt-2">
                     <button
                       onClick={() => {
                         setShowClientMenu(false);
@@ -183,7 +169,6 @@ const Header = () => {
                         <div className="text-sm text-gray-500">Gérer vos projets</div>
                       </div>
                     </button>
-                        </div>
                       </>
                     )}
                   </div>
