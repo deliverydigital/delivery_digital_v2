@@ -126,6 +126,62 @@ router.get('/', validatePagination, async (req, res) => {
     const { page = 1, limit = 20, category, search, active_only = 'true' } = req.query;
     const skip = (page - 1) * limit;
 
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    // Build query
+    const query = {};
+    
+    if (active_only === 'true') {
+      query.is_active = true;
+    }
+
+    if (category) {
+      query.category = category;
+    }
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const programs = await TrainingProgram.find(query)
+      .select('-documents')
+      .skip(skip)
+      .limit(parseInt(limit))
+      .sort({ created_at: -1 });
+
+    const total = await TrainingProgram.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        programs,
+        pagination: {
+          current_page: parseInt(page),
+          total_pages: Math.ceil(total / limit),
+          total_items: total,
+          items_per_page: parseInt(limit)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Get training programs error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch training programs'
+    });
+  }
+});
+
 // Create new training program (admin only)
 router.post('/', authenticate, authorize('admin'), async (req, res) => {
   try {
