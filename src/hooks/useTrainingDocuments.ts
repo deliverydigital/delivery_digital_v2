@@ -11,6 +11,7 @@ export const useTrainingDocuments = (programId?: string) => {
     setLoading(true);
     setError(null);
     try {
+
       let docs: TrainingDocument[];
       if (programId) {
         docs = await TrainingDocumentsApiService.getProgramDocuments(programId);
