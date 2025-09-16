@@ -807,7 +807,10 @@ const Training = () => {
                                         <button
                                             onClick={(e) => {
                                                 console.log(doc)
-                                                downloadTraningDocument(doc.id);
+                                                // Use the correct API endpoint for training programs
+                                                const baseUrl = import.meta.env.VITE_API_URL || '';
+                                                const downloadUrl = `${baseUrl}/api/training-programs/${selectedProgram}/documents/${doc.id}/download`;
+                                                window.open(downloadUrl, '_blank');
                                             }}
                                             className="flex items-center text-xs text-primary-400 hover:text-primary-300 transition-colors"
                                         >

@@ -182,15 +182,17 @@ export class TrainingDocumentsApiService {
   // Download document (public)
   static downloadDocument(documentId: string): void {
     const baseUrl = getApiBaseUrl();
-    const downloadUrl = `${baseUrl}/api/training/documents/${documentId}/download`;
+    // This method should not be used for training program documents
+    // Use TrainingProgramsApiService.downloadDocument instead
+    console.warn('TrainingDocumentsApiService.downloadDocument is deprecated for training program documents');
     
     // Create a temporary link and trigger download
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // const link = document.createElement('a');
+    // link.href = downloadUrl;
+    // link.style.display = 'none';
+    // document.body.appendChild(link);
+    // link.click();
+    // document.body.removeChild(link);
   }
 
   // Fallback data for demo purposes
