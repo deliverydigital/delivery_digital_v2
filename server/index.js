@@ -29,7 +29,6 @@ import analyticsRoutes from './routes/analytics.js';
 import quotesRoutes from './routes/quotes.js';
 import { createDummyUsers } from './scripts/createUsers.js';
 import { createDummyTrainingDocuments } from './scripts/createTrainingDocuments.js';
-import { createDummyTrainingSessions } from './scripts/createTrainingSessions.js';
 import { execSync } from 'child_process';
 
 const app = express();
@@ -166,10 +165,6 @@ const startServer = async () => {
           // Create dummy training documents
           await createDummyTrainingDocuments();
           console.log('✅ Dummy training documents created/verified');
-          
-          // Create dummy training sessions
-          await createDummyTrainingSessions();
-          console.log('✅ Dummy training sessions created/verified');
         } catch (userError) {
           console.warn('⚠️ Could not create dummy users:', userError.message);
         }
