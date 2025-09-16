@@ -696,27 +696,6 @@ const Training = () => {
                 }`}
               >
                 {category.label} ({category.count})
-                
-                {/* Download PDF Button */}
-                <div className="mt-4 pt-4 border-t border-white/10">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Check if documents are available for this program
-                      const programDocuments = documents.filter(doc => doc.program_id === key);
-                      if (programDocuments.length > 0) {
-                        // Download the first document or show selection
-                        downloadDocument(programDocuments[0].id);
-                      } else {
-                        alert('Aucun document disponible pour ce programme');
-                      }
-                    }}
-                    className="w-full flex items-center justify-center px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg text-blue-400 hover:text-blue-300 transition-all text-sm font-medium"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Télécharger PDF
-                  </button>
-                </div>
               </button>
             ))}
           </div>
@@ -751,6 +730,28 @@ const Training = () => {
                   <CheckCircle2 className="h-3 w-3 mr-1" />
                   <span>100% OPCO</span>
                 </div>
+              </div>
+              
+              {/* Download button if documents are available */}
+              <div className="mt-4 pt-4 border-t border-gray-700">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Check if documents are available for this program
+                    const programDocuments = documents.filter(doc => doc.program_id === key);
+                    if (programDocuments.length > 0) {
+                      // Download the first document or show a selection
+                      downloadDocument(programDocuments[0].id);
+                    } else {
+                      // Show message that no documents are available
+                      alert('Aucun document disponible pour cette formation');
+                    }
+                  }}
+                  className="w-full flex items-center justify-center px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg text-blue-400 hover:text-blue-300 transition-all text-sm"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Télécharger PDF
+                </button>
               </div>
             </motion.div>
           ))}
@@ -1001,48 +1002,4 @@ const Training = () => {
                 <Accessibility className="h-6 w-6 text-primary-400 mr-2" />
                 <h3 className="text-xl font-bold text-white">Accessibilité</h3>
               </div>
-              <p className="text-gray-300 mb-4">
-                Toutes nos formations sont accessibles aux personnes en situation de handicap. Notre équipe est formée pour adapter nos programmes et méthodes pédagogiques selon vos besoins spécifiques.
-              </p>
-              <p className="text-gray-300">
-                En cas de handicap, merci de nous contacter pour que nous puissions évaluer ensemble les meilleures adaptations possibles.
-              </p>
-            </div>
-            
-            <div>
-              <div className="flex items-center mb-4">
-                <Mail className="h-6 w-6 text-primary-400 mr-2" />
-                <h3 className="text-xl font-bold text-white">Contact</h3>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center text-gray-300">
-                  <Mail className="h-5 w-5 mr-3 text-primary-400" />
-                  <a 
-                    href="mailto:contact@deliverydigital.fr"
-                    className="hover:text-white transition-colors"
-                  >
-                    contact@deliverydigital.fr
-                  </a>
-                </div>
-                <div className="flex items-center text-gray-300">
-                  <Phone className="h-5 w-5 mr-3 text-primary-400" />
-                  <a 
-                    href="tel:0749707773"
-                    className="hover:text-white transition-colors"
-                  >
-                    07 49 70 77 73
-                  </a>
-                </div>
-              </div>
-              <p className="mt-4 text-sm text-gray-400">
-                Notre équipe est à votre disposition pour répondre à toutes vos questions concernant l'accessibilité et l'adaptation de nos formations.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-export default Training;
+              <p className="text-gray
