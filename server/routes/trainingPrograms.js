@@ -355,9 +355,12 @@ router.get('/:programId/documents/:documentId/download', async (req, res) => {
 router.get('/:programId/documents', async (req, res) => {
   try {
     const { programId } = req.params;
+    
+    console.log('🔍 Looking for program with program_id:', programId);
 
     // Check if MongoDB is available
     if (!isMongoAvailable()) {
+      console.log('❌ MongoDB not available');
       return res.status(503).json({
         success: false,
         error: 'Database service unavailable'
@@ -366,11 +369,19 @@ router.get('/:programId/documents', async (req, res) => {
 
     const program = await TrainingProgram.findOne({ program_id: programId })
       .populate('documents.uploaded_by', 'name email');
+    
+    console.log('📊 Found program:', program ? program.title : 'null');
 
     if (!program) {
+      console.log('❌ Program not found with program_id:', programId);
+      
+      // List all existing programs for debugging
+      const allPrograms = await TrainingProgram.find({}, 'program_id title');
+      console.log('📋 Available programs:', allPrograms.map(p => ({ id: p.program_id, title: p.title })));
+      
       return res.status(404).json({
         success: false,
-        error: 'Training program not found'
+        error: `Training program '${programId}' not found`
       });
     }
 

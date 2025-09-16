@@ -56,6 +56,99 @@ const seedTrainingPrograms = async () => {
 
     // Training programs data
     const programsData = [
+      // Add the missing dev-web-mobile program
+      {
+        program_id: 'dev-web-mobile',
+        title: 'Développeur Web et Web Mobile',
+        description: 'Formation complète pour devenir développeur web et mobile avec les technologies modernes',
+        category: 'web',
+        duration_hours: 400,
+        price: 8000,
+        level: 'intermediate',
+        max_participants: 12,
+        prerequisites: 'Connaissances de base en informatique et logique',
+        objectives: [
+          'Maîtriser HTML, CSS et JavaScript',
+          'Développer avec React et Node.js',
+          'Créer des applications mobiles avec React Native',
+          'Comprendre les bases de données et APIs',
+          'Déployer des applications en production'
+        ],
+        methods: [
+          'Formation pratique avec projets réels',
+          'Accompagnement personnalisé',
+          'Méthodes agiles et collaboratives'
+        ],
+        evaluation_methods: [
+          'Projets pratiques',
+          'Portfolio professionnel',
+          'Évaluation continue',
+          'Soutenance finale'
+        ],
+        accessibility_info: 'Formation accessible aux personnes en situation de handicap',
+        access_delay: '2 semaines',
+        modules: [
+          {
+            title: 'Fondamentaux Web',
+            duration_hours: 80,
+            topics: ['HTML5', 'CSS3', 'JavaScript ES6+', 'Git/GitHub'],
+            order: 1
+          },
+          {
+            title: 'Frontend Moderne',
+            duration_hours: 120,
+            topics: ['React.js', 'Redux', 'TypeScript', 'Responsive Design'],
+            order: 2
+          },
+          {
+            title: 'Backend et APIs',
+            duration_hours: 100,
+            topics: ['Node.js', 'Express', 'MongoDB', 'APIs REST'],
+            order: 3
+          },
+          {
+            title: 'Mobile et Déploiement',
+            duration_hours: 100,
+            topics: ['React Native', 'Déploiement', 'DevOps', 'Tests'],
+            order: 4
+          }
+        ],
+        documents: [
+          {
+            title: 'Curriculum complet Développeur Web',
+            description: 'Programme détaillé de la formation développeur web et mobile (400h)',
+            filename: 'dev-web-curriculum.pdf',
+            original_name: 'dev-web-curriculum.pdf',
+            file_type: 'application/pdf',
+            document_type: 'program',
+            is_public: true,
+            uploaded_by: adminUser._id,
+            content: 'Curriculum Développeur Web - Formation complète en développement web et mobile avec React, Node.js, React Native et déploiement'
+          },
+          {
+            title: 'Guide React.js',
+            description: 'Guide complet pour apprendre React.js',
+            filename: 'react-guide.pdf',
+            original_name: 'react-guide.pdf',
+            file_type: 'application/pdf',
+            document_type: 'guide',
+            is_public: true,
+            uploaded_by: adminUser._id,
+            content: 'Guide React.js - Apprenez React.js de zéro avec des exemples pratiques et des projets concrets'
+          },
+          {
+            title: 'API REST avec Node.js',
+            description: 'Guide pour créer des APIs REST avec Node.js',
+            filename: 'nodejs-api-guide.pdf',
+            original_name: 'nodejs-api-guide.pdf',
+            file_type: 'application/pdf',
+            document_type: 'guide',
+            is_public: true,
+            uploaded_by: adminUser._id,
+            content: 'Guide Node.js API - Créez des APIs REST robustes et sécurisées avec Node.js et Express'
+          }
+        ]
+      },
       {
         program_id: 'wordpress',
         title: 'WordPress',
