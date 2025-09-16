@@ -734,23 +734,24 @@ const Training = () => {
               </div>
               
               {/* Download PDF Button */}
-              <div className="mt-4 pt-4 border-t border-white/10">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const programDocs = documents.filter(doc => doc.program_id === key);
-                    if (programDocs.length > 0) {
-                      downloadDocument(programDocs[0].id);
-                    } else {
-                      alert('Aucun document disponible pour ce programme');
-                    }
-                  }}
-                  className="w-full flex items-center justify-center px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg text-blue-400 hover:text-blue-300 transition-all text-sm font-medium"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Télécharger PDF
-                </button>
-              </div>
+              {/* Download PDF Button - Only show if documents exist */}
+              {(() => {
+                const programDocs = documents.filter(doc => doc.program_id === key);
+                return programDocs.length > 0 ? (
+                  <div className="mt-4 pt-4 border-t border-white/10">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadDocument(programDocs[0].id);
+                      }}
+                      className="w-full flex items-center justify-center px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg text-blue-400 hover:text-blue-300 transition-all text-sm font-medium"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Télécharger PDF
+                    </button>
+                  </div>
+                ) : null;
+              })()}
             </motion.div>
           ))}
         </div>
