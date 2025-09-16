@@ -17,7 +17,7 @@ const Training = () => {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedProgram, setSelectedProgram] = useState('hygiene-security');
     const { documents, loading: documentsLoading, downloadDocument , } = useTrainingPrograms();
-    const { documents : docs} = useTrainingDocuments();
+    const { documents : docs, downloadDocument : downloadTraningDocument} = useTrainingDocuments();
 
     const { ref, inView } = useInView({
         threshold: 0.1,
@@ -807,7 +807,7 @@ const Training = () => {
                                         <button
                                             onClick={(e) => {
                                                 console.log(doc)
-                                                downloadDocument(doc.id, doc.program_id);
+                                                downloadTraningDocument(doc.id);
                                             }}
                                             className="flex items-center text-xs text-primary-400 hover:text-primary-300 transition-colors"
                                         >
