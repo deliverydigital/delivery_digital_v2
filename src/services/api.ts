@@ -90,6 +90,12 @@ export class ApiService {
     console.log('🔄 Making API request to:', `${baseUrl}/api${url}`);
     console.log('📊 Request options:', { method: options.method || 'GET', hasToken: !!token });
     
+    // Check if API base URL is available
+    if (!baseUrl) {
+      console.log('⚠️ No API base URL configured, skipping API call');
+      throw new Error('API service not available');
+    }
+    
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -107,6 +113,13 @@ export class ApiService {
       });
 
       console.log('📊 Response status:', response.status, response.statusText);
+      
+      // Check if response is HTML (error page) instead of JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        console.log('⚠️ Received HTML response instead of JSON - API endpoint likely not available');
+        throw new Error('API endpoint not available');
+      }
       
       if (!response.ok) {
         const errorData = await response.json().catch((error) => {
@@ -126,6 +139,13 @@ export class ApiService {
       return data;
     } catch (fetchError) {
       console.error('❌ Fetch error:', fetchError);
+      
+      // Handle specific error types
+      if (fetchError.message.includes('Unexpected token')) {
+        console.log('⚠️ API returned HTML instead of JSON - endpoint not available');
+        throw new Error('API endpoint not available');
+      }
+      
       if (fetchError.name === 'TypeError' && fetchError.message.includes('fetch')) {
         throw new Error('Impossible de contacter le serveur. Vérifiez que le serveur backend est démarré.');
       }
