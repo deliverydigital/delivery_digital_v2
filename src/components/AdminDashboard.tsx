@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 
 import {useAuth, useClients, useMessages, useProjects, useStatistics} from '../hooks/useApi';
+import { useTrainingDocuments, useTrainingDocumentStats } from '../hooks/useTrainingDocuments';
 import Auth from './Auth';
 import TaskBoard from "./TaskBoard.tsx";
 
@@ -45,6 +46,8 @@ const AdminDashboard = () => {
     const {projects, pagination, updateProject} = useProjects(undefined, currentPage, itemsPerPage);
     const {clients: allClients, loading: clientsDataLoading, refreshClients} = useClients();
     const {stats, refreshStats} = useStatistics();
+    const { documents: allDocuments, loading: documentsLoading, uploadDocument, deleteDocument } = useTrainingDocuments();
+    const { stats: documentStats } = useTrainingDocumentStats();
 
     const [activeTab, setActiveTab] = useState<'overview' | 'clients' | 'projects' | 'tasks' | 'messages' | 'quotes' | 'training' | 'settings'>('overview');
     const [searchQuery, setSearchQuery] = useState('');
@@ -99,6 +102,18 @@ const AdminDashboard = () => {
         'nutrition': [],
         'autocad-sketchup-revit': []
     });
+    const [uploadFormData, setUploadFormData] = useState({
+        program_id: '',
+        program_name: '',
+        title: '',
+        description: '',
+        category: 'program',
+        tags: '',
+        version: '1.0',
+        files: [] as File[]
+    });
+    const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+    const [uploadError, setUploadError] = useState('');
 
     // Check authentication on mount
     useEffect(() => {
@@ -133,6 +148,98 @@ const AdminDashboard = () => {
             ...prev,
             [programKey]: prev[programKey].filter((_, i) => i !== index)
         }));
+    };
+
+    const trainingPrograms = [
+        { id: 'wordpress', name: 'WordPress' },
+        { id: 'photoshop', name: 'Photoshop' },
+        { id: 'canva', name: 'Canva' },
+        { id: 'excel', name: 'Excel' },
+        { id: 'dev-web-mobile', name: 'Développeur Web et Web Mobile' },
+        { id: 'reflex-english-1', name: 'Reflex English 1' },
+        { id: 'reflex-english-2', name: 'Reflex English 2' },
+        { id: 'reflex-english-3', name: 'Reflex English 3' },
+        { id: 'hygiene-security', name: 'Hygiène, Sécurité et Développement Durable' },
+        { id: 'hygiene-security-afest', name: 'Hygiène, Sécurité et Développement Durable - AFEST' },
+        { id: 'conduite-securitaire', name: 'Conduite Sécuritaire' },
+        { id: 'autocad-sketchup-revit', name: 'AutoCAD, SketchUp, et Revit' },
+        { id: 'reflex-espagnol-1', name: 'Reflex Espagnol Niveau 1' },
+        { id: 'reflex-espagnol-2', name: 'Reflex Espagnol Niveau 2' },
+        { id: 'reflex-espagnol-3', name: 'Reflex Espagnol Niveau 3' },
+        { id: 'management-complet', name: 'Management Parcours Complet' },
+        { id: 'vente-omnicanal', name: 'Techniques de Vente Omnicanal' },
+        { id: 'nutrition', name: 'Nutrition' }
+    ];
+
+    const handleUploadSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (uploadFormData.files.length === 0) {
+            setUploadError('Veuillez sélectionner au moins un fichier');
+            return;
+        }
+
+        setUploadStatus('uploading');
+        setUploadError('');
+
+        try {
+            const result = await uploadDocument({
+                program_id: uploadFormData.program_id,
+                program_name: uploadFormData.program_name,
+                title: uploadFormData.title,
+                description: uploadFormData.description,
+                category: uploadFormData.category as any,
+                tags: uploadFormData.tags.split(',').map(t => t.trim()).filter(t => t),
+                version: uploadFormData.version,
+                files: uploadFormData.files
+            });
+
+            if (result.success) {
+                setUploadStatus('success');
+                setTimeout(() => {
+                    setShowUploadModal(false);
+                    setUploadStatus('idle');
+                    setUploadFormData({
+                        program_id: '',
+                        program_name: '',
+                        title: '',
+                        description: '',
+                        category: 'program',
+                        tags: '',
+                        version: '1.0',
+                        files: []
+                    });
+                }, 1500);
+            } else {
+                setUploadStatus('error');
+                setUploadError(result.error || 'Erreur lors de l\'upload');
+            }
+        } catch (error) {
+            setUploadStatus('error');
+            setUploadError(error.message || 'Erreur lors de l\'upload');
+        }
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const files = Array.from(e.target.files).filter(file => file.type === 'application/pdf');
+            setUploadFormData({ ...uploadFormData, files });
+            
+            if (files.length === 0 && e.target.files.length > 0) {
+                setUploadError('Seuls les fichiers PDF sont acceptés');
+            } else {
+                setUploadError('');
+            }
+        }
+    };
+
+    const handleProgramChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedProgram = trainingPrograms.find(p => p.id === e.target.value);
+        setUploadFormData({
+            ...uploadFormData,
+            program_id: e.target.value,
+            program_name: selectedProgram?.name || ''
+        });
     };
 
     const UploadModal = () => {
@@ -243,6 +350,213 @@ const AdminDashboard = () => {
             </div>
         );
     };
+
+    const UploadDocumentModal = () => (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl">
+                <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+                    <h3 className="text-xl font-bold text-white">Télécharger un document</h3>
+                    <button
+                        onClick={() => {
+                            setShowUploadModal(false);
+                            setUploadStatus('idle');
+                            setUploadError('');
+                        }}
+                        className="text-gray-400 hover:text-white transition-colors"
+                    >
+                        <X className="h-6 w-6" />
+                    </button>
+                </div>
+
+                <form onSubmit={handleUploadSubmit} className="p-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Programme de formation *
+                            </label>
+                            <select
+                                value={uploadFormData.program_id}
+                                onChange={handleProgramChange}
+                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                required
+                            >
+                                <option value="">Sélectionner un programme</option>
+                                {trainingPrograms.map((program) => (
+                                    <option key={program.id} value={program.id}>
+                                        {program.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Catégorie
+                            </label>
+                            <select
+                                value={uploadFormData.category}
+                                onChange={(e) => setUploadFormData({ ...uploadFormData, category: e.target.value })}
+                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            >
+                                <option value="program">Programme</option>
+                                <option value="guide">Guide</option>
+                                <option value="certificate">Certificat</option>
+                                <option value="evaluation">Évaluation</option>
+                                <option value="other">Autre</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Titre du document *
+                        </label>
+                        <input
+                            type="text"
+                            value={uploadFormData.title}
+                            onChange={(e) => setUploadFormData({ ...uploadFormData, title: e.target.value })}
+                            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            placeholder="Ex: Programme détaillé WordPress"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Description
+                        </label>
+                        <textarea
+                            value={uploadFormData.description}
+                            onChange={(e) => setUploadFormData({ ...uploadFormData, description: e.target.value })}
+                            rows={3}
+                            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            placeholder="Description du document..."
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Tags (séparés par des virgules)
+                            </label>
+                            <input
+                                type="text"
+                                value={uploadFormData.tags}
+                                onChange={(e) => setUploadFormData({ ...uploadFormData, tags: e.target.value })}
+                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                placeholder="Ex: wordpress, guide, installation"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Version
+                            </label>
+                            <input
+                                type="text"
+                                value={uploadFormData.version}
+                                onChange={(e) => setUploadFormData({ ...uploadFormData, version: e.target.value })}
+                                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                placeholder="1.0"
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Fichiers PDF *
+                        </label>
+                        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-700 border-dashed rounded-lg">
+                            <div className="space-y-1 text-center">
+                                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                                <div className="flex text-sm text-gray-400">
+                                    <label
+                                        htmlFor="document-upload"
+                                        className="relative cursor-pointer rounded-md font-medium text-primary-400 hover:text-primary-300"
+                                    >
+                                        <span>Télécharger des fichiers PDF</span>
+                                        <input
+                                            id="document-upload"
+                                            type="file"
+                                            className="sr-only"
+                                            multiple
+                                            accept=".pdf"
+                                            onChange={handleFileChange}
+                                        />
+                                    </label>
+                                </div>
+                                <p className="text-xs text-gray-500">PDF uniquement, jusqu'à 10MB par fichier</p>
+                            </div>
+                        </div>
+                        {uploadFormData.files.length > 0 && (
+                            <div className="mt-3">
+                                <p className="text-sm text-gray-300 mb-2">{uploadFormData.files.length} fichier(s) sélectionné(s):</p>
+                                <div className="space-y-2">
+                                    {uploadFormData.files.map((file, index) => (
+                                        <div key={index} className="flex items-center justify-between p-2 bg-gray-800 rounded">
+                                            <div className="flex items-center">
+                                                <FileText className="h-4 w-4 text-red-400 mr-2" />
+                                                <span className="text-white text-sm">{file.name}</span>
+                                                <span className="text-gray-400 text-xs ml-2">
+                                                    ({(file.size / 1024 / 1024).toFixed(1)} MB)
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {uploadError && (
+                        <div className="p-3 bg-red-900/50 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                            {uploadError}
+                        </div>
+                    )}
+
+                    {uploadStatus === 'success' && (
+                        <div className="p-3 bg-green-900/50 border border-green-500/50 rounded-lg text-green-400 text-sm flex items-center">
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Documents téléchargés avec succès !
+                        </div>
+                    )}
+
+                    <div className="flex justify-end gap-4">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setShowUploadModal(false);
+                                setUploadStatus('idle');
+                                setUploadError('');
+                            }}
+                            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={uploadStatus === 'uploading' || !uploadFormData.program_id || !uploadFormData.title || uploadFormData.files.length === 0}
+                            className={`btn ${
+                                uploadStatus === 'uploading' || !uploadFormData.program_id || !uploadFormData.title || uploadFormData.files.length === 0
+                                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                    : 'btn-primary'
+                            }`}
+                        >
+                            {uploadStatus === 'uploading' ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                                    Téléchargement...
+                                </>
+                            ) : (
+                                <>
+                                    <Upload className="h-4 w-4 mr-2" />
+                                    Télécharger
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
 
     const loadQuotes = async () => {
         setQuotesLoading(true);
@@ -1411,9 +1725,9 @@ const AdminDashboard = () => {
 
                     {/* Training Tab */}
                     {activeTab === 'training' && (
-                        <div className="space-y-6">
-                            <div className="flex justify-between items-center">
-                                <h2 className="text-2xl font-bold text-white">Gestion des Documents de Formation</h2>
+                        <div>
+                            <div className="flex justify-between items-center mb-8">
+                                <h2 className="text-2xl font-bold text-white">Formation Professionnelle</h2>
                                 <button
                                     onClick={() => setShowUploadModal(true)}
                                     className="btn btn-primary"
@@ -1423,65 +1737,127 @@ const AdminDashboard = () => {
                                 </button>
                             </div>
 
-                            {/* Training Documents Management */}
-                            <div className="bg-gray-800 rounded-lg p-6">
-                                <h3 className="text-lg font-bold text-white mb-4">Documents par Formation</h3>
-                                
-                                <div className="space-y-6">
-                                    {Object.entries(trainingDocuments).map(([programKey, docs]) => (
-                                        <div key={programKey} className="border border-gray-700 rounded-lg p-4">
+                            {/* Document Statistics */}
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                                <div className="bg-gray-800 rounded-lg p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-gray-400 text-sm">Documents totaux</p>
+                                            <p className="text-2xl font-bold text-white">{documentStats.totalDocuments}</p>
+                                        </div>
+                                        <FileText className="h-8 w-8 text-blue-400" />
+                                    </div>
+                                </div>
+                                <div className="bg-gray-800 rounded-lg p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-gray-400 text-sm">Téléchargements</p>
+                                            <p className="text-2xl font-bold text-white">{documentStats.totalDownloads}</p>
+                                        </div>
+                                        <Download className="h-8 w-8 text-green-400" />
+                                    </div>
+                                </div>
+                                <div className="bg-gray-800 rounded-lg p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-gray-400 text-sm">Programmes couverts</p>
+                                            <p className="text-2xl font-bold text-white">
+                                                {Object.keys(documentStats.documentsByProgram).length}
+                                            </p>
+                                        </div>
+                                        <GraduationCap className="h-8 w-8 text-purple-400" />
+                                    </div>
+                                </div>
+                                <div className="bg-gray-800 rounded-lg p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-gray-400 text-sm">Document populaire</p>
+                                            <p className="text-sm font-bold text-white truncate">
+                                                {documentStats.popularDocuments[0]?.title || 'Aucun'}
+                                            </p>
+                                        </div>
+                                        <Star className="h-8 w-8 text-yellow-400" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Documents by Program */}
+                            <div className="space-y-6">
+                                {trainingPrograms.map((program) => {
+                                    const programDocuments = allDocuments.filter(doc => doc.program_id === program.id);
+                                    
+                                    return (
+                                        <div key={program.id} className="bg-gray-800 rounded-lg p-6">
                                             <div className="flex justify-between items-center mb-4">
-                                                <h4 className="text-white font-medium capitalize">
-                                                    {programKey.replace('-', ' ')}
-                                                </h4>
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedProgram(programKey);
-                                                        setShowUploadModal(true);
-                                                    }}
-                                                    className="text-blue-400 hover:text-blue-300 text-sm"
-                                                >
-                                                    <Plus className="h-4 w-4 mr-1 inline" />
-                                                    Ajouter
-                                                </button>
+                                                <h3 className="text-lg font-bold text-white">{program.name}</h3>
+                                                <span className="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded-full">
+                                                    {programDocuments.length} documents
+                                                </span>
                                             </div>
                                             
-                                            <div className="space-y-2">
-                                                {docs.map((doc, index) => (
-                                                    <div key={index} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
-                                                        <div className="flex items-center">
-                                                            <FileText className="h-5 w-5 text-red-400 mr-3" />
-                                                            <span className="text-white text-sm">{doc.name}</span>
+                                            {programDocuments.length === 0 ? (
+                                                <div className="text-center py-8 text-gray-400">
+                                                    <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                                    <p className="text-sm">Aucun document pour ce programme</p>
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    {programDocuments.map((document) => (
+                                                        <div key={document.id} className="bg-gray-700 rounded-lg p-4">
+                                                            <div className="flex items-start justify-between mb-2">
+                                                                <div className="flex-1">
+                                                                    <h4 className="text-white font-medium text-sm mb-1">{document.title}</h4>
+                                                                    {document.description && (
+                                                                        <p className="text-gray-400 text-xs mb-2 line-clamp-2">{document.description}</p>
+                                                                    )}
+                                                                    <div className="flex items-center space-x-2 text-xs text-gray-500">
+                                                                        <span>{(document.file_size / 1024 / 1024).toFixed(1)} MB</span>
+                                                                        <span>•</span>
+                                                                        <span>{document.download_count} téléchargements</span>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => deleteDocument(document.id)}
+                                                                    className="text-red-400 hover:text-red-300 ml-2"
+                                                                    title="Supprimer"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
+                                                            
+                                                            {document.tags.length > 0 && (
+                                                                <div className="flex flex-wrap gap-1 mb-2">
+                                                                    {document.tags.slice(0, 3).map((tag, index) => (
+                                                                        <span key={index} className="bg-blue-900/50 text-blue-400 text-xs px-2 py-0.5 rounded">
+                                                                            {tag}
+                                                                        </span>
+                                                                    ))}
+                                                                    {document.tags.length > 3 && (
+                                                                        <span className="text-gray-400 text-xs">+{document.tags.length - 3}</span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                            
+                                                            <div className="flex items-center justify-between">
+                                                                <span className={`text-xs px-2 py-1 rounded ${
+                                                                    document.category === 'program' ? 'bg-blue-900/50 text-blue-400' :
+                                                                    document.category === 'guide' ? 'bg-green-900/50 text-green-400' :
+                                                                    document.category === 'certificate' ? 'bg-yellow-900/50 text-yellow-400' :
+                                                                    'bg-gray-900/50 text-gray-400'
+                                                                }`}>
+                                                                    {document.category}
+                                                                </span>
+                                                                <span className="text-gray-400 text-xs">
+                                                                    v{document.version}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex items-center space-x-2">
-                                                            <a
-                                                                href={doc.url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-blue-400 hover:text-blue-300"
-                                                                title="Télécharger"
-                                                            >
-                                                                <Download className="h-4 w-4" />
-                                                            </a>
-                                                            <button
-                                                                onClick={() => removeDocument(programKey, index)}
-                                                                className="text-red-400 hover:text-red-300"
-                                                                title="Supprimer"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                {docs.length === 0 && (
-                                                    <p className="text-gray-400 text-sm text-center py-4">
-                                                        Aucun document pour cette formation
-                                                    </p>
-                                                )}
-                                            </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
-                                    ))}
-                                </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
@@ -2256,7 +2632,7 @@ const AdminDashboard = () => {
             )}
 
             {/* Upload Modal */}
-            {showUploadModal && <UploadModal />}
+            {showUploadModal && <UploadDocumentModal />}
         </div>
     );
 };
