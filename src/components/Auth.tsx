@@ -237,13 +237,6 @@ const Auth = ({ isOpen, onClose, onSuccess }: AuthProps) => {
             )}
           </div>
 
-          {isLogin && (
-            <div className="text-sm text-gray-600">
-              <p>Comptes de démonstration :</p>
-              <p>• Client: marie.dupont@techcorp.fr / password123</p>
-              <p>• Admin: admin@deliverydigital.fr / password123</p>
-            </div>
-          )}
 
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
