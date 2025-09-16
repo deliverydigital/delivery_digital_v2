@@ -6,7 +6,7 @@ import {
   Accessibility, Calculator, Euro, Building2, PiggyBank, GraduationCap, 
   Code, Palette, Camera, Globe, FileSpreadsheet, Smartphone, ShoppingCart,
   Apple, Shield, Car, UserCheck, Languages, Wrench, Filter, ChevronDown,
-  Briefcase, Heart, Zap, PenTool, Layers, Target, TrendingUp
+  Briefcase, Heart, Zap, PenTool, Layers, Target, TrendingUp, Download
 } from 'lucide-react';
 
 const Training = () => {
@@ -42,6 +42,10 @@ const Training = () => {
           duration: "14h",
           topics: ["Customizer", "CSS personnalisé", "Fonctions avancées", "E-commerce"]
         }
+      ],
+      downloads: [
+        { name: "Programme détaillé WordPress", url: "/downloads/wordpress-program.pdf" },
+        { name: "Guide d'installation", url: "/downloads/wordpress-installation.pdf" }
       ]
     },
     'photoshop': {
@@ -67,6 +71,10 @@ const Training = () => {
           duration: "7h",
           topics: ["Design graphique", "Typographie", "Composition", "Export"]
         }
+      ],
+      downloads: [
+        { name: "Programme Photoshop", url: "/downloads/photoshop-program.pdf" },
+        { name: "Raccourcis clavier", url: "/downloads/photoshop-shortcuts.pdf" }
       ]
     },
     'canva': {
@@ -92,6 +100,9 @@ const Training = () => {
           duration: "7h",
           topics: ["Animations", "Vidéos", "Collaboration", "Brand Kit"]
         }
+      ],
+      downloads: [
+        { name: "Guide Canva", url: "/downloads/canva-guide.pdf" }
       ]
     },
     'reflex-english-1': {
@@ -842,6 +853,34 @@ const Training = () => {
                         <p className="text-gray-300 text-sm">{currentProgram.accessibility}</p>
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Downloads Section */}
+              {programs[selectedProgram].downloads && programs[selectedProgram].downloads.length > 0 && (
+                <div className="card p-6 mt-6">
+                  <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                    <Download className="h-5 w-5 mr-2" />
+                    Documents à télécharger
+                  </h4>
+                  <div className="space-y-3">
+                    {programs[selectedProgram].downloads.map((download, index) => (
+                      <a
+                        key={index}
+                        href={download.url}
+                        download
+                        className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group"
+                      >
+                        <div className="flex items-center">
+                          <div className="bg-red-500/20 p-2 rounded-lg mr-3">
+                            <Download className="h-4 w-4 text-red-400" />
+                          </div>
+                          <span className="text-white text-sm font-medium">{download.name}</span>
+                        </div>
+                        <Download className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors" />
+                      </a>
+                    ))}
                   </div>
                 </div>
               )}
