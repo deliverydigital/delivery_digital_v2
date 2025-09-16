@@ -10,6 +10,8 @@ import {
     Apple, Shield, Car, UserCheck, Languages, Wrench, Filter, ChevronDown,
     Briefcase, Heart, Zap, PenTool, Layers, Target, TrendingUp, Download
 } from 'lucide-react';
+import { TrainingProgramsApiService } from '../services/trainingProgramsApi';
+import { useTrainingDocuments } from '../hooks/useTrainingDocuments';
 
 const Training = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -23,6 +25,8 @@ const Training = () => {
 
     const programs = {
         'wordpress': {
+  const [programDocuments, setProgramDocuments] = useState<{[key: string]: any[]}>({});
+  const [loadingDocuments, setLoadingDocuments] = useState<{[key: string]: boolean}>({});
             title: "WordPress",
             duration: "35 heures",
             price: "1200€ par apprenant",
@@ -636,9 +640,50 @@ const Training = () => {
 
     const currentProgram = programs[selectedProgram];
 
+  // Load documents for a specific program
+  const loadProgramDocuments = async (programId: string) => {
+    if (programDocuments[programId] || loadingDocuments[programId]) {
+      return; // Already loaded or loading
+    }
+
+    setLoadingDocuments(prev => ({ ...prev, [programId]: true }));
+    
+    try {
+      const docs = await TrainingProgramsApiService.getProgramDocuments(programId);
+      setProgramDocuments(prev => ({ ...prev, [programId]: docs }));
+    } catch (error) {
+      console.error(`Error loading documents for ${programId}:`, error);
+      // Fallback to static downloads if API fails
+      const program = Object.values(programs).find(p => p.id === programId);
+      if (program?.downloads) {
+        setProgramDocuments(prev => ({ 
+          ...prev, 
+          [programId]: program.downloads.map(download => ({
+            id: `static-${Date.now()}-${Math.random()}`,
+            title: download.title,
+            document_type: 'program',
+            file_size: 1024000, // Default size
+            download_count: 0,
+            uploaded_at: new Date(),
+            download_url: '#' // Static placeholder
+          }))
+        }));
+      }
+    } finally {
+      setLoadingDocuments(prev => ({ ...prev, [programId]: false }));
+    }
+  };
+
+  // Load documents when a program is selected
+  useEffect(() => {
+    if (selectedProgram) {
+      loadProgramDocuments(selectedProgram);
+    }
+  }, [selectedProgram]);
 
     return (
         <section id="training" className="section bg-gradient-to-b from-gray-900 to-primary-950">
+    loadProgramDocuments(programId);
             <div ref={ref} className="container relative z-10">
                 <div className="text-center mb-12">
                     <motion.div
@@ -705,11 +750,26 @@ const Training = () => {
 
                 {/* Programs Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+  const handleDownloadDocument = (documentId: string, programId: string) => {
+    try {
+      TrainingProgramsApiService.downloadDocument(documentId, programId);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      // Fallback for static downloads
+      const program = Object.values(programs).find(p => p.id === programId);
+      const staticDownload = program?.downloads?.find(d => d.title.includes(documentId));
+      if (staticDownload) {
+        // For demo purposes, show an alert
+        alert(`Téléchargement: ${staticDownload.title}\n\nCe document sera disponible une fois le système de gestion documentaire configuré.`);
+      }
+    }
+  };
                     {filteredPrograms.map(([key, program]) => (
                         <motion.div
                             key={key}
                             initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
+  const programDocs = programDocuments[selectedProgram || ''] || [];
+  const isLoadingDocs = loadingDocuments[selectedProgram || ''] || false;
                             transition={{ duration: 0.6 }}
                             className={`card p-6 cursor-pointer transition-all hover:scale-105 ${
                                 selectedProgram === key ? 'ring-2 ring-primary-500 bg-primary-900/20' : ''
@@ -734,22 +794,31 @@ const Training = () => {
                                 </div>
                             </div>
 
+                {isLoadingDocs ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Chargement des documents...</p>
+                  </div>
+                ) : programDocs.length > 0 ? (
                             {/* Download PDF Button */}
                             {/* Download PDF Button - Only show if documents exist */}
                             {console.log(program)}
                             {program.downloads && program.downloads.length > 0 && (
                                 <div className="mt-4 pt-4 border-t border-white/10">
                                     <button
+                            {doc.description && (
+                              <p className="text-sm text-gray-600 mb-2">{doc.description}</p>
+                            )}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            // For now, trigger download of the first document
+                              <span>PDF • {(doc.file_size / 1024).toFixed(0)} KB</span>
+                              {doc.download_count > 0 && (
+                                <span className="ml-2">• {doc.download_count} téléchargements</span>
+                              )}
                                             const link = document.createElement('a');
                                             link.href = program.downloads[0].url;
                                             link.download = program.downloads[0].name;
-                                            link.click();
-                                        }}
-                                        className="w-full flex items-center justify-center px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg text-blue-400 hover:text-blue-300 transition-all text-sm font-medium"
-                                    >
+                            onClick={() => handleDownloadDocument(doc.id, selectedProgram!)}
                                         <Download className="h-4 w-4 mr-2" />
                                         Télécharger PDF
                                     </button>
@@ -1037,6 +1106,13 @@ const Training = () => {
                                     </a>
                                 </div>
                             </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Aucun document disponible pour cette formation</p>
+                    <p className="text-sm mt-2">Les documents seront ajoutés prochainement</p>
+                  </div>
+                )}
                             <p className="mt-4 text-sm text-gray-400">
                                 Notre équipe est à votre disposition pour répondre à toutes vos questions concernant l'accessibilité et l'adaptation de nos formations.
                             </p>
