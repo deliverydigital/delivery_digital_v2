@@ -223,8 +223,7 @@ const autoSetupMongoDB = async () => {
     console.log('🔧 Auto-setup MongoDB...');
 
     // Check if MongoDB is accessible
-    // const isMongoAccessible = await checkMongoDBAccessibility();
-    const isMongoAccessible = true;
+    const isMongoAccessible = await checkMongoDBAccessibility();
 
     if (!isMongoAccessible) {
       console.log('📦 MongoDB not accessible, attempting auto-setup...');
@@ -232,7 +231,7 @@ const autoSetupMongoDB = async () => {
       // Try to run the setup script
       try {
         console.log('🔄 Running MongoDB setup script...');
-        execSync('node server/scripts/setup-local-db.js', {
+        execSync('node server/scripts/install-mongodb.js', {
           stdio: 'inherit',
         });
         console.log('✅ MongoDB setup script completed');
