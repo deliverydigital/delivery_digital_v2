@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import { useTrainingDocuments } from '../hooks/useTrainingDocuments';
 import { 
   Clock, Users, CheckCircle2, BookOpen, Search, Utensils, Leaf, Mail, Phone, 
   Accessibility, Calculator, Euro, Building2, PiggyBank, GraduationCap, 
@@ -13,6 +14,7 @@ const Training = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProgram, setSelectedProgram] = useState('hygiene-security');
+  const { documents, loading: documentsLoading, downloadDocument } = useTrainingDocuments(selectedProgram);
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
@@ -858,7 +860,55 @@ const Training = () => {
               )}
               
               {/* Downloads Section */}
-              {programs[selectedProgram].downloads && programs[selectedProgram].downloads.length > 0 && (
+              {documents.length > 0 && (
+                <div className="card p-6 mt-6">
+                  <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                    <Download className="h-5 w-5 mr-2" />
+                    Documents à télécharger
+                  </h4>
+                  {documentsLoading ? (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary-500 mx-auto"></div>
+                      <p className="mt-2 text-gray-400 text-sm">Chargement des documents...</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {documents.map((document) => (
+                        <button
+                          key={document.id}
+                          onClick={() => downloadDocument(document.id)}
+                          className="w-full flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group"
+                        >
+                          <div className="flex items-center">
+                            <div className="bg-red-500/20 p-2 rounded-lg mr-3">
+                              <Download className="h-4 w-4 text-red-400" />
+                            </div>
+                            <div className="text-left">
+                              <span className="text-white text-sm font-medium block">{document.title}</span>
+                              {document.description && (
+                                <span className="text-gray-400 text-xs">{document.description}</span>
+                              )}
+                              <div className="flex items-center mt-1 space-x-2">
+                                <span className="text-gray-500 text-xs">
+                                  {(document.file_size / 1024 / 1024).toFixed(1)} MB
+                                </span>
+                                <span className="text-gray-500 text-xs">•</span>
+                                <span className="text-gray-500 text-xs">
+                                  {document.download_count} téléchargements
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <Download className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Fallback to static downloads if no API documents */}
+              {documents.length === 0 && !documentsLoading && programs[selectedProgram].downloads && programs[selectedProgram].downloads.length > 0 && (
                 <div className="card p-6 mt-6">
                   <h4 className="text-lg font-bold text-white mb-4 flex items-center">
                     <Download className="h-5 w-5 mr-2" />
@@ -876,7 +926,7 @@ const Training = () => {
                           <div className="bg-red-500/20 p-2 rounded-lg mr-3">
                             <Download className="h-4 w-4 text-red-400" />
                           </div>
-                          <span className="text-white text-sm font-medium">{download.name}</span>
+                        <span className="text-white text-sm font-medium">{download.name}</span>
                         </div>
                         <Download className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors" />
                       </a>
