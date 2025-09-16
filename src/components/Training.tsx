@@ -913,50 +913,10 @@ const Training = () => {
                               )}
                               <div className="flex items-center mt-1 space-x-2">
                                 <span className="text-gray-500 text-xs">
-                                  {(document.file_size / 1024 / 1024).toFixed(1)} MB
+          {currentProgram.downloads && currentProgram.downloads.length > 0 && (
                                 </span>
                                 <span className="text-gray-500 text-xs">•</span>
                                 <span className="text-gray-500 text-xs">
-                                  {document.download_count} téléchargements
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <Download className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {/* Fallback to static downloads if no API documents */}
-              {false && documents.length === 0 && !documentsLoading && programs[selectedProgram].downloads && programs[selectedProgram].downloads.length > 0 && (
-                <div className="card p-6 mt-6">
-                  <h4 className="text-lg font-bold text-white mb-4 flex items-center">
-                    <Download className="h-5 w-5 mr-2" />
-                    Documents à télécharger
-                  </h4>
-                  <div className="space-y-3">
-                    {programs[selectedProgram].downloads.map((download, index) => (
-                      <a
-                        key={index}
-                        href={download.url}
-                        download
-                        className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group"
-                      >
-                        <div className="flex items-center">
-                          <div className="bg-red-500/20 p-2 rounded-lg mr-3">
-                            <Download className="h-4 w-4 text-red-400" />
-                          </div>
-                        <span className="text-white text-sm font-medium">{download.name}</span>
-                        </div>
-                        <Download className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors" />
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="lg:col-span-2">
