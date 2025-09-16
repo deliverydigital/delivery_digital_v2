@@ -589,6 +589,13 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                       <p className="text-gray-500">Client</p>
                     </div>
                   </div>
+                  <a
+                    href="/?admin=true"
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center text-lg font-medium w-full justify-center"
+                  >
+                    <User className="h-5 w-5 mr-2" />
+                    Accéder au Dashboard
+                  </a>
                   <button
                     onClick={handleLogout}
                     className="text-red-600 hover:text-red-800 text-sm font-medium"
