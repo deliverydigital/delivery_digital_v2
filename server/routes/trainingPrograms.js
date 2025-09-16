@@ -9,79 +9,9 @@ import { validateStringId, validatePagination } from '../middleware/validation.j
 
 const router = express.Router();
 
-// Get all training programs (public)
-router.get('/', validatePagination, async (req, res) => {
-  try {
-    const { page = 1, limit = 20, category, search, active_only = 'true' } = req.query;
-    const skip = (page - 1) * limit;
-
-    // Check if MongoDB is available
-    if (!isMongoAvailable()) {
-      return res.status(503).json({
-        success: false,
-        error: 'Database service unavailable'
-      });
-    }
-
-    let query = {};
-    
-    // Filter by active status
-    if (active_only === 'true') {
-      query.is_active = true;
-    }
-    
-    // Filter by category
-    if (category && category !== 'all') {
-      query.category = category;
-    }
-
-    let programs;
-    if (search) {
-      programs = await TrainingProgram.searchPrograms(search)
-        .skip(skip)
-        .limit(parseInt(limit));
-    } else {
-      programs = await TrainingProgram.find(query)
-        .sort({ title: 1 })
-        .skip(skip)
-        .limit(parseInt(limit));
-    }
-
-    const total = await TrainingProgram.countDocuments(query);
-
-    // Transform documents to include download URLs
-    const programsWithUrls = programs.map(program => ({
-      ...program.toObject(),
-      documents: program.documents.map(doc => ({
-        ...doc.toObject(),
-        download_url: `${req.protocol}://${req.get('host')}/api/training-programs/${program.program_id}/documents/${doc._id}/download`
-      }))
-    }));
-
-    res.json({
-      success: true,
-      data: {
-        programs: programsWithUrls,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total,
-          pages: Math.ceil(total / limit)
-        }
-      }
-    });
-
-  } catch (error) {
-    console.error('Get training programs error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch training programs'
-    });
-  }
-});
-
-// Get single training program by program_id (public)
-router.get('/:programId', validateStringId, async (req, res) => {
+// Public routes (no authentication required)
+// Get documents for a training program (public)
+router.get('/:programId/documents', async (req, res) => {
   try {
     const { programId } = req.params;
 
@@ -93,7 +23,8 @@ router.get('/:programId', validateStringId, async (req, res) => {
       });
     }
 
-    const program = await TrainingProgram.findOne({ program_id: programId });
+    const program = await TrainingProgram.findOne({ program_id: programId })
+      .populate('documents.uploaded_by', 'name email');
 
     if (!program) {
       return res.status(404).json({
@@ -102,28 +33,98 @@ router.get('/:programId', validateStringId, async (req, res) => {
       });
     }
 
-    // Transform documents to include download URLs
-    const programWithUrls = {
-      ...program.toObject(),
-      documents: program.documents.map(doc => ({
-        ...doc.toObject(),
-        download_url: `${req.protocol}://${req.get('host')}/api/training-programs/${program.program_id}/documents/${doc._id}/download`
-      }))
-    };
+    // Filter public documents and add download URLs
+    const publicDocuments = program.documents
+      .filter(doc => doc.is_public)
+      .map(doc => ({
+        id: doc._id,
+        title: doc.title,
+        description: doc.description,
+        document_type: doc.document_type,
+        file_size: doc.file_size,
+        download_count: doc.download_count,
+        uploaded_at: doc.uploaded_at,
+        download_url: `${req.protocol}://${req.get('host')}/api/training-programs/${programId}/documents/${doc._id}/download`
+      }));
 
     res.json({
       success: true,
-      data: { program: programWithUrls }
+      data: { documents: publicDocuments }
     });
 
   } catch (error) {
-    console.error('Get training program error:', error);
+    console.error('Get training program documents error:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch training program'
+      error: 'Failed to fetch documents'
     });
   }
 });
+
+// Download training program document (public)
+router.get('/:programId/documents/:documentId/download', async (req, res) => {
+  try {
+    const { programId, documentId } = req.params;
+
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    console.log(await TrainingDocument.find());
+
+    const document = await TrainingDocument.findOne({ program_id: programId , _id : documentId});
+    if (!document) {
+      return res.status(404).json({
+        success: false,
+        error: 'Document not found'
+      });
+    }
+
+    if (!document.is_public) {
+      return res.status(403).json({
+        success: false,
+        error: 'Document not available for download'
+      });
+    }
+
+    // Check if file exists on disk
+    if (!fs.existsSync(document.file_path)) {
+      return res.status(404).json({
+        success: false,
+        error: 'File not found on disk'
+      });
+    }
+
+    // Increment download count
+    await document.incrementDownloadCount(documentId);
+
+    // Set download headers
+    res.setHeader('Content-Type', document.file_type);
+    res.setHeader('Content-Disposition', `attachment; filename="${document.original_name}"`);
+    res.setHeader('Content-Length', document.file_size);
+
+    // Stream the file
+    const fileStream = fs.createReadStream(document.file_path);
+    fileStream.pipe(res);
+
+  } catch (error) {
+    console.error('Download training program document error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to download document'
+    });
+  }
+});
+
+// Get all training programs (public)
+router.get('/', validatePagination, async (req, res) => {
+  try {
+    const { page = 1, limit = 20, category, search, active_only = 'true' } = req.query;
+    const skip = (page - 1) * limit;
 
 // Create new training program (admin only)
 router.post('/', authenticate, authorize('admin'), async (req, res) => {
