@@ -100,7 +100,7 @@ const UploadDocumentModal = ({
                   setFormData({
                     ...formData,
                     program_id: e.target.value,
-                    program_name: selectedProgram?.name || '',
+                    program_name: selectedProgram?.title || '',
                     title: formData.title || '' // Preserve existing title
                   });
                 }}
@@ -110,7 +110,7 @@ const UploadDocumentModal = ({
                 <option value="">Sélectionner un programme</option>
                 {programs.map((program) => (
                   <option key={program.id} value={program.id}>
-                    {program.name}
+                    {program.title}
                   </option>
                 ))}
               </select>
@@ -1905,4 +1905,848 @@ const AdminDashboard = () => {
                                             ) : (
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     {programDocuments.map((document) => (
-                                                        
+                                                        <div key={document.id} className="bg-gray-700 rounded-lg p-4">
+                                                            <div className="flex items-start justify-between mb-2">
+                                                                <div className="flex-1">
+                                                                    <h4 className="text-white font-medium text-sm mb-1">{document.title}</h4>
+                                                                    {document.description && (
+                                                                        <p className="text-gray-400 text-xs mb-2 line-clamp-2">{document.description}</p>
+                                                                    )}
+                                                                    <div className="flex items-center space-x-2 text-xs text-gray-500">
+                                                                        <span>{(document.file_size / 1024 / 1024).toFixed(1)} MB</span>
+                                                                        <span>•</span>
+                                                                        <span>{document.download_count} téléchargements</span>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => deleteDocument(document.id)}
+                                                                    className="text-red-400 hover:text-red-300 ml-2"
+                                                                    title="Supprimer"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
+
+                                                            {document.tags.length > 0 && (
+                                                                <div className="flex flex-wrap gap-1 mb-2">
+                                                                    {document.tags.slice(0, 3).map((tag, index) => (
+                                                                        <span key={index} className="bg-blue-900/50 text-blue-400 text-xs px-2 py-0.5 rounded">
+                                                                            {tag}
+                                                                        </span>
+                                                                    ))}
+                                                                    {document.tags.length > 3 && (
+                                                                        <span className="text-gray-400 text-xs">+{document.tags.length - 3}</span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+
+                                                            <div className="flex items-center justify-between">
+                                                                <span className={`text-xs px-2 py-1 rounded ${
+                                                                    document.category === 'program' ? 'bg-blue-900/50 text-blue-400' :
+                                                                        document.category === 'guide' ? 'bg-green-900/50 text-green-400' :
+                                                                            document.category === 'certificate' ? 'bg-yellow-900/50 text-yellow-400' :
+                                                                                'bg-gray-900/50 text-gray-400'
+                                                                }`}>
+                                                                    {document.category}
+                                                                </span>
+                                                                <span className="text-gray-400 text-xs">
+                                                                    v{document.version}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Messages Tab */}
+                    {activeTab === 'messages' && (
+                        <div>
+                            <div className="flex justify-between items-center mb-8">
+                                <h2 className="text-2xl font-bold text-white">Messages</h2>
+                                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-gray-400">
+                    {stats.unreadMessages} message(s) non lu(s)
+                  </span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                {messages.map((message) => (
+                                    <div key={message.id}
+                                         className={`bg-gray-800 rounded-lg p-6 ${!message.read && message.sender === 'client' ? 'border-l-4 border-primary-500' : ''}`}>
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="flex items-center space-x-3">
+                                                <div
+                                                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                                        message.sender === 'client' ? 'bg-blue-600' : 'bg-green-600'
+                                                    }`}>
+                                                    {message.sender === 'client' ? (
+                                                        <User className="h-4 w-4 text-white"/>
+                                                    ) : (
+                                                        <MessageCircle className="h-4 w-4 text-white"/>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <p className="text-white font-medium">
+                                                        {message.sender === 'client'
+                                                            ? clients.find(c => c.id === message.clientId)?.name || 'Client'
+                                                            : 'Admin'
+                                                        }
+                                                    </p>
+                                                    <p className="text-gray-400 text-sm">
+                                                        Projet: {projects.find(p => p.id === message.projectId)?.title || 'Projet'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                        <span className="text-gray-400 text-sm">
+                          {message.timestamp.toLocaleString('fr-FR')}
+                        </span>
+                                                {!message.read && message.sender === 'client' && (
+                                                    <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <p className="text-gray-300 mb-4">{message.content}</p>
+                                        <div className="flex items-center space-x-2">
+                                            <button
+                                                onClick={() => {
+                                                    const project = projects.find(p => p.id === message.projectId);
+                                                    if (project) {
+                                                        setSelectedProject(project);
+                                                        setShowMessageModal(true);
+                                                    }
+                                                }}
+                                                className="text-primary-400 hover:text-primary-300 text-sm flex items-center"
+                                            >
+                                                <Reply className="h-4 w-4 mr-1"/>
+                                                Répondre
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Settings Tab */}
+                    {activeTab === 'settings' && (
+                        <div>
+                            <h2 className="text-2xl font-bold text-white mb-8">Paramètres</h2>
+                            <div className="bg-gray-800 rounded-lg p-6">
+                                <h3 className="text-lg font-bold text-white mb-4">Configuration générale</h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                                            Notifications par email
+                                        </label>
+                                        <input type="checkbox" className="rounded" defaultChecked/>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                                            Délai de réponse automatique (heures)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            defaultValue={24}
+                                            className="w-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Project Details Modal */}
+            {showProjectDetails && selectedProject && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+                            <h3 className="text-xl font-bold text-white">
+                                Détails du projet: {selectedProject.title}
+                            </h3>
+                            <button
+                                onClick={() => setShowProjectDetails(false)}
+                                className="text-gray-400 hover:text-white transition-colors"
+                            >
+                                <X className="h-6 w-6"/>
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 className="text-lg font-medium text-white mb-4">Informations générales</h4>
+                                    <div className="space-y-3 text-sm">
+                                        <div>
+                                            <span className="text-gray-400">Client:</span>
+                                            <span className="text-white ml-2">{selectedProject.clientName}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-400">Type:</span>
+                                            <span className="text-white ml-2">{selectedProject.type}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-400">Budget:</span>
+                                            <span className="text-white ml-2">{selectedProject.budget}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-400">Délai:</span>
+                                            <span className="text-white ml-2">{selectedProject.timeline}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-400">Heures estimées:</span>
+                                            <span
+                                                className="text-white ml-2">{selectedProject.estimatedHours || 'N/A'}h</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-400">Assigné à:</span>
+                                            <span
+                                                className="text-white ml-2">{selectedProject.assignedTo || 'Non assigné'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 className="text-lg font-medium text-white mb-4">Statut et priorité</h4>
+                                    <div className="space-y-3">
+                                        <div className={`px-3 py-2 rounded ${getStatusColor(selectedProject.status)}`}>
+                                            Statut: {selectedProject.status}
+                                        </div>
+                                        <div
+                                            className={`px-3 py-2 rounded ${getPriorityColor(selectedProject.priority)}`}>
+                                            Priorité: {selectedProject.priority}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 className="text-lg font-medium text-white mb-4">Description</h4>
+                                <p className="text-gray-300 bg-gray-800 p-4 rounded-lg">
+                                    {selectedProject.description}
+                                </p>
+                            </div>
+
+                            {selectedProject.notes && (
+                                <div>
+                                    <h4 className="text-lg font-medium text-white mb-4">Notes internes</h4>
+                                    <p className="text-gray-300 bg-gray-800 p-4 rounded-lg">
+                                        {selectedProject.notes}
+                                    </p>
+                                </div>
+                            )}
+
+                            {(selectedProject.figmaUrl || selectedProject.gitlabUrl) && (
+                                <div>
+                                    <h4 className="text-lg font-medium text-white mb-4">Liens</h4>
+                                    <div className="space-y-2">
+                                        {selectedProject.figmaUrl && (
+                                            <a
+                                                href={selectedProject.figmaUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center text-primary-400 hover:text-primary-300"
+                                            >
+                                                <ExternalLink className="h-4 w-4 mr-2"/>
+                                                Figma Design
+                                            </a>
+                                        )}
+                                        {selectedProject.gitlabUrl && (
+                                            <a
+                                                href={selectedProject.gitlabUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center text-primary-400 hover:text-primary-300"
+                                            >
+                                                <ExternalLink className="h-4 w-4 mr-2"/>
+                                                GitLab Repository
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedProject.attachments.length > 0 && (
+                                <div>
+                                    <h4 className="text-lg font-medium text-white mb-4">Fichiers joints</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        {selectedProject.attachments.map((file, index) => (
+                                            <div
+                                                key={index}
+                                                className="flex items-center bg-gray-800 rounded-lg p-3"
+                                            >
+                                                {file.type.includes('image') ? (
+                                                    <ImageIcon className="h-5 w-5 text-primary-400 mr-3"/>
+                                                ) : (
+                                                    <FileText className="h-5 w-5 text-primary-400 mr-3"/>
+                                                )}
+                                                <span className="text-gray-300 flex-1">{file.name}</span>
+                                                <button className="text-primary-400 hover:text-primary-300">
+                                                    <Download className="h-4 w-4"/>
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-6 border-t border-gray-800 flex justify-end gap-4">
+                            <button
+                                onClick={() => setShowProjectDetails(false)}
+                                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                            >
+                                Fermer
+                            </button>
+                            <button className="btn btn-primary">
+                                <Edit className="h-4 w-4 mr-2"/>
+                                Modifier
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Message Modal */}
+            {showMessageModal && selectedProject && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl">
+                        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+                            <h3 className="text-xl font-bold text-white">
+                                Envoyer un message - {selectedProject.title}
+                            </h3>
+                            <button
+                                onClick={() => setShowMessageModal(false)}
+                                className="text-gray-400 hover:text-white transition-colors"
+                            >
+                                <X className="h-6 w-6"/>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSendMessage} className="p-6">
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Destinataire
+                                </label>
+                                <div className="text-white bg-gray-800 p-3 rounded-lg">
+                                    {selectedProject.clientName}
+                                </div>
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Message
+                                </label>
+                                <textarea
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    rows={6}
+                                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    placeholder="Tapez votre message..."
+                                    required
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowMessageModal(false)}
+                                    className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                >
+                                    <Send className="h-4 w-4 mr-2"/>
+                                    Envoyer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Create Quote Modal */}
+            {showCreateQuoteModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+                            <h3 className="text-xl font-bold text-white">Créer un nouveau devis</h3>
+                            <button
+                                onClick={() => setShowCreateQuoteModal(false)}
+                                className="text-gray-400 hover:text-white transition-colors"
+                            >
+                                <X className="h-6 w-6"/>
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Client *
+                                    </label>
+                                    <select
+                                        value={quoteFormData.clientId}
+                                        onChange={(e) => setQuoteFormData({...quoteFormData, clientId: e.target.value})}
+                                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        required
+                                    >
+                                        <option value="">Sélectionner un client</option>
+                                        {clients.map((client) => (
+                                            <option key={client.id} value={client.id}>
+                                                {client.name} - {client.company}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Projet (optionnel)
+                                    </label>
+                                    <select
+                                        value={quoteFormData.projectId}
+                                        onChange={(e) => setQuoteFormData({
+                                            ...quoteFormData,
+                                            projectId: e.target.value
+                                        })}
+                                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    >
+                                        <option value="">Aucun projet spécifique</option>
+                                        {projects.filter(p => p.clientId === quoteFormData.clientId).map((project) => (
+                                            <option key={project.id} value={project.id}>
+                                                {project.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Titre du devis *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={quoteFormData.title}
+                                        onChange={(e) => setQuoteFormData({...quoteFormData, title: e.target.value})}
+                                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Valide jusqu'au *
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={quoteFormData.validUntil}
+                                        onChange={(e) => setQuoteFormData({
+                                            ...quoteFormData,
+                                            validUntil: e.target.value
+                                        })}
+                                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Description
+                                </label>
+                                <textarea
+                                    value={quoteFormData.description}
+                                    onChange={(e) => setQuoteFormData({...quoteFormData, description: e.target.value})}
+                                    rows={3}
+                                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                />
+                            </div>
+
+                            {/* Quote Items */}
+                            <div>
+                                <div className="flex justify-between items-center mb-4">
+                                    <label className="block text-sm font-medium text-gray-300">
+                                        Éléments du devis *
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={addQuoteItem}
+                                        className="text-primary-400 hover:text-primary-300 text-sm flex items-center"
+                                    >
+                                        <Plus className="h-4 w-4 mr-1"/>
+                                        Ajouter un élément
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {quoteFormData.items.map((item, index) => (
+                                        <div key={index}
+                                             className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-800 rounded-lg">
+                                            <div className="md:col-span-2">
+                                                <input
+                                                    type="text"
+                                                    value={item.description}
+                                                    onChange={(e) => updateQuoteItem(index, 'description', e.target.value)}
+                                                    placeholder="Description de l'élément"
+                                                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <input
+                                                    type="number"
+                                                    value={item.quantity}
+                                                    onChange={(e) => updateQuoteItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                                                    placeholder="Quantité"
+                                                    min="0"
+                                                    step="0.01"
+                                                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="number"
+                                                    value={item.unitPrice}
+                                                    onChange={(e) => updateQuoteItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                                                    placeholder="Prix unitaire"
+                                                    min="0"
+                                                    step="0.01"
+                                                    className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+                                                    required
+                                                />
+                                                {quoteFormData.items.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeQuoteItem(index)}
+                                                        className="text-red-400 hover:text-red-300"
+                                                    >
+                                                        <Trash2 className="h-4 w-4"/>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Quote Total */}
+                                <div className="mt-6 p-4 bg-gray-800 rounded-lg">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-gray-300">
+                                            <span>Sous-total:</span>
+                                            <span>{calculateQuoteTotal().subtotal.toFixed(2)} €</span>
+                                        </div>
+                                        <div className="flex justify-between text-gray-300">
+                                            <span>TVA ({quoteFormData.taxRate}%):</span>
+                                            <span>{calculateQuoteTotal().taxAmount.toFixed(2)} €</span>
+                                        </div>
+                                        <div
+                                            className="flex justify-between text-white font-bold text-lg border-t border-gray-700 pt-2">
+                                            <span>Total:</span>
+                                            <span>{calculateQuoteTotal().total.toFixed(2)} €</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Taux de TVA (%)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={quoteFormData.taxRate}
+                                        onChange={(e) => setQuoteFormData({
+                                            ...quoteFormData,
+                                            taxRate: parseFloat(e.target.value) || 20
+                                        })}
+                                        min="0"
+                                        max="100"
+                                        step="0.01"
+                                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Devise
+                                    </label>
+                                    <select
+                                        value={quoteFormData.currency}
+                                        onChange={(e) => setQuoteFormData({...quoteFormData, currency: e.target.value})}
+                                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    >
+                                        <option value="EUR">Euro (€)</option>
+                                        <option value="USD">Dollar ($)</option>
+                                        <option value="GBP">Livre (£)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Notes
+                                </label>
+                                <textarea
+                                    value={quoteFormData.notes}
+                                    onChange={(e) => setQuoteFormData({...quoteFormData, notes: e.target.value})}
+                                    rows={3}
+                                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    placeholder="Notes additionnelles..."
+                                />
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-gray-800 flex justify-end gap-4">
+                            <button
+                                type="button"
+                                onClick={() => setShowCreateQuoteModal(false)}
+                                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={createQuote}
+                                className="btn btn-primary"
+                                disabled={!quoteFormData.title || !quoteFormData.clientId || !quoteFormData.validUntil || quoteFormData.items.some(item => !item.description || item.quantity <= 0 || item.unitPrice <= 0)}
+                            >
+                                <Save className="h-4 w-4 mr-2"/>
+                                Créer le devis
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Quote Details Modal */}
+            {showQuoteDetails && selectedQuote && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+                            <h3 className="text-xl font-bold text-white">
+                                Devis: {selectedQuote.title}
+                            </h3>
+                            <button
+                                onClick={() => setShowQuoteDetails(false)}
+                                className="text-gray-400 hover:text-white transition-colors"
+                            >
+                                <X className="h-6 w-6"/>
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 className="text-lg font-medium text-white mb-4">Informations du devis</h4>
+                                    <div className="space-y-3 text-sm">
+                                        <div>
+                                            <span className="text-gray-400">Client:</span>
+                                            <span className="text-white ml-2">{selectedQuote.users?.name}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-400">Entreprise:</span>
+                                            <span className="text-white ml-2">{selectedQuote.users?.company}</span>
+                                        </div>
+                                        {selectedQuote.projects && (
+                                            <div>
+                                                <span className="text-gray-400">Projet:</span>
+                                                <span className="text-white ml-2">{selectedQuote.projects.title}</span>
+                                            </div>
+                                        )}
+                                        <div>
+                                            <span className="text-gray-400">Créé le:</span>
+                                            <span
+                                                className="text-white ml-2">{new Date(selectedQuote.created_at).toLocaleDateString('fr-FR')}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-400">Valide jusqu'au:</span>
+                                            <span
+                                                className="text-white ml-2">{new Date(selectedQuote.valid_until).toLocaleDateString('fr-FR')}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 className="text-lg font-medium text-white mb-4">Statut</h4>
+                                    <div className="space-y-3">
+                                        <div
+                                            className={`px-3 py-2 rounded ${getQuoteStatusColor(selectedQuote.status)}`}>
+                                            Statut: {selectedQuote.status === 'draft' ? 'Brouillon' :
+                                            selectedQuote.status === 'sent' ? 'Envoyé' :
+                                                selectedQuote.status === 'accepted' ? 'Accepté' :
+                                                    selectedQuote.status === 'rejected' ? 'Refusé' : 'Expiré'}
+                                        </div>
+                                        <div className="flex space-x-2">
+                                            {selectedQuote.status === 'draft' && (
+                                                <button
+                                                    onClick={() => {
+                                                        updateQuoteStatus(selectedQuote.id, 'sent');
+                                                        setShowQuoteDetails(false);
+                                                    }}
+                                                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                                                >
+                                                    <Send className="h-3 w-3 mr-1 inline"/>
+                                                    Marquer comme envoyé
+                                                </button>
+                                            )}
+                                            {selectedQuote.status === 'sent' && (
+                                                <>
+                                                    <button
+                                                        onClick={() => {
+                                                            updateQuoteStatus(selectedQuote.id, 'accepted');
+                                                            setShowQuoteDetails(false);
+                                                        }}
+                                                        className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                                                    >
+                                                        <CheckCircle className="h-3 w-3 mr-1 inline"/>
+                                                        Accepter
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            updateQuoteStatus(selectedQuote.id, 'rejected');
+                                                            setShowQuoteDetails(false);
+                                                        }}
+                                                        className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
+                                                    >
+                                                        <X className="h-3 w-3 mr-1 inline"/>
+                                                        Refuser
+                                                    </button>
+                                                </>
+                                            )}
+                                            {selectedQuote.status === 'accepted' && (
+                                                <button
+                                                    onClick={() => {
+                                                        convertQuoteToInvoice(selectedQuote.id);
+                                                        setShowQuoteDetails(false);
+                                                    }}
+                                                    className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700"
+                                                >
+                                                    <FileCheck className="h-3 w-3 mr-1 inline"/>
+                                                    Convertir en facture
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {selectedQuote.description && (
+                                <div>
+                                    <h4 className="text-lg font-medium text-white mb-4">Description</h4>
+                                    <p className="text-gray-300 bg-gray-800 p-4 rounded-lg">
+                                        {selectedQuote.description}
+                                    </p>
+                                </div>
+                            )}
+
+                            <div>
+                                <h4 className="text-lg font-medium text-white mb-4">Éléments du devis</h4>
+                                <div className="bg-gray-800 rounded-lg overflow-hidden">
+                                    <table className="w-full">
+                                        <thead className="bg-gray-700">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-300">Description</th>
+                                            <th className="px-4 py-2 text-right text-xs font-medium text-gray-300">Quantité</th>
+                                            <th className="px-4 py-2 text-right text-xs font-medium text-gray-300">Prix
+                                                unitaire
+                                            </th>
+                                            <th className="px-4 py-2 text-right text-xs font-medium text-gray-300">Total</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-700">
+                                        {selectedQuote.items.map((item, index) => (
+                                            <tr key={index}>
+                                                <td className="px-4 py-3 text-sm text-white">{item.description}</td>
+                                                <td className="px-4 py-3 text-sm text-white text-right">{item.quantity}</td>
+                                                <td className="px-4 py-3 text-sm text-white text-right">{parseFloat(item.unitPrice).toLocaleString('fr-FR')} €</td>
+                                                <td className="px-4 py-3 text-sm text-white text-right">{parseFloat(item.totalPrice).toLocaleString('fr-FR')} €</td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                        <tfoot className="bg-gray-700">
+                                        <tr>
+                                            <td colSpan={3}
+                                                className="px-4 py-2 text-sm font-medium text-gray-300 text-right">Sous-total:
+                                            </td>
+                                            <td className="px-4 py-2 text-sm font-medium text-white text-right">{parseFloat(selectedQuote.subtotal).toLocaleString('fr-FR')} €</td>
+                                        </tr>
+                                        <tr>
+                                            <td colSpan={3}
+                                                className="px-4 py-2 text-sm font-medium text-gray-300 text-right">TVA
+                                                ({selectedQuote.tax_rate}%):
+                                            </td>
+                                            <td className="px-4 py-2 text-sm font-medium text-white text-right">{parseFloat(selectedQuote.tax_amount).toLocaleString('fr-FR')} €</td>
+                                        </tr>
+                                        <tr>
+                                            <td colSpan={3}
+                                                className="px-4 py-2 text-sm font-bold text-white text-right">Total:
+                                            </td>
+                                            <td className="px-4 py-2 text-sm font-bold text-white text-right">{parseFloat(selectedQuote.total_amount).toLocaleString('fr-FR')} €</td>
+                                        </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {selectedQuote.notes && (
+                                <div>
+                                    <h4 className="text-lg font-medium text-white mb-4">Notes</h4>
+                                    <p className="text-gray-300 bg-gray-800 p-4 rounded-lg">
+                                        {selectedQuote.notes}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-6 border-t border-gray-800 flex justify-end gap-4">
+                            <button
+                                onClick={() => setShowQuoteDetails(false)}
+                                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                            >
+                                Fermer
+                            </button>
+                            <button
+                                onClick={() => {
+                                    // TODO: Implement PDF generation
+                                    alert('Fonctionnalité en cours de développement');
+                                }}
+                                className="btn btn-secondary"
+                            >
+                                <Download className="h-4 w-4 mr-2"/>
+                                Télécharger PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Upload Modal */}
+            {showUploadModal && (
+                <UploadDocumentModal
+                    isOpen={showUploadModal}
+                    onClose={() => setShowUploadModal(false)}
+                    formData={uploadFormData}
+                    setFormData={setUploadFormData}
+                    onSubmit={handleUploadSubmit}
+                    isSubmitting={uploadStatus === 'uploading'}
+                    programs={trainingPrograms}
+                />
+            )}
+        </div>
+    );
+};
+
+export default AdminDashboard;
