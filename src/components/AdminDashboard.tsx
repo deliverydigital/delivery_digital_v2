@@ -466,8 +466,13 @@ const AdminDashboard = () => {
     const handleUploadSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (uploadFormData.files.length === 0) {
+        if (!uploadFormData.files || uploadFormData.files.length === 0) {
             setUploadError('Veuillez sélectionner au moins un fichier');
+            return;
+        }
+
+        if (!uploadFormData.program_id || !uploadFormData.program_name) {
+            setUploadError('Veuillez sélectionner un programme de formation');
             return;
         }
 
