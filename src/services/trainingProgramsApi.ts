@@ -7,6 +7,7 @@ const getApiBaseUrl = (): string => {
 
 export interface TrainingProgram {
   id: string;
+  name: string;
   program_id: string;
   title: string;
   description: string;
@@ -22,6 +23,11 @@ export interface TrainingProgram {
   accessibility_info?: string;
   access_delay?: string;
   is_active: boolean;
+  is_featured?: boolean;
+  opco_eligible?: boolean;
+  cpf_eligible?: boolean;
+  certification_type?: string;
+  certification_provider?: string;
   modules: {
     title: string;
     duration_hours: number;
@@ -86,28 +92,57 @@ export class TrainingProgramsApiService {
       try {
         const response = await makeRequest(`/training-programs?${params.toString()}`);
         
-        if (response.success && response.data.programs) {
+        if (response.data && response.data.programs) {
           return response.data.programs.map((program: any) => ({
             ...program,
-            created_at: new Date(program.created_at),
-            updated_at: new Date(program.updated_at),
+            created_at: program.created_at ? new Date(program.created_at) : new Date(),
+            updated_at: program.updated_at ? new Date(program.updated_at) : new Date(),
             documents: (program.documents || []).map((doc: any) => ({
               ...doc,
-              uploaded_at: new Date(doc.uploaded_at)
+              uploaded_at: doc.uploaded_at ? new Date(doc.uploaded_at) : new Date()
             }))
           }));
         }
         
-        return [];
+        // If API call fails but returns data, use fallback
+        if (response.data && response.data.programs) {
+          return response.data.programs;
+        }
+        
+        // Return fallback data
+        return this.getFallbackPrograms();
       } catch (apiError) {
         console.log('API endpoint not available, using fallback data');
-        // Return empty array as fallback since Training.tsx has its own programs object
-        return [];
+        return this.getFallbackPrograms();
       }
     } catch (error) {
       console.error('Error fetching training programs:', error);
-      return [];
+      return this.getFallbackPrograms();
     }
+  }
+
+  // Fallback data when API is not available
+  private static getFallbackPrograms(): TrainingProgram[] {
+    return [
+      { id: 'wordpress', name: 'WordPress', program_id: 'wordpress', title: 'WordPress', description: 'Créez et gérez des sites web professionnels', category: 'web', duration_hours: 35, price: 1200, level: 'beginner', max_participants: 12, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'photoshop', name: 'Photoshop', program_id: 'photoshop', title: 'Photoshop', description: 'Maîtrisez les outils de retouche photo', category: 'design', duration_hours: 28, price: 800, level: 'beginner', max_participants: 12, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'canva', name: 'Canva', program_id: 'canva', title: 'Canva', description: 'Créez des designs professionnels facilement', category: 'design', duration_hours: 21, price: 600, level: 'beginner', max_participants: 15, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'excel', name: 'Excel', program_id: 'excel', title: 'Excel', description: 'Maîtrisez Excel pour l\'analyse de données', category: 'office', duration_hours: 35, price: 900, level: 'intermediate', max_participants: 10, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'dev-web-mobile', name: 'Développeur Web et Web Mobile', program_id: 'dev-web-mobile', title: 'Développeur Web et Web Mobile', description: 'Formation complète pour devenir développeur', category: 'web', duration_hours: 400, price: 8000, level: 'intermediate', max_participants: 12, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'reflex-english-1', name: 'Reflex English 1', program_id: 'reflex-english-1', title: 'Reflex English Niveau 1', description: 'Apprentissage de l\'anglais niveau débutant', category: 'languages', duration_hours: 60, price: 1500, level: 'beginner', max_participants: 15, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'reflex-english-2', name: 'Reflex English 2', program_id: 'reflex-english-2', title: 'Reflex English Niveau 2', description: 'Perfectionnement en anglais niveau intermédiaire', category: 'languages', duration_hours: 60, price: 1500, level: 'intermediate', max_participants: 15, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'reflex-english-3', name: 'Reflex English 3', program_id: 'reflex-english-3', title: 'Reflex English Niveau 3', description: 'Anglais avancé pour un niveau professionnel', category: 'languages', duration_hours: 60, price: 1500, level: 'advanced', max_participants: 15, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'hygiene-security', name: 'Hygiène, Sécurité et Développement Durable', program_id: 'hygiene-security', title: 'Hygiène, Sécurité et Développement Durable', description: 'Formation en hygiène et sécurité pour la restauration', category: 'safety', duration_hours: 14, price: 350, level: 'beginner', max_participants: 12, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'hygiene-security-afest', name: 'Hygiène, Sécurité et Développement Durable - AFEST', program_id: 'hygiene-security-afest', title: 'Hygiène, Sécurité et Développement Durable - AFEST', description: 'Formation AFEST en hygiène et sécurité', category: 'safety', duration_hours: 21, price: 525, level: 'beginner', max_participants: 8, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'conduite-securitaire', name: 'Conduite Sécuritaire', program_id: 'conduite-securitaire', title: 'Conduite Sécuritaire', description: 'Formation à la conduite préventive et sécuritaire', category: 'safety', duration_hours: 14, price: 400, level: 'beginner', max_participants: 12, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'autocad-sketchup-revit', name: 'AutoCAD, SketchUp, et Revit', program_id: 'autocad-sketchup-revit', title: 'AutoCAD, SketchUp, et Revit', description: 'Maîtrisez les logiciels de CAO et BIM', category: 'design', duration_hours: 100, price: 2500, level: 'intermediate', max_participants: 10, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'reflex-espagnol-1', name: 'Reflex Espagnol Niveau 1', program_id: 'reflex-espagnol-1', title: 'Reflex Espagnol Niveau 1', description: 'Apprentissage de l\'espagnol niveau débutant', category: 'languages', duration_hours: 60, price: 1500, level: 'beginner', max_participants: 15, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'reflex-espagnol-2', name: 'Reflex Espagnol Niveau 2', program_id: 'reflex-espagnol-2', title: 'Reflex Espagnol Niveau 2', description: 'Perfectionnement en espagnol niveau intermédiaire', category: 'languages', duration_hours: 60, price: 1500, level: 'intermediate', max_participants: 15, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'reflex-espagnol-3', name: 'Reflex Espagnol Niveau 3', program_id: 'reflex-espagnol-3', title: 'Reflex Espagnol Niveau 3', description: 'Espagnol avancé pour un niveau professionnel', category: 'languages', duration_hours: 60, price: 1500, level: 'advanced', max_participants: 15, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'management-complet', name: 'Management Parcours Complet', program_id: 'management-complet', title: 'Management Parcours Complet', description: 'Formation complète en management et leadership', category: 'management', duration_hours: 70, price: 2100, level: 'intermediate', max_participants: 12, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'vente-omnicanal', name: 'Techniques de Vente Omnicanal', program_id: 'vente-omnicanal', title: 'Techniques de Vente Omnicanal', description: 'Maîtrisez les techniques de vente modernes', category: 'business', duration_hours: 35, price: 1050, level: 'intermediate', max_participants: 12, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() },
+      { id: 'nutrition', name: 'Nutrition', program_id: 'nutrition', title: 'Nutrition', description: 'Formation en nutrition et diététique', category: 'health', duration_hours: 42, price: 1260, level: 'intermediate', max_participants: 15, objectives: [], methods: [], evaluation_methods: [], is_active: true, modules: [], documents: [], created_at: new Date(), updated_at: new Date() }
+    ];
   }
 
   // Get single training program

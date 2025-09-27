@@ -56,6 +56,20 @@ const trainingProgramSchema = new Schema({
     type: Boolean,
     default: true
   },
+  is_featured: {
+    type: Boolean,
+    default: false
+  },
+  certification_type: String,
+  certification_provider: String,
+  opco_eligible: {
+    type: Boolean,
+    default: true
+  },
+  cpf_eligible: {
+    type: Boolean,
+    default: false
+  },
   
   // PDF Documents as embedded documents
   documents: [{
@@ -110,6 +124,9 @@ const trainingProgramSchema = new Schema({
 trainingProgramSchema.index({ program_id: 1 });
 trainingProgramSchema.index({ category: 1 });
 trainingProgramSchema.index({ is_active: 1 });
+trainingProgramSchema.index({ is_featured: 1 });
+trainingProgramSchema.index({ opco_eligible: 1 });
+trainingProgramSchema.index({ cpf_eligible: 1 });
 trainingProgramSchema.index({ 'documents.document_type': 1 });
 
 // Instance methods
@@ -139,6 +156,14 @@ trainingProgramSchema.statics.findByCategory = function(category) {
 
 trainingProgramSchema.statics.findActivePrograms = function() {
   return this.find({ is_active: true }).sort({ title: 1 });
+};
+
+trainingProgramSchema.statics.findFeaturedPrograms = function() {
+  return this.find({ is_active: true, is_featured: true }).sort({ title: 1 });
+};
+
+trainingProgramSchema.statics.findOPCOEligible = function() {
+  return this.find({ is_active: true, opco_eligible: true }).sort({ title: 1 });
 };
 
 trainingProgramSchema.statics.searchPrograms = function(query) {

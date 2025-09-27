@@ -128,9 +128,39 @@ router.get('/', validatePagination, async (req, res) => {
 
     // Check if MongoDB is available
     if (!isMongoAvailable()) {
-      return res.status(503).json({
+      // Return fallback data when MongoDB is not available
+      const fallbackPrograms = [
+        { id: 'wordpress', name: 'WordPress' },
+        { id: 'photoshop', name: 'Photoshop' },
+        { id: 'canva', name: 'Canva' },
+        { id: 'excel', name: 'Excel' },
+        { id: 'dev-web-mobile', name: 'Développeur Web et Web Mobile' },
+        { id: 'reflex-english-1', name: 'Reflex English 1' },
+        { id: 'reflex-english-2', name: 'Reflex English 2' },
+        { id: 'reflex-english-3', name: 'Reflex English 3' },
+        { id: 'hygiene-security', name: 'Hygiène, Sécurité et Développement Durable' },
+        { id: 'hygiene-security-afest', name: 'Hygiène, Sécurité et Développement Durable - AFEST' },
+        { id: 'conduite-securitaire', name: 'Conduite Sécuritaire' },
+        { id: 'autocad-sketchup-revit', name: 'AutoCAD, SketchUp, et Revit' },
+        { id: 'reflex-espagnol-1', name: 'Reflex Espagnol Niveau 1' },
+        { id: 'reflex-espagnol-2', name: 'Reflex Espagnol Niveau 2' },
+        { id: 'reflex-espagnol-3', name: 'Reflex Espagnol Niveau 3' },
+        { id: 'management-complet', name: 'Management Parcours Complet' },
+        { id: 'vente-omnicanal', name: 'Techniques de Vente Omnicanal' },
+        { id: 'nutrition', name: 'Nutrition' }
+      ];
+      
+      return res.json({
         success: false,
-        error: 'Database service unavailable'
+        data: {
+          programs: fallbackPrograms,
+          pagination: {
+            current_page: 1,
+            total_pages: 1,
+            total_items: fallbackPrograms.length,
+            items_per_page: fallbackPrograms.length
+          }
+        }
       });
     }
 
@@ -153,17 +183,31 @@ router.get('/', validatePagination, async (req, res) => {
     }
 
     const programs = await TrainingProgram.find(query)
-      .select('-documents')
+      .select('program_id title description category duration_hours price level max_participants is_featured opco_eligible cpf_eligible certification_type')
       .skip(skip)
       .limit(parseInt(limit))
-      .sort({ created_at: -1 });
+      .sort({ is_featured: -1, title: 1 });
 
     const total = await TrainingProgram.countDocuments(query);
 
     res.json({
       success: true,
       data: {
-        programs,
+        programs: programs.map(program => ({
+          id: program.program_id,
+          name: program.title,
+          title: program.title,
+          description: program.description,
+          category: program.category,
+          duration_hours: program.duration_hours,
+          price: program.price,
+          level: program.level,
+          max_participants: program.max_participants,
+          is_featured: program.is_featured,
+          opco_eligible: program.opco_eligible,
+          cpf_eligible: program.cpf_eligible,
+          certification_type: program.certification_type
+        })),
         pagination: {
           current_page: parseInt(page),
           total_pages: Math.ceil(total / limit),
