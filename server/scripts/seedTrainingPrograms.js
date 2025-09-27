@@ -26,8 +26,7 @@ const seedTrainingPrograms = async () => {
     // Check if programs already exist
     const existingPrograms = await TrainingProgram.find();
     if (existingPrograms.length > 0) {
-      console.log('⚠️ Training programs already exist, skipping seeding');
-      return;
+      console.log('⚠️ Training programs already exist, updating...');
     }
 
     // Find admin user for document uploads
@@ -54,101 +53,8 @@ const seedTrainingPrograms = async () => {
       return filePath;
     };
 
-    // Training programs data
+    // Complete training programs data
     const programsData = [
-      // Add the missing dev-web-mobile program
-      {
-        program_id: 'dev-web-mobile',
-        title: 'Développeur Web et Web Mobile',
-        description: 'Formation complète pour devenir développeur web et mobile avec les technologies modernes',
-        category: 'web',
-        duration_hours: 400,
-        price: 8000,
-        level: 'intermediate',
-        max_participants: 12,
-        prerequisites: 'Connaissances de base en informatique et logique',
-        objectives: [
-          'Maîtriser HTML, CSS et JavaScript',
-          'Développer avec React et Node.js',
-          'Créer des applications mobiles avec React Native',
-          'Comprendre les bases de données et APIs',
-          'Déployer des applications en production'
-        ],
-        methods: [
-          'Formation pratique avec projets réels',
-          'Accompagnement personnalisé',
-          'Méthodes agiles et collaboratives'
-        ],
-        evaluation_methods: [
-          'Projets pratiques',
-          'Portfolio professionnel',
-          'Évaluation continue',
-          'Soutenance finale'
-        ],
-        accessibility_info: 'Formation accessible aux personnes en situation de handicap',
-        access_delay: '2 semaines',
-        modules: [
-          {
-            title: 'Fondamentaux Web',
-            duration_hours: 80,
-            topics: ['HTML5', 'CSS3', 'JavaScript ES6+', 'Git/GitHub'],
-            order: 1
-          },
-          {
-            title: 'Frontend Moderne',
-            duration_hours: 120,
-            topics: ['React.js', 'Redux', 'TypeScript', 'Responsive Design'],
-            order: 2
-          },
-          {
-            title: 'Backend et APIs',
-            duration_hours: 100,
-            topics: ['Node.js', 'Express', 'MongoDB', 'APIs REST'],
-            order: 3
-          },
-          {
-            title: 'Mobile et Déploiement',
-            duration_hours: 100,
-            topics: ['React Native', 'Déploiement', 'DevOps', 'Tests'],
-            order: 4
-          }
-        ],
-        documents: [
-          {
-            title: 'Curriculum complet Développeur Web',
-            description: 'Programme détaillé de la formation développeur web et mobile (400h)',
-            filename: 'dev-web-curriculum.pdf',
-            original_name: 'dev-web-curriculum.pdf',
-            file_type: 'application/pdf',
-            document_type: 'program',
-            is_public: true,
-            uploaded_by: adminUser._id,
-            content: 'Curriculum Développeur Web - Formation complète en développement web et mobile avec React, Node.js, React Native et déploiement'
-          },
-          {
-            title: 'Guide React.js',
-            description: 'Guide complet pour apprendre React.js',
-            filename: 'react-guide.pdf',
-            original_name: 'react-guide.pdf',
-            file_type: 'application/pdf',
-            document_type: 'guide',
-            is_public: true,
-            uploaded_by: adminUser._id,
-            content: 'Guide React.js - Apprenez React.js de zéro avec des exemples pratiques et des projets concrets'
-          },
-          {
-            title: 'API REST avec Node.js',
-            description: 'Guide pour créer des APIs REST avec Node.js',
-            filename: 'nodejs-api-guide.pdf',
-            original_name: 'nodejs-api-guide.pdf',
-            file_type: 'application/pdf',
-            document_type: 'guide',
-            is_public: true,
-            uploaded_by: adminUser._id,
-            content: 'Guide Node.js API - Créez des APIs REST robustes et sécurisées avec Node.js et Express'
-          }
-        ]
-      },
       {
         program_id: 'wordpress',
         title: 'WordPress',
@@ -183,18 +89,6 @@ const seedTrainingPrograms = async () => {
             duration_hours: 7,
             topics: ['Installation WordPress', 'Configuration de base', 'Thèmes et plugins', 'Sécurité'],
             order: 1
-          },
-          {
-            title: 'Création de Contenu',
-            duration_hours: 14,
-            topics: ['Pages et articles', 'Médias', 'Menus', 'Widgets'],
-            order: 2
-          },
-          {
-            title: 'Personnalisation Avancée',
-            duration_hours: 14,
-            topics: ['Customizer', 'CSS personnalisé', 'Fonctions avancées', 'E-commerce'],
-            order: 3
           }
         ],
         documents: [
@@ -208,17 +102,6 @@ const seedTrainingPrograms = async () => {
             is_public: true,
             uploaded_by: adminUser._id,
             content: 'Programme détaillé WordPress - Formation complète pour créer et gérer des sites web professionnels'
-          },
-          {
-            title: 'Guide d\'installation WordPress',
-            description: 'Guide pas à pas pour installer WordPress',
-            filename: 'wordpress-installation.pdf',
-            original_name: 'wordpress-installation.pdf',
-            file_type: 'application/pdf',
-            document_type: 'guide',
-            is_public: true,
-            uploaded_by: adminUser._id,
-            content: 'Guide d\'installation WordPress - Instructions détaillées pour l\'installation et la configuration'
           }
         ]
       },
@@ -256,18 +139,6 @@ const seedTrainingPrograms = async () => {
             duration_hours: 7,
             topics: ['Interface Photoshop', 'Outils de sélection', 'Calques', 'Masques'],
             order: 1
-          },
-          {
-            title: 'Retouche Photo',
-            duration_hours: 14,
-            topics: ['Correction colorimétrique', 'Retouche beauté', 'Montage photo', 'Effets'],
-            order: 2
-          },
-          {
-            title: 'Création Graphique',
-            duration_hours: 7,
-            topics: ['Design graphique', 'Typographie', 'Composition', 'Export'],
-            order: 3
           }
         ],
         documents: [
@@ -285,29 +156,246 @@ const seedTrainingPrograms = async () => {
         ]
       },
       {
+        program_id: 'canva',
+        title: 'Canva',
+        description: 'Créez des designs professionnels facilement avec Canva',
+        category: 'design',
+        duration_hours: 14,
+        price: 400,
+        level: 'beginner',
+        max_participants: 15,
+        prerequisites: 'Aucun prérequis',
+        objectives: [
+          'Maîtriser l\'interface Canva',
+          'Créer des designs pour les réseaux sociaux',
+          'Réaliser des présentations professionnelles',
+          'Optimiser ses créations'
+        ],
+        methods: [
+          'Formation pratique',
+          'Exercices créatifs',
+          'Projets personnalisés'
+        ],
+        evaluation_methods: [
+          'Portfolio de créations',
+          'Évaluation pratique'
+        ],
+        accessibility_info: 'Formation accessible aux personnes en situation de handicap',
+        access_delay: '1 semaine',
+        modules: [],
+        documents: []
+      },
+      {
+        program_id: 'excel',
+        title: 'Excel',
+        description: 'Maîtrisez Excel pour l\'analyse de données et la gestion',
+        category: 'office',
+        duration_hours: 21,
+        price: 600,
+        level: 'intermediate',
+        max_participants: 12,
+        prerequisites: 'Connaissances de base d\'Excel',
+        objectives: [
+          'Maîtriser les formules avancées',
+          'Créer des tableaux croisés dynamiques',
+          'Automatiser avec les macros',
+          'Analyser des données'
+        ],
+        methods: [
+          'Formation pratique',
+          'Cas d\'usage réels',
+          'Exercices progressifs'
+        ],
+        evaluation_methods: [
+          'Tests pratiques',
+          'Projet final'
+        ],
+        accessibility_info: 'Formation accessible aux personnes en situation de handicap',
+        access_delay: '1 semaine',
+        modules: [],
+        documents: []
+      },
+      {
+        program_id: 'dev-web-mobile',
+        title: 'Développeur Web et Web Mobile',
+        description: 'Formation intensive pour devenir développeur full-stack',
+        category: 'web',
+        duration_hours: 400,
+        price: 8000,
+        level: 'intermediate',
+        max_participants: 16,
+        prerequisites: 'Bac+2 ou expérience équivalente. Logique et motivation indispensables.',
+        objectives: [
+          'Maîtriser HTML5, CSS3 et JavaScript moderne',
+          'Développer avec React.js et Node.js',
+          'Créer des applications mobiles avec React Native',
+          'Gérer les bases de données (MongoDB, PostgreSQL)',
+          'Déployer et maintenir des applications en production',
+          'Travailler en équipe avec Git et méthodes agiles'
+        ],
+        methods: [
+          'Pédagogie par projet et apprentissage actif',
+          'Pair programming et code review',
+          'Méthodes agiles (Scrum)',
+          'Mentorat individuel',
+          'Plateforme d\'apprentissage 24h/24'
+        ],
+        evaluation_methods: [
+          'Projets pratiques tout au long de la formation',
+          'Portfolio professionnel GitHub',
+          'Évaluations techniques régulières',
+          'Soutenance finale devant jury professionnel',
+          'Certification des compétences acquises'
+        ],
+        accessibility_info: 'Formation accessible aux personnes en situation de handicap. Matériel adapté disponible.',
+        access_delay: '2 semaines (selon financement)',
+        modules: [
+          {
+            title: 'Fondamentaux Web',
+            duration_hours: 80,
+            topics: ['HTML5', 'CSS3', 'JavaScript ES6+', 'Git/GitHub'],
+            order: 1
+          },
+          {
+            title: 'Frontend Moderne',
+            duration_hours: 120,
+            topics: ['React.js', 'Redux', 'TypeScript', 'Responsive Design'],
+            order: 2
+          },
+          {
+            title: 'Backend et APIs',
+            duration_hours: 100,
+            topics: ['Node.js', 'Express', 'MongoDB', 'APIs REST'],
+            order: 3
+          },
+          {
+            title: 'Mobile et Déploiement',
+            duration_hours: 100,
+            topics: ['React Native', 'Déploiement', 'DevOps', 'Tests'],
+            order: 4
+          }
+        ],
+        documents: []
+      },
+      {
+        program_id: 'reflex-english-1',
+        title: 'Reflex English 1',
+        description: 'Anglais niveau débutant avec méthode Reflex',
+        category: 'languages',
+        duration_hours: 20,
+        price: 500,
+        level: 'beginner',
+        max_participants: 15,
+        prerequisites: 'Aucun prérequis',
+        objectives: [
+          'Acquérir les bases de l\'anglais',
+          'Comprendre des phrases simples',
+          'Communiquer de façon simple',
+          'Se présenter et présenter autrui'
+        ],
+        methods: [
+          'Méthode Reflex interactive',
+          'Exercices audio et visuels',
+          'Mise en situation'
+        ],
+        evaluation_methods: [
+          'Tests de progression',
+          'Évaluation orale',
+          'Préparation TOEIC'
+        ],
+        accessibility_info: 'Formation accessible aux personnes en situation de handicap',
+        access_delay: '1 semaine',
+        modules: [],
+        documents: []
+      },
+      {
+        program_id: 'reflex-english-2',
+        title: 'Reflex English 2',
+        description: 'Anglais niveau intermédiaire avec méthode Reflex',
+        category: 'languages',
+        duration_hours: 20,
+        price: 500,
+        level: 'intermediate',
+        max_participants: 15,
+        prerequisites: 'Niveau A1 en anglais',
+        objectives: [
+          'Améliorer la compréhension orale',
+          'Enrichir le vocabulaire',
+          'Maîtriser les temps verbaux',
+          'Communiquer avec plus d\'aisance'
+        ],
+        methods: [
+          'Méthode Reflex interactive',
+          'Exercices audio et visuels',
+          'Conversations guidées'
+        ],
+        evaluation_methods: [
+          'Tests de progression',
+          'Évaluation orale',
+          'Préparation TOEIC'
+        ],
+        accessibility_info: 'Formation accessible aux personnes en situation de handicap',
+        access_delay: '1 semaine',
+        modules: [],
+        documents: []
+      },
+      {
+        program_id: 'reflex-english-3',
+        title: 'Reflex English 3',
+        description: 'Anglais niveau avancé avec méthode Reflex',
+        category: 'languages',
+        duration_hours: 20,
+        price: 500,
+        level: 'advanced',
+        max_participants: 15,
+        prerequisites: 'Niveau B1 en anglais',
+        objectives: [
+          'Perfectionner l\'expression orale',
+          'Maîtriser l\'anglais professionnel',
+          'Comprendre des textes complexes',
+          'Rédiger des documents professionnels'
+        ],
+        methods: [
+          'Méthode Reflex interactive',
+          'Études de cas professionnels',
+          'Débats et présentations'
+        ],
+        evaluation_methods: [
+          'Tests de progression',
+          'Évaluation orale avancée',
+          'Certification TOEIC'
+        ],
+        accessibility_info: 'Formation accessible aux personnes en situation de handicap',
+        access_delay: '1 semaine',
+        modules: [],
+        documents: []
+      },
+      {
         program_id: 'hygiene-security',
         title: 'Hygiène, Sécurité et Développement Durable',
-        description: 'Formation complète en hygiène, sécurité et pratiques durables pour le secteur de la restauration',
+        description: 'Formation obligatoire pour le secteur de la restauration',
         category: 'safety',
         duration_hours: 21,
         price: 525,
         level: 'beginner',
-        max_participants: 12,
-        prerequisites: 'Aucun prérequis',
+        max_participants: 15,
+        prerequisites: 'Aucun prérequis spécifique',
         objectives: [
-          'Acquérir des compétences en matière de bonnes pratiques d\'hygiène',
+          'Acquérir les bonnes pratiques d\'hygiène alimentaire',
           'Identifier et prévenir les risques de sécurité',
-          'Intégrer des pratiques durables'
+          'Intégrer des pratiques de développement durable',
+          'Respecter la réglementation en vigueur'
         ],
         methods: [
-          'AFEST (Action de Formation en Situation de Travail)',
+          'Formation théorique et pratique',
           'Exercices pratiques et études de cas',
           'Alternance théorie et pratique',
           'Suivi personnalisé'
         ],
         evaluation_methods: [
           'Évaluation initiale et finale',
-          'Plateforme d\'apprentissage DELIVERY Digital',
+          'QCM de validation',
+          'Mise en situation pratique',
           'Suivi des acquis personnalisé'
         ],
         accessibility_info: 'Formation accessible aux personnes en situation de handicap',
@@ -345,38 +433,328 @@ const seedTrainingPrograms = async () => {
             content: 'Manuel HACCP - Guide complet des bonnes pratiques d\'hygiène en restauration'
           }
         ]
+      },
+      {
+        program_id: 'hygiene-security-afest',
+        title: 'Hygiène, Sécurité et Développement Durable - AFEST',
+        description: 'Formation AFEST en hygiène, sécurité et développement durable',
+        category: 'safety',
+        duration_hours: 14,
+        price: 350,
+        level: 'beginner',
+        max_participants: 8,
+        prerequisites: 'Aucun prérequis',
+        objectives: [
+          'Appliquer les bonnes pratiques d\'hygiène en situation de travail',
+          'Identifier les risques sur le terrain',
+          'Mettre en œuvre des pratiques durables'
+        ],
+        methods: [
+          'AFEST (Action de Formation en Situation de Travail)',
+          'Accompagnement en visioconférence',
+          'Mise en pratique directe'
+        ],
+        evaluation_methods: [
+          'Évaluation en situation de travail',
+          'Suivi personnalisé des acquis'
+        ],
+        accessibility_info: 'Formation adaptée aux contraintes du secteur',
+        access_delay: '1 semaine',
+        modules: [],
+        documents: []
+      },
+      {
+        program_id: 'conduite-securitaire',
+        title: 'Conduite Sécuritaire',
+        description: 'Formation à la conduite préventive et sécuritaire',
+        category: 'safety',
+        duration_hours: 7,
+        price: 200,
+        level: 'beginner',
+        max_participants: 12,
+        prerequisites: 'Permis de conduire valide',
+        objectives: [
+          'Adopter une conduite préventive',
+          'Réduire les risques d\'accidents',
+          'Économiser le carburant',
+          'Respecter le code de la route'
+        ],
+        methods: [
+          'Formation théorique et pratique',
+          'Simulateur de conduite',
+          'Mise en situation réelle'
+        ],
+        evaluation_methods: [
+          'Test théorique',
+          'Évaluation pratique',
+          'Suivi post-formation'
+        ],
+        accessibility_info: 'Formation accessible selon les capacités de conduite',
+        access_delay: '1 semaine',
+        modules: [],
+        documents: []
+      },
+      {
+        program_id: 'autocad-sketchup-revit',
+        title: 'AutoCAD, SketchUp, et Revit',
+        description: 'Maîtrisez les logiciels de CAO et BIM pour l\'architecture',
+        category: 'design',
+        duration_hours: 100,
+        price: 2500,
+        level: 'intermediate',
+        max_participants: 10,
+        prerequisites: 'Connaissances en dessin technique',
+        objectives: [
+          'Maîtriser AutoCAD pour le dessin 2D',
+          'Créer des modèles 3D avec SketchUp',
+          'Comprendre le BIM avec Revit',
+          'Optimiser les workflows de conception'
+        ],
+        methods: [
+          'Formation pratique sur projets',
+          'Exercices progressifs',
+          'Accompagnement personnalisé'
+        ],
+        evaluation_methods: [
+          'Projets de conception',
+          'Évaluation technique',
+          'Portfolio professionnel'
+        ],
+        accessibility_info: 'Formation accessible aux personnes en situation de handicap',
+        access_delay: '2 semaines',
+        modules: [],
+        documents: []
+      },
+      {
+        program_id: 'reflex-espagnol-1',
+        title: 'Reflex Espagnol Niveau 1',
+        description: 'Espagnol niveau débutant avec méthode Reflex',
+        category: 'languages',
+        duration_hours: 20,
+        price: 500,
+        level: 'beginner',
+        max_participants: 15,
+        prerequisites: 'Aucun prérequis',
+        objectives: [
+          'Acquérir les bases de l\'espagnol',
+          'Comprendre des phrases simples',
+          'Communiquer de façon élémentaire',
+          'Se présenter et échanger'
+        ],
+        methods: [
+          'Méthode Reflex interactive',
+          'Exercices audio et visuels',
+          'Mise en situation'
+        ],
+        evaluation_methods: [
+          'Tests de progression',
+          'Évaluation orale',
+          'Préparation DELE'
+        ],
+        accessibility_info: 'Formation accessible aux personnes en situation de handicap',
+        access_delay: '1 semaine',
+        modules: [],
+        documents: []
+      },
+      {
+        program_id: 'reflex-espagnol-2',
+        title: 'Reflex Espagnol Niveau 2',
+        description: 'Espagnol niveau intermédiaire avec méthode Reflex',
+        category: 'languages',
+        duration_hours: 20,
+        price: 500,
+        level: 'intermediate',
+        max_participants: 15,
+        prerequisites: 'Niveau A1 en espagnol',
+        objectives: [
+          'Améliorer la compréhension orale',
+          'Enrichir le vocabulaire',
+          'Maîtriser les temps verbaux',
+          'Communiquer avec plus d\'aisance'
+        ],
+        methods: [
+          'Méthode Reflex interactive',
+          'Exercices audio et visuels',
+          'Conversations guidées'
+        ],
+        evaluation_methods: [
+          'Tests de progression',
+          'Évaluation orale',
+          'Préparation DELE'
+        ],
+        accessibility_info: 'Formation accessible aux personnes en situation de handicap',
+        access_delay: '1 semaine',
+        modules: [],
+        documents: []
+      },
+      {
+        program_id: 'reflex-espagnol-3',
+        title: 'Reflex Espagnol Niveau 3',
+        description: 'Espagnol niveau avancé avec méthode Reflex',
+        category: 'languages',
+        duration_hours: 20,
+        price: 500,
+        level: 'advanced',
+        max_participants: 15,
+        prerequisites: 'Niveau B1 en espagnol',
+        objectives: [
+          'Perfectionner l\'expression orale',
+          'Maîtriser l\'espagnol professionnel',
+          'Comprendre des textes complexes',
+          'Rédiger des documents professionnels'
+        ],
+        methods: [
+          'Méthode Reflex interactive',
+          'Études de cas professionnels',
+          'Débats et présentations'
+        ],
+        evaluation_methods: [
+          'Tests de progression',
+          'Évaluation orale avancée',
+          'Certification DELE'
+        ],
+        accessibility_info: 'Formation accessible aux personnes en situation de handicap',
+        access_delay: '1 semaine',
+        modules: [],
+        documents: []
+      },
+      {
+        program_id: 'management-complet',
+        title: 'Management Parcours Complet',
+        description: 'Formation complète en management et leadership',
+        category: 'business',
+        duration_hours: 35,
+        price: 1200,
+        level: 'intermediate',
+        max_participants: 12,
+        prerequisites: 'Expérience professionnelle souhaitée',
+        objectives: [
+          'Développer ses compétences de leader',
+          'Gérer une équipe efficacement',
+          'Communiquer avec impact',
+          'Prendre des décisions stratégiques'
+        ],
+        methods: [
+          'Études de cas réels',
+          'Jeux de rôle',
+          'Coaching individuel',
+          'Ateliers collaboratifs'
+        ],
+        evaluation_methods: [
+          'Mise en situation managériale',
+          'Évaluation 360°',
+          'Plan d\'action personnel'
+        ],
+        accessibility_info: 'Formation accessible aux personnes en situation de handicap',
+        access_delay: '2 semaines',
+        modules: [],
+        documents: []
+      },
+      {
+        program_id: 'vente-omnicanal',
+        title: 'Techniques de Vente Omnicanal',
+        description: 'Maîtrisez les techniques de vente multicanales',
+        category: 'business',
+        duration_hours: 21,
+        price: 800,
+        level: 'intermediate',
+        max_participants: 12,
+        prerequisites: 'Expérience en vente souhaitée',
+        objectives: [
+          'Maîtriser les techniques de vente modernes',
+          'Optimiser l\'expérience client omnicanal',
+          'Utiliser les outils digitaux de vente',
+          'Fidéliser la clientèle'
+        ],
+        methods: [
+          'Simulations de vente',
+          'Analyse de cas clients',
+          'Outils digitaux',
+          'Coaching commercial'
+        ],
+        evaluation_methods: [
+          'Jeux de rôle évalués',
+          'Présentation commerciale',
+          'Plan d\'action commercial'
+        ],
+        accessibility_info: 'Formation accessible aux personnes en situation de handicap',
+        access_delay: '1 semaine',
+        modules: [],
+        documents: []
+      },
+      {
+        program_id: 'nutrition',
+        title: 'Nutrition',
+        description: 'Formation en nutrition et diététique',
+        category: 'health',
+        duration_hours: 14,
+        price: 400,
+        level: 'beginner',
+        max_participants: 15,
+        prerequisites: 'Aucun prérequis',
+        objectives: [
+          'Comprendre les bases de la nutrition',
+          'Équilibrer les repas',
+          'Adapter l\'alimentation aux besoins',
+          'Prévenir les troubles alimentaires'
+        ],
+        methods: [
+          'Cours théoriques',
+          'Ateliers pratiques',
+          'Études de cas',
+          'Conseils personnalisés'
+        ],
+        evaluation_methods: [
+          'QCM de connaissances',
+          'Élaboration de menus',
+          'Évaluation pratique'
+        ],
+        accessibility_info: 'Formation accessible aux personnes en situation de handicap',
+        access_delay: '1 semaine',
+        modules: [],
+        documents: []
       }
     ];
 
-    // Create programs with documents
+    // Create or update programs
     for (const programData of programsData) {
-      console.log(`🔄 Creating program: ${programData.title}`);
+      console.log(`🔄 Processing program: ${programData.title}`);
 
-      // Create PDF files for documents
-      const documentsWithPaths = programData.documents.map(doc => {
-        const filePath = createDummyPDF(doc.filename, doc.content);
-        const fileStats = fs.statSync(filePath);
-        
-        return {
-          ...doc,
-          file_path: filePath,
-          file_size: fileStats.size,
-          uploaded_at: new Date()
-        };
-      });
+      // Check if program exists
+      const existingProgram = await TrainingProgram.findOne({ program_id: programData.program_id });
 
-      // Create program with documents
-      const program = new TrainingProgram({
-        ...programData,
-        documents: documentsWithPaths
-      });
+      if (existingProgram) {
+        // Update existing program
+        Object.assign(existingProgram, programData);
+        await existingProgram.save();
+        console.log(`✅ Updated program: ${programData.title}`);
+      } else {
+        // Create documents with file paths if they exist
+        const documentsWithPaths = programData.documents.map(doc => {
+          const filePath = createDummyPDF(doc.filename, doc.content);
+          const fileStats = fs.statSync(filePath);
+          
+          return {
+            ...doc,
+            file_path: filePath,
+            file_size: fileStats.size,
+            uploaded_at: new Date()
+          };
+        });
 
-      await program.save();
-      console.log(`✅ Created program: ${programData.title} with ${documentsWithPaths.length} documents`);
+        // Create new program
+        const program = new TrainingProgram({
+          ...programData,
+          documents: documentsWithPaths
+        });
+
+        await program.save();
+        console.log(`✅ Created program: ${programData.title}`);
+      }
     }
 
     console.log('🎉 Training programs seeded successfully!');
-    console.log(`📊 Total programs created: ${programsData.length}`);
+    console.log(`📊 Total programs processed: ${programsData.length}`);
 
   } catch (error) {
     console.error('❌ Error seeding training programs:', error);

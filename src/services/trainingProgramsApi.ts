@@ -83,27 +83,21 @@ export class TrainingProgramsApiService {
       if (filters?.search) params.append('search', filters.search);
       if (filters?.active_only !== undefined) params.append('active_only', filters.active_only.toString());
 
-      try {
-        const response = await makeRequest(`/training-programs?${params.toString()}`);
-        
-        if (response.success && response.data.programs) {
-          return response.data.programs.map((program: any) => ({
-            ...program,
-            created_at: new Date(program.created_at),
-            updated_at: new Date(program.updated_at),
-            documents: (program.documents || []).map((doc: any) => ({
-              ...doc,
-              uploaded_at: new Date(doc.uploaded_at)
-            }))
-          }));
-        }
-        
-        return [];
-      } catch (apiError) {
-        console.log('API endpoint not available, using fallback data');
-        // Return empty array as fallback since Training.tsx has its own programs object
-        return [];
+      const response = await makeRequest(`/training-programs?${params.toString()}`);
+      
+      if (response.success && response.data.programs) {
+        return response.data.programs.map((program: any) => ({
+          ...program,
+          created_at: new Date(program.created_at),
+          updated_at: new Date(program.updated_at),
+          documents: (program.documents || []).map((doc: any) => ({
+            ...doc,
+            uploaded_at: new Date(doc.uploaded_at)
+          }))
+        }));
       }
+      
+      return [];
     } catch (error) {
       console.error('Error fetching training programs:', error);
       return [];
@@ -113,27 +107,22 @@ export class TrainingProgramsApiService {
   // Get single training program
   static async getProgram(programId: string): Promise<TrainingProgram | null> {
     try {
-      try {
-        const response = await makeRequest(`/training-programs/${programId}`);
-        
-        if (response.success && response.data.program) {
-          const program = response.data.program;
-          return {
-            ...program,
-            created_at: new Date(program.created_at),
-            updated_at: new Date(program.updated_at),
-            documents: (program.documents || []).map((doc: any) => ({
-              ...doc,
-              uploaded_at: new Date(doc.uploaded_at)
-            }))
-          };
-        }
-        
-        return null;
-      } catch (apiError) {
-        console.log('API endpoint not available for single program');
-        return null;
+      const response = await makeRequest(`/training-programs/${programId}`);
+      
+      if (response.success && response.data.program) {
+        const program = response.data.program;
+        return {
+          ...program,
+          created_at: new Date(program.created_at),
+          updated_at: new Date(program.updated_at),
+          documents: (program.documents || []).map((doc: any) => ({
+            ...doc,
+            uploaded_at: new Date(doc.uploaded_at)
+          }))
+        };
       }
+      
+      return null;
     } catch (error) {
       console.error('Error fetching training program:', error);
       return null;
@@ -143,21 +132,16 @@ export class TrainingProgramsApiService {
   // Get documents for a training program
   static async getProgramDocuments(programId: string): Promise<TrainingProgram['documents']> {
     try {
-      try {
-        const response = await makeRequest(`/training-programs/${programId}/documents`);
-        
-        if (response.success && response.data.documents) {
-          return response.data.documents.map((doc: any) => ({
-            ...doc,
-            uploaded_at: new Date(doc.uploaded_at)
-          }));
-        }
-        
-        return [];
-      } catch (apiError) {
-        console.log('API endpoint not available for program documents');
-        return [];
+      const response = await makeRequest(`/training-programs/${programId}/documents`);
+      
+      if (response.success && response.data.documents) {
+        return response.data.documents.map((doc: any) => ({
+          ...doc,
+          uploaded_at: new Date(doc.uploaded_at)
+        }));
       }
+      
+      return [];
     } catch (error) {
       console.error('Error fetching program documents:', error);
       return [];

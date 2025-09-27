@@ -30,6 +30,7 @@ import quotesRoutes from './routes/quotes.js';
 import trainingProgramsRoutes from './routes/trainingPrograms.js';
 import { createDummyUsers } from './scripts/createUsers.js';
 import { createDummyTrainingDocuments } from './scripts/createTrainingDocuments.js';
+import { seedTrainingPrograms } from './scripts/seedTrainingPrograms.js';
 import { execSync } from 'child_process';
 
 const app = express();
@@ -167,6 +168,10 @@ const startServer = async () => {
           // Create dummy training documents
           await createDummyTrainingDocuments();
           console.log('✅ Dummy training documents created/verified');
+          
+          // Seed training programs
+          await seedTrainingPrograms();
+          console.log('✅ Training programs seeded/verified');
         } catch (userError) {
           console.warn('⚠️ Could not create dummy users:', userError.message);
         }
