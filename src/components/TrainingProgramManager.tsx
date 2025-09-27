@@ -1,14 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Plus, Edit, Trash2, Eye, Save, X, Search, Filter,
-  Users, Clock, Euro, MapPin, Calendar, BookOpen,
-  Target, Award, Settings, Upload, Download, Copy,
-  AlertCircle, CheckCircle, User, GraduationCap,
-  FileText, Globe, Accessibility, DollarSign,
-  Building2, Phone, Mail, Star, ChevronDown,
-  ChevronUp, Info, HelpCircle, Zap, Shield
-} from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Eye, Save, X, Search, Filter, Users, Clock, Euro, MapPin, Calendar, BookOpen, Target, Award, Settings, Upload, Download, Copy, AlertCircle, CheckCircle, User, GraduationCap, FileText, Globe, Accessibility, DollarSign, Building2, Phone, Mail, Star, ChevronDown, ChevronUp, Info, HelpCircle, Zap, Shield } from 'lucide-react';
 
 interface TrainingProgram {
   id: string;

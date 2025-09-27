@@ -1,42 +1,10 @@
 import {useEffect, useState} from 'react';
-import {
-    AlertTriangle,
-    Bell,
-    CheckCircle,
-    Clock,
-    Download,
-    Edit,
-    ExternalLink,
-    Eye,
-    FileText,
-    FolderOpen, Home,
-    Image as ImageIcon, Kanban,
-    LogOut,
-    Mail,
-    MessageCircle,
-    Paperclip,
-    Phone,
-    Plus, Receipt,
-    RefreshCw,
-    Reply,
-    Save,
-    Search,
-    Send,
-    Settings,
-    Star,
-    Trash2,
-    User,
-    Users,
-    X,
-    Upload
-    , GraduationCap
-} from 'lucide-react';
+import { AlertTriangle, Bell, CheckCircle, Clock, Download, CreditCard as Edit, ExternalLink, Eye, FileText, FolderOpen, Home, Image as ImageIcon, Kanban, LogOut, Mail, MessageCircle, Paperclip, Phone, Plus, Receipt, RefreshCw, Reply, Save, Search, Send, Settings, Star, Trash2, User, Users, X, Upload, GraduationCap } from 'lucide-react';
 
 import {useAuth, useClients, useMessages, useProjects, useStatistics} from '../hooks/useApi';
 import { useTrainingDocuments, useTrainingDocumentStats } from '../hooks/useTrainingDocuments';
 import Auth from './Auth';
 import TaskBoard from "./TaskBoard.tsx";
-import TrainingProgramManager from './TrainingProgramManager';
 
 // Define the upload form data type
 interface UploadDocumentFormDataType {
@@ -1829,7 +1797,141 @@ const AdminDashboard = () => {
 
                     {/* Training Tab */}
                     {activeTab === 'training' && (
-                        <TrainingProgramManager />
+                        <div>
+                            <div className="flex justify-between items-center mb-8">
+                                <h2 className="text-2xl font-bold text-white">Formation Professionnelle</h2>
+                                <button
+                                    onClick={() => setShowUploadModal(true)}
+                                    className="btn btn-primary"
+                                >
+                                    <Upload className="h-4 w-4 mr-2" />
+                                    Télécharger un document
+                                </button>
+                            </div>
+
+                            {/* Document Statistics */}
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                                <div className="bg-gray-800 rounded-lg p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-gray-400 text-sm">Documents totaux</p>
+                                            <p className="text-2xl font-bold text-white">{documentStats.totalDocuments}</p>
+                                        </div>
+                                        <FileText className="h-8 w-8 text-blue-400" />
+                                    </div>
+                                </div>
+                                <div className="bg-gray-800 rounded-lg p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-gray-400 text-sm">Téléchargements</p>
+                                            <p className="text-2xl font-bold text-white">{documentStats.totalDownloads}</p>
+                                        </div>
+                                        <Download className="h-8 w-8 text-green-400" />
+                                    </div>
+                                </div>
+                                <div className="bg-gray-800 rounded-lg p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-gray-400 text-sm">Programmes couverts</p>
+                                            <p className="text-2xl font-bold text-white">
+                                                {Object.keys(documentStats.documentsByProgram).length}
+                                            </p>
+                                        </div>
+                                        <GraduationCap className="h-8 w-8 text-purple-400" />
+                                    </div>
+                                </div>
+                                <div className="bg-gray-800 rounded-lg p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-gray-400 text-sm">Document populaire</p>
+                                            <p className="text-sm font-bold text-white truncate">
+                                                {documentStats.popularDocuments[0]?.title || 'Aucun'}
+                                            </p>
+                                        </div>
+                                        <Star className="h-8 w-8 text-yellow-400" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Documents by Program */}
+                            <div className="space-y-6">
+                                {trainingPrograms.map((program) => {
+                                    const programDocuments = allDocuments.filter(doc => doc.program_id === program.id);
+
+                                    return (
+                                        <div key={program.id} className="bg-gray-800 rounded-lg p-6">
+                                            <div className="flex justify-between items-center mb-4">
+                                                <h3 className="text-lg font-bold text-white">{program.name}</h3>
+                                                <span className="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded-full">
+                                                    {programDocuments.length} documents
+                                                </span>
+                                            </div>
+
+                                            {programDocuments.length === 0 ? (
+                                                <div className="text-center py-8 text-gray-400">
+                                                    <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                                    <p className="text-sm">Aucun document pour ce programme</p>
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    {programDocuments.map((document) => (
+                                                        <div key={document.id} className="bg-gray-700 rounded-lg p-4">
+                                                            <div className="flex items-start justify-between mb-2">
+                                                                <div className="flex-1">
+                                                                    <h4 className="text-white font-medium text-sm mb-1">{document.title}</h4>
+                                                                    {document.description && (
+                                                                        <p className="text-gray-400 text-xs mb-2 line-clamp-2">{document.description}</p>
+                                                                    )}
+                                                                    <div className="flex items-center space-x-2 text-xs text-gray-500">
+                                                                        <span>{(document.file_size / 1024 / 1024).toFixed(1)} MB</span>
+                                                                        <span>•</span>
+                                                                        <span>{document.download_count} téléchargements</span>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => deleteDocument(document.id)}
+                                                                    className="text-red-400 hover:text-red-300 ml-2"
+                                                                    title="Supprimer"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
+
+                                                            {document.tags.length > 0 && (
+                                                                <div className="flex flex-wrap gap-1 mb-2">
+                                                                    {document.tags.slice(0, 3).map((tag, index) => (
+                                                                        <span key={index} className="bg-blue-900/50 text-blue-400 text-xs px-2 py-0.5 rounded">
+                                                                            {tag}
+                                                                        </span>
+                                                                    ))}
+                                                                    {document.tags.length > 3 && (
+                                                                        <span className="text-gray-400 text-xs">+{document.tags.length - 3}</span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+
+                                                            <div className="flex items-center justify-between">
+                                                                <span className={`text-xs px-2 py-1 rounded ${
+                                                                    document.category === 'program' ? 'bg-blue-900/50 text-blue-400' :
+                                                                        document.category === 'guide' ? 'bg-green-900/50 text-green-400' :
+                                                                            document.category === 'certificate' ? 'bg-yellow-900/50 text-yellow-400' :
+                                                                                'bg-gray-900/50 text-gray-400'
+                                                                }`}>
+                                                                    {document.category}
+                                                                </span>
+                                                                <span className="text-gray-400 text-xs">
+                                                                    v{document.version}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     )}
 
                     {/* Messages Tab */}
