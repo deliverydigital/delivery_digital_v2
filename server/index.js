@@ -27,10 +27,7 @@ import fileRoutes from './routes/files.js';
 import notificationRoutes from './routes/notifications.js';
 import analyticsRoutes from './routes/analytics.js';
 import quotesRoutes from './routes/quotes.js';
-import trainingProgramsRoutes from './routes/trainingPrograms.js';
 import { createDummyUsers } from './scripts/createUsers.js';
-import { createDummyTrainingDocuments } from './scripts/createTrainingDocuments.js';
-import { seedTrainingPrograms } from './scripts/seedTrainingPrograms.js';
 import { execSync } from 'child_process';
 
 const app = express();
@@ -102,7 +99,6 @@ app.use('/api/files', fileRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/quotes', quotesRoutes);
-app.use('/api/training-programs', trainingProgramsRoutes);
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
@@ -164,14 +160,6 @@ const startServer = async () => {
         try {
           await createDummyUsers();
           console.log('✅ Dummy users created/verified');
-          
-          // Create dummy training documents
-          await createDummyTrainingDocuments();
-          console.log('✅ Dummy training documents created/verified');
-          
-          // Seed training programs
-          await seedTrainingPrograms();
-          console.log('✅ Training programs seeded/verified');
         } catch (userError) {
           console.warn('⚠️ Could not create dummy users:', userError.message);
         }

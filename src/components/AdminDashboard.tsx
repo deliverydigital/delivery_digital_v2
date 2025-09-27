@@ -265,7 +265,6 @@ const UploadDocumentModal = ({
       </div>
     </div>
   );
-};
 
 const AdminDashboard = () => {
     const {user, logout, isAuthenticated} = useAuth();
