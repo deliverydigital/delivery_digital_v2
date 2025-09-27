@@ -9,8 +9,10 @@ import { validateStringId, validatePagination } from '../middleware/validation.j
 
 const router = express.Router();
 
-// Public routes (no authentication required)
-// Get documents for a training program (public)
+// Apply authentication to all routes
+router.use(authenticate);
+
+// Get documents for a training program (authenticated users only)
 router.get('/:programId/documents', async (req, res) => {
   try {
     const { programId } = req.params;
@@ -61,7 +63,7 @@ router.get('/:programId/documents', async (req, res) => {
   }
 });
 
-// Download training program document (public)
+// Download training program document (authenticated users only)
 router.get('/:programId/documents/:documentId/download', async (req, res) => {
   try {
     const { programId, documentId } = req.params;
@@ -120,7 +122,7 @@ router.get('/:programId/documents/:documentId/download', async (req, res) => {
   }
 });
 
-// Get all training programs (public)
+// Get all training programs (authenticated users only)
 router.get('/', validatePagination, async (req, res) => {
   try {
     const { page = 1, limit = 20, category, search, active_only = 'true' } = req.query;
@@ -183,7 +185,7 @@ router.get('/', validatePagination, async (req, res) => {
 });
 
 // Create new training program (admin only)
-router.post('/', authenticate, authorize('admin'), async (req, res) => {
+router.post('/', authorize('admin'), async (req, res) => {
   try {
     const {
       program_id,
@@ -268,7 +270,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // Upload document to training program (admin only)
-router.post('/:programId/documents', authenticate, authorize('admin'), uploadTrainingMaterials, handleUploadError, async (req, res) => {
+router.post('/:programId/documents', authorize('admin'), uploadTrainingMaterials, handleUploadError, async (req, res) => {
   try {
     const { programId } = req.params;
     const { title, description, document_type = 'program' } = req.body;
@@ -343,118 +345,8 @@ router.post('/:programId/documents', authenticate, authorize('admin'), uploadTra
   }
 });
 
-// Download training program document (public)
-router.get('/:programId/documents/:documentId/download', async (req, res) => {
-  try {
-    const { programId, documentId } = req.params;
-
-    // Check if MongoDB is available
-    if (!isMongoAvailable()) {
-      return res.status(503).json({
-        success: false,
-        error: 'Database service unavailable'
-      });
-    }
-
-    console.log(await TrainingDocument.find());
-
-    const document = await TrainingDocument.findOne({ program_id: programId , _id : documentId});
-    if (!document) {
-      return res.status(404).json({
-        success: false,
-        error: 'Document not found'
-      });
-    }
-
-    if (!document.is_public) {
-      return res.status(403).json({
-        success: false,
-        error: 'Document not available for download'
-      });
-    }
-
-    // Check if file exists on disk
-    if (!fs.existsSync(document.file_path)) {
-      return res.status(404).json({
-        success: false,
-        error: 'File not found on disk'
-      });
-    }
-
-    // Increment download count
-    await document.incrementDownloadCount(documentId);
-
-    // Set download headers
-    res.setHeader('Content-Type', document.file_type);
-    res.setHeader('Content-Disposition', `attachment; filename="${document.original_name}"`);
-    res.setHeader('Content-Length', document.file_size);
-
-    // Stream the file
-    const fileStream = fs.createReadStream(document.file_path);
-    fileStream.pipe(res);
-
-  } catch (error) {
-    console.error('Download training program document error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to download document'
-    });
-  }
-});
-
-// Get documents for a training program (public)
-router.get('/:programId/documents', async (req, res) => {
-  try {
-    const { programId } = req.params;
-
-    // Check if MongoDB is available
-    if (!isMongoAvailable()) {
-      return res.status(503).json({
-        success: false,
-        error: 'Database service unavailable'
-      });
-    }
-
-    const program = await TrainingProgram.findOne({ program_id: programId })
-      .populate('documents.uploaded_by', 'name email');
-
-    if (!program) {
-      return res.status(404).json({
-        success: false,
-        error: 'Training program not found'
-      });
-    }
-
-    // Filter public documents and add download URLs
-    const publicDocuments = program.documents
-      .filter(doc => doc.is_public)
-      .map(doc => ({
-        id: doc._id,
-        title: doc.title,
-        description: doc.description,
-        document_type: doc.document_type,
-        file_size: doc.file_size,
-        download_count: doc.download_count,
-        uploaded_at: doc.uploaded_at,
-        download_url: `${req.protocol}://${req.get('host')}/api/training-programs/${programId}/documents/${doc._id}/download`
-      }));
-
-    res.json({
-      success: true,
-      data: { documents: publicDocuments }
-    });
-
-  } catch (error) {
-    console.error('Get training program documents error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch documents'
-    });
-  }
-});
-
 // Update training program (admin only)
-router.put('/:programId', authenticate, authorize('admin'), async (req, res) => {
+router.put('/:programId', authorize('admin'), async (req, res) => {
   try {
     const { programId } = req.params;
     const updates = req.body;
@@ -512,7 +404,7 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
 });
 
 // Delete training program document (admin only)
-router.delete('/:programId/documents/:documentId', authenticate, authorize('admin'), async (req, res) => {
+router.delete('/:programId/documents/:documentId', authorize('admin'), async (req, res) => {
   try {
     const { programId, documentId } = req.params;
 
@@ -563,7 +455,7 @@ router.delete('/:programId/documents/:documentId', authenticate, authorize('admi
 });
 
 // Delete training program (admin only)
-router.delete('/:programId', authenticate, authorize('admin'), async (req, res) => {
+router.delete('/:programId', authorize('admin'), async (req, res) => {
   try {
     const { programId } = req.params;
 
@@ -608,7 +500,7 @@ router.delete('/:programId', authenticate, authorize('admin'), async (req, res) 
 });
 
 // Get training program statistics (admin only)
-router.get('/stats/overview', authenticate, authorize('admin'), async (req, res) => {
+router.get('/stats/overview', authorize('admin'), async (req, res) => {
   try {
     // Check if MongoDB is available
     if (!isMongoAvailable()) {
