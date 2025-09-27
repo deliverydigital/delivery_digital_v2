@@ -12,6 +12,42 @@ const router = express.Router();
 // Apply authentication to all routes
 router.use(authenticate);
 
+// Get single training program (authenticated users only)
+router.get('/:programId', async (req, res) => {
+  try {
+    const { programId } = req.params;
+
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    const program = await TrainingProgram.findOne({ program_id: programId });
+
+    if (!program) {
+      return res.status(404).json({
+        success: false,
+        error: 'Training program not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { program }
+    });
+
+  } catch (error) {
+    console.error('Get training program error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch training program'
+    });
+  }
+});
+
 // Get documents for a training program (authenticated users only)
 router.get('/:programId/documents', async (req, res) => {
   try {

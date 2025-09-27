@@ -3,6 +3,7 @@ import { AlertTriangle, Bell, CheckCircle, Clock, Download, CreditCard as Edit, 
 
 import {useAuth, useClients, useMessages, useProjects, useStatistics} from '../hooks/useApi';
 import { useTrainingDocuments, useTrainingDocumentStats } from '../hooks/useTrainingDocuments';
+import { useTrainingPrograms } from '../hooks/useTrainingPrograms';
 import Auth from './Auth';
 import TaskBoard from "./TaskBoard.tsx";
 
@@ -278,6 +279,7 @@ const AdminDashboard = () => {
     const {stats, refreshStats} = useStatistics();
     const { documents: allDocuments, loading: documentsLoading, uploadDocument, deleteDocument } = useTrainingDocuments();
     const { stats: documentStats } = useTrainingDocumentStats();
+    const { programs: trainingPrograms, loading: programsLoading } = useTrainingPrograms();
 
     const [activeTab, setActiveTab] = useState<'overview' | 'clients' | 'projects' | 'tasks' | 'messages' | 'quotes' | 'training' | 'settings'>('overview');
     const [searchQuery, setSearchQuery] = useState('');
@@ -391,27 +393,6 @@ const AdminDashboard = () => {
             [programKey]: prev[programKey].filter((_, i) => i !== index)
         }));
     };
-
-    const trainingPrograms = [
-        { id: 'wordpress', name: 'WordPress' },
-        { id: 'photoshop', name: 'Photoshop' },
-        { id: 'canva', name: 'Canva' },
-        { id: 'excel', name: 'Excel' },
-        { id: 'dev-web-mobile', name: 'Développeur Web et Web Mobile' },
-        { id: 'reflex-english-1', name: 'Reflex English 1' },
-        { id: 'reflex-english-2', name: 'Reflex English 2' },
-        { id: 'reflex-english-3', name: 'Reflex English 3' },
-        { id: 'hygiene-security', name: 'Hygiène, Sécurité et Développement Durable' },
-        { id: 'hygiene-security-afest', name: 'Hygiène, Sécurité et Développement Durable - AFEST' },
-        { id: 'conduite-securitaire', name: 'Conduite Sécuritaire' },
-        { id: 'autocad-sketchup-revit', name: 'AutoCAD, SketchUp, et Revit' },
-        { id: 'reflex-espagnol-1', name: 'Reflex Espagnol Niveau 1' },
-        { id: 'reflex-espagnol-2', name: 'Reflex Espagnol Niveau 2' },
-        { id: 'reflex-espagnol-3', name: 'Reflex Espagnol Niveau 3' },
-        { id: 'management-complet', name: 'Management Parcours Complet' },
-        { id: 'vente-omnicanal', name: 'Techniques de Vente Omnicanal' },
-        { id: 'nutrition', name: 'Nutrition' }
-    ];
 
     const handleDocumentFormChange = (field: string, value: any) => {
         setDocumentFormData(prev => {
@@ -553,14 +534,15 @@ const AdminDashboard = () => {
                                 onChange={(e) => setUploadForm(prev => ({ ...prev, program: e.target.value }))}
                                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                             >
-                                <option value="wordpress">WordPress</option>
-                                <option value="photoshop">Photoshop</option>
-                                <option value="canva">Canva</option>
-                                <option value="excel">Excel</option>
-                                <option value="dev-web-mobile">Développeur Web et Web Mobile</option>
-                                <option value="hygiene-security">Hygiène, Sécurité et Développement Durable</option>
-                                <option value="nutrition">Nutrition</option>
-                                <option value="autocad-sketchup-revit">AutoCAD, SketchUp, et Revit</option>
+                                {programsLoading ? (
+                                  <option disabled>Chargement...</option>
+                                ) : (
+                                  trainingPrograms.map((program) => (
+                                    <option key={program.program_id} value={program.program_id}>
+                                      {program.title}
+                                    </option>
+                                  ))
+                                )}
                             </select>
                         </div>
 
