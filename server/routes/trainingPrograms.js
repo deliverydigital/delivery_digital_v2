@@ -1,13 +1,35 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import {TrainingDocument, TrainingProgram, User} from '../models/index.js';
+import { TrainingDocument, TrainingProgram, User } from '../models/index.js';
 import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { uploadTrainingMaterials, handleUploadError, deleteFile } from '../middleware/upload.js';
 import { validateStringId, validatePagination } from '../middleware/validation.js';
 
 const router = express.Router();
+
+// Dummy training programs data
+const dummyTrainingPrograms = [
+  { id: 'wordpress', name: 'WordPress', title: 'WordPress', description: 'Créez et gérez des sites web professionnels avec WordPress', category: 'web', duration_hours: 35, price: 1200, level: 'beginner', max_participants: 12, is_featured: true, opco_eligible: true, cpf_eligible: false },
+  { id: 'photoshop', name: 'Photoshop', title: 'Photoshop', description: 'Maîtrisez les outils de retouche photo et de création graphique', category: 'design', duration_hours: 28, price: 800, level: 'beginner', max_participants: 12, is_featured: true, opco_eligible: true, cpf_eligible: false },
+  { id: 'canva', name: 'Canva', title: 'Canva', description: 'Créez des designs professionnels facilement avec Canva', category: 'design', duration_hours: 21, price: 600, level: 'beginner', max_participants: 15, is_featured: false, opco_eligible: true, cpf_eligible: false },
+  { id: 'excel', name: 'Excel', title: 'Excel', description: 'Maîtrisez Excel pour l\'analyse de données et la gestion', category: 'office', duration_hours: 35, price: 900, level: 'intermediate', max_participants: 10, is_featured: false, opco_eligible: true, cpf_eligible: true },
+  { id: 'dev-web-mobile', name: 'Développeur Web et Web Mobile', title: 'Développeur Web et Web Mobile', description: 'Formation complète pour devenir développeur web et mobile avec les technologies modernes', category: 'web', duration_hours: 400, price: 8000, level: 'intermediate', max_participants: 12, is_featured: true, opco_eligible: true, cpf_eligible: true },
+  { id: 'reflex-english-1', name: 'Reflex English 1', title: 'Reflex English Niveau 1', description: 'Apprentissage de l\'anglais niveau débutant avec méthode interactive', category: 'languages', duration_hours: 60, price: 1500, level: 'beginner', max_participants: 15, is_featured: false, opco_eligible: true, cpf_eligible: true },
+  { id: 'reflex-english-2', name: 'Reflex English 2', title: 'Reflex English Niveau 2', description: 'Perfectionnement en anglais niveau intermédiaire', category: 'languages', duration_hours: 60, price: 1500, level: 'intermediate', max_participants: 15, is_featured: false, opco_eligible: true, cpf_eligible: true },
+  { id: 'reflex-english-3', name: 'Reflex English 3', title: 'Reflex English Niveau 3', description: 'Anglais avancé pour un niveau professionnel', category: 'languages', duration_hours: 60, price: 1500, level: 'advanced', max_participants: 15, is_featured: false, opco_eligible: true, cpf_eligible: true },
+  { id: 'hygiene-security', name: 'Hygiène, Sécurité et Développement Durable', title: 'Hygiène, Sécurité et Développement Durable', description: 'Formation complète en hygiène, sécurité et pratiques durables pour le secteur de la restauration', category: 'safety', duration_hours: 14, price: 350, level: 'beginner', max_participants: 12, is_featured: true, opco_eligible: true, cpf_eligible: false },
+  { id: 'hygiene-security-afest', name: 'Hygiène, Sécurité et Développement Durable - AFEST', title: 'Hygiène, Sécurité et Développement Durable - AFEST', description: 'Formation en situation de travail (AFEST) pour l\'hygiène et la sécurité en restauration', category: 'safety', duration_hours: 21, price: 525, level: 'beginner', max_participants: 8, is_featured: false, opco_eligible: true, cpf_eligible: false },
+  { id: 'conduite-securitaire', name: 'Conduite Sécuritaire', title: 'Conduite Sécuritaire', description: 'Formation à la conduite préventive et sécuritaire', category: 'safety', duration_hours: 14, price: 400, level: 'beginner', max_participants: 12, is_featured: false, opco_eligible: true, cpf_eligible: false },
+  { id: 'autocad-sketchup-revit', name: 'AutoCAD, SketchUp, et Revit', title: 'AutoCAD, SketchUp, et Revit', description: 'Maîtrisez les logiciels de CAO et BIM pour l\'architecture et l\'ingénierie', category: 'design', duration_hours: 100, price: 2500, level: 'intermediate', max_participants: 10, is_featured: true, opco_eligible: true, cpf_eligible: true },
+  { id: 'reflex-espagnol-1', name: 'Reflex Espagnol Niveau 1', title: 'Reflex Espagnol Niveau 1', description: 'Apprentissage de l\'espagnol niveau débutant', category: 'languages', duration_hours: 60, price: 1500, level: 'beginner', max_participants: 15, is_featured: false, opco_eligible: true, cpf_eligible: true },
+  { id: 'reflex-espagnol-2', name: 'Reflex Espagnol Niveau 2', title: 'Reflex Espagnol Niveau 2', description: 'Perfectionnement en espagnol niveau intermédiaire', category: 'languages', duration_hours: 60, price: 1500, level: 'intermediate', max_participants: 15, is_featured: false, opco_eligible: true, cpf_eligible: true },
+  { id: 'reflex-espagnol-3', name: 'Reflex Espagnol Niveau 3', title: 'Reflex Espagnol Niveau 3', description: 'Espagnol avancé pour un niveau professionnel', category: 'languages', duration_hours: 60, price: 1500, level: 'advanced', max_participants: 15, is_featured: false, opco_eligible: true, cpf_eligible: true },
+  { id: 'management-complet', name: 'Management Parcours Complet', title: 'Management Parcours Complet', description: 'Formation complète en management et leadership', category: 'management', duration_hours: 70, price: 2100, level: 'intermediate', max_participants: 12, is_featured: true, opco_eligible: true, cpf_eligible: true },
+  { id: 'vente-omnicanal', name: 'Techniques de Vente Omnicanal', title: 'Techniques de Vente Omnicanal', description: 'Maîtrisez les techniques de vente modernes sur tous les canaux', category: 'business', duration_hours: 35, price: 1050, level: 'intermediate', max_participants: 12, is_featured: false, opco_eligible: true, cpf_eligible: true },
+  { id: 'nutrition', name: 'Nutrition', title: 'Nutrition', description: 'Formation en nutrition et diététique pour professionnels de santé', category: 'health', duration_hours: 42, price: 1260, level: 'intermediate', max_participants: 15, is_featured: false, opco_eligible: true, cpf_eligible: true }
+];
 
 // Public routes (no authentication required)
 // Get documents for a training program (public)
@@ -128,37 +150,44 @@ router.get('/', validatePagination, async (req, res) => {
 
     // Check if MongoDB is available
     if (!isMongoAvailable()) {
-      // Return fallback data when MongoDB is not available
-      const fallbackPrograms = [
-        { id: 'wordpress', name: 'WordPress' },
-        { id: 'photoshop', name: 'Photoshop' },
-        { id: 'canva', name: 'Canva' },
-        { id: 'excel', name: 'Excel' },
-        { id: 'dev-web-mobile', name: 'Développeur Web et Web Mobile' },
-        { id: 'reflex-english-1', name: 'Reflex English 1' },
-        { id: 'reflex-english-2', name: 'Reflex English 2' },
-        { id: 'reflex-english-3', name: 'Reflex English 3' },
-        { id: 'hygiene-security', name: 'Hygiène, Sécurité et Développement Durable' },
-        { id: 'hygiene-security-afest', name: 'Hygiène, Sécurité et Développement Durable - AFEST' },
-        { id: 'conduite-securitaire', name: 'Conduite Sécuritaire' },
-        { id: 'autocad-sketchup-revit', name: 'AutoCAD, SketchUp, et Revit' },
-        { id: 'reflex-espagnol-1', name: 'Reflex Espagnol Niveau 1' },
-        { id: 'reflex-espagnol-2', name: 'Reflex Espagnol Niveau 2' },
-        { id: 'reflex-espagnol-3', name: 'Reflex Espagnol Niveau 3' },
-        { id: 'management-complet', name: 'Management Parcours Complet' },
-        { id: 'vente-omnicanal', name: 'Techniques de Vente Omnicanal' },
-        { id: 'nutrition', name: 'Nutrition' }
-      ];
+      // Return dummy data when MongoDB is not available
+      let filteredPrograms = [...dummyTrainingPrograms];
+      
+      // Apply filters
+      if (category) {
+        filteredPrograms = filteredPrograms.filter(p => p.category === category);
+      }
+      
+      if (search) {
+        const searchLower = search.toLowerCase();
+        filteredPrograms = filteredPrograms.filter(p => 
+          p.title.toLowerCase().includes(searchLower) ||
+          p.description.toLowerCase().includes(searchLower)
+        );
+      }
       
       return res.json({
-        success: false,
+        success: true,
         data: {
-          programs: fallbackPrograms,
+          programs: filteredPrograms.map(program => ({
+            id: program.id,
+            name: program.name,
+            title: program.title,
+            description: program.description,
+            category: program.category,
+            duration_hours: program.duration_hours,
+            price: program.price,
+            level: program.level,
+            max_participants: program.max_participants,
+            is_featured: program.is_featured,
+            opco_eligible: program.opco_eligible,
+            cpf_eligible: program.cpf_eligible
+          })),
           pagination: {
             current_page: 1,
             total_pages: 1,
-            total_items: fallbackPrograms.length,
-            items_per_page: fallbackPrograms.length
+            total_items: filteredPrograms.length,
+            items_per_page: filteredPrograms.length
           }
         }
       });
