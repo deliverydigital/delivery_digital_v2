@@ -34,6 +34,7 @@ import {
 
 import {useAuth, useClients, useMessages, useProjects, useStatistics} from '../hooks/useApi';
 import { useTrainingDocuments, useTrainingDocumentStats } from '../hooks/useTrainingDocuments';
+import { useTrainingPrograms } from '../hooks/useTrainingPrograms';
 import Auth from './Auth';
 import TaskBoard from "./TaskBoard.tsx";
 
@@ -309,6 +310,7 @@ const AdminDashboard = () => {
     const {stats, refreshStats} = useStatistics();
     const { documents: allDocuments, loading: documentsLoading, uploadDocument, deleteDocument } = useTrainingDocuments();
     const { stats: documentStats } = useTrainingDocumentStats();
+    const { programs: trainingPrograms, loading: programsLoading } = useTrainingPrograms();
 
     const [activeTab, setActiveTab] = useState<'overview' | 'clients' | 'projects' | 'tasks' | 'messages' | 'quotes' | 'training' | 'settings'>('overview');
     const [searchQuery, setSearchQuery] = useState('');
@@ -422,27 +424,6 @@ const AdminDashboard = () => {
             [programKey]: prev[programKey].filter((_, i) => i !== index)
         }));
     };
-
-    const trainingPrograms = [
-        { id: 'wordpress', name: 'WordPress' },
-        { id: 'photoshop', name: 'Photoshop' },
-        { id: 'canva', name: 'Canva' },
-        { id: 'excel', name: 'Excel' },
-        { id: 'dev-web-mobile', name: 'Développeur Web et Web Mobile' },
-        { id: 'reflex-english-1', name: 'Reflex English 1' },
-        { id: 'reflex-english-2', name: 'Reflex English 2' },
-        { id: 'reflex-english-3', name: 'Reflex English 3' },
-        { id: 'hygiene-security', name: 'Hygiène, Sécurité et Développement Durable' },
-        { id: 'hygiene-security-afest', name: 'Hygiène, Sécurité et Développement Durable - AFEST' },
-        { id: 'conduite-securitaire', name: 'Conduite Sécuritaire' },
-        { id: 'autocad-sketchup-revit', name: 'AutoCAD, SketchUp, et Revit' },
-        { id: 'reflex-espagnol-1', name: 'Reflex Espagnol Niveau 1' },
-        { id: 'reflex-espagnol-2', name: 'Reflex Espagnol Niveau 2' },
-        { id: 'reflex-espagnol-3', name: 'Reflex Espagnol Niveau 3' },
-        { id: 'management-complet', name: 'Management Parcours Complet' },
-        { id: 'vente-omnicanal', name: 'Techniques de Vente Omnicanal' },
-        { id: 'nutrition', name: 'Nutrition' }
-    ];
 
     const handleDocumentFormChange = (field: string, value: any) => {
         setDocumentFormData(prev => {
@@ -1358,22 +1339,38 @@ const AdminDashboard = () => {
                                 </div>
 
                                 <div className="bg-gray-800 rounded-lg p-6">
-                                    <h3 className="text-lg font-bold text-white mb-4">Messages récents</h3>
-                                    <div className="space-y-4">
-                                        {messages.slice(0, 5).map((message) => (
-                                            <div key={message.id} className="p-3 bg-gray-700 rounded-lg">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <p className="text-white font-medium">
-                                                        {clients.find(c => c.id === message.clientId)?.name || 'Client'}
-                                                    </p>
-                                                    <span className="text-gray-400 text-xs">
-                            {message.timestamp.toLocaleTimeString()}
-                          </span>
+                                    <h3 className="text-lg font-bold text-white mb-4">Programmes de Formation</h3>
+                                    {programsLoading ? (
+                                        <div className="text-center py-4">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-500 mx-auto"></div>
+                                            <p className="mt-2 text-gray-400 text-sm">Chargement...</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {trainingPrograms.slice(0, 5).map((program) => (
+                                                <div key={program.id} className="flex items-center p-3 bg-gray-700 rounded-lg">
+                                                    <GraduationCap className="h-5 w-5 text-green-400 mr-3" />
+                                                    <div className="flex-1">
+                                                        <p className="text-white text-sm">{program.name}</p>
+                                                        <p className="text-gray-400 text-xs">
+                                                            {program.duration_hours}h • {program.price}€
+                                                            {program.opco_eligible && ' • OPCO'}
+                                                            {program.cpf_eligible && ' • CPF'}
+                                                        </p>
+                                                    </div>
+                                                    {program.is_featured && (
+                                                        <Star className="h-4 w-4 text-yellow-400" />
+                                                    )}
                                                 </div>
-                                                <p className="text-gray-300 text-sm truncate">{message.content}</p>
-                                            </div>
-                                        ))}
-                                    </div>
+                                            ))}
+                                            {trainingPrograms.length === 0 && (
+                                                <div className="text-center py-4 text-gray-400">
+                                                    <GraduationCap className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                                    <p className="text-sm">Aucun programme disponible</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
