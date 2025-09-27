@@ -1,5 +1,5 @@
 import express from 'express';
-import { User, TrainingDocument } from '../models/index.js';
+import { User } from '../models/index.js';
 import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { validateTrainingSessionCreation, validateStringId, validatePagination } from '../middleware/validation.js';
@@ -638,35 +638,11 @@ router.get('/documents/:programId', async (req, res) => {
   try {
     const { programId } = req.params;
 
-    // Check if MongoDB is available
-    if (!isMongoAvailable()) {
-      return res.status(503).json({
-        success: false,
-        error: 'Database service unavailable'
-      });
-    }
-
-    const documents = await TrainingDocument.findByProgram(programId);
-
+    // Return empty documents array since TrainingDocument model was removed
     res.json({
       success: true,
       data: {
-        documents: documents.map(doc => ({
-          id: doc._id,
-          title: doc.title,
-          description: doc.description,
-          filename: doc.filename,
-          original_name: doc.original_name,
-          file_type: doc.file_type,
-          file_size: doc.file_size,
-          download_count: doc.download_count,
-          category: doc.category,
-          tags: doc.tags,
-          version: doc.version,
-          uploaded_by: doc.uploaded_by?.name,
-          created_at: doc.createdAt,
-          download_url: `${req.protocol}://${req.get('host')}/api/training/documents/${doc._id}/download`
-        }))
+        documents: []
       }
     });
 
@@ -682,81 +658,10 @@ router.get('/documents/:programId', async (req, res) => {
 // Upload training document (admin only)
 router.post('/documents', authenticate, authorize('admin'), uploadTrainingMaterials, handleUploadError, async (req, res) => {
   try {
-    const {
-      program_id,
-      program_name,
-      title,
-      description,
-      category,
-      tags,
-      version
-    } = req.body;
-
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'No files uploaded'
-      });
-    }
-
-    // Check if MongoDB is available
-    if (!isMongoAvailable()) {
-      return res.status(503).json({
-        success: false,
-        error: 'Database service unavailable'
-      });
-    }
-
-    const uploadedDocuments = [];
-
-    for (const file of req.files) {
-      // Only allow PDF files
-      if (file.mimetype !== 'application/pdf') {
-        continue;
-      }
-
-      const documentData = {
-        program_id,
-        program_name,
-        title: title || file.originalname,
-        description,
-        filename: file.filename,
-        original_name: file.originalname,
-        file_type: file.mimetype,
-        file_size: file.size,
-        file_path: file.path,
-        uploaded_by: req.user.id,
-        category: category || 'program',
-        tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim())) : [],
-        version: version || '1.0'
-      };
-
-      const document = new TrainingDocument(documentData);
-      await document.save();
-      
-      await document.populate('uploaded_by', 'name email');
-      uploadedDocuments.push(document);
-    }
-
-    res.status(201).json({
-      success: true,
-      message: 'Training documents uploaded successfully',
-      data: {
-        documents: uploadedDocuments.map(doc => ({
-          id: doc._id,
-          title: doc.title,
-          description: doc.description,
-          filename: doc.filename,
-          original_name: doc.original_name,
-          file_type: doc.file_type,
-          file_size: doc.file_size,
-          category: doc.category,
-          tags: doc.tags,
-          version: doc.version,
-          uploaded_by: doc.uploaded_by.name,
-          created_at: doc.createdAt
-        }))
-      }
+    // Document upload functionality removed - TrainingDocument model no longer exists
+    res.status(501).json({
+      success: false,
+      error: 'Document upload functionality not implemented'
     });
 
   } catch (error) {
@@ -771,51 +676,11 @@ router.post('/documents', authenticate, authorize('admin'), uploadTrainingMateri
 // Download training document
 router.get('/documents/:id/download', async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // Check if MongoDB is available
-    if (!isMongoAvailable()) {
-      return res.status(503).json({
-        success: false,
-        error: 'Database service unavailable'
-      });
-    }
-
-    const document = await TrainingDocument.findById(id);
-
-    if (!document) {
-      return res.status(404).json({
-        success: false,
-        error: 'Document not found'
-      });
-    }
-
-    if (!document.is_public) {
-      return res.status(403).json({
-        success: false,
-        error: 'Document not available for download'
-      });
-    }
-
-    // Check if file exists on disk
-    if (!fs.existsSync(document.file_path)) {
-      return res.status(404).json({
-        success: false,
-        error: 'File not found on disk'
-      });
-    }
-
-    // Increment download count
-    await document.incrementDownloadCount();
-
-    // Set download headers
-    res.setHeader('Content-Type', document.file_type);
-    res.setHeader('Content-Disposition', `attachment; filename="${document.original_name}"`);
-    res.setHeader('Content-Length', document.file_size);
-
-    // Stream the file
-    const fileStream = fs.createReadStream(document.file_path);
-    fileStream.pipe(res);
+    // Document download functionality removed - TrainingDocument model no longer exists
+    res.status(404).json({
+      success: false,
+      error: 'Document not found'
+    });
 
   } catch (error) {
     console.error('Download training document error:', error);
@@ -829,51 +694,11 @@ router.get('/documents/:id/download', async (req, res) => {
 // Get all training documents (admin only)
 router.get('/documents', authenticate, authorize('admin'), async (req, res) => {
   try {
-    const { program_id, category, search } = req.query;
-
-    // Check if MongoDB is available
-    if (!isMongoAvailable()) {
-      return res.status(503).json({
-        success: false,
-        error: 'Database service unavailable'
-      });
-    }
-
-    let documents;
-
-    if (search) {
-      documents = await TrainingDocument.searchDocuments(search);
-    } else if (program_id) {
-      documents = await TrainingDocument.findByProgram(program_id);
-    } else if (category) {
-      documents = await TrainingDocument.findByCategory(category);
-    } else {
-      documents = await TrainingDocument.find()
-        .populate('uploaded_by', 'name email')
-        .sort({ createdAt: -1 });
-    }
-
+    // Return empty documents array since TrainingDocument model was removed
     res.json({
       success: true,
       data: {
-        documents: documents.map(doc => ({
-          id: doc._id,
-          program_id: doc.program_id,
-          program_name: doc.program_name,
-          title: doc.title,
-          description: doc.description,
-          filename: doc.filename,
-          original_name: doc.original_name,
-          file_type: doc.file_type,
-          file_size: doc.file_size,
-          download_count: doc.download_count,
-          category: doc.category,
-          tags: doc.tags,
-          version: doc.version,
-          uploaded_by: doc.uploaded_by?.name,
-          created_at: doc.createdAt,
-          download_url: `${req.protocol}://${req.get('host')}/api/training/documents/${doc._id}/download`
-        }))
+        documents: []
       }
     });
 
@@ -889,36 +714,10 @@ router.get('/documents', authenticate, authorize('admin'), async (req, res) => {
 // Delete training document (admin only)
 router.delete('/documents/:id', authenticate, authorize('admin'), async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // Check if MongoDB is available
-    if (!isMongoAvailable()) {
-      return res.status(503).json({
-        success: false,
-        error: 'Database service unavailable'
-      });
-    }
-
-    const document = await TrainingDocument.findById(id);
-
-    if (!document) {
-      return res.status(404).json({
-        success: false,
-        error: 'Document not found'
-      });
-    }
-
-    // Delete file from disk
-    if (fs.existsSync(document.file_path)) {
-      fs.unlinkSync(document.file_path);
-    }
-
-    // Delete document from database
-    await TrainingDocument.findByIdAndDelete(id);
-
-    res.json({
-      success: true,
-      message: 'Training document deleted successfully'
+    // Document deletion functionality removed - TrainingDocument model no longer exists
+    res.status(404).json({
+      success: false,
+      error: 'Document not found'
     });
 
   } catch (error) {
