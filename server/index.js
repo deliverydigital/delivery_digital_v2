@@ -28,9 +28,11 @@ import notificationRoutes from './routes/notifications.js';
 import analyticsRoutes from './routes/analytics.js';
 import quotesRoutes from './routes/quotes.js';
 import trainingProgramsRoutes from './routes/trainingPrograms.js';
+import categoriesRoutes from './routes/categories.js';
 import { createDummyUsers } from './scripts/createUsers.js';
 import { createDummyTrainingDocuments } from './scripts/createTrainingDocuments.js';
 import { seedTrainingPrograms } from './scripts/seedTrainingPrograms.js';
+import { seedCategories } from './scripts/seedCategories.js';
 import { execSync } from 'child_process';
 
 const app = express();
@@ -103,6 +105,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/quotes', quotesRoutes);
 app.use('/api/training-programs', trainingProgramsRoutes);
+app.use('/api/categories', categoriesRoutes);
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
@@ -172,6 +175,10 @@ const startServer = async () => {
           // Seed training programs
           await seedTrainingPrograms();
           console.log('✅ Training programs seeded/verified');
+          
+          // Seed categories
+          await seedCategories();
+          console.log('✅ Categories seeded/verified');
         } catch (userError) {
           console.warn('⚠️ Could not create dummy users:', userError.message);
         }

@@ -7,6 +7,7 @@ import Quote from './Quote.js';
 import Invoice from './Invoice.js';
 import TrainingDocument from './TrainingDocument.js';
 import TrainingProgram from './TrainingProgram.js';
+import Category from './Category.js';
 
 export {
   User,
@@ -16,7 +17,8 @@ export {
   Quote,
   Invoice,
   TrainingDocument,
-  TrainingProgram
+  TrainingProgram,
+  Category
 };
 
 // Export default object with all models
@@ -28,5 +30,6 @@ export default {
   Quote,
   Invoice,
   TrainingDocument,
-  TrainingProgram
+  TrainingProgram,
+  Category
 };
