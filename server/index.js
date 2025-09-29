@@ -33,6 +33,8 @@ import { createDummyUsers } from './scripts/createUsers.js';
 import { createDummyTrainingDocuments } from './scripts/createTrainingDocuments.js';
 import { seedTrainingPrograms } from './scripts/seedTrainingPrograms.js';
 import { seedCategories } from './scripts/seedCategories.js';
+import { seedTrainingPrograms } from './scripts/seedTrainingPrograms.js';
+import { seedCategories } from './scripts/seedCategories.js';
 import { execSync } from 'child_process';
 
 const app = express();
@@ -172,6 +174,13 @@ const startServer = async () => {
           await createDummyTrainingDocuments();
           console.log('✅ Dummy training documents created/verified');
           
+          // Seed training programs
+          await seedTrainingPrograms();
+          console.log('✅ Training programs seeded/verified');
+          
+          // Seed categories
+          await seedCategories();
+          console.log('✅ Categories seeded/verified');
           // Seed training programs
           await seedTrainingPrograms();
           console.log('✅ Training programs seeded/verified');
