@@ -19,6 +19,7 @@ const Training = () => {
     const [selectedProgram, setSelectedProgram] = useState('hygiene-security');
     const { documents, loading: documentsLoading, downloadDocument , } = useTrainingPrograms();
     const { documents : docs, downloadDocument : downloadTraningDocument} = useTrainingDocuments();
+    const { programs, loading: programsLoading } = useTrainingPrograms();
     const { categories, loading: categoriesLoading } = useCategories();
 
     const { ref, inView } = useInView({
@@ -29,7 +30,7 @@ const Training = () => {
     const [programDocuments, setProgramDocuments] = useState<{[key: string]: any[]}>({});
     const [loadingDocuments, setLoadingDocuments] = useState<{[key: string]: boolean}>({});
 
-    const programs = {
+    const staticPrograms = {
         'wordpress': {
             title: "WordPress",
             duration: "35 heures",
@@ -629,14 +630,14 @@ const Training = () => {
         ...categories
     ];
 
-    const filteredPrograms = Object.entries(programs).filter(([key, program]) => {
+    const filteredPrograms = Object.entries(staticPrograms).filter(([key, program]) => {
         const matchesSearch = program.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             program.description.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCategory = selectedCategory === 'all' || program.category === selectedCategory;
         return matchesSearch && matchesCategory;
     });
 
-    const currentProgram = programs[selectedProgram];
+    const currentProgram = staticPrograms[selectedProgram];
 
     // Load documents for a specific program
     const loadProgramDocuments = async (programId: string) => {
@@ -652,7 +653,7 @@ const Training = () => {
         } catch (error) {
             console.error(`Error loading documents for ${programId}:`, error);
             // Fallback to static downloads if API fails
-            const program = Object.values(programs).find(p => p.id === programId);
+            const program = Object.values(staticPrograms).find(p => p.id === programId);
             if (program?.downloads) {
                 setProgramDocuments(prev => ({ 
                     ...prev, 
@@ -685,7 +686,7 @@ const Training = () => {
         } catch (error) {
             console.error('Error downloading document:', error);
             // Fallback for static downloads
-            const program = Object.values(programs).find(p => p.id === programId);
+            const program = Object.values(staticPrograms).find(p => p.id === programId);
             const staticDownload = program?.downloads?.find(d => d.title.includes(documentId));
             if (staticDownload) {
                 // For demo purposes, show an alert
@@ -696,6 +697,20 @@ const Training = () => {
 
     const programDocs = programDocuments[selectedProgram || ''] || [];
     const isLoadingDocs = loadingDocuments[selectedProgram || ''] || false;
+
+    // Show loading state
+    if (programsLoading || categoriesLoading) {
+        return (
+            <section id="training" className="section bg-gradient-to-b from-gray-900 to-primary-950">
+                <div className="container">
+                    <div className="text-center py-20">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mx-auto mb-4"></div>
+                        <p className="text-gray-300">Chargement des formations...</p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section id="training" className="section bg-gradient-to-b from-gray-900 to-primary-950">
@@ -727,7 +742,7 @@ const Training = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
                     >
-                        Développez vos compétences avec nos {Object.keys(programs).length} formations certifiées - Financement intégral OPCO
+                        Développez vos compétences avec nos {Object.keys(staticPrograms).length} formations certifiées - Financement intégral OPCO
                     </motion.p>
                 </div>
 
@@ -757,7 +772,7 @@ const Training = () => {
                                         : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
                                 }`}
                             >
-                                {category.name} ({Object.values(programs).filter(p => category.id === 'all' || p.category === category.id).length})
+                                {category.name} ({Object.values(staticPrograms).filter(p => category.id === 'all' || p.category === category.id).length})
                             </button>
                         ))}
                     </div>
@@ -995,14 +1010,14 @@ const Training = () => {
                             )}
 
                             {/* Fallback to static downloads if no API documents */}
-                            {false && documents.length === 0 && !documentsLoading && programs[selectedProgram].downloads && programs[selectedProgram].downloads.length > 0 && (
+                            {false && documents.length === 0 && !documentsLoading && staticPrograms[selectedProgram].downloads && staticPrograms[selectedProgram].downloads.length > 0 && (
                                 <div className="card p-6 mt-6">
                                     <h4 className="text-lg font-bold text-white mb-4 flex items-center">
                                         <Download className="h-5 w-5 mr-2" />
                                         Documents à télécharger
                                     </h4>
                                     <div className="space-y-3">
-                                        {programs[selectedProgram].downloads.map((download, index) => (
+                                        {staticPrograms[selectedProgram].downloads.map((download, index) => (
                                             <a
                                                 key={index}
                                                 href={download.url}
