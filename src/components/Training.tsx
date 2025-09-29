@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { useTrainingDocuments } from '../hooks/useTrainingDocuments';
 import { useTrainingPrograms } from '../hooks/useTrainingPrograms';
+import { useCategories } from '../hooks/useCategories';
 import {
     Clock, Users, CheckCircle2, BookOpen, Search, Utensils, Leaf, Mail, Phone,
     Accessibility, Calculator, Euro, Building2, PiggyBank, GraduationCap,
@@ -18,6 +19,7 @@ const Training = () => {
     const [selectedProgram, setSelectedProgram] = useState('hygiene-security');
     const { documents, loading: documentsLoading, downloadDocument , } = useTrainingPrograms();
     const { documents : docs, downloadDocument : downloadTraningDocument} = useTrainingDocuments();
+    const { categories, loading: categoriesLoading } = useCategories();
 
     const { ref, inView } = useInView({
         threshold: 0.1,
@@ -621,16 +623,10 @@ const Training = () => {
         }
     };
 
-    const categories = [
-        { id: 'all', label: 'Toutes les formations', count: Object.keys(programs).length },
-        { id: 'web', label: 'Web & Digital', count: Object.values(programs).filter(p => p.category === 'web').length },
-        { id: 'design', label: 'Design & Création', count: Object.values(programs).filter(p => p.category === 'design').length },
-        { id: 'languages', label: 'Langues', count: Object.values(programs).filter(p => p.category === 'languages').length },
-        { id: 'office', label: 'Bureautique', count: Object.values(programs).filter(p => p.category === 'office').length },
-        { id: 'safety', label: 'Sécurité & Hygiène', count: Object.values(programs).filter(p => p.category === 'safety').length },
-        { id: 'business', label: 'Business', count: Object.values(programs).filter(p => p.category === 'business').length },
-        { id: 'health', label: 'Santé', count: Object.values(programs).filter(p => p.category === 'health').length },
-        { id: 'management', label: 'Management', count: Object.values(programs).filter(p => p.category === 'management').length }
+    // Add "all" category to the fetched categories
+    const allCategories = [
+        { id: 'all', name: 'Toutes les formations', slug: 'all', color: '#6b7280', icon: 'book-open' },
+        ...categories
     ];
 
     const filteredPrograms = Object.entries(programs).filter(([key, program]) => {
@@ -751,9 +747,9 @@ const Training = () => {
                     </div>
 
                     <div className="flex flex-wrap justify-center gap-2">
-                        {categories.map((category) => (
+                        {allCategories.map((category) => (
                             <button
-                                key={category.id}
+                                key={category.slug || category.id}
                                 onClick={() => setSelectedCategory(category.id)}
                                 className={`px-4 py-2 rounded-full text-sm transition-all ${
                                     selectedCategory === category.id
@@ -761,7 +757,7 @@ const Training = () => {
                                         : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
                                 }`}
                             >
-                                {category.label} ({category.count})
+                                {category.name} ({Object.values(programs).filter(p => category.id === 'all' || p.category === category.id).length})
                             </button>
                         ))}
                     </div>
@@ -1160,6 +1156,21 @@ const Training = () => {
             </div>
         </section>
     );
+};
+
+// Helper function to get emoji icons for categories
+const getIconForCategory = (iconName: string) => {
+    const iconMap = {
+        'code': '💻',
+        'palette': '🎨',
+        'file-text': '📊',
+        'globe': '🌍',
+        'shield': '🛡️',
+        'users': '👥',
+        'briefcase': '💼',
+        'heart': '❤️'
+    };
+    return iconMap[iconName] || '📚';
 };
 
 export default Training;

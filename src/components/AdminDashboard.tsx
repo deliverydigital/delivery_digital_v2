@@ -4,6 +4,7 @@ import { AlertTriangle, Bell, CheckCircle, Clock, Download, CreditCard as Edit, 
 import {useAuth, useClients, useMessages, useProjects, useStatistics} from '../hooks/useApi';
 import { useTrainingDocuments, useTrainingDocumentStats } from '../hooks/useTrainingDocuments';
 import { useTrainingPrograms } from '../hooks/useTrainingPrograms';
+import { useCategories } from '../hooks/useCategories';
 import Auth from './Auth';
 import TaskBoard from "./TaskBoard.tsx";
 
@@ -280,6 +281,7 @@ const AdminDashboard = () => {
     const { documents: allDocuments, loading: documentsLoading, uploadDocument, deleteDocument } = useTrainingDocuments();
     const { stats: documentStats } = useTrainingDocumentStats();
     const { programs: trainingPrograms, loading: programsLoading } = useTrainingPrograms();
+    const { categories, loading: categoriesLoading } = useCategories();
 
     const [activeTab, setActiveTab] = useState<'overview' | 'clients' | 'projects' | 'tasks' | 'messages' | 'quotes' | 'training' | 'settings'>('overview');
     const [searchQuery, setSearchQuery] = useState('');
