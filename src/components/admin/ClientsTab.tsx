@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Search, Filter, Plus, Eye, Edit, Trash2, RefreshCw,
-  Users, Calendar, Building2, Mail, Phone, MapPin,
-  CheckCircle, AlertTriangle, Star, X, Save, User
-} from 'lucide-react';
+import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, Users, Calendar, Building2, Mail, Phone, MapPin, CheckCircle, AlertTriangle, Star, X, Save, User } from 'lucide-react';
 import { useClients } from '../../hooks/useApi';
 
 const ClientsTab = () => {

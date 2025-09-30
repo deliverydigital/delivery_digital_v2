@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Search, Filter, Plus, Eye, Edit, Trash2, RefreshCw,
-  FolderOpen, Calendar, User, Building2, Clock, CheckCircle,
-  AlertTriangle, Star, ChevronDown, ChevronUp, X, Save,
-  FileText, ExternalLink, MessageCircle, Settings
-} from 'lucide-react';
+import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, FolderOpen, Calendar, User, Building2, Clock, CheckCircle, AlertTriangle, Star, ChevronDown, ChevronUp, X, Save, FileText, ExternalLink, MessageCircle, Settings } from 'lucide-react';
 import { useProjects, useClients } from '../../hooks/useApi';
 
 const ProjectsTab = () => {
