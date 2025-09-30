@@ -104,6 +104,8 @@ const TrainingProgramsManagement = () => {
   const openEditModal = (program: TrainingProgram) => {
     setFormData({
       ...program,
+      program_id: program.program_id || program.id,
+      title: program.title || program.name,
       objectives: program.objectives && program.objectives.length > 0 ? [...program.objectives] : [''],
       methods: program.methods && program.methods.length > 0 ? [...program.methods] : [''],
       evaluation_methods: program.evaluation_methods && program.evaluation_methods.length > 0 ? [...program.evaluation_methods] : ['']
