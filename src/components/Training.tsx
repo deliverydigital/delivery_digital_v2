@@ -13,7 +13,7 @@ const Training = () => {
     const [selectedProgram, setSelectedProgram] = useState('hygiene-security');
     const { documents, loading: documentsLoading, downloadDocument , } = useTrainingPrograms();
     const { documents : docs, downloadDocument : downloadTraningDocument} = useTrainingDocuments();
-    const { programs, loading: programsLoading } = useTrainingPrograms();
+    const { programs, loading: programsLoading, error: programsError } = useTrainingPrograms();
     const { categories, loading: categoriesLoading } = useCategories();
 
     const { ref, inView } = useInView({
@@ -624,7 +624,7 @@ const Training = () => {
         ...categories
     ];
 
-    const filteredPrograms = Object.entries(staticPrograms).filter(([key, program]) => {
+    const filteredPrograms = programs.filter((program) => {
         const matchesSearch = program.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             program.description.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesCategory = selectedCategory === 'all' || program.category === selectedCategory;
