@@ -9,7 +9,7 @@ import {
   Eye, Edit, Trash2, Plus, Settings, Laptop, Database, Server, Cloud, Smartphone, 
   Monitor, Palette, FileSpreadsheet, MessageSquare, HardHat, Zap 
 } from 'lucide-react';
-} from 'lucide-react';
+
 import { TrainingProgramsApiService } from '../services/trainingProgramsApi';
 
 const Training = () => {
