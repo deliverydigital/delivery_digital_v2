@@ -1,14 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Plus, Edit, Trash2, Eye, Save, X, Upload, Download, 
-  Search, Filter, RefreshCw, BookOpen, Users, Clock, 
-  Euro, Star, Award, CheckCircle, AlertTriangle, 
-  FileText, Calendar, Target, Settings, Copy,
-  ChevronDown, ChevronUp, ExternalLink, Zap,
-  Code, PenTool, Globe, Shield, Heart, Briefcase,
-  GraduationCap, Building2, Utensils, Car
-} from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Eye, Save, X, Upload, Download, Search, Filter, RefreshCw, BookOpen, Users, Clock, Euro, Star, Award, CheckCircle, AlertTriangle, FileText, Calendar, Target, Settings, Copy, ChevronDown, ChevronUp, ExternalLink, Zap, Code, PenTool, Globe, Shield, Heart, Briefcase, GraduationCap, Building2, Utensils, Car } from 'lucide-react';
 import { useTrainingPrograms } from '../hooks/useTrainingPrograms';
 import { useCategories } from '../hooks/useCategories';
 
