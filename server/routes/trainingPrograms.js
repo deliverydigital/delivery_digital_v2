@@ -183,7 +183,7 @@ router.get('/', validatePagination, async (req, res) => {
     }
 
     const programs = await TrainingProgram.find(query)
-      .select('program_id title description category duration_hours price level max_participants is_featured opco_eligible cpf_eligible certification_type')
+      .select('program_id title modules description category duration_hours price level max_participants is_featured opco_eligible cpf_eligible certification_type')
       .skip(skip)
       .limit(parseInt(limit))
       .sort({ is_featured: -1, title: 1 });
@@ -206,7 +206,8 @@ router.get('/', validatePagination, async (req, res) => {
           is_featured: program.is_featured,
           opco_eligible: program.opco_eligible,
           cpf_eligible: program.cpf_eligible,
-          certification_type: program.certification_type
+          certification_type: program.certification_type,
+          modules : program.modules
         })),
         pagination: {
           current_page: parseInt(page),

@@ -93,6 +93,7 @@ export class TrainingProgramsApiService {
         const response = await makeRequest(`/training-programs?${params.toString()}`);
         
         if (response.data && response.data.programs) {
+          console.log('response.data.programs',response.data.programs);
           return response.data.programs.map((program: any) => ({
             ...program,
             created_at: program.created_at ? new Date(program.created_at) : new Date(),

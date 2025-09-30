@@ -10,7 +10,7 @@ import {useCategories} from "../hooks/useCategories.ts";
 const Training = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
-    const [selectedProgram, setSelectedProgram] = useState('hygiene-security');
+    const [selectedProgram, setSelectedProgram] = useState();
     const { documents, loading: documentsLoading, downloadDocument , } = useTrainingPrograms();
     const { documents : docs, downloadDocument : downloadTraningDocument} = useTrainingDocuments();
     const { programs, loading: programsLoading, error: programsError } = useTrainingPrograms();
@@ -631,7 +631,9 @@ const Training = () => {
         return matchesSearch && matchesCategory;
     });
 
-    const currentProgram = staticPrograms[selectedProgram];
+
+    console.log('Programs------------------------------>',programs)
+    const currentProgram =  selectedProgram;
 
     // Load documents for a specific program
     const loadProgramDocuments = async (programId: string) => {
@@ -669,8 +671,9 @@ const Training = () => {
 
     // Load documents when a program is selected
     useEffect(() => {
-        if (selectedProgram) {
-            loadProgramDocuments(selectedProgram);
+        if (selectedProgram?.program_id) {
+            console.log(selectedProgram.program_id);
+            loadProgramDocuments(selectedProgram?.program_id);
         }
     }, [selectedProgram]);
 
@@ -689,8 +692,8 @@ const Training = () => {
         }
     };
 
-    const programDocs = programDocuments[selectedProgram || ''] || [];
-    const isLoadingDocs = loadingDocuments[selectedProgram || ''] || false;
+    const programDocs = programDocuments[selectedProgram?.program_id || ''] || [];
+    const isLoadingDocs = loadingDocuments[selectedProgram?.program_id || ''] || false;
 
     // Show loading state
     if (programsLoading || categoriesLoading) {
@@ -774,16 +777,16 @@ const Training = () => {
 
                 {/* Programs Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-                    {filteredPrograms.map(([key, program]) => (
+                    {filteredPrograms.map((program, key) => (
                         <motion.div
-                            key={key}
+                            key={program.id || key}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6 }}
                             className={`card p-6 cursor-pointer transition-all hover:scale-105 ${
-                                selectedProgram === key ? 'ring-2 ring-primary-500 bg-primary-900/20' : ''
+                                selectedProgram?.program_id === program.program_id ? 'ring-2 ring-primary-500 bg-primary-900/20' : ''
                             }`}
-                            onClick={() => setSelectedProgram(key)}
+                            onClick={() => {console.log(program);setSelectedProgram(program)}}
                         >
                             <div className="flex items-center mb-4">
                                 <div className="bg-white/10 p-3 rounded-lg mr-3">
@@ -814,7 +817,7 @@ const Training = () => {
                                                 console.log(doc)
                                                 // Use the correct API endpoint for training programs
                                                 const baseUrl = import.meta.env.VITE_API_URL || '';
-                                                const downloadUrl = `${baseUrl}/api/training-programs/${selectedProgram}/documents/${doc.id}/download`;
+                                                const downloadUrl = `${baseUrl}/api/training-programs/${selectedProgram?.program_id}/documents/${doc.id}/download`;
                                                 window.open(downloadUrl, '_blank');
                                             }}
                                             className="flex items-center text-xs text-primary-400 hover:text-primary-300 transition-colors"
@@ -834,7 +837,7 @@ const Training = () => {
                 {/* Selected Program Details */}
                 {currentProgram && (
                     <motion.div
-                        key={selectedProgram}
+                        key={selectedProgram?.program_id || ''}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
@@ -893,7 +896,7 @@ const Training = () => {
                             </div>
 
                             {/* Additional info for specific programs */}
-                            {(selectedProgram === 'hygiene-security' || selectedProgram === 'hygiene-security-afest' || selectedProgram === 'conduite-securitaire' || selectedProgram === 'autocad-sketchup-revit') && currentProgram.prerequisites && (
+                            {(selectedProgram?.program_id === 'hygiene-security' || selectedProgram?.program_id === 'hygiene-security-afest' || selectedProgram?.program_id === 'conduite-securitaire' || selectedProgram?.program_id === 'autocad-sketchup-revit') && currentProgram.prerequisites && (
                                 <div className="card p-6 mt-6">
                                     <h4 className="text-lg font-bold text-white mb-4">Informations complémentaires</h4>
 
@@ -1004,14 +1007,14 @@ const Training = () => {
                             )}
 
                             {/* Fallback to static downloads if no API documents */}
-                            {false && documents.length === 0 && !documentsLoading && staticPrograms[selectedProgram].downloads && staticPrograms[selectedProgram].downloads.length > 0 && (
+                            {false && documents.length === 0 && !documentsLoading && staticPrograms[selectedProgram].downloads && staticPrograms[selectedProgram?.program_id].downloads.length > 0 && (
                                 <div className="card p-6 mt-6">
                                     <h4 className="text-lg font-bold text-white mb-4 flex items-center">
                                         <Download className="h-5 w-5 mr-2" />
                                         Documents à télécharger
                                     </h4>
                                     <div className="space-y-3">
-                                        {staticPrograms[selectedProgram].downloads.map((download, index) => (
+                                        {staticPrograms[selectedProgram?.program_id].downloads.map((download, index) => (
                                             <a
                                                 key={index}
                                                 href={download.url}
@@ -1078,10 +1081,9 @@ const Training = () => {
                                 )}
                             </div>
                         </div>
-
                         <div className="lg:col-span-2">
                             <div className="space-y-4">
-                                {currentProgram.modules.map((module, index) => (
+                                {currentProgram?.modules?.map((module, index) => (
                                     <div key={index} className="card p-4">
                                         <div className="flex items-start">
                                             <div className="bg-white/10 p-2 rounded-lg mr-3">
