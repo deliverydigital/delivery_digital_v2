@@ -33,7 +33,8 @@ import {
     X,
     Upload,
     GraduationCap,
-    BarChart3
+    BarChart3,
+    Tag
 } from 'lucide-react';
 
 import {useAuth, useClients, useMessages, useProjects, useStatistics} from '../hooks/useApi';
@@ -50,6 +51,7 @@ import ClientsTab from './admin/ClientsTab';
 import MessagesTab from './admin/MessagesTab';
 import SettingsTab from './admin/SettingsTab';
 import TrainingProgramsManagement from './TrainingProgramsManagement';
+import CategoriesTab from './admin/CategoriesTab';
 
 // Define the upload form data type
 interface UploadDocumentFormDataType {
@@ -332,6 +334,8 @@ const AdminDashboard = () => {
                 return <MessagesTab />;
             case 'training':
                 return <TrainingProgramsManagement />;
+            case 'categories':
+                return <CategoriesTab />;
             case 'settings':
                 return <SettingsTab />;
             default:
@@ -411,6 +415,18 @@ const AdminDashboard = () => {
                         >
                             <GraduationCap className="h-5 w-5 mr-3"/>
                             Formation
+                        </button>
+
+                        <button
+                            onClick={() => setActiveTab('categories')}
+                            className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
+                                activeTab === 'categories'
+                                    ? 'bg-primary-600 text-white'
+                                    : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+                            }`}
+                        >
+                            <Tag className="h-5 w-5 mr-3"/>
+                            Catégories
                         </button>
 
                         <button
