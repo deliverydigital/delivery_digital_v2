@@ -1,9 +1,43 @@
 import { useState } from 'react';
 import React from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, Tag, Save, X, CheckCircle, AlertTriangle, Palette, Code, PenTool, FileText, Globe, Shield, Users, Briefcase, Heart, BookOpen, Folder } from 'lucide-react';
 import { useCategories } from '../../hooks/useCategories';
 
+// Move CategoryModal outside the main component to prevent recreation
+interface CategoryModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  modalMode: 'create' | 'edit' | 'view';
+  selectedCategory: any;
+  formData: any;
+  onFormDataChange: (field: string, value: any) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  iconOptions: any[];
+  colorOptions: string[];
+  getIconComponent: (iconName: string) => React.ReactNode;
+}
+
+const CategoryModal = React.memo(({
+  isOpen,
+  onClose,
+  modalMode,
+  selectedCategory,
+  formData,
+  onFormDataChange,
+  onSubmit,
+  iconOptions,
+  colorOptions,
+  getIconComponent
+}: CategoryModalProps) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
 const CategoriesTab = () => {
   const { 
     categories, 
@@ -462,10 +496,20 @@ const CategoriesTab = () => {
 
       {/* Modal */}
       <AnimatePresence>
-        {showModal && <CategoryModal />}
+        {showModal && (
+          <CategoryModal
+            isOpen={showModal}
+            onClose={closeModal}
+            modalMode={modalMode}
+            selectedCategory={selectedCategory}
+            formData={formData}
+            onFormDataChange={handleFormDataChange}
+            onSubmit={handleSubmit}
+            iconOptions={iconOptions}
+            colorOptions={colorOptions}
+            getIconComponent={getIconComponent}
+          />
+        )}
       </AnimatePresence>
     </div>
-  );
-};
-
 export default CategoriesTab;
