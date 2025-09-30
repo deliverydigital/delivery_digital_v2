@@ -954,14 +954,22 @@ const TrainingProgramsManagement = () => {
                         <Eye className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => openEditModal(program)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          openEditModal(program);
+                        }}
                         className="text-green-400 hover:text-green-300"
                         title="Modifier"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(program.id)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDelete(program.id);
+                        }}
                         className="text-red-400 hover:text-red-300"
                         title="Supprimer"
                       >
