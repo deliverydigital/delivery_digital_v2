@@ -255,6 +255,26 @@ const TrainingProgramsManagement = () => {
     );
   };
 
+  // Memoized handlers to prevent re-creation on every render
+  const handleFormDataChange = React.useCallback((field: string, value: any) => {
+    setFormData(prevData => ({
+      ...prevData,
+      [field]: value
+    }));
+  }, []);
+
+  const handleArrayFieldChange = React.useCallback((field: 'objectives' | 'methods' | 'evaluation_methods', index: number, value: string) => {
+    setFormData(prevData => {
+      const currentArray = prevData[field] || [];
+      const newArray = [...currentArray];
+      newArray[index] = value;
+      return {
+        ...prevData,
+        [field]: newArray
+      };
+    });
+  }, []);
+
   const getCategoryIcon = (categorySlug: string) => {
     switch (categorySlug) {
       case 'web': return <Code className="h-5 w-5" />;
@@ -281,7 +301,8 @@ const TrainingProgramsManagement = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const ProgramModal = () => (
+  // Move ProgramModal outside to prevent recreation on every render
+  const renderProgramModal = () => (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -391,7 +412,7 @@ const TrainingProgramsManagement = () => {
                 <input
                   type="text"
                   value={formData.program_id || ''}
-                  onChange={(e) => setFormData({ ...formData, program_id: e.target.value })}
+                  onChange={(e) => handleFormDataChange('program_id', e.target.value)}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="ex: wordpress-advanced"
                   required
@@ -406,7 +427,7 @@ const TrainingProgramsManagement = () => {
                 <input
                   type="text"
                   value={formData.title || ''}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) => handleFormDataChange('title', e.target.value)}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Titre de la formation"
                   required
@@ -420,13 +441,7 @@ const TrainingProgramsManagement = () => {
               </label>
               <textarea
                 value={formData.description || ''}
-                onChange={(e) => {
-                  const newValue = e.target.value;
-                  setFormData(prevData => ({ 
-                    ...prevData, 
-                    description: newValue 
-                  }));
-                }}
+                onChange={(e) => handleFormDataChange('description', e.target.value)}
                 rows={3}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Description détaillée de la formation"
@@ -442,7 +457,7 @@ const TrainingProgramsManagement = () => {
                 </label>
                 <select
                   value={formData.category || 'web'}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  onChange={(e) => handleFormDataChange('category', e.target.value)}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 >
@@ -460,7 +475,7 @@ const TrainingProgramsManagement = () => {
                 <input
                   type="number"
                   value={formData.duration_hours || 0}
-                  onChange={(e) => setFormData({ ...formData, duration_hours: parseInt(e.target.value) || 0 })}
+                  onChange={(e) => handleFormDataChange('duration_hours', parseInt(e.target.value) || 0)}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="1"
                   required
@@ -473,7 +488,7 @@ const TrainingProgramsManagement = () => {
                 <input
                   type="number"
                   value={formData.price || 0}
-                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => handleFormDataChange('price', parseFloat(e.target.value) || 0)}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="0"
                   step="0.01"
@@ -486,7 +501,7 @@ const TrainingProgramsManagement = () => {
                 </label>
                 <select
                   value={formData.level || 'beginner'}
-                  onChange={(e) => setFormData({ ...formData, level: e.target.value })}
+                  onChange={(e) => handleFormDataChange('level', e.target.value)}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="beginner">Débutant</option>
@@ -504,7 +519,7 @@ const TrainingProgramsManagement = () => {
                 <input
                   type="number"
                   value={formData.max_participants || 12}
-                  onChange={(e) => setFormData({ ...formData, max_participants: parseInt(e.target.value) || 12 })}
+                  onChange={(e) => handleFormDataChange('max_participants', parseInt(e.target.value) || 12)}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="1"
                 />
@@ -516,7 +531,7 @@ const TrainingProgramsManagement = () => {
                 <input
                   type="text"
                   value={formData.access_delay || ''}
-                  onChange={(e) => setFormData({ ...formData, access_delay: e.target.value })}
+                  onChange={(e) => handleFormDataChange('access_delay', e.target.value)}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="ex: 1 semaine"
                 />
@@ -529,7 +544,7 @@ const TrainingProgramsManagement = () => {
               </label>
               <textarea
                 value={formData.prerequisites || ''}
-                onChange={(e) => setFormData({ ...formData, prerequisites: e.target.value })}
+                onChange={(e) => handleFormDataChange('prerequisites', e.target.value)}
                 rows={2}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Prérequis nécessaires pour suivre cette formation"
@@ -557,7 +572,7 @@ const TrainingProgramsManagement = () => {
                     <input
                       type="text"
                       value={objective}
-                      onChange={(e) => updateArrayField('objectives', index, e.target.value)}
+                      onChange={(e) => handleArrayFieldChange('objectives', index, e.target.value)}
                       className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder={`Objectif ${index + 1}`}
                     />
@@ -596,7 +611,7 @@ const TrainingProgramsManagement = () => {
                     <input
                       type="text"
                       value={method}
-                      onChange={(e) => updateArrayField('methods', index, e.target.value)}
+                      onChange={(e) => handleArrayFieldChange('methods', index, e.target.value)}
                       className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder={`Méthode ${index + 1}`}
                     />
@@ -635,7 +650,7 @@ const TrainingProgramsManagement = () => {
                     <input
                       type="text"
                       value={method}
-                      onChange={(e) => updateArrayField('evaluation_methods', index, e.target.value)}
+                      onChange={(e) => handleArrayFieldChange('evaluation_methods', index, e.target.value)}
                       className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder={`Méthode d'évaluation ${index + 1}`}
                     />
@@ -750,7 +765,7 @@ const TrainingProgramsManagement = () => {
                     <input
                       type="checkbox"
                       checked={formData.is_active || false}
-                      onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                      onChange={(e) => handleFormDataChange('is_active', e.target.checked)}
                       className="mr-3 rounded"
                     />
                     <span className="text-gray-300">Programme actif</span>
@@ -759,7 +774,7 @@ const TrainingProgramsManagement = () => {
                     <input
                       type="checkbox"
                       checked={formData.is_featured || false}
-                      onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                      onChange={(e) => handleFormDataChange('is_featured', e.target.checked)}
                       className="mr-3 rounded"
                     />
                     <span className="text-gray-300">Programme vedette</span>
@@ -770,7 +785,7 @@ const TrainingProgramsManagement = () => {
                     <input
                       type="checkbox"
                       checked={formData.opco_eligible || false}
-                      onChange={(e) => setFormData({ ...formData, opco_eligible: e.target.checked })}
+                      onChange={(e) => handleFormDataChange('opco_eligible', e.target.checked)}
                       className="mr-3 rounded"
                     />
                     <span className="text-gray-300">Éligible OPCO</span>
@@ -779,7 +794,7 @@ const TrainingProgramsManagement = () => {
                     <input
                       type="checkbox"
                       checked={formData.cpf_eligible || false}
-                      onChange={(e) => setFormData({ ...formData, cpf_eligible: e.target.checked })}
+                      onChange={(e) => handleFormDataChange('cpf_eligible', e.target.checked)}
                       className="mr-3 rounded"
                     />
                     <span className="text-gray-300">Éligible CPF</span>
@@ -794,7 +809,7 @@ const TrainingProgramsManagement = () => {
               </label>
               <textarea
                 value={formData.accessibility_info || ''}
-                onChange={(e) => setFormData({ ...formData, accessibility_info: e.target.value })}
+                onChange={(e) => handleFormDataChange('accessibility_info', e.target.value)}
                 rows={2}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Informations sur l'accessibilité de la formation"
@@ -1008,10 +1023,13 @@ const TrainingProgramsManagement = () => {
 
       {/* Modal */}
       <AnimatePresence>
-        {showModal && <ProgramModal />}
+        {showModal && renderProgramModal()}
       </AnimatePresence>
     </div>
   );
 };
+
+// Add React import at the top if not already present
+import React from 'react';
 
 export default TrainingProgramsManagement;
