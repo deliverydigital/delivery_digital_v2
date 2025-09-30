@@ -457,7 +457,6 @@ const CategoriesTab = () => {
       </AnimatePresence>
     </div>
   );
-
 };
 
 export default CategoriesTab;
