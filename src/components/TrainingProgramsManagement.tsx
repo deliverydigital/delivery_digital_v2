@@ -148,19 +148,29 @@ const TrainingProgramsManagement = () => {
       };
 
       if (modalMode === 'create') {
-        // Create new program
-        console.log('Creating new program:', cleanedData);
-        // TODO: Implement API call to create program
-        alert('Fonctionnalité de création en cours de développement');
+        const result = await createProgram(cleanedData);
+        if (result.success) {
+          console.log('Program created successfully:', result.program);
+          closeModal();
+          refetch();
+        } else {
+          alert(`Erreur lors de la création: ${result.error}`);
+        }
       } else if (modalMode === 'edit') {
-        // Update existing program
-        console.log('Updating program:', cleanedData);
-        // TODO: Implement API call to update program
-        alert('Fonctionnalité de modification en cours de développement');
+        if (!selectedProgram) {
+          alert('Aucun programme sélectionné');
+          return;
+        }
+        
+        const result = await updateProgram(selectedProgram.id, cleanedData);
+        if (result.success) {
+          console.log('Program updated successfully:', result.program);
+          closeModal();
+          refetch();
+        } else {
+          alert(`Erreur lors de la modification: ${result.error}`);
+        }
       }
-
-      closeModal();
-      refetch();
     } catch (error) {
       console.error('Error saving program:', error);
       alert('Erreur lors de la sauvegarde du programme');
@@ -170,10 +180,13 @@ const TrainingProgramsManagement = () => {
   const handleDelete = async (programId: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce programme ?')) {
       try {
-        console.log('Deleting program:', programId);
-        // TODO: Implement API call to delete program
-        alert('Fonctionnalité de suppression en cours de développement');
-        refetch();
+        const result = await deleteProgram(programId);
+        if (result.success) {
+          console.log('Program deleted successfully');
+          refetch();
+        } else {
+          alert(`Erreur lors de la suppression: ${result.error}`);
+        }
       } catch (error) {
         console.error('Error deleting program:', error);
         alert('Erreur lors de la suppression du programme');
