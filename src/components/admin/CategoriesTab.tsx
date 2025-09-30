@@ -38,6 +38,176 @@ const CategoryModal = React.memo(({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
+        className="bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl"
+      >
+        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-white">
+            {modalMode === 'create' ? 'Créer une Catégorie' : 
+             modalMode === 'edit' ? 'Modifier la Catégorie' : 'Détails de la Catégorie'}
+          </h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        {modalMode === 'view' && selectedCategory ? (
+          <div className="p-6 space-y-6">
+            <div className="flex items-center mb-4">
+              <div 
+                className="w-12 h-12 rounded-lg flex items-center justify-center mr-4"
+                style={{ backgroundColor: `${selectedCategory.color}20`, color: selectedCategory.color }}
+              >
+                {getIconComponent(selectedCategory.icon)}
+              </div>
+              <div>
+                <h4 className="text-lg font-bold text-white">{selectedCategory.name}</h4>
+                <p className="text-gray-400">{selectedCategory.description}</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-400">Couleur</label>
+                <div className="flex items-center mt-1">
+                  <div 
+                    className="w-6 h-6 rounded mr-2"
+                    style={{ backgroundColor: selectedCategory.color }}
+                  />
+                  <span className="text-white">{selectedCategory.color}</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-400">Ordre</label>
+                <div className="text-white mt-1">{selectedCategory.order}</div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => {}}
+                className="btn btn-primary"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Modifier
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={onSubmit} className="p-6 space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Nom de la catégorie *
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => onFormDataChange('name', e.target.value)}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ex: Développement Web"
+                required
+                autoComplete="off"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Description
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => onFormDataChange('description', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Description de la catégorie..."
+                autoComplete="off"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Icône
+                </label>
+                <select
+                  value={formData.icon}
+                  onChange={(e) => onFormDataChange('icon', e.target.value)}
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {iconOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="mt-2 flex items-center text-gray-400">
+                  <span className="mr-2">Aperçu:</span>
+                  {getIconComponent(formData.icon)}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Ordre d'affichage
+                </label>
+                <input
+                  type="number"
+                  value={formData.order}
+                  onChange={(e) => onFormDataChange('order', parseInt(e.target.value) || 0)}
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="0"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Couleur
+              </label>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {colorOptions.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => onFormDataChange('color', color)}
+                    className={`w-8 h-8 rounded border-2 ${
+                      formData.color === color ? 'border-white' : 'border-gray-600'
+                    }`}
+                    style={{ backgroundColor: color }}
+                    title={color}
+                  />
+                ))}
+              </div>
+              <input
+                type="color"
+                value={formData.color}
+                onChange={(e) => onFormDataChange('color', e.target.value)}
+                className="w-full h-10 bg-gray-800 border border-gray-700 rounded-lg"
+              />
+            </div>
+
+            <div className="flex justify-end gap-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-2 text-gray-400 hover:text-white transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {modalMode === 'create' ? 'Créer' : 'Sauvegarder'}
+              </button>
+            </div>
+          </form>
+        )}
+      </motion.div>
+    </div>
+  );
+});
+
 const CategoriesTab = () => {
   const { 
     categories, 
@@ -181,180 +351,6 @@ const CategoriesTab = () => {
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (category.description && category.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
-  const CategoryModal = () => (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
-        className="bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl"
-      >
-        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-white">
-            {modalMode === 'create' ? 'Créer une Catégorie' : 
-             modalMode === 'edit' ? 'Modifier la Catégorie' : 'Détails de la Catégorie'}
-          </h3>
-          <button onClick={closeModal} className="text-gray-400 hover:text-white">
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        {modalMode === 'view' && selectedCategory ? (
-          <div className="p-6 space-y-6">
-            <div className="flex items-center mb-4">
-              <div 
-                className="w-12 h-12 rounded-lg flex items-center justify-center mr-4"
-                style={{ backgroundColor: `${selectedCategory.color}20`, color: selectedCategory.color }}
-              >
-                {getIconComponent(selectedCategory.icon)}
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-white">{selectedCategory.name}</h4>
-                <p className="text-gray-400">{selectedCategory.description}</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-400">Couleur</label>
-                <div className="flex items-center mt-1">
-                  <div 
-                    className="w-6 h-6 rounded mr-2"
-                    style={{ backgroundColor: selectedCategory.color }}
-                  />
-                  <span className="text-white">{selectedCategory.color}</span>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-400">Ordre</label>
-                <div className="text-white mt-1">{selectedCategory.order}</div>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={() => openEditModal(selectedCategory)}
-                className="btn btn-primary"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Modifier
-              </button>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Nom de la catégorie *
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleFormDataChange('name', e.target.value)}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Ex: Développement Web"
-                required
-                autoComplete="off"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => handleFormDataChange('description', e.target.value)}
-                rows={3}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Description de la catégorie..."
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Icône
-                </label>
-                <select
-                  value={formData.icon}
-                  onChange={(e) => handleFormDataChange('icon', e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {iconOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="mt-2 flex items-center text-gray-400">
-                  <span className="mr-2">Aperçu:</span>
-                  {getIconComponent(formData.icon)}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Ordre d'affichage
-                </label>
-                <input
-                  type="number"
-                  value={formData.order}
-                  onChange={(e) => handleFormDataChange('order', parseInt(e.target.value) || 0)}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min="0"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Couleur
-              </label>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {colorOptions.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => handleFormDataChange('color', color)}
-                    className={`w-8 h-8 rounded border-2 ${
-                      formData.color === color ? 'border-white' : 'border-gray-600'
-                    }`}
-                    style={{ backgroundColor: color }}
-                    title={color}
-                  />
-                ))}
-              </div>
-              <input
-                type="color"
-                value={formData.color}
-                onChange={(e) => handleFormDataChange('color', e.target.value)}
-                className="w-full h-10 bg-gray-800 border border-gray-700 rounded-lg"
-              />
-            </div>
-
-            <div className="flex justify-end gap-4">
-              <button
-                type="button"
-                onClick={closeModal}
-                className="px-6 py-2 text-gray-400 hover:text-white transition-colors"
-              >
-                Annuler
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {modalMode === 'create' ? 'Créer' : 'Sauvegarder'}
-              </button>
-            </div>
-          </form>
-        )}
-      </motion.div>
-    </div>
   );
 
   return (
@@ -512,4 +508,7 @@ const CategoriesTab = () => {
         )}
       </AnimatePresence>
     </div>
+  );
+};
+
 export default CategoriesTab;
