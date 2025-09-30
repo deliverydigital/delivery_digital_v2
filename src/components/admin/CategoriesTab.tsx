@@ -1,11 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, Filter, Plus, Eye, Edit, Trash2, RefreshCw, 
-  Tag, Save, X, CheckCircle, AlertTriangle, Palette,
-  Code, PenTool, FileText, Globe, Shield, Users, 
-  Briefcase, Heart, BookOpen, Folder
-} from 'lucide-react';
+import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, Tag, Save, X, CheckCircle, AlertTriangle, Palette, Code, PenTool, FileText, Globe, Shield, Users, Briefcase, Heart, BookOpen, Folder } from 'lucide-react';
 import { useCategories } from '../../hooks/useCategories';
 
 const CategoriesTab = () => {
