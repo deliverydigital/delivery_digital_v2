@@ -458,10 +458,6 @@ const CategoriesTab = () => {
     </div>
   );
 
-  function getIconComponent(iconName: string) {
-    const iconOption = iconOptions.find(opt => opt.value === iconName);
-    return iconOption?.icon || <Folder className="h-4 w-4" />;
-  }
 };
 
 export default CategoriesTab;
