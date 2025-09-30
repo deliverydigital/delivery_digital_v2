@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, Tag, Save, X, CheckCircle, AlertTriangle, Palette, Code, PenTool, FileText, Globe, Shield, Users, Briefcase, Heart, BookOpen, Folder } from 'lucide-react';
 import { useCategories } from '../../hooks/useCategories';
@@ -84,6 +85,14 @@ const CategoriesTab = () => {
     setSelectedCategory(null);
     resetForm();
   };
+
+  // Memoized handlers to prevent re-creation on every render
+  const handleFormDataChange = React.useCallback((field: string, value: any) => {
+    setFormData(prevData => ({
+      ...prevData,
+      [field]: value
+    }));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -209,7 +218,7 @@ const CategoriesTab = () => {
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => handleFormDataChange('name', e.target.value)}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Ex: Développement Web"
                 required
@@ -223,7 +232,7 @@ const CategoriesTab = () => {
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e) => handleFormDataChange('description', e.target.value)}
                 rows={3}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Description de la catégorie..."
@@ -238,7 +247,7 @@ const CategoriesTab = () => {
                 </label>
                 <select
                   value={formData.icon}
-                  onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
+                  onChange={(e) => handleFormDataChange('icon', e.target.value)}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {iconOptions.map((option) => (
@@ -259,7 +268,7 @@ const CategoriesTab = () => {
                 <input
                   type="number"
                   value={formData.order}
-                  onChange={(e) => setFormData(prev => ({ ...prev, order: parseInt(e.target.value) || 0 }))}
+                  onChange={(e) => handleFormDataChange('order', parseInt(e.target.value) || 0)}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="0"
                 />
@@ -275,7 +284,7 @@ const CategoriesTab = () => {
                   <button
                     key={color}
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, color }))}
+                    onClick={() => handleFormDataChange('color', color)}
                     className={`w-8 h-8 rounded border-2 ${
                       formData.color === color ? 'border-white' : 'border-gray-600'
                     }`}
@@ -287,7 +296,7 @@ const CategoriesTab = () => {
               <input
                 type="color"
                 value={formData.color}
-                onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
+                onChange={(e) => handleFormDataChange('color', e.target.value)}
                 className="w-full h-10 bg-gray-800 border border-gray-700 rounded-lg"
               />
             </div>
