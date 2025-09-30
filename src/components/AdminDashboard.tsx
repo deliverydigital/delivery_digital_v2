@@ -1,5 +1,40 @@
 import {useEffect, useState} from 'react';
-import { AlertTriangle, Bell, CheckCircle, Clock, Download, CreditCard as Edit, ExternalLink, Eye, FileText, FolderOpen, Home, Image as ImageIcon, Kanban, LogOut, Mail, MessageCircle, Paperclip, Phone, Plus, Receipt, RefreshCw, Reply, Save, Search, Send, Settings, Star, Trash2, User, Users, X, Upload, GraduationCap } from 'lucide-react';
+import {
+    AlertTriangle,
+    Bell,
+    CheckCircle,
+    Clock,
+    Download,
+    CreditCard as Edit,
+    ExternalLink,
+    Eye,
+    FileText,
+    FolderOpen,
+    Home,
+    Image as ImageIcon,
+    Kanban,
+    LogOut,
+    Mail,
+    MessageCircle,
+    Paperclip,
+    Phone,
+    Plus,
+    Receipt,
+    RefreshCw,
+    Reply,
+    Save,
+    Search,
+    Send,
+    Settings,
+    Star,
+    Trash2,
+    User,
+    Users,
+    X,
+    Upload,
+    GraduationCap,
+    BarChart3
+} from 'lucide-react';
 
 import {useAuth, useClients, useMessages, useProjects, useStatistics} from '../hooks/useApi';
 import { useTrainingDocuments, useTrainingDocumentStats } from '../hooks/useTrainingDocuments';
