@@ -104,9 +104,9 @@ const TrainingProgramsManagement = () => {
   const openEditModal = (program: TrainingProgram) => {
     setFormData({
       ...program,
-      objectives: (program.objectives ?? []).length > 0 ? program.objectives : [''],
-      methods: (program.methods ?? []).length > 0 ? program.methods : [''],
-      evaluation_methods: (program.evaluation_methods ?? []).length > 0 ? program.evaluation_methods : ['']
+      objectives: program.objectives && program.objectives.length > 0 ? [...program.objectives] : [''],
+      methods: program.methods && program.methods.length > 0 ? [...program.methods] : [''],
+      evaluation_methods: program.evaluation_methods && program.evaluation_methods.length > 0 ? [...program.evaluation_methods] : ['']
     });
     setSelectedProgram(program);
     setModalMode('edit');
@@ -186,19 +186,25 @@ const TrainingProgramsManagement = () => {
   };
 
   const updateArrayField = (field: 'objectives' | 'methods' | 'evaluation_methods', index: number, value: string) => {
-    const newArray = [...(formData[field] || [])];
-    newArray[index] = value;
-    setFormData({
-      ...formData,
-      [field]: newArray
+    setFormData(prevData => {
+      const currentArray = prevData[field] || [];
+      const newArray = [...currentArray];
+      newArray[index] = value;
+      return {
+        ...prevData,
+        [field]: newArray
+      };
     });
   };
 
   const removeArrayField = (field: 'objectives' | 'methods' | 'evaluation_methods', index: number) => {
-    const newArray = (formData[field] || []).filter((_, i) => i !== index);
-    setFormData({
-      ...formData,
-      [field]: newArray.length > 0 ? newArray : ['']
+    setFormData(prevData => {
+      const currentArray = prevData[field] || [];
+      const newArray = currentArray.filter((_, i) => i !== index);
+      return {
+        ...prevData,
+        [field]: newArray.length > 0 ? newArray : ['']
+      };
     });
   };
 
@@ -216,19 +222,25 @@ const TrainingProgramsManagement = () => {
   };
 
   const updateModule = (index: number, field: string, value: any) => {
-    const newModules = [...(formData.modules || [])];
-    newModules[index] = { ...newModules[index], [field]: value };
-    setFormData({
-      ...formData,
-      modules: newModules
+    setFormData(prevData => {
+      const currentModules = prevData.modules || [];
+      const newModules = [...currentModules];
+      newModules[index] = { ...newModules[index], [field]: value };
+      return {
+        ...prevData,
+        modules: newModules
+      };
     });
   };
 
   const removeModule = (index: number) => {
-    const newModules = (formData.modules || []).filter((_, i) => i !== index);
-    setFormData({
-      ...formData,
-      modules: newModules
+    setFormData(prevData => {
+      const currentModules = prevData.modules || [];
+      const newModules = currentModules.filter((_, i) => i !== index);
+      return {
+        ...prevData,
+        modules: newModules
+      };
     });
   };
 
