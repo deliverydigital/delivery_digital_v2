@@ -123,7 +123,7 @@ router.get('/:programId/documents/:documentId/download', async (req, res) => {
 // Get all training programs (public)
 router.get('/', validatePagination, async (req, res) => {
   try {
-    const { page = 1, limit = 20, category, search, active_only = 'true' } = req.query;
+    const { page = 1, limit = 50, category, search, active_only = 'true' } = req.query;
     const skip = (page - 1) * limit;
 
     // Check if MongoDB is available
@@ -151,7 +151,7 @@ router.get('/', validatePagination, async (req, res) => {
       ];
       
       return res.json({
-        success: false,
+        success: true,
         data: {
           programs: fallbackPrograms,
           pagination: {
@@ -245,7 +245,13 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       evaluation_methods,
       accessibility_info,
       access_delay,
-      modules
+      modules,
+      is_active,
+      is_featured,
+      opco_eligible,
+      cpf_eligible,
+      certification_type,
+      certification_provider
     } = req.body;
 
     // Check if MongoDB is available
@@ -281,7 +287,13 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       accessibility_info,
       access_delay,
       modules: modules ? (typeof modules === 'string' ? JSON.parse(modules) : modules) : [],
-      documents: []
+      documents: [],
+      is_active: is_active !== undefined ? is_active : true,
+      is_featured: is_featured !== undefined ? is_featured : false,
+      opco_eligible: opco_eligible !== undefined ? opco_eligible : true,
+      cpf_eligible: cpf_eligible !== undefined ? cpf_eligible : false,
+      certification_type,
+      certification_provider
     };
 
     const program = new TrainingProgram(programData);
@@ -290,7 +302,34 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Training program created successfully',
-      data: { program }
+      data: { 
+        program: {
+          id: program._id,
+          program_id: program.program_id,
+          title: program.title,
+          description: program.description,
+          category: program.category,
+          duration_hours: program.duration_hours,
+          price: program.price,
+          level: program.level,
+          max_participants: program.max_participants,
+          prerequisites: program.prerequisites,
+          objectives: program.objectives,
+          methods: program.methods,
+          evaluation_methods: program.evaluation_methods,
+          accessibility_info: program.accessibility_info,
+          access_delay: program.access_delay,
+          is_active: program.is_active,
+          is_featured: program.is_featured,
+          opco_eligible: program.opco_eligible,
+          cpf_eligible: program.cpf_eligible,
+          certification_type: program.certification_type,
+          certification_provider: program.certification_provider,
+          modules: program.modules,
+          created_at: program.createdAt,
+          updated_at: program.updatedAt
+        }
+      }
     });
 
   } catch (error) {
@@ -512,7 +551,12 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
       });
     }
 
-    const program = await TrainingProgram.findOne({ program_id: programId });
+    // Try to find by program_id first, then by _id
+    let program = await TrainingProgram.findOne({ program_id: programId });
+    if (!program) {
+      program = await TrainingProgram.findById(programId);
+    }
+    
     if (!program) {
       return res.status(404).json({
         success: false,
@@ -522,9 +566,10 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
 
     // Update allowed fields
     const allowedFields = [
-      'title', 'description', 'category', 'duration_hours', 'price', 'level',
+      'title', 'description', 'category', 'duration_hours', 'price', 'level', 'program_id',
       'max_participants', 'prerequisites', 'objectives', 'methods', 
-      'evaluation_methods', 'accessibility_info', 'access_delay', 'is_active', 'modules'
+      'evaluation_methods', 'accessibility_info', 'access_delay', 'is_active', 'modules',
+      'is_featured', 'opco_eligible', 'cpf_eligible', 'certification_type', 'certification_provider'
     ];
 
     for (const [key, value] of Object.entries(updates)) {
@@ -533,6 +578,8 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
           program[key] = Array.isArray(value) ? value : value.split(',').map(item => item.trim());
         } else if (key === 'modules') {
           program[key] = typeof value === 'string' ? JSON.parse(value) : value;
+        } else if (key === 'duration_hours' || key === 'price' || key === 'max_participants') {
+          program[key] = parseFloat(value) || 0;
         } else {
           program[key] = value;
         }
@@ -544,7 +591,34 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
     res.json({
       success: true,
       message: 'Training program updated successfully',
-      data: { program }
+      data: { 
+        program: {
+          id: program._id,
+          program_id: program.program_id,
+          title: program.title,
+          description: program.description,
+          category: program.category,
+          duration_hours: program.duration_hours,
+          price: program.price,
+          level: program.level,
+          max_participants: program.max_participants,
+          prerequisites: program.prerequisites,
+          objectives: program.objectives,
+          methods: program.methods,
+          evaluation_methods: program.evaluation_methods,
+          accessibility_info: program.accessibility_info,
+          access_delay: program.access_delay,
+          is_active: program.is_active,
+          is_featured: program.is_featured,
+          opco_eligible: program.opco_eligible,
+          cpf_eligible: program.cpf_eligible,
+          certification_type: program.certification_type,
+          certification_provider: program.certification_provider,
+          modules: program.modules,
+          created_at: program.createdAt,
+          updated_at: program.updatedAt
+        }
+      }
     });
 
   } catch (error) {
@@ -620,7 +694,12 @@ router.delete('/:programId', authenticate, authorize('admin'), async (req, res) 
       });
     }
 
-    const program = await TrainingProgram.findOne({ program_id: programId });
+    // Try to find by program_id first, then by _id
+    let program = await TrainingProgram.findOne({ program_id: programId });
+    if (!program) {
+      program = await TrainingProgram.findById(programId);
+    }
+    
     if (!program) {
       return res.status(404).json({
         success: false,
@@ -636,7 +715,7 @@ router.delete('/:programId', authenticate, authorize('admin'), async (req, res) 
     }
 
     // Delete program from database
-    await TrainingProgram.deleteOne({ program_id: programId });
+    await TrainingProgram.findByIdAndDelete(program._id);
 
     res.json({
       success: true,

@@ -203,11 +203,15 @@ export class TrainingProgramsApiService {
   // Create new training program (admin only)
   static async createProgram(programData: Partial<TrainingProgram>): Promise<{ success: boolean; program?: TrainingProgram; error?: string }> {
     try {
+      console.log('Creating program with data:', programData);
+      
       const response = await makeRequest('/training-programs', {
         method: 'POST',
         body: JSON.stringify(programData),
       });
 
+      console.log('Create program response:', response);
+      
       if (response.success) {
         return { 
           success: true, 
@@ -278,11 +282,15 @@ export class TrainingProgramsApiService {
   // Update training program (admin only)
   static async updateProgram(programId: string, updates: Partial<TrainingProgram>): Promise<{ success: boolean; program?: TrainingProgram; error?: string }> {
     try {
+      console.log('Updating program:', programId, 'with data:', updates);
+      
       const response = await makeRequest(`/training-programs/${programId}`, {
         method: 'PUT',
         body: JSON.stringify(updates),
       });
 
+      console.log('Update program response:', response);
+      
       if (response.success) {
         return { 
           success: true, 
@@ -304,10 +312,13 @@ export class TrainingProgramsApiService {
   // Delete training program (admin only)
   static async deleteProgram(programId: string): Promise<{ success: boolean; error?: string }> {
     try {
+      console.log('Deleting program:', programId);
+      
       await makeRequest(`/training-programs/${programId}`, {
         method: 'DELETE',
       });
       
+      console.log('Program deleted successfully');
       return { success: true };
     } catch (error) {
       console.error('Delete program error:', error);

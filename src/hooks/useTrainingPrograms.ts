@@ -54,7 +54,9 @@ export const useTrainingPrograms = () => {
   };
 
   const createProgram = async (programData: Partial<TrainingProgram>) => {
+    console.log('useTrainingPrograms: Creating program with data:', programData);
     const result = await TrainingProgramsApiService.createProgram(programData);
+    console.log('useTrainingPrograms: Create result:', result);
     if (result.success) {
       await loadPrograms();
     }
@@ -62,7 +64,9 @@ export const useTrainingPrograms = () => {
   };
 
   const updateProgram = async (programId: string, updates: Partial<TrainingProgram>) => {
+    console.log('useTrainingPrograms: Updating program:', programId, 'with updates:', updates);
     const result = await TrainingProgramsApiService.updateProgram(programId, updates);
+    console.log('useTrainingPrograms: Update result:', result);
     if (result.success) {
       await loadPrograms();
     }
@@ -70,7 +74,9 @@ export const useTrainingPrograms = () => {
   };
 
   const deleteProgram = async (programId: string) => {
+    console.log('useTrainingPrograms: Deleting program:', programId);
     const result = await TrainingProgramsApiService.deleteProgram(programId);
+    console.log('useTrainingPrograms: Delete result:', result);
     if (result.success) {
       await loadPrograms();
     }

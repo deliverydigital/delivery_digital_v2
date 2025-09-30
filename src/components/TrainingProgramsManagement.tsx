@@ -38,6 +38,9 @@ const TrainingProgramsManagement = () => {
   const { programs, loading, error, refetch } = useTrainingPrograms();
   const { categories, loading: categoriesLoading } = useCategories();
   
+  // Import the CRUD functions from the hook
+  const { createProgram, updateProgram, deleteProgram } = useTrainingPrograms();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProgram, setSelectedProgram] = useState<TrainingProgram | null>(null);
@@ -132,6 +135,8 @@ const TrainingProgramsManagement = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
+    console.log('Form submitted with data:', formData);
+    
     // Validate required fields
     if (!formData.program_id || !formData.title || !formData.description) {
       alert('Veuillez remplir tous les champs obligatoires');
@@ -147,14 +152,19 @@ const TrainingProgramsManagement = () => {
         evaluation_methods: formData.evaluation_methods?.filter(method => method.trim() !== '') || []
       };
 
+      console.log('Cleaned data for submission:', cleanedData);
+      
       if (modalMode === 'create') {
+        console.log('Creating new program...');
         const result = await createProgram(cleanedData);
+        console.log('Create result:', result);
         if (result.success) {
           console.log('Program created successfully:', result.program);
           closeModal();
           refetch();
         } else {
-          alert(`Erreur lors de la création: ${result.error}`);
+          console.error('Create failed:', result.error);
+          alert(`Erreur lors de la création: ${result.error || 'Erreur inconnue'}`);
         }
       } else if (modalMode === 'edit') {
         if (!selectedProgram) {
@@ -162,34 +172,41 @@ const TrainingProgramsManagement = () => {
           return;
         }
         
-        const result = await updateProgram(selectedProgram.id, cleanedData);
+        console.log('Updating program:', selectedProgram.id || selectedProgram.program_id);
+        const programId = selectedProgram.program_id || selectedProgram.id;
+        const result = await updateProgram(programId, cleanedData);
+        console.log('Update result:', result);
         if (result.success) {
           console.log('Program updated successfully:', result.program);
           closeModal();
           refetch();
         } else {
-          alert(`Erreur lors de la modification: ${result.error}`);
+          console.error('Update failed:', result.error);
+          alert(`Erreur lors de la modification: ${result.error || 'Erreur inconnue'}`);
         }
       }
     } catch (error) {
       console.error('Error saving program:', error);
-      alert('Erreur lors de la sauvegarde du programme');
+      alert(`Erreur lors de la sauvegarde du programme: ${error.message || 'Erreur inconnue'}`);
     }
   };
 
   const handleDelete = async (programId: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce programme ?')) {
       try {
+        console.log('Deleting program:', programId);
         const result = await deleteProgram(programId);
+        console.log('Delete result:', result);
         if (result.success) {
           console.log('Program deleted successfully');
           refetch();
         } else {
-          alert(`Erreur lors de la suppression: ${result.error}`);
+          console.error('Delete failed:', result.error);
+          alert(`Erreur lors de la suppression: ${result.error || 'Erreur inconnue'}`);
         }
       } catch (error) {
         console.error('Error deleting program:', error);
-        alert('Erreur lors de la suppression du programme');
+        alert(`Erreur lors de la suppression du programme: ${error.message || 'Erreur inconnue'}`);
       }
     }
   };
