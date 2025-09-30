@@ -1,14 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { 
-  Search, Filter, Download, ExternalLink, Clock, Users, Euro, Star, Award, CheckCircle, 
-  BookOpen, GraduationCap, Target, Code, PenTool, Languages, Car, Apple, Leaf, 
-  ShoppingCart, BarChart3, Globe, Utensils, Shield, Building2, Heart, Briefcase, 
-  FileText, Calendar, MapPin, Phone, Mail, User, ChevronDown, ChevronUp, X, Send, 
-  Eye, Edit, Trash2, Plus, Settings, Laptop, Database, Server, Cloud, Smartphone, 
-  Monitor, Palette, FileSpreadsheet, MessageSquare, HardHat, Zap 
-} from 'lucide-react';
+import { Search, Filter, Download, ExternalLink, Clock, Users, Euro, Star, Award, CheckCircle, BookOpen, GraduationCap, Target, Code, PenTool, Languages, Car, Apple, Leaf, ShoppingCart, BarChart3, Globe, Utensils, Shield, Building2, Heart, Briefcase, FileText, Calendar, MapPin, Phone, Mail, User, ChevronDown, ChevronUp, X, Send, Eye, CreditCard as Edit, Trash2, Plus, Settings, Laptop, Database, Server, Cloud, Smartphone, Monitor, Palette, FileSpreadsheet, MessageSquare, HardHat, Zap } from 'lucide-react'iefcase, Heart, Zap, PenTool, Layers, Target, TrendingUp, Download, FileText
 } from 'lucide-react';
 import { TrainingProgramsApiService } from '../services/trainingProgramsApi';
 
