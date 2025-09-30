@@ -102,14 +102,15 @@ const TrainingProgramsManagement = () => {
   };
 
   const openEditModal = (program: TrainingProgram) => {
-    setFormData({
+    const editData = {
       ...program,
       program_id: program.program_id || program.id,
       title: program.title || program.name,
       objectives: program.objectives && program.objectives.length > 0 ? [...program.objectives] : [''],
       methods: program.methods && program.methods.length > 0 ? [...program.methods] : [''],
       evaluation_methods: program.evaluation_methods && program.evaluation_methods.length > 0 ? [...program.evaluation_methods] : ['']
-    });
+    };
+    setFormData(editData);
     setSelectedProgram(program);
     setModalMode('edit');
     setShowModal(true);
@@ -128,7 +129,7 @@ const TrainingProgramsManagement = () => {
     setExpandedModules([]);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     // Validate required fields
@@ -419,11 +420,18 @@ const TrainingProgramsManagement = () => {
               </label>
               <textarea
                 value={formData.description || ''}
-               onChange={(e) => setFormData(prevData => ({ ...prevData, description: e.target.value }))}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setFormData(prevData => ({ 
+                    ...prevData, 
+                    description: newValue 
+                  }));
+                }}
                 rows={3}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Description détaillée de la formation"
                 required
+                autoComplete="off"
               />
             </div>
 
