@@ -201,23 +201,7 @@ export class TrainingProgramsApiService {
   }
 
   // Create new training program (admin only)
-  static async createProgram(programData: {
-    program_id: string;
-    title: string;
-    description: string;
-    category: string;
-    duration_hours: number;
-    price: number;
-    level?: string;
-    max_participants?: number;
-    prerequisites?: string;
-    objectives?: string[];
-    methods?: string[];
-    evaluation_methods?: string[];
-    accessibility_info?: string;
-    access_delay?: string;
-    modules?: any[];
-  }): Promise<{ success: boolean; program?: TrainingProgram; error?: string }> {
+  static async createProgram(programData: Partial<TrainingProgram>): Promise<{ success: boolean; program?: TrainingProgram; error?: string }> {
     try {
       const response = await makeRequest('/training-programs', {
         method: 'POST',

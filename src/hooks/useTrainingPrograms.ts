@@ -53,6 +53,29 @@ export const useTrainingPrograms = () => {
     );
   };
 
+  const createProgram = async (programData: Partial<TrainingProgram>) => {
+    const result = await TrainingProgramsApiService.createProgram(programData);
+    if (result.success) {
+      await loadPrograms();
+    }
+    return result;
+  };
+
+  const updateProgram = async (programId: string, updates: Partial<TrainingProgram>) => {
+    const result = await TrainingProgramsApiService.updateProgram(programId, updates);
+    if (result.success) {
+      await loadPrograms();
+    }
+    return result;
+  };
+
+  const deleteProgram = async (programId: string) => {
+    const result = await TrainingProgramsApiService.deleteProgram(programId);
+    if (result.success) {
+      await loadPrograms();
+    }
+    return result;
+  };
   return {
     programs,
     loading,
@@ -62,6 +85,9 @@ export const useTrainingPrograms = () => {
     getFeaturedPrograms,
     getOPCOEligiblePrograms,
     searchPrograms,
+    createProgram,
+    updateProgram,
+    deleteProgram,
     refetch: loadPrograms
   };
 };

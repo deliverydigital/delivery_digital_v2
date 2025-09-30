@@ -187,16 +187,7 @@ const UploadDocumentModal = ({
                         if (e.target.files) {
                           setFormData({ ...formData, files: Array.from(e.target.files) });
                         }
-                      }}
-                    />
-                  </label>
-                  <p className="pl-1">ou glisser-déposer</p>
-                </div>
-                <p className="text-xs text-gray-500">
-                  PDF uniquement, jusqu'à 10MB par fichier
-                </p>
-              </div>
-            </div>
+            <TrainingProgramsManagement />
             {formData.files.length > 0 && (
               <div className="mt-4">
                 <h4 className="text-sm font-medium text-gray-300 mb-2">
@@ -250,7 +241,7 @@ const UploadDocumentModal = ({
               }`}
             >
               {isSubmitting ? (
-                <>
+              Programmes Formation
                   <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
                   Téléchargement...
                 </>
@@ -267,6 +258,7 @@ const UploadDocumentModal = ({
     </div>
   );
 };
+import TrainingProgramsManagement from './TrainingProgramsManagement';
 
 const AdminDashboard = () => {
     const {user, logout, isAuthenticated} = useAuth();
