@@ -12,8 +12,7 @@ const Training = () => {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedProgram, setSelectedProgram] = useState();
     const { documents, loading: documentsLoading, downloadDocument , } = useTrainingPrograms();
-  const [selectedProgram, setSelectedProgram] = useState<TrainingProgram | null>(null);
-  const [showProgramModal, setShowProgramModal] = useState(false);
+    const { documents : docs, downloadDocument : downloadTraningDocument} = useTrainingDocuments();
     const { programs, loading: programsLoading, error: programsError } = useTrainingPrograms();
     const { categories, loading: categoriesLoading } = useCategories();
 
