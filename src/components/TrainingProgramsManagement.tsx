@@ -106,14 +106,33 @@ const TrainingProgramsManagement = () => {
   };
 
   const openEditModal = (program: TrainingProgram) => {
+    console.log('Opening edit modal for program:', program);
+    
     const editData = {
-      ...program,
-      program_id: program.program_id || program.id,
-      title: program.title || program.name,
+      program_id: program.program_id || program.id || '',
+      title: program.title || program.name || '',
+      description: program.description || '',
+      category: program.category || 'web',
+      duration_hours: program.duration_hours || 0,
+      price: program.price || 0,
+      level: program.level || 'beginner',
+      max_participants: program.max_participants || 12,
+      prerequisites: program.prerequisites || '',
       objectives: program.objectives && program.objectives.length > 0 ? [...program.objectives] : [''],
       methods: program.methods && program.methods.length > 0 ? [...program.methods] : [''],
-      evaluation_methods: program.evaluation_methods && program.evaluation_methods.length > 0 ? [...program.evaluation_methods] : ['']
+      evaluation_methods: program.evaluation_methods && program.evaluation_methods.length > 0 ? [...program.evaluation_methods] : [''],
+      accessibility_info: program.accessibility_info || 'Formation accessible aux personnes en situation de handicap',
+      access_delay: program.access_delay || '1 semaine',
+      is_active: program.is_active !== undefined ? program.is_active : true,
+      is_featured: program.is_featured || false,
+      opco_eligible: program.opco_eligible !== undefined ? program.opco_eligible : true,
+      cpf_eligible: program.cpf_eligible || false,
+      certification_type: program.certification_type || '',
+      certification_provider: program.certification_provider || '',
+      modules: program.modules || []
     };
+    
+    console.log('Edit data prepared:', editData);
     setFormData(editData);
     setSelectedProgram(program);
     setModalMode('edit');
@@ -341,6 +360,7 @@ const TrainingProgramsManagement = () => {
 
   // Memoized handlers to prevent re-creation on every render
   const handleFormDataChange = React.useCallback((field: string, value: any) => {
+    console.log(`Form field ${field} changed to:`, value);
     setFormData(prevData => ({
       ...prevData,
       [field]: value
@@ -512,10 +532,14 @@ const TrainingProgramsManagement = () => {
                 <input
                   type="text"
                   value={formData.title || ''}
-                  onChange={(e) => handleFormDataChange('title', e.target.value)}
+                  onChange={(e) => {
+                    console.log('Title changed to:', e.target.value);
+                    handleFormDataChange('title', e.target.value);
+                  }}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Titre de la formation"
                   required
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -526,7 +550,10 @@ const TrainingProgramsManagement = () => {
               </label>
               <textarea
                 value={formData.description || ''}
-                onChange={(e) => handleFormDataChange('description', e.target.value)}
+                onChange={(e) => {
+                  console.log('Description changed to:', e.target.value);
+                  handleFormDataChange('description', e.target.value);
+                }}
                 rows={3}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Description détaillée de la formation"
@@ -560,7 +587,11 @@ const TrainingProgramsManagement = () => {
                 <input
                   type="number"
                   value={formData.duration_hours || 0}
-                  onChange={(e) => handleFormDataChange('duration_hours', parseInt(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 0;
+                    console.log('Duration changed to:', value);
+                    handleFormDataChange('duration_hours', value);
+                  }}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="1"
                   required
@@ -573,7 +604,11 @@ const TrainingProgramsManagement = () => {
                 <input
                   type="number"
                   value={formData.price || 0}
-                  onChange={(e) => handleFormDataChange('price', parseFloat(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value) || 0;
+                    console.log('Price changed to:', value);
+                    handleFormDataChange('price', value);
+                  }}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="0"
                   step="0.01"
