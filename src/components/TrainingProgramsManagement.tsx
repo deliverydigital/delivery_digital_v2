@@ -540,478 +540,472 @@ const TrainingProgramsManagement = () => {
             )}
           </div>
         ) : (
-          <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-            <h3 className="text-xl font-bold text-white">
-              {modalMode === 'create' ? 'Créer un Programme' : 
-               isLoadingProgramData ? 'Chargement des données...' : 'Modifier le Programme'}
-            </h3>
-            <button onClick={closeModal} className="text-gray-400 hover:text-white">
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-        )}
-          {/* Loading state for edit mode */}
-          {modalMode === 'edit' && loadingEditData && (
-            <div className="p-6 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-              <p className="text-gray-400">Chargement des données du programme...</p>
-            </div>
-          )}
-
-        
-        {isLoadingProgramData ? (
-          <div className="p-6 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-400">Chargement des données du programme...</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  ID du Programme *
-                </label>
-                <input
-                  type="text"
-                  value={formData.program_id || ''}
-                  onChange={(e) => handleFormDataChange('program_id', e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="ex: wordpress-advanced"
-                  required
-                  disabled={modalMode === 'edit'}
-                />
-                <p className="text-xs text-gray-400 mt-1">Identifiant unique (non modifiable après création)</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Titre *
-                </label>
-                <input
-                  type="text"
-                  value={formData.title || ''}
-                  onChange={(e) => {
-                    console.log('Title changed to:', e.target.value);
-                    handleFormDataChange('title', e.target.value);
-                  }}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Titre de la formation"
-                  required
-                  autoComplete="off"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Description *
-              </label>
-              <textarea
-                value={formData.description || ''}
-                onChange={(e) => {
-                  console.log('📝 Description changed:', e.target.value.substring(0, 50) + '...');
-                  setFormData({ ...formData, description: e.target.value });
-                }}
-                rows={4}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="Description détaillée de la formation..."
-                required
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Catégorie *
-                </label>
-                <select
-                  value={formData.category || 'web'}
-                  onChange={(e) => handleFormDataChange('category', e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.slug}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Durée (heures) *
-                </label>
-                <input
-                  type="number"
-                  value={formData.duration_hours || 0}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value) || 0;
-                    console.log('Duration changed to:', value);
-                    handleFormDataChange('duration_hours', value);
-                  }}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min="1"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Prix (€) *
-                </label>
-                <input
-                  type="number"
-                  value={formData.price || 0}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    console.log('Price changed to:', value);
-                    handleFormDataChange('price', value);
-                  }}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min="0"
-                  step="0.01"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Niveau
-                </label>
-                <select
-                  value={formData.level || 'beginner'}
-                  onChange={(e) => handleFormDataChange('level', e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="beginner">Débutant</option>
-                  <option value="intermediate">Intermédiaire</option>
-                  <option value="advanced">Avancé</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Participants maximum
-                </label>
-                <input
-                  type="number"
-                  value={formData.max_participants || 12}
-                  onChange={(e) => handleFormDataChange('max_participants', parseInt(e.target.value) || 12)}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min="1"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Délai d'accès
-                </label>
-                <input
-                  type="text"
-                  value={formData.access_delay || ''}
-                  onChange={(e) => handleFormDataChange('access_delay', e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="ex: 1 semaine"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Prérequis
-              </label>
-              <textarea
-                value={formData.prerequisites || ''}
-                onChange={(e) => handleFormDataChange('prerequisites', e.target.value)}
-                rows={2}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Prérequis nécessaires pour suivre cette formation"
-                autoComplete="off"
-              />
-            </div>
-
-            {/* Objectives */}
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <label className="block text-sm font-medium text-gray-300">
-                  Objectifs pédagogiques
-                </label>
-                <button
-                  type="button"
-                  onClick={() => addArrayField('objectives')}
-                  className="text-blue-400 hover:text-blue-300 text-sm flex items-center"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Ajouter
-                </button>
-              </div>
-              <div className="space-y-2">
-                {(formData.objectives || ['']).map((objective, index) => (
-                  <div key={index} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={objective}
-                      onChange={(e) => handleArrayFieldChange('objectives', index, e.target.value)}
-                      className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder={`Objectif ${index + 1}`}
-                    />
-                    {(formData.objectives?.length || 0) > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeArrayField('objectives', index)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Methods */}
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <label className="block text-sm font-medium text-gray-300">
-                  Méthodes pédagogiques
-                </label>
-                <button
-                  type="button"
-                  onClick={() => addArrayField('methods')}
-                  className="text-blue-400 hover:text-blue-300 text-sm flex items-center"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Ajouter
-                </button>
-              </div>
-              <div className="space-y-2">
-                {(formData.methods || ['']).map((method, index) => (
-                  <div key={index} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={method}
-                      onChange={(e) => handleArrayFieldChange('methods', index, e.target.value)}
-                      className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder={`Méthode ${index + 1}`}
-                    />
-                    {(formData.methods?.length || 0) > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeArrayField('methods', index)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Evaluation Methods */}
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <label className="block text-sm font-medium text-gray-300">
-                  Méthodes d'évaluation
-                </label>
-                <button
-                  type="button"
-                  onClick={() => addArrayField('evaluation_methods')}
-                  className="text-blue-400 hover:text-blue-300 text-sm flex items-center"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Ajouter
-                </button>
-              </div>
-              <div className="space-y-2">
-                {(formData.evaluation_methods || ['']).map((method, index) => (
-                  <div key={index} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={method}
-                      onChange={(e) => handleArrayFieldChange('evaluation_methods', index, e.target.value)}
-                      className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder={`Méthode d'évaluation ${index + 1}`}
-                    />
-                    {(formData.evaluation_methods?.length || 0) > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeArrayField('evaluation_methods', index)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Modules */}
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <label className="block text-sm font-medium text-gray-300">
-                  Modules de formation
-                </label>
-                <button
-                  type="button"
-                  onClick={addModule}
-                  className="text-blue-400 hover:text-blue-300 text-sm flex items-center"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Ajouter un module
-                </button>
-              </div>
-              <div className="space-y-4">
-                {(formData.modules || []).map((module, index) => (
-                  <div key={index} className="bg-gray-800 rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-4">
-                      <h6 className="text-white font-medium">Module {index + 1}</h6>
-                      <button
-                        type="button"
-                        onClick={() => removeModule(index)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <input
-                        type="text"
-                        value={module.title}
-                        onChange={(e) => updateModule(index, 'title', e.target.value)}
-                        className="px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Titre du module"
-                      />
-                      <input
-                        type="number"
-                        value={module.duration_hours}
-                        onChange={(e) => updateModule(index, 'duration_hours', parseInt(e.target.value) || 0)}
-                        className="px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Durée (heures)"
-                        min="0"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-2">Sujets (un par ligne)</label>
-                      <textarea
-                        value={module.topics.join('\n')}
-                        onChange={(e) => updateModule(index, 'topics', e.target.value.split('\n').filter(topic => topic.trim()))}
-                        rows={3}
-                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Sujet 1&#10;Sujet 2&#10;Sujet 3"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Type de certification
-                </label>
-                <input
-                  type="text"
-                  value={formData.certification_type || ''}
-                  onChange={(e) => setFormData({ ...formData, certification_type: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="ex: Attestation de formation"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Organisme certificateur
-                </label>
-                <input
-                  type="text"
-                  value={formData.certification_provider || ''}
-                  onChange={(e) => setFormData({ ...formData, certification_provider: e.target.value })}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="ex: DELIVERY Digital Technology"
-                />
-              </div>
-            </div>
-
-            {/* Settings */}
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h5 className="text-lg font-medium text-white mb-4">Paramètres</h5>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_active || false}
-                      onChange={(e) => handleFormDataChange('is_active', e.target.checked)}
-                      className="mr-3 rounded"
-                    />
-                    <span className="text-gray-300">Programme actif</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_featured || false}
-                      onChange={(e) => handleFormDataChange('is_featured', e.target.checked)}
-                      className="mr-3 rounded"
-                    />
-                    <span className="text-gray-300">Programme vedette</span>
-                  </label>
-                </div>
-                <div className="space-y-3">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.opco_eligible || false}
-                      onChange={(e) => handleFormDataChange('opco_eligible', e.target.checked)}
-                      className="mr-3 rounded"
-                    />
-                    <span className="text-gray-300">Éligible OPCO</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.cpf_eligible || false}
-                      onChange={(e) => handleFormDataChange('cpf_eligible', e.target.checked)}
-                      className="mr-3 rounded"
-                    />
-                    <span className="text-gray-300">Éligible CPF</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Informations d'accessibilité
-              </label>
-              <textarea
-                value={formData.accessibility_info || ''}
-                onChange={(e) => handleFormDataChange('accessibility_info', e.target.value)}
-                rows={2}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Informations sur l'accessibilité de la formation"
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="flex justify-end gap-4">
-              <button
-                type="button"
-                onClick={closeModal}
-                className="px-6 py-2 text-gray-400 hover:text-white transition-colors"
-              >
-                Annuler
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {modalMode === 'create' ? 'Créer le programme' : 'Sauvegarder'}
+          <>
+            <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-white">
+                {modalMode === 'create' ? 'Créer un Programme' : 
+                 isLoadingProgramData ? 'Chargement des données...' : 'Modifier le Programme'}
+              </h3>
+              <button onClick={closeModal} className="text-gray-400 hover:text-white">
+                <X className="h-6 w-6" />
               </button>
             </div>
-          </form>
+            
+            {isLoadingProgramData ? (
+              <div className="p-6 text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p className="text-gray-400">Chargement des données du programme...</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                {/* Basic Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      ID du Programme *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.program_id || ''}
+                      onChange={(e) => handleFormDataChange('program_id', e.target.value)}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="ex: wordpress-advanced"
+                      required
+                      disabled={modalMode === 'edit'}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Identifiant unique (non modifiable après création)</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Titre *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.title || ''}
+                      onChange={(e) => {
+                        console.log('Title changed to:', e.target.value);
+                        handleFormDataChange('title', e.target.value);
+                      }}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Titre de la formation"
+                      required
+                      autoComplete="off"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Description *
+                  </label>
+                  <textarea
+                    value={formData.description || ''}
+                    onChange={(e) => {
+                      console.log('📝 Description changed:', e.target.value.substring(0, 50) + '...');
+                      setFormData({ ...formData, description: e.target.value });
+                    }}
+                    rows={4}
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="Description détaillée de la formation..."
+                    required
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Catégorie *
+                    </label>
+                    <select
+                      value={formData.category || 'web'}
+                      onChange={(e) => handleFormDataChange('category', e.target.value)}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.slug}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Durée (heures) *
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.duration_hours || 0}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 0;
+                        console.log('Duration changed to:', value);
+                        handleFormDataChange('duration_hours', value);
+                      }}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      min="1"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Prix (€) *
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.price || 0}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value) || 0;
+                        console.log('Price changed to:', value);
+                        handleFormDataChange('price', value);
+                      }}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Niveau
+                    </label>
+                    <select
+                      value={formData.level || 'beginner'}
+                      onChange={(e) => handleFormDataChange('level', e.target.value)}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="beginner">Débutant</option>
+                      <option value="intermediate">Intermédiaire</option>
+                      <option value="advanced">Avancé</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Participants maximum
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.max_participants || 12}
+                      onChange={(e) => handleFormDataChange('max_participants', parseInt(e.target.value) || 12)}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Délai d'accès
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.access_delay || ''}
+                      onChange={(e) => handleFormDataChange('access_delay', e.target.value)}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="ex: 1 semaine"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Prérequis
+                  </label>
+                  <textarea
+                    value={formData.prerequisites || ''}
+                    onChange={(e) => handleFormDataChange('prerequisites', e.target.value)}
+                    rows={2}
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Prérequis nécessaires pour suivre cette formation"
+                    autoComplete="off"
+                  />
+                </div>
+
+                {/* Objectives */}
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="block text-sm font-medium text-gray-300">
+                      Objectifs pédagogiques
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => addArrayField('objectives')}
+                      className="text-blue-400 hover:text-blue-300 text-sm flex items-center"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Ajouter
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {(formData.objectives || ['']).map((objective, index) => (
+                      <div key={index} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={objective}
+                          onChange={(e) => handleArrayFieldChange('objectives', index, e.target.value)}
+                          className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder={`Objectif ${index + 1}`}
+                        />
+                        {(formData.objectives?.length || 0) > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeArrayField('objectives', index)}
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Methods */}
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="block text-sm font-medium text-gray-300">
+                      Méthodes pédagogiques
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => addArrayField('methods')}
+                      className="text-blue-400 hover:text-blue-300 text-sm flex items-center"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Ajouter
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {(formData.methods || ['']).map((method, index) => (
+                      <div key={index} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={method}
+                          onChange={(e) => handleArrayFieldChange('methods', index, e.target.value)}
+                          className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder={`Méthode ${index + 1}`}
+                        />
+                        {(formData.methods?.length || 0) > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeArrayField('methods', index)}
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Evaluation Methods */}
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="block text-sm font-medium text-gray-300">
+                      Méthodes d'évaluation
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => addArrayField('evaluation_methods')}
+                      className="text-blue-400 hover:text-blue-300 text-sm flex items-center"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Ajouter
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {(formData.evaluation_methods || ['']).map((method, index) => (
+                      <div key={index} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={method}
+                          onChange={(e) => handleArrayFieldChange('evaluation_methods', index, e.target.value)}
+                          className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder={`Méthode d'évaluation ${index + 1}`}
+                        />
+                        {(formData.evaluation_methods?.length || 0) > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeArrayField('evaluation_methods', index)}
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Modules */}
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="block text-sm font-medium text-gray-300">
+                      Modules de formation
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addModule}
+                      className="text-blue-400 hover:text-blue-300 text-sm flex items-center"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Ajouter un module
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    {(formData.modules || []).map((module, index) => (
+                      <div key={index} className="bg-gray-800 rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-4">
+                          <h6 className="text-white font-medium">Module {index + 1}</h6>
+                          <button
+                            type="button"
+                            onClick={() => removeModule(index)}
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <input
+                            type="text"
+                            value={module.title}
+                            onChange={(e) => updateModule(index, 'title', e.target.value)}
+                            className="px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Titre du module"
+                          />
+                          <input
+                            type="number"
+                            value={module.duration_hours}
+                            onChange={(e) => updateModule(index, 'duration_hours', parseInt(e.target.value) || 0)}
+                            className="px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Durée (heures)"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-2">Sujets (un par ligne)</label>
+                          <textarea
+                            value={module.topics.join('\n')}
+                            onChange={(e) => updateModule(index, 'topics', e.target.value.split('\n').filter(topic => topic.trim()))}
+                            rows={3}
+                            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Sujet 1&#10;Sujet 2&#10;Sujet 3"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Type de certification
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.certification_type || ''}
+                      onChange={(e) => setFormData({ ...formData, certification_type: e.target.value })}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="ex: Attestation de formation"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Organisme certificateur
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.certification_provider || ''}
+                      onChange={(e) => setFormData({ ...formData, certification_provider: e.target.value })}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="ex: DELIVERY Digital Technology"
+                    />
+                  </div>
+                </div>
+
+                {/* Settings */}
+                <div className="bg-gray-800 rounded-lg p-4">
+                  <h5 className="text-lg font-medium text-white mb-4">Paramètres</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.is_active || false}
+                          onChange={(e) => handleFormDataChange('is_active', e.target.checked)}
+                          className="mr-3 rounded"
+                        />
+                        <span className="text-gray-300">Programme actif</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.is_featured || false}
+                          onChange={(e) => handleFormDataChange('is_featured', e.target.checked)}
+                          className="mr-3 rounded"
+                        />
+                        <span className="text-gray-300">Programme vedette</span>
+                      </label>
+                    </div>
+                    <div className="space-y-3">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.opco_eligible || false}
+                          onChange={(e) => handleFormDataChange('opco_eligible', e.target.checked)}
+                          className="mr-3 rounded"
+                        />
+                        <span className="text-gray-300">Éligible OPCO</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.cpf_eligible || false}
+                          onChange={(e) => handleFormDataChange('cpf_eligible', e.target.checked)}
+                          className="mr-3 rounded"
+                        />
+                        <span className="text-gray-300">Éligible CPF</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Informations d'accessibilité
+                  </label>
+                  <textarea
+                    value={formData.accessibility_info || ''}
+                    onChange={(e) => handleFormDataChange('accessibility_info', e.target.value)}
+                    rows={2}
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Informations sur l'accessibilité de la formation"
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-4">
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="px-6 py-2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {modalMode === 'create' ? 'Créer le programme' : 'Sauvegarder'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </>
         )}
       </motion.div>
     </div>
