@@ -113,50 +113,36 @@ const TrainingProgramsManagement = () => {
     const editData = {
       program_id: program.program_id || program.id || program.name || '',
       title: program.title || program.name || '',
-      description: program.description || '',
-      category: program.category || 'web',
-      duration_hours: Number(program.duration_hours) || 0,
-      price: Number(program.price) || 0,
-      level: program.level || 'beginner',
-      max_participants: Number(program.max_participants) || 12,
-      prerequisites: program.prerequisites || 'Aucun prérequis',
-      objectives: Array.isArray(program.objectives) && program.objectives.length > 0 ? 
-        [...program.objectives] : 
-        ['Objectif principal de la formation'],
-      methods: Array.isArray(program.methods) && program.methods.length > 0 ? 
-        [...program.methods] : 
-        ['Formation pratique avec exercices'],
-      evaluation_methods: Array.isArray(program.evaluation_methods) && program.evaluation_methods.length > 0 ? 
-        [...program.evaluation_methods] : 
-        ['QCM d\'évaluation'],
-      accessibility_info: program.accessibility_info || 'Formation accessible aux personnes en situation de handicap',
-      access_delay: program.access_delay || '1 semaine',
-      is_active: Boolean(program.is_active),
-      is_featured: Boolean(program.is_featured),
-      opco_eligible: Boolean(program.opco_eligible),
-      cpf_eligible: Boolean(program.cpf_eligible),
-      certification_type: program.certification_type || '',
-      certification_provider: program.certification_provider || '',
-      modules: Array.isArray(program.modules) && program.modules.length > 0 ? 
-        [...program.modules] : 
-        [{
-          title: 'Module 1',
-          duration_hours: Math.floor((program.duration_hours || 35) / 3),
-          topics: ['Sujet 1', 'Sujet 2'],
-          order: 1
-        }]
-    };
-    
-    console.log('Edit data prepared:', editData);
-    setFormData(editData);
-    setSelectedProgram(program);
-    setModalMode('edit');
-    setShowModal(true);
-    
-    // Force a re-render to ensure form fields are populated
-    setTimeout(() => {
-      console.log('📊 Form data after timeout:', formData);
-    }, 100);
+    try {
+      console.log('🔄 Opening edit modal for program:', program);
+      setIsLoadingProgramData(true);
+      
+      // Load complete program data from API
+      const fullProgramData = await TrainingProgramsApiService.getProgram(program.program_id || program.id);
+      
+      if (!fullProgramData) {
+        console.warn('⚠️ Could not load full program data, using existing data');
+        // Fallback to existing program data
+        populateFormWithProgramData(program);
+      } else {
+        console.log('✅ Loaded full program data from API:', fullProgramData);
+        populateFormWithProgramData(fullProgramData);
+      }
+      
+      setSelectedProgram(fullProgramData || program);
+      setModalMode('edit');
+      setShowModal(true);
+      
+    } catch (error) {
+      console.error('❌ Error loading program data for edit:', error);
+      // Fallback to existing program data
+      populateFormWithProgramData(program);
+      setSelectedProgram(program);
+      setModalMode('edit');
+      setShowModal(true);
+    } finally {
+      setIsLoadingProgramData(false);
+    }
   };
 
   const openViewModal = (program: TrainingProgram) => {
