@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { Search, Filter, Download, ExternalLink, Clock, Users, Euro, Star, Award, CheckCircle, BookOpen, GraduationCap, Target, Code, PenTool, Languages, Car, Apple, Leaf, ShoppingCart, BarChart3, Globe, Utensils, Shield, Building2, Heart, Briefcase, FileText, Calendar, MapPin, Phone, Mail, User, ChevronDown, ChevronUp, X, Send, Eye, CreditCard as Edit, Trash2, Plus, Settings, Laptop, Database, Server, Cloud, Smartphone, Monitor, Palette, FileSpreadsheet, MessageSquare, HardHat, Zap, Briefcase as iefcase, Layers, TrendingUp, Camera, CheckCircle2, Accessibility } from 'lucide-react';
+import { Search, Filter, Download, ExternalLink, Clock, Users, Euro, Star, Award, CheckCircle, BookOpen, GraduationCap, Target, Code, PenTool, Languages, Car, Apple, Leaf, ShoppingCart, BarChart3, Globe, Utensils, Shield, Building2, Heart, Briefcase, FileText, Calendar, MapPin, Phone, Mail, User, ChevronDown, ChevronUp, X, Send, Eye, CreditCard as Edit, Trash2, Plus, Settings, Laptop, Database, Server, Cloud, Smartphone, Monitor, Palette, FileSpreadsheet, MessageSquare, HardHat, Zap, Briefcase as iefcase, Layers, TrendingUp, Camera, CheckCircle2, Accessibility, Tag, Grid3X3, List } from 'lucide-react';
 import { TrainingProgramsApiService } from '../services/trainingProgramsApi';
 import {useTrainingPrograms} from "../hooks/useTrainingPrograms.ts";
 import {useTrainingDocuments} from "../hooks/useTrainingDocuments.ts";
@@ -11,6 +11,7 @@ const Training = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedProgram, setSelectedProgram] = useState();
+    const [showCategories, setShowCategories] = useState(false);
     const { documents, loading: documentsLoading, downloadDocument , } = useTrainingPrograms();
     const { documents : docs, downloadDocument : downloadTraningDocument} = useTrainingDocuments();
     const { programs, loading: programsLoading, error: programsError } = useTrainingPrograms();
@@ -618,12 +619,30 @@ const Training = () => {
         }
     };
 
+    // Get icon component for category
+    const getCategoryIcon = (iconName: string) => {
+        const iconMap = {
+            'code': <Code className="h-6 w-6" />,
+            'palette': <PenTool className="h-6 w-6" />,
+            'file-text': <FileText className="h-6 w-6" />,
+            'globe': <Globe className="h-6 w-6" />,
+            'shield': <Shield className="h-6 w-6" />,
+            'users': <Briefcase className="h-6 w-6" />,
+            'briefcase': <ShoppingCart className="h-6 w-6" />,
+            'heart': <Heart className="h-6 w-6" />,
+            'book': <BookOpen className="h-6 w-6" />,
+            'folder': <FileText className="h-6 w-6" />
+        };
+        return iconMap[iconName] || <BookOpen className="h-6 w-6" />;
+    };
+
     // Add "all" category to the fetched categories
     const allCategories = [
         { id: 'all', name: 'Toutes les formations', slug: 'all', color: '#6b7280', icon: 'book-open' },
         ...categories
     ];
 
+    // Filter programs based on search and category
     const filteredPrograms = programs.filter((program) => {
         const matchesSearch = program.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             program.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -631,6 +650,14 @@ const Training = () => {
         return matchesSearch && matchesCategory;
     });
 
+    // Get programs count by category
+    const getProgramsCountByCategory = (categorySlug: string) => {
+        return programs.filter(program => program.category === categorySlug).length;
+    };
+
+    const toggleCategories = () => {
+        setShowCategories(!showCategories);
+    };
 
     console.log('Programs------------------------------>',programs)
     const currentProgram =  selectedProgram;
@@ -696,492 +723,4 @@ const Training = () => {
     const isLoadingDocs = loadingDocuments[selectedProgram?.program_id || ''] || false;
 
     // Show loading state
-    if (programsLoading || categoriesLoading) {
-        return (
-            <section id="training" className="section bg-gradient-to-b from-gray-900 to-primary-950">
-                <div className="container">
-                    <div className="text-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mx-auto mb-4"></div>
-                        <p className="text-gray-300">Chargement des formations...</p>
-                    </div>
-                </div>
-            </section>
-        );
-    }
-
-    return (
-        <section id="training" className="section bg-gradient-to-b from-gray-900 to-primary-950">
-            <div ref={ref} className="container relative z-10">
-                <div className="text-center mb-12">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="mb-4"
-                    >
-                        <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-900/20 border border-green-500/20">
-                            <GraduationCap className="h-5 w-5 text-green-400 mr-2" />
-                            <span className="text-green-400">Formation Certifiée Qualiopi - Prise en charge OPCO 100%</span>
-                        </div>
-                    </motion.div>
-
-                    <motion.h2
-                        className="text-2xl md:text-3xl font-bold mb-4 text-white"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                    >
-                        Formations Professionnelles
-                    </motion.h2>
-                    <motion.p
-                        className="text-lg text-gray-300 max-w-2xl mx-auto"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                    >
-                        Développez vos compétences avec nos {Object.keys(staticPrograms).length} formations certifiées - Financement intégral OPCO
-                    </motion.p>
-                </div>
-
-                {/* Search and Filters */}
-                <div className="mb-8 space-y-4">
-                    <div className="max-w-md mx-auto">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Rechercher une formation..."
-                                className="w-full px-4 py-2 pl-10 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                            />
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        </div>
-                    </div>
-
-                    <div className="flex flex-wrap justify-center gap-2">
-                        {allCategories.map((category) => (
-                            <button
-                                key={category.slug || category.id}
-                                onClick={() => setSelectedCategory(category.id)}
-                                className={`px-4 py-2 rounded-full text-sm transition-all ${
-                                    selectedCategory === category.id
-                                        ? 'bg-primary-600 text-white'
-                                        : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
-                                }`}
-                            >
-                                {category.name} ({Object.values(staticPrograms).filter(p => category.id === 'all' || p.category === category.id).length})
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Programs Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-                    {filteredPrograms.map((program, key) => (
-                        <motion.div
-                            key={program.id || key}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6 }}
-                            className={`card p-6 cursor-pointer transition-all hover:scale-105 ${
-                                selectedProgram?.program_id === program.program_id ? 'ring-2 ring-primary-500 bg-primary-900/20' : ''
-                            }`}
-                            onClick={() => {console.log(program);setSelectedProgram(program)}}
-                        >
-                            <div className="flex items-center mb-4">
-                                <div className="bg-white/10 p-3 rounded-lg mr-3">
-                                    {program.icon}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="text-lg font-bold text-white truncate">{program.title}</h3>
-                                    <p className="text-primary-400 text-sm">{program.duration}</p>
-                                </div>
-                            </div>
-                            <p className="text-gray-300 text-sm mb-4 line-clamp-2">{program.description}</p>
-                            <div className="flex items-center justify-between">
-                                <span className="text-white font-bold text-sm">{program.price}</span>
-                                <div className="flex items-center text-xs text-green-400">
-                                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                                    <span>100% OPCO</span>
-                                </div>
-                            </div>
-
-                            {docs.map((doc) => {
-
-                                if(doc.category === 'program'  && doc.program_name === program.title){
-
-                                    console.log('doc',doc);
-                                    return <div className="mt-4 pt-4 border-t border-white/10">
-                                        <button
-                                            onClick={(e) => {
-                                                console.log(doc)
-                                                // Use the correct API endpoint for training programs
-                                                const baseUrl = import.meta.env.VITE_API_URL || '';
-                                                const downloadUrl = `${baseUrl}/api/training-programs/${selectedProgram?.program_id}/documents/${doc.id}/download`;
-                                                window.open(downloadUrl, '_blank');
-                                            }}
-                                            className="flex items-center text-xs text-primary-400 hover:text-primary-300 transition-colors"
-                                        >
-                                            <Download className="h-4 w-4 mr-2" />
-                                            Télécharger PDF
-                                        </button>
-                                    </div>
-                                }
-
-                                return null;
-                            })}
-                        </motion.div>
-                    ))}
-                </div>
-
-                {/* Selected Program Details */}
-                {currentProgram && (
-                    <motion.div
-                        key={selectedProgram?.program_id || ''}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12"
-                    >
-                        <div className="lg:col-span-1">
-                            <div className="card p-6">
-                                <div className="mb-6">
-                                    <h3 className="text-xl font-bold text-white mb-3">
-                                        {currentProgram.title}
-                                    </h3>
-                                    <p className="text-gray-300 text-sm mb-4">
-                                        {currentProgram.description}
-                                    </p>
-                                    <div className="space-y-3">
-                                        <div className="flex items-center text-gray-300 text-sm">
-                                            <Clock className="h-4 w-4 mr-2 text-primary-400" />
-                                            <span>{currentProgram.duration}</span>
-                                        </div>
-                                        <div className="flex items-center text-gray-300 text-sm">
-                                            <Users className="h-4 w-4 mr-2 text-primary-400" />
-                                            <span>12 participants maximum</span>
-                                        </div>
-                                        {currentProgram.accessDelay && (
-                                            <div className="flex items-center text-gray-300 text-sm">
-                                                <Clock className="h-4 w-4 mr-2 text-primary-400" />
-                                                <span>Délai d'accès : {currentProgram.accessDelay}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="bg-green-900/50 rounded-lg p-4 mb-6">
-                                    <div className="flex items-center mb-2">
-                                        <CheckCircle2 className="h-4 w-4 text-green-400 mr-2" />
-                                        <span className="text-green-400 font-medium text-sm">
-                                            Prise en charge OPCO 100%
-                                        </span>
-                                    </div>
-                                    <p className="text-2xl font-bold text-white">
-                                        {currentProgram.price}
-                                    </p>
-                                    <p className="text-green-400 text-sm font-medium">
-                                        Reste à charge : 0€
-                                    </p>
-                                </div>
-
-                                <a
-                                    href="https://app.deliverydigital.fr/student/signup"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="btn btn-primary w-full text-sm"
-                                >
-                                    S'inscrire
-                                </a>
-                            </div>
-
-                            {/* Additional info for specific programs */}
-                            {(selectedProgram?.program_id === 'hygiene-security' || selectedProgram?.program_id === 'hygiene-security-afest' || selectedProgram?.program_id === 'conduite-securitaire' || selectedProgram?.program_id === 'autocad-sketchup-revit') && currentProgram.prerequisites && (
-                                <div className="card p-6 mt-6">
-                                    <h4 className="text-lg font-bold text-white mb-4">Informations complémentaires</h4>
-
-                                    <div className="space-y-4">
-                                        <div>
-                                            <h5 className="text-sm font-medium text-white mb-2">Prérequis</h5>
-                                            <p className="text-gray-300 text-sm">{currentProgram.prerequisites}</p>
-                                        </div>
-
-                                        {currentProgram.objectives && (
-                                            <div>
-                                                <h5 className="text-sm font-medium text-white mb-2">Objectifs pédagogiques</h5>
-                                                <ul className="space-y-2">
-                                                    {currentProgram.objectives.map((objective, index) => (
-                                                        <li key={index} className="flex items-start text-gray-300 text-sm">
-                                                            <CheckCircle2 className="h-4 w-4 mr-2 mt-0.5 text-primary-400" />
-                                                            <span>{objective}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-
-                                        {currentProgram.methods && (
-                                            <div>
-                                                <h5 className="text-sm font-medium text-white mb-2">Méthodes pédagogiques</h5>
-                                                <ul className="space-y-2">
-                                                    {currentProgram.methods.map((method, index) => (
-                                                        <li key={index} className="flex items-start text-gray-300 text-sm">
-                                                            <CheckCircle2 className="h-4 w-4 mr-2 mt-0.5 text-primary-400" />
-                                                            <span>{method}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-
-                                        {currentProgram.evaluationMethods && (
-                                            <div>
-                                                <h5 className="text-sm font-medium text-white mb-2">Modalités d'évaluation</h5>
-                                                <ul className="space-y-2">
-                                                    {currentProgram.evaluationMethods.map((item, index) => (
-                                                        <li key={index} className="flex items-start text-gray-300 text-sm">
-                                                            <CheckCircle2 className="h-4 w-4 mr-2 mt-0.5 text-primary-400" />
-                                                            <span>{item}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-
-                                        {currentProgram.accessibility && (
-                                            <div>
-                                                <h5 className="text-sm font-medium text-white mb-2">Accessibilité</h5>
-                                                <p className="text-gray-300 text-sm">{currentProgram.accessibility}</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Downloads Section */}
-                            {false && documents.length > 0 && (
-                                <div className="card p-6 mt-6">
-                                    <h4 className="text-lg font-bold text-white mb-4 flex items-center">
-                                        <Download className="h-5 w-5 mr-2" />
-                                        Documents à télécharger
-                                    </h4>
-                                    {documentsLoading ? (
-                                        <div className="text-center py-4">
-                                            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary-500 mx-auto"></div>
-                                            <p className="mt-2 text-gray-400 text-sm">Chargement des documents...</p>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-3">
-                                            {documents.map((document) => (
-                                                <button
-                                                    key={document.id}
-                                                    onClick={() => downloadDocument(document.id)}
-                                                    className="w-full flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group"
-                                                >
-                                                    <div className="flex items-center">
-                                                        <div className="bg-red-500/20 p-2 rounded-lg mr-3">
-                                                            <Download className="h-4 w-4 text-red-400" />
-                                                        </div>
-                                                        <div className="text-left">
-                                                            <span className="text-white text-sm font-medium block">{document.title}</span>
-                                                            {document.description && (
-                                                                <span className="text-gray-400 text-xs">{document.description}</span>
-                                                            )}
-                                                            <div className="flex items-center mt-1 space-x-2">
-                                                                <span className="text-gray-500 text-xs">
-                                                                    {(document.file_size / 1024 / 1024).toFixed(1)} MB
-                                                                </span>
-                                                                <span className="text-gray-500 text-xs">•</span>
-                                                                <span className="text-gray-500 text-xs">
-                                                                    {document.download_count} téléchargements
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <Download className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors" />
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Fallback to static downloads if no API documents */}
-                            {false && documents.length === 0 && !documentsLoading && staticPrograms[selectedProgram].downloads && staticPrograms[selectedProgram?.program_id].downloads.length > 0 && (
-                                <div className="card p-6 mt-6">
-                                    <h4 className="text-lg font-bold text-white mb-4 flex items-center">
-                                        <Download className="h-5 w-5 mr-2" />
-                                        Documents à télécharger
-                                    </h4>
-                                    <div className="space-y-3">
-                                        {staticPrograms[selectedProgram?.program_id].downloads.map((download, index) => (
-                                            <a
-                                                key={index}
-                                                href={download.url}
-                                                download
-                                                className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group"
-                                            >
-                                                <div className="flex items-center">
-                                                    <div className="bg-red-500/20 p-2 rounded-lg mr-3">
-                                                        <Download className="h-4 w-4 text-red-400" />
-                                                    </div>
-                                                    <span className="text-white text-sm font-medium">{download.name}</span>
-                                                </div>
-                                                <Download className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors" />
-                                            </a>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Dynamic Documents Section */}
-                            <div className="card p-6 mt-6">
-                                <h4 className="text-lg font-bold text-white mb-4 flex items-center">
-                                    <Download className="h-5 w-5 mr-2" />
-                                    Documents à télécharger
-                                </h4>
-                                
-                                {isLoadingDocs ? (
-                                    <div className="text-center py-8">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                                        <p className="text-gray-600">Chargement des documents...</p>
-                                    </div>
-                                ) : programDocs.length > 0 ? (
-                                    <div className="space-y-3">
-                                        {programDocs.map((doc) => (
-                                            <div key={doc.id} className="p-4 bg-white/5 rounded-lg">
-                                                <h5 className="font-medium text-white mb-2">{doc.title}</h5>
-                                                {doc.description && (
-                                                    <p className="text-sm text-gray-600 mb-2">{doc.description}</p>
-                                                )}
-                                                <div className="flex items-center justify-between">
-                                                    <div className="text-sm text-gray-500">
-                                                        <span>PDF • {(doc.file_size / 1024).toFixed(0)} KB</span>
-                                                        {doc.download_count > 0 && (
-                                                            <span className="ml-2">• {doc.download_count} téléchargements</span>
-                                                        )}
-                                                    </div>
-                                                    <button
-                                                        className="btn btn-sm btn-primary"
-                                                        onClick={() => handleDownloadDocument(doc.id, selectedProgram!)}
-                                                    >
-                                                        <Download className="h-4 w-4 mr-1" />
-                                                        Télécharger
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-8 text-gray-500">
-                                        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                                        <p>Aucun document disponible pour cette formation</p>
-                                        <p className="text-sm mt-2">Les documents seront ajoutés prochainement</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        <div className="lg:col-span-2">
-                            <div className="space-y-4">
-                                {currentProgram?.modules?.map((module, index) => (
-                                    <div key={index} className="card p-4">
-                                        <div className="flex items-start">
-                                            <div className="bg-white/10 p-2 rounded-lg mr-3">
-                                                <BookOpen className="h-6 w-6" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <h4 className="text-lg font-bold text-white">
-                                                        {module.title}
-                                                    </h4>
-                                                    <span className="text-primary-400 font-medium text-sm">
-                                                        {module.duration}
-                                                    </span>
-                                                </div>
-                                                <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                    {module.topics.map((topic, topicIndex) => (
-                                                        <li
-                                                            key={topicIndex}
-                                                            className="flex items-center text-gray-300 text-sm"
-                                                        >
-                                                            <CheckCircle2 className="h-3 w-3 mr-2 text-primary-400" />
-                                                            {topic}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-
-                <div className="mt-12 card p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                            <div className="flex items-center mb-4">
-                                <Accessibility className="h-6 w-6 text-primary-400 mr-2" />
-                                <h3 className="text-xl font-bold text-white">Accessibilité</h3>
-                            </div>
-                            <p className="text-gray-300 mb-4">
-                                Toutes nos formations sont accessibles aux personnes en situation de handicap. Notre équipe est formée pour adapter nos programmes et méthodes pédagogiques selon vos besoins spécifiques.
-                            </p>
-                            <p className="text-gray-300">
-                                En cas de handicap, merci de nous contacter pour que nous puissions évaluer ensemble les meilleures adaptations possibles.
-                            </p>
-                        </div>
-
-                        <div>
-                            <div className="flex items-center mb-4">
-                                <Mail className="h-6 w-6 text-primary-400 mr-2" />
-                                <h3 className="text-xl font-bold text-white">Contact</h3>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="flex items-center text-gray-300">
-                                    <Mail className="h-5 w-5 mr-3 text-primary-400" />
-                                    <a
-                                        href="mailto:contact@deliverydigital.fr"
-                                        className="hover:text-white transition-colors"
-                                    >
-                                        contact@deliverydigital.fr
-                                    </a>
-                                </div>
-                                <div className="flex items-center text-gray-300">
-                                    <Phone className="h-5 w-5 mr-3 text-primary-400" />
-                                    <a
-                                        href="tel:0749707773"
-                                        className="hover:text-white transition-colors"
-                                    >
-                                        07 49 70 77 73
-                                    </a>
-                                </div>
-                            </div>
-                            <p className="mt-4 text-sm text-gray-400">
-                                Notre équipe est à votre disposition pour répondre à toutes vos questions concernant l'accessibilité et l'adaptation de nos formations.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    );
-};
-
-// Helper function to get emoji icons for categories
-const getIconForCategory = (iconName: string) => {
-    const iconMap = {
-        'code': '💻',
-        'palette': '🎨',
-        'file-text': '📊',
-        'globe': '🌍',
-        'shield': '🛡️',
-        'users': '👥',
-        'briefcase': '💼',
-        'heart': '❤️'
-    };
-    return iconMap[iconName] || '📚';
-};
-
-export default Training;
+    if (program
