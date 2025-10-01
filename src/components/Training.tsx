@@ -8,7 +8,8 @@ import {
   Code, Palette, FileText, Globe, Shield, Briefcase, 
   Heart, GraduationCap, BookOpen, Target, ChevronDown, 
   ChevronUp, Download, Mail, Phone, Building2, HelpCircle,
-  Utensils, Leaf, Car, Apple, BarChart3, PenTool, Languages
+  Utensils, Leaf, Car, Apple, BarChart3, PenTool, Languages,
+  AlertTriangle
 } from 'lucide-react';
 import { staticPrograms, categoryColors, categoryIcons } from '../constants/trainingPrograms';
 import { useCategories } from '../hooks/useCategories';
@@ -415,12 +416,102 @@ const Training = () => {
                       </div>
                     )}
 
+                    {/* Training Documents Section */}
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                        {t('training.modal.documents', 'Documents de formation')}
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex items-center">
+                            <FileText className="h-5 w-5 text-blue-600 mr-3" />
+                            <div>
+                              <p className="font-medium text-blue-900">Programme détaillé</p>
+                              <p className="text-sm text-blue-700">Contenu complet de la formation</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => downloadDocument('program', selectedProgram.id)}
+                            className="text-blue-600 hover:text-blue-800 transition-colors"
+                          >
+                            <Download className="h-5 w-5" />
+                          </button>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                          <div className="flex items-center">
+                            <FileText className="h-5 w-5 text-green-600 mr-3" />
+                            <div>
+                              <p className="font-medium text-green-900">Guide pratique</p>
+                              <p className="text-sm text-green-700">Exercices et ressources</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => downloadDocument('guide', selectedProgram.id)}
+                            className="text-green-600 hover:text-green-800 transition-colors"
+                          >
+                            <Download className="h-5 w-5" />
+                          </button>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
+                          <div className="flex items-center">
+                            <Award className="h-5 w-5 text-purple-600 mr-3" />
+                            <div>
+                              <p className="font-medium text-purple-900">Modèle de certificat</p>
+                              <p className="text-sm text-purple-700">Aperçu du certificat de fin de formation</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => downloadDocument('certificate', selectedProgram.id)}
+                            className="text-purple-600 hover:text-purple-800 transition-colors"
+                          >
+                            <Download className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Additional Program Information */}
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                        {t('training.modal.additionalInfo', 'Informations complémentaires')}
+                      </h3>
+                      <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">{t('training.modal.programId', 'ID Programme')}</span>
+                          <span className="font-mono text-sm bg-gray-200 px-2 py-1 rounded">{selectedProgram.id}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">{t('training.modal.category', 'Catégorie')}</span>
+                          <span className="font-medium text-gray-900 capitalize">{selectedProgram.category}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">{t('training.modal.level', 'Niveau')}</span>
+                          <span className={`px-2 py-1 rounded text-sm font-medium ${getLevelBadgeColor(selectedProgram.level)}`}>
+                            {getLevelText(selectedProgram.level)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">{t('training.modal.lastUpdated', 'Dernière mise à jour')}</span>
+                          <span className="text-gray-900">
+                            {selectedProgram.updated_at ? new Date(selectedProgram.updated_at).toLocaleDateString('fr-FR') : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
                     {selectedProgram.prerequisites && (
                       <div className="mb-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-3">
                           {t('training.modal.prerequisites', 'Prérequis')}
                         </h3>
-                        <p className="text-gray-600">{selectedProgram.prerequisites}</p>
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                          <div className="flex items-start">
+                            <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" />
+                            <p className="text-yellow-800">{selectedProgram.prerequisites}</p>
+                          </div>
+                        </div>
                       </div>
                     )}
 
@@ -429,13 +520,38 @@ const Training = () => {
                         <h3 className="text-lg font-semibold text-gray-900 mb-3">
                           {t('training.modal.accessibility', 'Accessibilité')}
                         </h3>
-                        <p className="text-gray-600">{selectedProgram.accessibility_info}</p>
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <div className="flex items-start">
+                            <Users className="h-5 w-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+                            <p className="text-blue-800">{selectedProgram.accessibility_info}</p>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
 
                   <div className="lg:col-span-1">
                     <div className="bg-gray-50 rounded-xl p-6 sticky top-6">
+                      {/* Program Summary Card */}
+                      <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
+                        <div className="text-center mb-4">
+                          <div 
+                            className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center"
+                            style={{ backgroundColor: `${categoryColors[selectedProgram.category] || '#3b82f6'}20` }}
+                          >
+                            {(() => {
+                              const IconComponent = getIconComponent(categoryIcons[selectedProgram.category] || 'BookOpen');
+                              return <IconComponent 
+                                className="h-8 w-8" 
+                                style={{ color: categoryColors[selectedProgram.category] || '#3b82f6' }}
+                              />;
+                            })()}
+                          </div>
+                          <h4 className="font-bold text-gray-900">{selectedProgram.title}</h4>
+                          <p className="text-sm text-gray-600 mt-1">{selectedProgram.category}</p>
+                        </div>
+                      </div>
+
                       <div className="space-y-4 mb-6">
                         <div className="flex items-center justify-between">
                           <span className="text-gray-600">{t('training.modal.duration', 'Durée')}</span>
@@ -461,6 +577,12 @@ const Training = () => {
                           <span className="text-gray-600">{t('training.modal.certification', 'Certification')}</span>
                           <span className="font-semibold text-sm">{selectedProgram.certification_type || t('training.defaultCertification', 'Attestation de formation')}</span>
                         </div>
+                        {selectedProgram.certification_provider && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-600">{t('training.modal.certificationProvider', 'Organisme certificateur')}</span>
+                            <span className="font-semibold text-sm">{selectedProgram.certification_provider}</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Eligibility badges */}
@@ -485,6 +607,29 @@ const Training = () => {
                         )}
                       </div>
 
+                      {/* Quick Stats */}
+                      <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
+                        <h4 className="font-medium text-gray-900 mb-3">{t('training.modal.quickStats', 'Statistiques')}</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-600">Modules</span>
+                            <span className="font-medium">{selectedProgram.modules?.length || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-600">Objectifs</span>
+                            <span className="font-medium">{selectedProgram.objectives?.length || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-600">Méthodes</span>
+                            <span className="font-medium">{selectedProgram.methods?.length || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-600">Évaluations</span>
+                            <span className="font-medium">{selectedProgram.evaluation_methods?.length || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="space-y-3">
                         <a
                           href="mailto:contact@deliverydigital.fr"
@@ -500,6 +645,13 @@ const Training = () => {
                           <Phone className="h-5 w-5 mr-2" />
                           {t('training.modal.call', 'Nous appeler')}
                         </a>
+                        <button
+                          onClick={() => window.open('https://app.deliverydigital.fr/student/signup', '_blank')}
+                          className="btn btn-secondary w-full"
+                        >
+                          <ExternalLink className="h-5 w-5 mr-2" />
+                          {t('training.modal.register', 'S\'inscrire en ligne')}
+                        </button>
                       </div>
 
                       <div className="mt-6 pt-6 border-t border-gray-200">
@@ -510,6 +662,10 @@ const Training = () => {
                         <div className="flex items-center text-sm text-gray-500">
                           <HelpCircle className="h-4 w-4 mr-2" />
                           <span>{selectedProgram.accessibility_info || t('training.defaultAccessibility', 'Accessible aux personnes handicapées')}</span>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-500 mt-2">
+                          <Clock className="h-4 w-4 mr-2" />
+                          <span>{t('training.modal.accessDelay', 'Délai d\'accès')}: {selectedProgram.access_delay || '1 semaine'}</span>
                         </div>
                       </div>
                     </div>
@@ -522,6 +678,18 @@ const Training = () => {
       </AnimatePresence>
     </section>
   );
+};
+
+// Helper function to download training documents
+const downloadDocument = (type: string, programId: string) => {
+  // This would typically make an API call to download the document
+  console.log(`Downloading ${type} document for program ${programId}`);
+  
+  // For demo purposes, show an alert
+  alert(`Téléchargement du document "${type}" pour le programme ${programId}`);
+  
+  // In a real implementation, this would be:
+  // TrainingProgramsApiService.downloadDocument(documentId, programId);
 };
 
 export default Training;
