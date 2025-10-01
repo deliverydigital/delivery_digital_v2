@@ -125,9 +125,15 @@ router.get('/', validatePagination, async (req, res) => {
   try {
     const { page = 1, limit = 50, category, search, active_only } = req.query;
     const skip = (page - 1) * limit;
+    
+    console.log('📊 Training programs request received:', {
+      page, limit, category, search, active_only,
+      query: req.query
+    });
 
     // Check if MongoDB is available
     if (!isMongoAvailable()) {
+      console.log('⚠️ MongoDB not available, returning fallback data');
       // Return fallback data when MongoDB is not available
       const fallbackPrograms = [
         { id: 'wordpress', name: 'WordPress' },
@@ -165,73 +171,138 @@ router.get('/', validatePagination, async (req, res) => {
     }
 
     // Build query
-    const query = {};
+    let query = {};
     
-    // Only filter by active status if explicitly requested
-    // For admin users, show all programs by default unless active_only is specifically set to 'true'
-    if (active_only === 'true') {
-      query.is_active = true;
-    } else if (active_only === 'false') {
-      query.is_active = false;
-    }
-    // If active_only is not specified or is 'all', don't filter by is_active
-
-    if (category) {
-      query.category = category;
-    }
-
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
-      ];
-    }
-
-    console.log('📊 Training programs query:', query);
-    console.log('📊 Query parameters:', { page, limit, category, search, active_only });
-    const programs = await TrainingProgram.find(query)
-      .select('program_id title modules description category duration_hours price level max_participants is_featured opco_eligible cpf_eligible certification_type')
-      .skip(skip)
-      .limit(parseInt(limit))
-      .sort({ is_featured: -1, title: 1 });
-
-    console.log('📊 Found programs:', programs.length);
-    const total = await TrainingProgram.countDocuments(query);
-
-    res.json({
-      success: true,
-      data: {
-        programs: programs.map(program => ({
-          id: program.program_id,
-          name: program.title,
-          title: program.title,
-          description: program.description,
-          category: program.category,
-          duration_hours: program.duration_hours,
-          price: program.price,
-          level: program.level,
-          max_participants: program.max_participants,
-          is_featured: program.is_featured,
-          is_active: program.is_active,
-          opco_eligible: program.opco_eligible,
-          cpf_eligible: program.cpf_eligible,
-          certification_type: program.certification_type,
-          modules : program.modules
-        })),
-        pagination: {
-          current_page: parseInt(page),
-          total_pages: Math.ceil(total / limit),
-          total_items: total,
-          items_per_page: parseInt(limit)
-        }
+    try {
+      // Handle active_only parameter
+      if (active_only === 'true') {
+        query.is_active = true;
+        console.log('📊 Filtering for active programs only');
+      } else if (active_only === 'false') {
+        query.is_active = false;
+        console.log('📊 Filtering for inactive programs only');
+      } else {
+        console.log('📊 Showing all programs (active and inactive)');
       }
-    });
+
+      if (category) {
+        query.category = category;
+        console.log('📊 Filtering by category:', category);
+      }
+
+      if (search) {
+        query.$or = [
+          { title: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } }
+        ];
+        console.log('📊 Searching for:', search);
+      }
+
+      console.log('📊 Final MongoDB query:', JSON.stringify(query, null, 2));
+
+      const programs = await TrainingProgram.find(query)
+        .select('program_id title description category duration_hours price level max_participants is_active is_featured opco_eligible cpf_eligible certification_type modules')
+        .skip(skip)
+        .limit(parseInt(limit))
+        .sort({ is_featured: -1, title: 1 });
+
+      console.log('📊 Found programs from database:', programs.length);
+      
+      if (programs.length > 0) {
+        console.log('📊 Sample program data:', {
+          id: programs[0]._id,
+          program_id: programs[0].program_id,
+          title: programs[0].title,
+          is_active: programs[0].is_active
+        });
+      }
+
+      const total = await TrainingProgram.countDocuments(query);
+      console.log('📊 Total programs matching query:', total);
+
+      const responseData = {
+        success: true,
+        data: {
+          programs: programs.map(program => ({
+            id: program.program_id,
+            name: program.title,
+            title: program.title,
+            description: program.description,
+            category: program.category,
+            duration_hours: program.duration_hours,
+            price: program.price,
+            level: program.level,
+            max_participants: program.max_participants,
+            prerequisites: program.prerequisites,
+            objectives: program.objectives || [],
+            methods: program.methods || [],
+            evaluation_methods: program.evaluation_methods || [],
+            accessibility_info: program.accessibility_info,
+            access_delay: program.access_delay,
+            is_active: program.is_active,
+            is_featured: program.is_featured || false,
+            opco_eligible: program.opco_eligible !== undefined ? program.opco_eligible : true,
+            cpf_eligible: program.cpf_eligible || false,
+            certification_type: program.certification_type || '',
+            certification_provider: program.certification_provider || '',
+            modules: program.modules || [],
+            created_at: program.createdAt,
+            updated_at: program.updatedAt
+          })),
+          pagination: {
+            current_page: parseInt(page),
+            total_pages: Math.ceil(total / limit),
+            total_items: total,
+            items_per_page: parseInt(limit)
+          }
+        }
+      };
+
+      console.log('📊 Sending response with programs:', responseData.data.programs.length);
+      res.json(responseData);
+
+    } catch (dbError) {
+      console.error('❌ Database query error:', dbError);
+      
+      // Return fallback data on database error
+      console.log('📊 Database error, returning fallback data');
+      const fallbackPrograms = this.getFallbackPrograms();
+      
+      res.json({
+        success: true,
+        data: {
+          programs: fallbackPrograms,
+          pagination: {
+            current_page: 1,
+            total_pages: 1,
+            total_items: fallbackPrograms.length,
+            items_per_page: fallbackPrograms.length
+          }
+        }
+      });
+    }
 
   } catch (error) {
     console.error('Get training programs error:', error);
-    res.status(500).json({
+    
+    // Return fallback data instead of error to prevent frontend crashes
+    console.log('📊 Main catch block, returning fallback data');
+    const fallbackPrograms = [
+      { id: 'wordpress', name: 'WordPress', program_id: 'wordpress', title: 'WordPress', description: 'Créez et gérez des sites web professionnels', category: 'web', duration_hours: 35, price: 1200, level: 'beginner', max_participants: 12, is_active: true, is_featured: true, opco_eligible: true, cpf_eligible: false, objectives: [], methods: [], evaluation_methods: [], modules: [], created_at: new Date(), updated_at: new Date() }
+    ];
+    
+    res.json({
       success: false,
-      error: 'Failed to fetch training programs'
+      error: 'Database error, using fallback data',
+      data: {
+        programs: fallbackPrograms,
+        pagination: {
+          current_page: 1,
+          total_pages: 1,
+          total_items: fallbackPrograms.length,
+          items_per_page: fallbackPrograms.length
+        }
+      }
     });
   }
 });
