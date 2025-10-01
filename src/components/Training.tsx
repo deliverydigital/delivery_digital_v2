@@ -999,189 +999,262 @@ const Training = () => {
                                                         </div>
                                                     </div>
                                                     <Download className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors" />
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Fallback to static downloads if no API documents */}
-                            {false && documents.length === 0 && !documentsLoading && staticPrograms[selectedProgram].downloads && staticPrograms[selectedProgram?.program_id].downloads.length > 0 && (
-                                <div className="card p-6 mt-6">
-                                    <h4 className="text-lg font-bold text-white mb-4 flex items-center">
-                                        <Download className="h-5 w-5 mr-2" />
-                                        Documents à télécharger
-                                    </h4>
-                                    <div className="space-y-3">
-                                        {staticPrograms[selectedProgram?.program_id].downloads.map((download, index) => (
-                                            <a
-                                                key={index}
-                                                href={download.url}
-                                                download
-                                                className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group"
-                                            >
-                                                <div className="flex items-center">
-                                                    <div className="bg-red-500/20 p-2 rounded-lg mr-3">
-                                                        <Download className="h-4 w-4 text-red-400" />
-                                                    </div>
-                                                    <span className="text-white text-sm font-medium">{download.name}</span>
-                                                </div>
-                                                <Download className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors" />
-                                            </a>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Dynamic Documents Section */}
-                            <div className="card p-6 mt-6">
-                                <h4 className="text-lg font-bold text-white mb-4 flex items-center">
-                                    <Download className="h-5 w-5 mr-2" />
-                                    Documents à télécharger
-                                </h4>
-                                
-                                {isLoadingDocs ? (
-                                    <div className="text-center py-8">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                                        <p className="text-gray-600">Chargement des documents...</p>
-                                    </div>
-                                ) : programDocs.length > 0 ? (
-                                    <div className="space-y-3">
-                                        {programDocs.map((doc) => (
-                                            <div key={doc.id} className="p-4 bg-white/5 rounded-lg">
-                                                <h5 className="font-medium text-white mb-2">{doc.title}</h5>
-                                                {doc.description && (
-                                                    <p className="text-sm text-gray-600 mb-2">{doc.description}</p>
-                                                )}
-                                                <div className="flex items-center justify-between">
-                                                    <div className="text-sm text-gray-500">
-                                                        <span>PDF • {(doc.file_size / 1024).toFixed(0)} KB</span>
-                                                        {doc.download_count > 0 && (
-                                                            <span className="ml-2">• {doc.download_count} téléchargements</span>
-                                                        )}
-                                                    </div>
-                                                    <button
-                                                        className="btn btn-sm btn-primary"
-                                                        onClick={() => handleDownloadDocument(doc.id, selectedProgram!)}
-                                                    >
-                                                        <Download className="h-4 w-4 mr-1" />
-                                                        Télécharger
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-8 text-gray-500">
-                                        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                                        <p>Aucun document disponible pour cette formation</p>
-                                        <p className="text-sm mt-2">Les documents seront ajoutés prochainement</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        <div className="lg:col-span-2">
-                            <div className="space-y-4">
-                                {currentProgram?.modules?.map((module, index) => (
-                                    <div key={index} className="card p-4">
-                                        <div className="flex items-start">
-                                            <div className="bg-white/10 p-2 rounded-lg mr-3">
-                                                <BookOpen className="h-6 w-6" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <h4 className="text-lg font-bold text-white">
-                                                        {module.title}
-                                                    </h4>
-                                                    <span className="text-primary-400 font-medium text-sm">
-                                                        {module.duration}
-                                                    </span>
-                                                </div>
-                                                <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                    {module.topics.map((topic, topicIndex) => (
-                                                        <li
-                                                            key={topicIndex}
-                                                            className="flex items-center text-gray-300 text-sm"
-                                                        >
-                                                            <CheckCircle2 className="h-3 w-3 mr-2 text-primary-400" />
-                                                            {topic}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-
-                <div className="mt-12 card p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                            <div className="flex items-center mb-4">
-                                <Accessibility className="h-6 w-6 text-primary-400 mr-2" />
-                                <h3 className="text-xl font-bold text-white">Accessibilité</h3>
-                            </div>
-                            <p className="text-gray-300 mb-4">
-                                Toutes nos formations sont accessibles aux personnes en situation de handicap. Notre équipe est formée pour adapter nos programmes et méthodes pédagogiques selon vos besoins spécifiques.
-                            </p>
-                            <p className="text-gray-300">
-                                En cas de handicap, merci de nous contacter pour que nous puissions évaluer ensemble les meilleures adaptations possibles.
-                            </p>
-                        </div>
-
-                        <div>
-                            <div className="flex items-center mb-4">
-                                <Mail className="h-6 w-6 text-primary-400 mr-2" />
-                                <h3 className="text-xl font-bold text-white">Contact</h3>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="flex items-center text-gray-300">
-                                    <Mail className="h-5 w-5 mr-3 text-primary-400" />
-                                    <a
-                                        href="mailto:contact@deliverydigital.fr"
-                                        className="hover:text-white transition-colors"
-                                    >
-                                        contact@deliverydigital.fr
-                                    </a>
-                                </div>
-                                <div className="flex items-center text-gray-300">
-                                    <Phone className="h-5 w-5 mr-3 text-primary-400" />
-                                    <a
-                                        href="tel:0749707773"
-                                        className="hover:text-white transition-colors"
-                                    >
-                                        07 49 70 77 73
-                                    </a>
-                                </div>
-                            </div>
-                            <p className="mt-4 text-sm text-gray-400">
-                                Notre équipe est à votre disposition pour répondre à toutes vos questions concernant l'accessibilité et l'adaptation de nos formations.
-                            </p>
-                        </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <span className="text-gray-300 text-sm">{program.duration_hours}h</span>
+                        <span className="text-gray-300 text-sm">Max {program.max_participants}</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-white">{program.price}€</div>
+                        <div className="text-sm text-gray-400">par apprenant</div>
+                      </div>
                     </div>
+
+                    {program.documents && program.documents.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-white/10">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-400 text-sm">Documents disponibles</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownload(program.documents[0].id, program.id);
+                            }}
+                            className="flex items-center text-blue-400 hover:text-blue-300 text-sm"
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            Télécharger PDF
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Program Details Modal */}
+        <AnimatePresence>
+          {showProgramModal && selectedProgram && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="bg-gray-900 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+              >
+                <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+                  <div className="flex items-center">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mr-4 ${getCategoryColor(selectedProgram.category)}`}>
+                      {getCategoryIcon(selectedProgram.category)}
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">{selectedProgram.title}</h3>
+                      <p className="text-gray-300">{selectedProgram.category}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-white">{selectedProgram.price}€</div>
+                      <div className="text-gray-400">par apprenant</div>
+                    </div>
+                    <button
+                      onClick={closeProgramModal}
+                      className="text-gray-400 hover:text-white transition-colors"
+                    >
+                      <X className="h-6 w-6" />
+                    </button>
+                  </div>
                 </div>
+
+                <div className="p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                      <div>
+                        <h4 className="text-lg font-bold text-white mb-3">Description</h4>
+                        <p className="text-gray-300 leading-relaxed">{selectedProgram.description}</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white/5 rounded-lg p-4">
+                          <div className="text-gray-400 text-sm">Durée</div>
+                          <div className="text-white font-bold">{selectedProgram.duration_hours}h</div>
+                        </div>
+                        <div className="bg-white/5 rounded-lg p-4">
+                          <div className="text-gray-400 text-sm">Niveau</div>
+                          <div className="text-white font-bold capitalize">{selectedProgram.level}</div>
+                        </div>
+                        <div className="bg-white/5 rounded-lg p-4">
+                          <div className="text-gray-400 text-sm">Participants max</div>
+                          <div className="text-white font-bold">{selectedProgram.max_participants}</div>
+                        </div>
+                        <div className="bg-white/5 rounded-lg p-4">
+                          <div className="text-gray-400 text-sm">Délai d'accès</div>
+                          <div className="text-white font-bold">{selectedProgram.access_delay || '1 semaine'}</div>
+                        </div>
+                      </div>
+
+                      {selectedProgram.objectives && selectedProgram.objectives.length > 0 && (
+                        <div>
+                          <h4 className="text-lg font-bold text-white mb-3">Objectifs pédagogiques</h4>
+                          <ul className="space-y-2">
+                            {selectedProgram.objectives.map((objective: string, index: number) => (
+                              <li key={index} className="flex items-start text-gray-300">
+                                <CheckCircle className="h-5 w-5 mr-3 text-green-400 mt-0.5 flex-shrink-0" />
+                                <span>{objective}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {selectedProgram.prerequisites && (
+                        <div>
+                          <h4 className="text-lg font-bold text-white mb-3">Prérequis</h4>
+                          <div className="bg-yellow-900/20 border border-yellow-500/20 rounded-lg p-4">
+                            <div className="flex items-start">
+                              <AlertTriangle className="h-5 w-5 text-yellow-400 mr-3 mt-0.5 flex-shrink-0" />
+                              <p className="text-yellow-200">{selectedProgram.prerequisites}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-6">
+                      {selectedProgram.methods && selectedProgram.methods.length > 0 && (
+                        <div>
+                          <h4 className="text-lg font-bold text-white mb-3">Méthodes pédagogiques</h4>
+                          <ul className="space-y-2">
+                            {selectedProgram.methods.map((method: string, index: number) => (
+                              <li key={index} className="flex items-start text-gray-300">
+                                <div className="w-2 h-2 bg-primary-400 rounded-full mr-3 mt-2 flex-shrink-0"></div>
+                                <span>{method}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {selectedProgram.evaluation_methods && selectedProgram.evaluation_methods.length > 0 && (
+                        <div>
+                          <h4 className="text-lg font-bold text-white mb-3">Modalités d'évaluation</h4>
+                          <ul className="space-y-2">
+                            {selectedProgram.evaluation_methods.map((method: string, index: number) => (
+                              <li key={index} className="flex items-start text-gray-300">
+                                <Star className="h-5 w-5 mr-3 text-yellow-400 mt-0.5 flex-shrink-0" />
+                                <span>{method}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {selectedProgram.modules && selectedProgram.modules.length > 0 && (
+                        <div>
+                          <h4 className="text-lg font-bold text-white mb-3">Modules de formation</h4>
+                          <div className="space-y-3">
+                            {selectedProgram.modules.map((module: any, index: number) => (
+                              <div key={index} className="bg-white/5 rounded-lg p-4">
+                                <div className="flex justify-between items-start mb-2">
+                                  <h5 className="font-medium text-white">{module.title}</h5>
+                                  <span className="text-primary-400 text-sm">{module.duration_hours}h</span>
+                                </div>
+                                {module.topics && module.topics.length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {module.topics.map((topic: string, topicIndex: number) => (
+                                      <span key={topicIndex} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-primary-900/50 text-primary-400 border border-primary-500/20">
+                                        {topic}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {(selectedProgram.certification_type || selectedProgram.opco_eligible || selectedProgram.cpf_eligible) && (
+                        <div>
+                          <h4 className="text-lg font-bold text-white mb-3">Certification et financement</h4>
+                          <div className="space-y-3">
+                            {selectedProgram.certification_type && (
+                              <div className="flex items-center p-3 bg-yellow-900/20 border border-yellow-500/20 rounded-lg">
+                                <Award className="h-5 w-5 text-yellow-400 mr-3" />
+                                <div>
+                                  <div className="text-yellow-200 font-medium">Certification</div>
+                                  <div className="text-yellow-300 text-sm">{selectedProgram.certification_type}</div>
+                                </div>
+                              </div>
+                            )}
+                            {selectedProgram.opco_eligible && (
+                              <div className="flex items-center p-3 bg-green-900/20 border border-green-500/20 rounded-lg">
+                                <CheckCircle className="h-5 w-5 text-green-400 mr-3" />
+                                <div>
+                                  <div className="text-green-200 font-medium">Éligible OPCO</div>
+                                  <div className="text-green-300 text-sm">Prise en charge possible par votre OPCO</div>
+                                </div>
+                              </div>
+                            )}
+                            {selectedProgram.cpf_eligible && (
+                              <div className="flex items-center p-3 bg-blue-900/20 border border-blue-500/20 rounded-lg">
+                                <CheckCircle className="h-5 w-5 text-blue-400 mr-3" />
+                                <div>
+                                  <div className="text-blue-200 font-medium">Éligible CPF</div>
+                                  <div className="text-blue-300 text-sm">Utilisez votre Compte Personnel de Formation</div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedProgram.accessibility_info && (
+                        <div>
+                          <h4 className="text-lg font-bold text-white mb-3">Accessibilité</h4>
+                          <div className="bg-blue-900/20 border border-blue-500/20 rounded-lg p-4">
+                            <div className="flex items-start">
+                              <Users className="h-5 w-5 text-blue-400 mr-3 mt-0.5 flex-shrink-0" />
+                              <p className="text-blue-200">{selectedProgram.accessibility_info}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-8 bg-gradient-to-r from-green-600/20 to-blue-600/20 border border-green-500/20 rounded-xl p-6">
+                    <h4 className="text-lg font-bold text-white mb-4">Contactez-nous pour plus d'informations</h4>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <a
+                        href="mailto:contact@deliverydigital.fr"
+                        className="flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        <Mail className="h-5 w-5 mr-2" />
+                        contact@deliverydigital.fr
+                      </a>
+                      <a
+                        href="tel:0749707773"
+                        className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <Phone className="h-5 w-5 mr-2" />
+                        07 49 70 77 73
+                      </a>
+                      <a
+                        href="https://app.deliverydigital.fr/student/signup"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:from-green-700 hover:to-blue-700 transition-all"
+                      >
+                        <ExternalLink className="h-5 w-5 mr-2" />
+                        S'inscrire en ligne
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             </div>
-        </section>
-    );
-};
-
-// Helper function to get emoji icons for categories
-const getIconForCategory = (iconName: string) => {
-    const iconMap = {
-        'code': '💻',
-        'palette': '🎨',
-        'file-text': '📊',
-        'globe': '🌍',
-        'shield': '🛡️',
-        'users': '👥',
-        'briefcase': '💼',
-        'heart': '❤️'
-    };
-    return iconMap[iconName] || '📚';
-};
-
-export default Training;
+          )}
+        </AnimatePresence>
