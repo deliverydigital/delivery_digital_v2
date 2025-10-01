@@ -176,7 +176,7 @@ const startServer = async () => {
 
             console.log('<UNK> Connected');
 
-            if (true) {
+            if (false) {
                 console.log('<UNK> Connected');
                 console.log('✅ MongoDB connection successful');
                 await testMongoConnection();
