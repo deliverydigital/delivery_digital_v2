@@ -137,40 +137,32 @@ const TrainingProgramsManagement = () => {
     setShowModal(true);
   };
 
-  const openEditModal = async (program: TrainingProgram) => {
-    console.log('Opening edit modal for program:', program);
+  const openEditModal = async (program: any) => {
+    console.log('🔄 Opening edit modal for program:', program);
     
-    // Create a deep copy of the program data for editing
-    // Ensure we have all the required fields with proper fallbacks
+    setLoadingEditData(true);
+    setSelectedProgram(program);
+    setModalMode('edit');
+    setShowModal(true);
+    
     try {
-      console.log('🔄 Opening edit modal for program:', program);
-      setIsLoadingProgramData(true);
+      // Fetch complete program data from API
+      console.log('📡 Fetching complete program data from API...');
+      const completeProgram = await TrainingProgramsApiService.getProgram(program.id || program.program_id);
       
-      // Load complete program data from API
-      const fullProgramData = await TrainingProgramsApiService.getProgram(program.program_id || program.id);
-      
-      if (!fullProgramData) {
-        console.warn('⚠️ Could not load full program data, using existing data');
-        // Fallback to existing program data
-        populateFormWithProgramData(program);
+      if (completeProgram) {
+        console.log('✅ Complete program data loaded:', completeProgram);
+        populateFormData(completeProgram);
       } else {
-        console.log('✅ Loaded full program data from API:', fullProgramData);
-        populateFormWithProgramData(fullProgramData);
+        console.log('⚠️ API call failed, using existing program data');
+        populateFormData(program);
       }
-      
-      setSelectedProgram(fullProgramData || program);
-      setModalMode('edit');
-      setShowModal(true);
-      
     } catch (error) {
       console.error('❌ Error loading program data for edit:', error);
       // Fallback to existing program data
-      populateFormWithProgramData(program);
-      setSelectedProgram(program);
-      setModalMode('edit');
-      setShowModal(true);
+      populateFormData(program);
     } finally {
-      setIsLoadingProgramData(false);
+      setLoadingEditData(false);
     }
   };
 
@@ -1230,16 +1222,3 @@ const TrainingProgramsManagement = () => {
           })}
         </div>
       )}
-
-      {/* Modal */}
-      <AnimatePresence>
-        {showModal && renderProgramModal()}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-// Add React import at the top if not already present
-import React from 'react';
-
-export default TrainingProgramsManagement;
