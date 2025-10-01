@@ -131,12 +131,6 @@ const TrainingProgramsManagement = () => {
         ['QCM d\'évaluation'],
       accessibility_info: program.accessibility_info || 'Formation accessible aux personnes en situation de handicap',
       access_delay: program.access_delay || '1 semaine',
-        : [''],
-      evaluation_methods: Array.isArray(program.evaluation_methods) && program.evaluation_methods.length > 0 
-        ? [...program.evaluation_methods] 
-        : [''],
-      accessibility_info: program.accessibility_info || 'Formation accessible aux personnes en situation de handicap',
-      access_delay: program.access_delay || '1 semaine',
       is_active: Boolean(program.is_active),
       is_featured: Boolean(program.is_featured),
       opco_eligible: Boolean(program.opco_eligible),
@@ -557,13 +551,13 @@ const TrainingProgramsManagement = () => {
                 </label>
                 <input
                   type="text"
-                  value={formData.title || ''}
+                  value={formData.title}
                   onChange={(e) => {
-                    console.log('Title changed to:', e.target.value);
-                    handleFormDataChange('title', e.target.value);
+                    console.log('📝 Title changed:', e.target.value);
+                    setFormData({ ...formData, title: e.target.value });
                   }}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Titre de la formation"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Ex: Formation WordPress Avancée"
                   required
                   autoComplete="off"
                 />
@@ -875,7 +869,6 @@ const TrainingProgramsManagement = () => {
               </div>
             </div>
 
-                        readOnly={modalMode === 'edit'}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -1127,92 +1120,3 @@ const TrainingProgramsManagement = () => {
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
                       program.is_active ? 'bg-green-900/50 text-green-400' : 'bg-gray-700 text-gray-300'
                     }`}>
-                      {program.is_active ? 'Actif' : 'Inactif'}
-                    </span>
-                    {program.opco_eligible && (
-                      <span className="px-2 py-1 bg-blue-900/50 text-blue-400 rounded text-xs font-medium">
-                        OPCO
-                      </span>
-                    )}
-                    {program.cpf_eligible && (
-                      <span className="px-2 py-1 bg-purple-900/50 text-purple-400 rounded text-xs font-medium">
-                        CPF
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center text-sm text-gray-400">
-                      <Users className="h-4 w-4 mr-1" />
-                      <span>Max {program.max_participants}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleToggleStatus(program.id);
-                        }}
-                        className={`${
-                          program.is_active 
-                            ? 'text-red-400 hover:text-red-300' 
-                            : 'text-green-400 hover:text-green-300'
-                        }`}
-                        title={program.is_active ? 'Désactiver' : 'Activer'}
-                      >
-                        {program.is_active ? (
-                          <X className="h-4 w-4" />
-                        ) : (
-                          <CheckCircle className="h-4 w-4" />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => openViewModal(program)}
-                        className="text-blue-400 hover:text-blue-300"
-                        title="Voir les détails"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          openEditModal(program);
-                        }}
-                        className="text-green-400 hover:text-green-300"
-                        title="Modifier"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleDelete(program.id);
-                        }}
-                        className="text-red-400 hover:text-red-300"
-                        title="Supprimer"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Modal */}
-      <AnimatePresence>
-        {showModal && renderProgramModal()}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-// Add React import at the top if not already present
-import React from 'react';
-
-export default TrainingProgramsManagement;
