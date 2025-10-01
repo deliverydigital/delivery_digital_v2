@@ -14,7 +14,11 @@ export const useTrainingPrograms = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await TrainingProgramsApiService.getAllPrograms({ active_only: true });
+      // For admin users, load all programs (active and inactive)
+      // For public users, only load active programs
+      const data = await TrainingProgramsApiService.getAllPrograms({ 
+        // Don't set active_only to show all programs for admin
+      });
       setPrograms(data);
     } catch (err) {
       console.error('Error loading training programs:', err);

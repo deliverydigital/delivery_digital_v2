@@ -123,7 +123,7 @@ router.get('/:programId/documents/:documentId/download', async (req, res) => {
 // Get all training programs (public)
 router.get('/', validatePagination, async (req, res) => {
   try {
-    const { page = 1, limit = 50, category, search, active_only = 'true' } = req.query;
+    const { page = 1, limit = 50, category, search, active_only } = req.query;
     const skip = (page - 1) * limit;
 
     // Check if MongoDB is available
@@ -167,9 +167,14 @@ router.get('/', validatePagination, async (req, res) => {
     // Build query
     const query = {};
     
+    // Only filter by active status if explicitly requested
+    // For admin users, show all programs by default unless active_only is specifically set to 'true'
     if (active_only === 'true') {
       query.is_active = true;
+    } else if (active_only === 'false') {
+      query.is_active = false;
     }
+    // If active_only is not specified or is 'all', don't filter by is_active
 
     if (category) {
       query.category = category;
@@ -182,12 +187,15 @@ router.get('/', validatePagination, async (req, res) => {
       ];
     }
 
+    console.log('📊 Training programs query:', query);
+    console.log('📊 Query parameters:', { page, limit, category, search, active_only });
     const programs = await TrainingProgram.find(query)
       .select('program_id title modules description category duration_hours price level max_participants is_featured opco_eligible cpf_eligible certification_type')
       .skip(skip)
       .limit(parseInt(limit))
       .sort({ is_featured: -1, title: 1 });
 
+    console.log('📊 Found programs:', programs.length);
     const total = await TrainingProgram.countDocuments(query);
 
     res.json({
@@ -204,6 +212,7 @@ router.get('/', validatePagination, async (req, res) => {
           level: program.level,
           max_participants: program.max_participants,
           is_featured: program.is_featured,
+          is_active: program.is_active,
           opco_eligible: program.opco_eligible,
           cpf_eligible: program.cpf_eligible,
           certification_type: program.certification_type,

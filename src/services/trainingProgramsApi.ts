@@ -82,12 +82,20 @@ export class TrainingProgramsApiService {
     category?: string;
     search?: string;
     active_only?: boolean;
+    show_inactive?: boolean;
   }): Promise<TrainingProgram[]> {
     try {
       const params = new URLSearchParams();
       if (filters?.category) params.append('category', filters.category);
       if (filters?.search) params.append('search', filters.search);
-      if (filters?.active_only !== undefined) params.append('active_only', filters.active_only.toString());
+      if (filters?.active_only !== undefined) {
+        params.append('active_only', filters.active_only.toString());
+      } else if (filters?.show_inactive !== undefined) {
+        // If show_inactive is true, don't filter by active status (show all)
+        // If show_inactive is false, only show active programs
+        params.append('active_only', (!filters.show_inactive).toString());
+      }
+      // If neither active_only nor show_inactive is specified, show all programs for admin
 
       try {
         const response = await makeRequest(`/training-programs?${params.toString()}`);
@@ -98,6 +106,7 @@ export class TrainingProgramsApiService {
             ...program,
             created_at: program.created_at ? new Date(program.created_at) : new Date(),
             updated_at: program.updated_at ? new Date(program.updated_at) : new Date(),
+            is_active: program.is_active !== undefined ? program.is_active : true,
             documents: (program.documents || []).map((doc: any) => ({
               ...doc,
               uploaded_at: doc.uploaded_at ? new Date(doc.uploaded_at) : new Date()

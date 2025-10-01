@@ -43,6 +43,7 @@ const TrainingProgramsManagement = () => {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showInactive, setShowInactive] = useState(true); // Show all programs by default
   const [selectedProgram, setSelectedProgram] = useState<TrainingProgram | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
@@ -240,6 +241,30 @@ const TrainingProgramsManagement = () => {
     }
   };
 
+  const handleToggleStatus = async (programId: string) => {
+    const program = programs.find(p => p.id === programId);
+    if (!program) return;
+
+    const action = program.is_active ? 'désactiver' : 'activer';
+    if (window.confirm(`Êtes-vous sûr de vouloir ${action} ce programme ?`)) {
+      try {
+        console.log(`Toggling program status:`, programId, 'to', !program.is_active);
+        const result = await updateProgram(programId, { is_active: !program.is_active });
+        console.log('Toggle status result:', result);
+        if (result.success) {
+          console.log('Program status updated successfully');
+          alert(`Programme ${action === 'activer' ? 'activé' : 'désactivé'} avec succès !`);
+          refetch();
+        } else {
+          console.error('Toggle status failed:', result.error);
+          alert(`Erreur lors de la modification du statut: ${result.error || 'Erreur inconnue'}`);
+        }
+      } catch (error) {
+        console.error('Error toggling program status:', error);
+        alert(`Erreur lors de la modification du statut: ${error.message || 'Erreur inconnue'}`);
+      }
+    }
+  };
   const addArrayField = (field: 'objectives' | 'methods' | 'evaluation_methods') => {
     setFormData({
       ...formData,
@@ -357,7 +382,8 @@ const TrainingProgramsManagement = () => {
     const matchesSearch = program.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          program.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || program.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesStatus = showInactive || program.is_active;
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
   // Move ProgramModal outside to prevent recreation on every render
@@ -947,6 +973,17 @@ const TrainingProgramsManagement = () => {
             </option>
           ))}
         </select>
+        <div className="flex items-center space-x-2">
+          <label className="flex items-center text-gray-300">
+            <input
+              type="checkbox"
+              checked={showInactive}
+              onChange={(e) => setShowInactive(e.target.checked)}
+              className="mr-2 rounded"
+            />
+            <span className="text-sm">Afficher les programmes inactifs</span>
+          </label>
+        </div>
       </div>
 
       {/* Programs Grid */}
@@ -1024,6 +1061,11 @@ const TrainingProgramsManagement = () => {
                       {program.level === 'beginner' ? 'Débutant' :
                        program.level === 'intermediate' ? 'Intermédiaire' : 'Avancé'}
                     </span>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      program.is_active ? 'bg-green-900/50 text-green-400' : 'bg-gray-700 text-gray-300'
+                    }`}>
+                      {program.is_active ? 'Actif' : 'Inactif'}
+                    </span>
                     {program.opco_eligible && (
                       <span className="px-2 py-1 bg-blue-900/50 text-blue-400 rounded text-xs font-medium">
                         OPCO
@@ -1042,6 +1084,25 @@ const TrainingProgramsManagement = () => {
                       <span>Max {program.max_participants}</span>
                     </div>
                     <div className="flex items-center space-x-2">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleToggleStatus(program.id);
+                        }}
+                        className={`${
+                          program.is_active 
+                            ? 'text-red-400 hover:text-red-300' 
+                            : 'text-green-400 hover:text-green-300'
+                        }`}
+                        title={program.is_active ? 'Désactiver' : 'Activer'}
+                      >
+                        {program.is_active ? (
+                          <X className="h-4 w-4" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4" />
+                        )}
+                      </button>
                       <button
                         onClick={() => openViewModal(program)}
                         className="text-blue-400 hover:text-blue-300"
