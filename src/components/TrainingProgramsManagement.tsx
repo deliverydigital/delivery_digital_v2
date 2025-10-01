@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, CreditCard as Edit, Trash2, Eye, Save, X, Upload, Download, Search, Filter, RefreshCw, BookOpen, Users, Clock, Euro, Star, Award, CheckCircle, AlertTriangle, FileText, Calendar, Target, Settings, Copy, ChevronDown, ChevronUp, ExternalLink, Zap, Code, PenTool, Globe, Shield, Heart, Briefcase, GraduationCap, Building2, Utensils, Car } from 'lucide-react';
 import { useTrainingPrograms } from '../hooks/useTrainingPrograms';
+import { TrainingProgramsApiService } from '../services/trainingProgramsApi';
 import { useCategories } from '../hooks/useCategories';
 
 interface TrainingProgram {
@@ -47,6 +48,7 @@ const TrainingProgramsManagement = () => {
   const [selectedProgram, setSelectedProgram] = useState<TrainingProgram | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [loadingEditData, setLoadingEditData] = useState(false);
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
   const [isLoadingProgramData, setIsLoadingProgramData] = useState(false);
 
