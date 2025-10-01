@@ -48,6 +48,7 @@ const TrainingProgramsManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
+  const [isLoadingProgramData, setIsLoadingProgramData] = useState(false);
 
   const [formData, setFormData] = useState<Partial<TrainingProgram>>({
     program_id: '',
@@ -99,21 +100,46 @@ const TrainingProgramsManagement = () => {
     });
   };
 
+  const populateFormWithProgramData = (program: TrainingProgram) => {
+    const editData = {
+      program_id: program.program_id || program.id || program.name || '',
+      title: program.title || program.name || '',
+      description: program.description || '',
+      category: program.category || 'web',
+      duration_hours: program.duration_hours || 0,
+      price: program.price || 0,
+      level: program.level || 'beginner',
+      max_participants: program.max_participants || 12,
+      prerequisites: program.prerequisites || '',
+      objectives: program.objectives && program.objectives.length > 0 ? program.objectives : [''],
+      methods: program.methods && program.methods.length > 0 ? program.methods : [''],
+      evaluation_methods: program.evaluation_methods && program.evaluation_methods.length > 0 ? program.evaluation_methods : [''],
+      accessibility_info: program.accessibility_info || 'Formation accessible aux personnes en situation de handicap',
+      access_delay: program.access_delay || '1 semaine',
+      is_active: program.is_active !== undefined ? program.is_active : true,
+      is_featured: program.is_featured || false,
+      opco_eligible: program.opco_eligible !== undefined ? program.opco_eligible : true,
+      cpf_eligible: program.cpf_eligible || false,
+      certification_type: program.certification_type || '',
+      certification_provider: program.certification_provider || '',
+      modules: program.modules || []
+    };
+    
+    console.log('Populating form with data:', editData);
+    setFormData(editData);
+  };
+
   const openCreateModal = () => {
     resetForm();
     setModalMode('create');
     setShowModal(true);
   };
 
-  const openEditModal = (program: TrainingProgram) => {
+  const openEditModal = async (program: TrainingProgram) => {
     console.log('Opening edit modal for program:', program);
     
     // Create a deep copy of the program data for editing
     // Ensure we have all the required fields with proper fallbacks
-    const editData = {
-      program_id: program.program_id || program.id || program.name || '',
-      title: program.title || program.name || '',
-    };
     try {
       console.log('🔄 Opening edit modal for program:', program);
       setIsLoadingProgramData(true);
@@ -512,6 +538,23 @@ const TrainingProgramsManagement = () => {
                 </div>
               </div>
             )}
+          </div>
+        ) : (
+          <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+            <h3 className="text-xl font-bold text-white">
+              {modalMode === 'create' ? 'Créer un Programme' : 
+               isLoadingProgramData ? 'Chargement des données...' : 'Modifier le Programme'}
+            </h3>
+            <button onClick={closeModal} className="text-gray-400 hover:text-white">
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+        )}
+        
+        {isLoadingProgramData ? (
+          <div className="p-6 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-400">Chargement des données du programme...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
