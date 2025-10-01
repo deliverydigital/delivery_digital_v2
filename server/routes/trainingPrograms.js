@@ -254,6 +254,29 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       certification_provider
     } = req.body;
 
+    console.log('📊 Received request body:', {
+      program_id,
+      title,
+      description,
+      category,
+      duration_hours,
+      price,
+      level,
+      max_participants,
+      prerequisites,
+      objectives,
+      methods,
+      evaluation_methods,
+      accessibility_info,
+      access_delay,
+      modules,
+      is_active,
+      is_featured,
+      opco_eligible,
+      cpf_eligible,
+      certification_type,
+      certification_provider
+    });
     // Check if MongoDB is available
     if (!isMongoAvailable()) {
       return res.status(503).json({
@@ -271,6 +294,15 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       });
     }
 
+    // Process array fields properly
+    const processedObjectives = objectives ? 
+      (Array.isArray(objectives) ? objectives : objectives.split(',').map(o => o.trim()).filter(o => o)) : [];
+    const processedMethods = methods ? 
+      (Array.isArray(methods) ? methods : methods.split(',').map(m => m.trim()).filter(m => m)) : [];
+    const processedEvaluationMethods = evaluation_methods ? 
+      (Array.isArray(evaluation_methods) ? evaluation_methods : evaluation_methods.split(',').map(e => e.trim()).filter(e => e)) : [];
+    const processedModules = modules ? 
+      (typeof modules === 'string' ? JSON.parse(modules) : modules) : [];
     const programData = {
       program_id,
       title,
@@ -281,12 +313,12 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       level: level || 'beginner',
       max_participants: parseInt(max_participants) || 12,
       prerequisites,
-      objectives: objectives ? (Array.isArray(objectives) ? objectives : objectives.split(',').map(o => o.trim())) : [],
-      methods: methods ? (Array.isArray(methods) ? methods : methods.split(',').map(m => m.trim())) : [],
-      evaluation_methods: evaluation_methods ? (Array.isArray(evaluation_methods) ? evaluation_methods : evaluation_methods.split(',').map(e => e.trim())) : [],
+      objectives: processedObjectives,
+      methods: processedMethods,
+      evaluation_methods: processedEvaluationMethods,
       accessibility_info,
       access_delay,
-      modules: modules ? (typeof modules === 'string' ? JSON.parse(modules) : modules) : [],
+      modules: processedModules,
       documents: [],
       is_active: is_active !== undefined ? is_active : true,
       is_featured: is_featured !== undefined ? is_featured : false,
@@ -296,9 +328,11 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       certification_provider
     };
 
+    console.log('📊 Processed program data:', programData);
     const program = new TrainingProgram(programData);
     await program.save();
 
+    console.log('✅ Program saved successfully:', program._id);
     res.status(201).json({
       success: true,
       message: 'Training program created successfully',
@@ -337,6 +371,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
     
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
+      console.error('❌ Validation errors:', validationErrors);
       return res.status(400).json({
         success: false,
         error: 'Validation failed',
@@ -543,6 +578,8 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
     const { programId } = req.params;
     const updates = req.body;
 
+    console.log('📊 Update request for program:', programId);
+    console.log('📊 Update data received:', updates);
     // Check if MongoDB is available
     if (!isMongoAvailable()) {
       return res.status(503).json({
@@ -564,6 +601,8 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
       });
     }
 
+    console.log('✅ Found program to update:', program.title);
+
     // Update allowed fields
     const allowedFields = [
       'title', 'description', 'category', 'duration_hours', 'price', 'level', 'program_id',
@@ -574,20 +613,48 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
 
     for (const [key, value] of Object.entries(updates)) {
       if (allowedFields.includes(key) && value !== undefined) {
+        console.log(`🔄 Updating field ${key}:`, value);
         if (key === 'objectives' || key === 'methods' || key === 'evaluation_methods') {
-          program[key] = Array.isArray(value) ? value : value.split(',').map(item => item.trim());
+          program[key] = Array.isArray(value) ? value.filter(item => item && item.trim()) : 
+                       (typeof value === 'string' ? value.split(',').map(item => item.trim()).filter(item => item) : []);
         } else if (key === 'modules') {
           program[key] = typeof value === 'string' ? JSON.parse(value) : value;
         } else if (key === 'duration_hours' || key === 'price' || key === 'max_participants') {
-          program[key] = parseFloat(value) || 0;
+          program[key] = key === 'max_participants' ? parseInt(value) || 12 : parseFloat(value) || 0;
+        } else if (key === 'is_active' || key === 'is_featured' || key === 'opco_eligible' || key === 'cpf_eligible') {
+          program[key] = Boolean(value);
         } else {
           program[key] = value;
         }
       }
     }
 
+    console.log('📊 Program before save:', {
+      title: program.title,
+      description: program.description,
+      category: program.category,
+      duration_hours: program.duration_hours,
+      price: program.price,
+      level: program.level,
+      max_participants: program.max_participants,
+      prerequisites: program.prerequisites,
+      objectives: program.objectives,
+      methods: program.methods,
+      evaluation_methods: program.evaluation_methods,
+      accessibility_info: program.accessibility_info,
+      access_delay: program.access_delay,
+      is_active: program.is_active,
+      is_featured: program.is_featured,
+      opco_eligible: program.opco_eligible,
+      cpf_eligible: program.cpf_eligible,
+      certification_type: program.certification_type,
+      certification_provider: program.certification_provider,
+      modules: program.modules
+    });
+
     await program.save();
 
+    console.log('✅ Program updated successfully');
     res.json({
       success: true,
       message: 'Training program updated successfully',
@@ -707,7 +774,7 @@ router.delete('/:programId', authenticate, authorize('admin'), async (req, res) 
       });
     }
 
-    // Delete all associated files
+    // Delete all associated documents from disk
     for (const document of program.documents) {
       if (fs.existsSync(document.file_path)) {
         await deleteFile(document.file_path);
