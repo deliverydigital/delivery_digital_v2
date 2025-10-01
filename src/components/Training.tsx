@@ -21,6 +21,7 @@ const Training = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCategories, setShowCategories] = useState(false);
+  const [showCategories, setShowCategories] = useState(false);
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
@@ -389,6 +390,16 @@ const Training = () => {
           >
             Catégories
           </button>
+          <button
+            onClick={() => setShowCategories(!showCategories)}
+            className={`px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+              showCategories 
+                ? 'bg-blue-600 text-white border-blue-600' 
+                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            Catégories
+          </button>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
@@ -402,6 +413,83 @@ const Training = () => {
             ))}
           </select>
         </div>
+
+        {/* Categories Display */}
+        <AnimatePresence>
+          {showCategories && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="mb-8 overflow-hidden"
+            >
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                  <BookOpen className="h-6 w-6 mr-2 text-blue-600" />
+                  Catégories de Formation
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {categories.map((category) => {
+                    const categoryPrograms = programs.filter(program => program.category === category.slug);
+                    return (
+                      <motion.div
+                        key={category.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gray-50 rounded-lg p-4 hover:shadow-md transition-all cursor-pointer border-l-4"
+                        style={{ borderLeftColor: category.color }}
+                        onClick={() => {
+                          setSelectedCategory(category.slug);
+                          setShowCategories(false);
+                        }}
+                      >
+                        <div className="flex items-center mb-3">
+                          <div 
+                            className="w-10 h-10 rounded-lg flex items-center justify-center mr-3"
+                            style={{ backgroundColor: `${category.color}20`, color: category.color }}
+                          >
+                            {getCategoryIcon(category.slug)}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900">{category.name}</h4>
+                            <p className="text-sm text-gray-600">{categoryPrograms.length} formation{categoryPrograms.length > 1 ? 's' : ''}</p>
+                          </div>
+                        </div>
+                        {category.description && (
+                          <p className="text-sm text-gray-600 line-clamp-2">{category.description}</p>
+                        )}
+                        <div className="mt-3 flex flex-wrap gap-1">
+                          {categoryPrograms.slice(0, 3).map((program) => (
+                            <span 
+                              key={program.id}
+                              className="inline-block px-2 py-1 bg-white rounded text-xs text-gray-600 border"
+                            >
+                              {program.title}
+                            </span>
+                          ))}
+                          {categoryPrograms.length > 3 && (
+                            <span className="inline-block px-2 py-1 bg-gray-200 rounded text-xs text-gray-500">
+                              +{categoryPrograms.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => setShowCategories(false)}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  >
+                    Masquer les catégories
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Categories Display */}
         <AnimatePresence>
