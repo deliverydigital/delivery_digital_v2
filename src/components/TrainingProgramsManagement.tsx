@@ -143,13 +143,40 @@ const TrainingProgramsManagement = () => {
       return;
     }
 
+    // Validate numeric fields
+    if (!formData.duration_hours || formData.duration_hours <= 0) {
+      alert('La durée doit être un nombre positif');
+      return;
+    }
+
+    if (!formData.price || formData.price < 0) {
+      alert('Le prix doit être un nombre positif ou zéro');
+      return;
+    }
+
     try {
       // Clean up array fields
       const cleanedData = {
         ...formData,
+        // Ensure numeric fields are properly converted
+        duration_hours: Number(formData.duration_hours) || 0,
+        price: Number(formData.price) || 0,
+        max_participants: Number(formData.max_participants) || 12,
+        // Clean up array fields
         objectives: formData.objectives?.filter(obj => obj.trim() !== '') || [],
         methods: formData.methods?.filter(method => method.trim() !== '') || [],
-        evaluation_methods: formData.evaluation_methods?.filter(method => method.trim() !== '') || []
+        evaluation_methods: formData.evaluation_methods?.filter(method => method.trim() !== '') || [],
+        // Ensure boolean fields are properly set
+        is_active: Boolean(formData.is_active),
+        is_featured: Boolean(formData.is_featured),
+        opco_eligible: Boolean(formData.opco_eligible),
+        cpf_eligible: Boolean(formData.cpf_eligible),
+        // Clean up string fields
+        prerequisites: formData.prerequisites?.trim() || '',
+        accessibility_info: formData.accessibility_info?.trim() || '',
+        access_delay: formData.access_delay?.trim() || '',
+        certification_type: formData.certification_type?.trim() || '',
+        certification_provider: formData.certification_provider?.trim() || ''
       };
 
       console.log('Cleaned data for submission:', cleanedData);
@@ -160,6 +187,7 @@ const TrainingProgramsManagement = () => {
         console.log('Create result:', result);
         if (result.success) {
           console.log('Program created successfully:', result.program);
+          alert('Programme créé avec succès !');
           closeModal();
           refetch();
         } else {
@@ -178,6 +206,7 @@ const TrainingProgramsManagement = () => {
         console.log('Update result:', result);
         if (result.success) {
           console.log('Program updated successfully:', result.program);
+          alert('Programme modifié avec succès !');
           closeModal();
           refetch();
         } else {

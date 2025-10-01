@@ -254,29 +254,31 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       certification_provider
     } = req.body;
 
-    console.log('📊 Received request body:', {
-      program_id,
-      title,
-      description,
-      category,
-      duration_hours,
-      price,
-      level,
-      max_participants,
-      prerequisites,
-      objectives,
-      methods,
-      evaluation_methods,
-      accessibility_info,
-      access_delay,
-      modules,
-      is_active,
-      is_featured,
-      opco_eligible,
-      cpf_eligible,
-      certification_type,
-      certification_provider
+    console.log('📊 Received request body:', req.body);
+    console.log('📊 Individual fields:', {
+      program_id: program_id,
+      title: title,
+      description: description,
+      category: category,
+      duration_hours: duration_hours,
+      price: price,
+      level: level,
+      max_participants: max_participants,
+      prerequisites: prerequisites,
+      objectives: objectives,
+      methods: methods,
+      evaluation_methods: evaluation_methods,
+      accessibility_info: accessibility_info,
+      access_delay: access_delay,
+      modules: modules,
+      is_active: is_active,
+      is_featured: is_featured,
+      opco_eligible: opco_eligible,
+      cpf_eligible: cpf_eligible,
+      certification_type: certification_type,
+      certification_provider: certification_provider
     });
+
     // Check if MongoDB is available
     if (!isMongoAvailable()) {
       return res.status(503).json({
@@ -294,6 +296,31 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       });
     }
 
+    // Validate required fields
+    if (!program_id || !title || !description) {
+      console.error('❌ Missing required fields:', { program_id, title, description });
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: program_id, title, and description are required'
+      });
+    }
+
+    if (!duration_hours || duration_hours <= 0) {
+      console.error('❌ Invalid duration_hours:', duration_hours);
+      return res.status(400).json({
+        success: false,
+        error: 'Duration hours must be a positive number'
+      });
+    }
+
+    if (!price || price < 0) {
+      console.error('❌ Invalid price:', price);
+      return res.status(400).json({
+        success: false,
+        error: 'Price must be a positive number'
+      });
+    }
+
     // Process array fields properly
     const processedObjectives = objectives ? 
       (Array.isArray(objectives) ? objectives : objectives.split(',').map(o => o.trim()).filter(o => o)) : [];
@@ -303,13 +330,21 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       (Array.isArray(evaluation_methods) ? evaluation_methods : evaluation_methods.split(',').map(e => e.trim()).filter(e => e)) : [];
     const processedModules = modules ? 
       (typeof modules === 'string' ? JSON.parse(modules) : modules) : [];
+
+    console.log('📊 Processed arrays:', {
+      processedObjectives,
+      processedMethods,
+      processedEvaluationMethods,
+      processedModules
+    });
+
     const programData = {
       program_id,
       title,
       description,
       category,
-      duration_hours: parseInt(duration_hours),
-      price: parseFloat(price),
+      duration_hours: parseInt(duration_hours) || 0,
+      price: parseFloat(price) || 0,
       level: level || 'beginner',
       max_participants: parseInt(max_participants) || 12,
       prerequisites,
@@ -329,7 +364,42 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
     };
 
     console.log('📊 Processed program data:', programData);
+    
+    // Validate processed data before saving
+    if (!programData.program_id || !programData.title || !programData.description) {
+      console.error('❌ Processed data missing required fields:', programData);
+      return res.status(400).json({
+        success: false,
+        error: 'Processed data is missing required fields'
+      });
+    }
+
     const program = new TrainingProgram(programData);
+    
+    console.log('📊 Program object before save:', {
+      program_id: program.program_id,
+      title: program.title,
+      description: program.description,
+      category: program.category,
+      duration_hours: program.duration_hours,
+      price: program.price,
+      level: program.level,
+      max_participants: program.max_participants,
+      prerequisites: program.prerequisites,
+      objectives: program.objectives,
+      methods: program.methods,
+      evaluation_methods: program.evaluation_methods,
+      accessibility_info: program.accessibility_info,
+      access_delay: program.access_delay,
+      is_active: program.is_active,
+      is_featured: program.is_featured,
+      opco_eligible: program.opco_eligible,
+      cpf_eligible: program.cpf_eligible,
+      certification_type: program.certification_type,
+      certification_provider: program.certification_provider,
+      modules: program.modules
+    });
+
     await program.save();
 
     console.log('✅ Program saved successfully:', program._id);
@@ -379,6 +449,13 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       });
     }
 
+    if (error.code === 11000) {
+      console.error('❌ Duplicate key error:', error);
+      return res.status(400).json({
+        success: false,
+        error: 'Program ID already exists'
+      });
+    }
     res.status(500).json({
       success: false,
       error: 'Failed to create training program'

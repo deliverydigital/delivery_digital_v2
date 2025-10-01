@@ -18,6 +18,7 @@ const trainingProgramSchema = new Schema({
   },
   description: {
     type: String,
+    required: true,
     trim: true
   },
   category: {
@@ -46,12 +47,21 @@ const trainingProgramSchema = new Schema({
     default: 12,
     min: 1
   },
-  prerequisites: String,
+  prerequisites: {
+    type: String,
+    default: ''
+  },
   objectives: [String],
   methods: [String],
   evaluation_methods: [String],
-  accessibility_info: String,
-  access_delay: String,
+  accessibility_info: {
+    type: String,
+    default: 'Formation accessible aux personnes en situation de handicap'
+  },
+  access_delay: {
+    type: String,
+    default: '1 semaine'
+  },
   is_active: {
     type: Boolean,
     default: true
@@ -60,8 +70,14 @@ const trainingProgramSchema = new Schema({
     type: Boolean,
     default: false
   },
-  certification_type: String,
-  certification_provider: String,
+  certification_type: {
+    type: String,
+    default: ''
+  },
+  certification_provider: {
+    type: String,
+    default: ''
+  },
   opco_eligible: {
     type: Boolean,
     default: true
