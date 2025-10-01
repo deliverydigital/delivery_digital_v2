@@ -201,7 +201,7 @@ router.get('/', validatePagination, async (req, res) => {
       console.log('📊 Final MongoDB query:', JSON.stringify(query, null, 2));
 
       const programs = await TrainingProgram.find(query)
-        .select('program_id title description category duration_hours price level max_participants is_active is_featured opco_eligible cpf_eligible certification_type modules')
+          .select('program_id title description category duration_hours price level max_participants prerequisites objectives methods evaluation_methods accessibility_info access_delay is_active is_featured opco_eligible cpf_eligible certification_type certification_provider modules')
         .skip(skip)
         .limit(parseInt(limit))
         .sort({ is_featured: -1, title: 1 });
