@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, CreditCard as Edit, Trash2, Eye, Save, X, Upload, Download, Search, Filter, RefreshCw, BookOpen, Users, Clock, Euro, Star, Award, CheckCircle, AlertTriangle, FileText, Calendar, Target, Settings, Copy, ChevronDown, ChevronUp, ExternalLink, Zap, Code, PenTool, Globe, Shield, Heart, Briefcase, GraduationCap, Building2, Utensils, Car } from 'lucide-react';
 import { useTrainingPrograms } from '../hooks/useTrainingPrograms';
-import { TrainingProgramsApiService } from '../services/trainingProgramsApi';
 import { useCategories } from '../hooks/useCategories';
 
 interface TrainingProgram {
@@ -48,7 +47,6 @@ const TrainingProgramsManagement = () => {
   const [selectedProgram, setSelectedProgram] = useState<TrainingProgram | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
-  const [loadingEditData, setLoadingEditData] = useState(false);
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
   const [isLoadingProgramData, setIsLoadingProgramData] = useState(false);
 
@@ -137,32 +135,40 @@ const TrainingProgramsManagement = () => {
     setShowModal(true);
   };
 
-  const openEditModal = async (program: any) => {
-    console.log('🔄 Opening edit modal for program:', program);
+  const openEditModal = async (program: TrainingProgram) => {
+    console.log('Opening edit modal for program:', program);
     
-    setLoadingEditData(true);
-    setSelectedProgram(program);
-    setModalMode('edit');
-    setShowModal(true);
-    
+    // Create a deep copy of the program data for editing
+    // Ensure we have all the required fields with proper fallbacks
     try {
-      // Fetch complete program data from API
-      console.log('📡 Fetching complete program data from API...');
-      const completeProgram = await TrainingProgramsApiService.getProgram(program.id || program.program_id);
+      console.log('🔄 Opening edit modal for program:', program);
+      setIsLoadingProgramData(true);
       
-      if (completeProgram) {
-        console.log('✅ Complete program data loaded:', completeProgram);
-        populateFormData(completeProgram);
+      // Load complete program data from API
+      const fullProgramData = await TrainingProgramsApiService.getProgram(program.program_id || program.id);
+      
+      if (!fullProgramData) {
+        console.warn('⚠️ Could not load full program data, using existing data');
+        // Fallback to existing program data
+        populateFormWithProgramData(program);
       } else {
-        console.log('⚠️ API call failed, using existing program data');
-        populateFormData(program);
+        console.log('✅ Loaded full program data from API:', fullProgramData);
+        populateFormWithProgramData(fullProgramData);
       }
+      
+      setSelectedProgram(fullProgramData || program);
+      setModalMode('edit');
+      setShowModal(true);
+      
     } catch (error) {
       console.error('❌ Error loading program data for edit:', error);
       // Fallback to existing program data
-      populateFormData(program);
+      populateFormWithProgramData(program);
+      setSelectedProgram(program);
+      setModalMode('edit');
+      setShowModal(true);
     } finally {
-      setLoadingEditData(false);
+      setIsLoadingProgramData(false);
     }
   };
 
@@ -1222,3 +1228,16 @@ const TrainingProgramsManagement = () => {
           })}
         </div>
       )}
+
+      {/* Modal */}
+      <AnimatePresence>
+        {showModal && renderProgramModal()}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Add React import at the top if not already present
+import React from 'react';
+
+export default TrainingProgramsManagement;
