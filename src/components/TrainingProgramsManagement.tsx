@@ -960,6 +960,7 @@ const TrainingProgramsManagement = () => {
               </button>
             </div>
           </form>
+          )}
         )}
       </motion.div>
     </div>
