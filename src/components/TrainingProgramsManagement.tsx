@@ -675,6 +675,7 @@ const TrainingProgramsManagement = () => {
                 rows={2}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Prérequis nécessaires pour suivre cette formation"
+                autoComplete="off"
               />
             </div>
 
@@ -940,6 +941,7 @@ const TrainingProgramsManagement = () => {
                 rows={2}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Informations sur l'accessibilité de la formation"
+                autoComplete="off"
               />
             </div>
 

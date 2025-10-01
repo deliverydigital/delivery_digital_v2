@@ -88,22 +88,29 @@ export class TrainingProgramsApiService {
       const params = new URLSearchParams();
       if (filters?.category) params.append('category', filters.category);
       if (filters?.search) params.append('search', filters.search);
-      if (filters?.active_only !== undefined) {
-        params.append('active_only', filters.active_only.toString());
-      } else if (filters?.show_inactive !== undefined) {
-        // If show_inactive is true, don't filter by active status (show all)
-        // If show_inactive is false, only show active programs
-        params.append('active_only', (!filters.show_inactive).toString());
+      
+      // Handle filtering logic
+      if (filters?.active_only === true) {
+        params.append('active_only', 'true');
+      } else if (filters?.active_only === false) {
+        params.append('active_only', 'false');
+      } else if (filters?.show_inactive === true) {
+        // Don't add active_only parameter to show all programs
+      } else if (filters?.show_inactive === false) {
+        params.append('active_only', 'true');
       }
-      // If neither active_only nor show_inactive is specified, show all programs for admin
+      // If no filter is specified, default behavior depends on context
 
       try {
         const response = await makeRequest(`/training-programs?${params.toString()}`);
         
         if (response.data && response.data.programs) {
-          console.log('response.data.programs',response.data.programs);
+          console.log('📊 API returned programs:', response.data.programs.length);
           return response.data.programs.map((program: any) => ({
             ...program,
+            // Ensure we have both id and program_id for compatibility
+            id: program.id || program.program_id,
+            name: program.name || program.title,
             created_at: program.created_at ? new Date(program.created_at) : new Date(),
             updated_at: program.updated_at ? new Date(program.updated_at) : new Date(),
             is_active: program.is_active !== undefined ? program.is_active : true,
