@@ -769,7 +769,7 @@ const Training = () => {
                                         : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
                                 }`}
                             >
-                                {category.name} ({Object.values(programs).filter(p => category.id === 'all' || p.category === category.id).length}) 00 
+                                {category.name} ({Object.values(programs).filter(p => category.id === 'all' || p.category === category.id).length})
                             </button>
                         ))}
                     </div>
