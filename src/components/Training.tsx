@@ -11,9 +11,11 @@ import {
   Utensils, Leaf, Car, Apple, BarChart3, PenTool, Languages
 } from 'lucide-react';
 import { staticPrograms, categoryColors, categoryIcons } from '../constants/trainingPrograms';
+import { useCategories } from '../hooks/useCategories';
 
 const Training = () => {
   const { t } = useTranslation();
+  const { categories, loading: categoriesLoading } = useCategories();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedProgram, setSelectedProgram] = useState<any>(null);
@@ -38,16 +40,15 @@ const Training = () => {
     triggerOnce: true,
   });
 
-  const categories = [
+  // Build categories array with API data
+  const categoriesWithAll = [
     { id: 'all', name: t('training.categories.all'), color: '#6b7280' },
-    { id: 'web', name: t('training.categories.web'), color: categoryColors.web },
-    { id: 'design', name: t('training.categories.design'), color: categoryColors.design },
-    { id: 'office', name: t('training.categories.office'), color: categoryColors.office },
-    { id: 'languages', name: t('training.categories.languages'), color: categoryColors.languages },
-    { id: 'safety', name: t('training.categories.safety'), color: categoryColors.safety },
-    { id: 'management', name: t('training.categories.management'), color: categoryColors.management },
-    { id: 'business', name: t('training.categories.business'), color: categoryColors.business },
-    { id: 'health', name: t('training.categories.health'), color: categoryColors.health }
+    ...categories.map(category => ({
+      id: category.slug,
+      name: category.name,
+      color: category.color,
+      description: category.description
+    }))
   ];
 
   const filteredPrograms = staticPrograms.filter(program => {
@@ -117,7 +118,7 @@ const Training = () => {
           </div>
 
           <div className="flex flex-wrap justify-center gap-2">
-            {categories.map((category) => (
+            {categoriesWithAll.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
