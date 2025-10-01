@@ -856,7 +856,7 @@ const TrainingProgramsManagement = () => {
               </div>
             </div>
 
-            {/* Certification */}
+                        readOnly={modalMode === 'edit'}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
