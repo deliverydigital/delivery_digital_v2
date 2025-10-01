@@ -10,7 +10,6 @@ import {useCategories} from "../hooks/useCategories.ts";
 const Training = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
-    const [selectedProgram, setSelectedProgram] = useState();
     const { documents, loading: documentsLoading, downloadDocument , } = useTrainingPrograms();
   const [selectedProgram, setSelectedProgram] = useState<TrainingProgram | null>(null);
   const [showProgramModal, setShowProgramModal] = useState(false);
