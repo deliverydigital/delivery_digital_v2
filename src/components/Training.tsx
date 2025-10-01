@@ -1,725 +1,1187 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { 
-  GraduationCap, Clock, Users, Euro, Star, Award, 
-  CheckCircle, ExternalLink, BookOpen, Target, 
-  FileText, Download, X, MapPin, Phone, Mail,
-  Code, PenTool, FileIcon as FileTextIcon, Globe, 
-  Shield, UserCheck, Briefcase, Heart, Search, Filter
-} from 'lucide-react';
-import { useTrainingPrograms } from '../hooks/useTrainingPrograms';
-import { useCategories } from '../hooks/useCategories';
+import { Search, Filter, Download, ExternalLink, Clock, Users, Euro, Star, Award, CheckCircle, BookOpen, GraduationCap, Target, Code, PenTool, Languages, Car, Apple, Leaf, ShoppingCart, BarChart3, Globe, Utensils, Shield, Building2, Heart, Briefcase, FileText, Calendar, MapPin, Phone, Mail, User, ChevronDown, ChevronUp, X, Send, Eye, CreditCard as Edit, Trash2, Plus, Settings, Laptop, Database, Server, Cloud, Smartphone, Monitor, Palette, FileSpreadsheet, MessageSquare, HardHat, Zap, Briefcase as iefcase, Layers, TrendingUp, Camera, CheckCircle2, Accessibility } from 'lucide-react';
+import { TrainingProgramsApiService } from '../services/trainingProgramsApi';
+import {useTrainingPrograms} from "../hooks/useTrainingPrograms.ts";
+import {useTrainingDocuments} from "../hooks/useTrainingDocuments.ts";
+import {useCategories} from "../hooks/useCategories.ts";
 
 const Training = () => {
-  const { t } = useTranslation();
-  const { programs, loading, error } = useTrainingPrograms();
-  const { categories } = useCategories();
-  const [selectedProgram, setSelectedProgram] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showCategories, setShowCategories] = useState(false);
-  const { ref, inView } = useInView({
-    threshold: 0.1,
-    triggerOnce: true,
-  });
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('all');
+    const [selectedProgram, setSelectedProgram] = useState();
+    const { documents, loading: documentsLoading, downloadDocument , } = useTrainingPrograms();
+    const { documents : docs, downloadDocument : downloadTraningDocument} = useTrainingDocuments();
+    const { programs, loading: programsLoading, error: programsError } = useTrainingPrograms();
+    const { categories, loading: categoriesLoading } = useCategories();
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'web': return <Code className="h-5 w-5" />;
-      case 'design': return <PenTool className="h-5 w-5" />;
-      case 'office': return <FileTextIcon className="h-5 w-5" />;
-      case 'languages': return <Globe className="h-5 w-5" />;
-      case 'safety': return <Shield className="h-5 w-5" />;
-      case 'management': return <UserCheck className="h-5 w-5" />;
-      case 'business': return <Briefcase className="h-5 w-5" />;
-      case 'health': return <Heart className="h-5 w-5" />;
-      default: return <BookOpen className="h-5 w-5" />;
+    const { ref, inView } = useInView({
+        threshold: 0.1,
+        triggerOnce: true,
+    });
+
+    const [programDocuments, setProgramDocuments] = useState<{[key: string]: any[]}>({});
+    const [loadingDocuments, setLoadingDocuments] = useState<{[key: string]: boolean}>({});
+
+    const staticPrograms = {
+        'wordpress': {
+            title: "WordPress",
+            duration: "35 heures",
+            price: "1200€ par apprenant",
+            category: "web",
+            description: "Créez et gérez des sites web professionnels avec WordPress",
+            icon: <Code className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Installation et Configuration",
+                    duration: "7h",
+                    topics: ["Installation WordPress", "Configuration de base", "Thèmes et plugins", "Sécurité"]
+                },
+                {
+                    title: "Création de Contenu",
+                    duration: "14h",
+                    topics: ["Pages et articles", "Médias", "Menus", "Widgets"]
+                },
+                {
+                    title: "Personnalisation Avancée",
+                    duration: "14h",
+                    topics: ["Customizer", "CSS personnalisé", "Fonctions avancées", "E-commerce"]
+                }
+            ],
+            downloads: [
+                { name: "Programme détaillé WordPress", url: "/downloads/wordpress-program.pdf" },
+                { name: "Guide d'installation", url: "/downloads/wordpress-installation.pdf" }
+            ]
+        },
+        'photoshop': {
+            title: "Photoshop",
+            duration: "28 heures",
+            price: "800€ par apprenant",
+            category: "design",
+            description: "Maîtrisez les outils de retouche photo et de création graphique",
+            icon: <Camera className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Interface et Outils de Base",
+                    duration: "7h",
+                    topics: ["Interface Photoshop", "Outils de sélection", "Calques", "Masques"]
+                },
+                {
+                    title: "Retouche Photo",
+                    duration: "14h",
+                    topics: ["Correction colorimétrique", "Retouche beauté", "Montage photo", "Effets"]
+                },
+                {
+                    title: "Création Graphique",
+                    duration: "7h",
+                    topics: ["Design graphique", "Typographie", "Composition", "Export"]
+                }
+            ],
+            downloads: [
+                { name: "Programme Photoshop", url: "/downloads/photoshop-program.pdf" },
+                { name: "Raccourcis clavier", url: "/downloads/photoshop-shortcuts.pdf" }
+            ]
+        },
+        'canva': {
+            title: "Canva",
+            duration: "21 heures",
+            price: "600€ par apprenant",
+            category: "design",
+            description: "Créez des visuels professionnels facilement avec Canva",
+            icon: <Palette className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Prise en Main",
+                    duration: "7h",
+                    topics: ["Interface Canva", "Templates", "Éléments graphiques", "Textes"]
+                },
+                {
+                    title: "Création de Supports",
+                    duration: "7h",
+                    topics: ["Réseaux sociaux", "Présentations", "Flyers", "Logos"]
+                },
+                {
+                    title: "Fonctionnalités Avancées",
+                    duration: "7h",
+                    topics: ["Animations", "Vidéos", "Collaboration", "Brand Kit"]
+                }
+            ],
+            downloads: [
+                { name: "Guide Canva", url: "/downloads/canva-guide.pdf" }
+            ]
+        },
+        'reflex-english-1': {
+            title: "Reflex English 1",
+            duration: "30 heures",
+            price: "900€ par apprenant",
+            category: "languages",
+            description: "Apprentissage de l'anglais niveau débutant",
+            icon: <Globe className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Bases de l'Anglais",
+                    duration: "10h",
+                    topics: ["Alphabet et phonétique", "Vocabulaire de base", "Grammaire élémentaire", "Présentation"]
+                },
+                {
+                    title: "Communication Quotidienne",
+                    duration: "10h",
+                    topics: ["Conversations simples", "Situations courantes", "Temps et dates", "Nombres"]
+                },
+                {
+                    title: "Pratique Orale",
+                    duration: "10h",
+                    topics: ["Prononciation", "Écoute", "Dialogue", "Exercices interactifs"]
+                }
+            ]
+        },
+        'reflex-english-2': {
+            title: "Reflex English 2",
+            duration: "30 heures",
+            price: "900€ par apprenant",
+            category: "languages",
+            description: "Apprentissage de l'anglais niveau intermédiaire",
+            icon: <Globe className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Grammaire Intermédiaire",
+                    duration: "10h",
+                    topics: ["Temps complexes", "Conditionnels", "Voix passive", "Discours rapporté"]
+                },
+                {
+                    title: "Vocabulaire Professionnel",
+                    duration: "10h",
+                    topics: ["Anglais des affaires", "Présentations", "Réunions", "Emails"]
+                },
+                {
+                    title: "Expression Orale Avancée",
+                    duration: "10h",
+                    topics: ["Débats", "Négociations", "Argumentation", "Accent"]
+                }
+            ]
+        },
+        'reflex-english-3': {
+            title: "Reflex English 3",
+            duration: "30 heures",
+            price: "900€ par apprenant",
+            category: "languages",
+            description: "Apprentissage de l'anglais niveau avancé",
+            icon: <Globe className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Anglais Avancé",
+                    duration: "10h",
+                    topics: ["Nuances linguistiques", "Expressions idiomatiques", "Littérature", "Culture"]
+                },
+                {
+                    title: "Communication Professionnelle",
+                    duration: "10h",
+                    topics: ["Leadership", "Management", "Négociation", "Stratégie"]
+                },
+                {
+                    title: "Certification",
+                    duration: "10h",
+                    topics: ["Préparation TOEIC", "Tests blancs", "Stratégies d'examen", "Certification"]
+                }
+            ]
+        },
+        'excel': {
+            title: "Excel",
+            duration: "28 heures",
+            price: "700€ par apprenant",
+            category: "office",
+            description: "Maîtrisez Excel pour l'analyse de données et la bureautique",
+            icon: <FileSpreadsheet className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Fondamentaux Excel",
+                    duration: "7h",
+                    topics: ["Interface", "Saisie de données", "Formules de base", "Mise en forme"]
+                },
+                {
+                    title: "Fonctions Avancées",
+                    duration: "14h",
+                    topics: ["Fonctions complexes", "Tableaux croisés", "Graphiques", "Macros"]
+                },
+                {
+                    title: "Analyse de Données",
+                    duration: "7h",
+                    topics: ["Filtres avancés", "Solveur", "Scénarios", "Tableaux de bord"]
+                }
+            ]
+        },
+        'dev-web-mobile': {
+            title: "Développeur Web et Web Mobile",
+            duration: "400 heures",
+            price: "6000€ par apprenant",
+            category: "web",
+            description: "Formation complète pour devenir développeur web et mobile",
+            icon: <Smartphone className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Fondamentaux Web",
+                    duration: "100h",
+                    topics: ["HTML5/CSS3", "JavaScript", "Responsive Design", "Git"]
+                },
+                {
+                    title: "Développement Frontend",
+                    duration: "150h",
+                    topics: ["React.js", "Vue.js", "TypeScript", "Outils de build"]
+                },
+                {
+                    title: "Développement Backend",
+                    duration: "100h",
+                    topics: ["Node.js", "Bases de données", "API REST", "Sécurité"]
+                },
+                {
+                    title: "Mobile et Déploiement",
+                    duration: "50h",
+                    topics: ["React Native", "PWA", "Déploiement", "Projet final"]
+                }
+            ]
+        },
+        'reflex-english-2-3': {
+            title: "Reflex English 2,3",
+            duration: "60 heures",
+            price: "1500€ par apprenant",
+            category: "languages",
+            description: "Formation combinée anglais intermédiaire et avancé",
+            icon: <Globe className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Niveau Intermédiaire",
+                    duration: "30h",
+                    topics: ["Grammaire intermédiaire", "Vocabulaire professionnel", "Expression orale", "Compréhension"]
+                },
+                {
+                    title: "Niveau Avancé",
+                    duration: "30h",
+                    topics: ["Anglais avancé", "Communication professionnelle", "Préparation certification", "Pratique intensive"]
+                }
+            ]
+        },
+        'vente-omnicanal': {
+            title: "Techniques de Vente Omnicanal",
+            duration: "35 heures",
+            price: "1800€ par apprenant",
+            category: "business",
+            description: "Maîtrisez les techniques de vente modernes sur tous les canaux",
+            icon: <ShoppingCart className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Fondamentaux de la Vente",
+                    duration: "14h",
+                    topics: ["Psychologie du client", "Techniques de persuasion", "Objections", "Closing"]
+                },
+                {
+                    title: "Vente Digitale",
+                    duration: "14h",
+                    topics: ["E-commerce", "Réseaux sociaux", "Email marketing", "CRM"]
+                },
+                {
+                    title: "Stratégie Omnicanal",
+                    duration: "7h",
+                    topics: ["Parcours client", "Cohérence des canaux", "Mesure de performance", "Fidélisation"]
+                }
+            ]
+        },
+        'nutrition': {
+            title: "Nutrition",
+            duration: "28 heures",
+            price: "1200€ par apprenant",
+            category: "health",
+            description: "Formation en nutrition et diététique",
+            icon: <Apple className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Bases de la Nutrition",
+                    duration: "14h",
+                    topics: ["Macronutriments", "Micronutriments", "Métabolisme", "Besoins nutritionnels"]
+                },
+                {
+                    title: "Nutrition Appliquée",
+                    duration: "14h",
+                    topics: ["Régimes spéciaux", "Nutrition sportive", "Pathologies", "Conseils pratiques"]
+                }
+            ]
+        },
+        'hygiene-dev-durable': {
+            title: "Hygiène et Développement Durable",
+            duration: "14 heures",
+            price: "450€ par apprenant",
+            category: "safety",
+            description: "Formation en hygiène et pratiques durables",
+            icon: <Leaf className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Hygiène Professionnelle",
+                    duration: "7h",
+                    topics: ["Bonnes pratiques", "Normes HACCP", "Prévention", "Contrôles"]
+                },
+                {
+                    title: "Développement Durable",
+                    duration: "7h",
+                    topics: ["Éco-responsabilité", "Gestion des déchets", "Économies d'énergie", "Pratiques vertes"]
+                }
+            ]
+        },
+        'hygiene-security': {
+            title: "Hygiène, Sécurité et Développement Durable",
+            duration: "21 heures",
+            price: "525€ par apprenant",
+            category: "safety",
+            description: "Formation complète en hygiène, sécurité et pratiques durables pour le secteur de la restauration",
+            icon: <Leaf className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Hygiène en Restauration",
+                    duration: "7h",
+                    topics: ["Bonnes pratiques d'hygiène", "Normes HACCP", "Gestion des contaminations", "Stockage des aliments"]
+                },
+                {
+                    title: "Sécurité au Travail",
+                    duration: "7h",
+                    topics: ["Prévention des risques", "Équipements de protection", "Gestes et postures", "Premiers secours"]
+                },
+                {
+                    title: "Développement Durable",
+                    duration: "7h",
+                    topics: ["Gestion des déchets", "Économie d'énergie", "Produits éco-responsables", "Réduction du gaspillage"]
+                }
+            ],
+            prerequisites: "Aucun prérequis",
+            objectives: [
+                "Acquérir des compétences en matière de bonnes pratiques d'hygiène",
+                "Identifier et prévenir les risques de sécurité",
+                "Intégrer des pratiques durables"
+            ],
+            methods: [
+                "AFEST (Action de Formation en Situation de Travail)",
+                "Exercices pratiques et études de cas",
+                "Alternance théorie et pratique",
+                "Suivi personnalisé"
+            ],
+            evaluationMethods: [
+                "Évaluation initiale et finale",
+                "Plateforme d'apprentissage DELIVERY Digital",
+                "Suivi des acquis personnalisé"
+            ],
+            accessibility: "Formation accessible aux personnes en situation de handicap"
+        },
+        'hygiene-security-afest': {
+            title: "Hygiène, Sécurité et Développement Durable - AFEST",
+            duration: "21 heures",
+            price: "525€ par apprenant",
+            category: "safety",
+            description: "Formation en situation de travail (AFEST) pour acquérir les compétences essentielles en hygiène, sécurité et développement durable",
+            icon: <Leaf className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Hygiène en Situation de Travail",
+                    duration: "7h",
+                    topics: ["Bonnes pratiques d'hygiène appliquées", "Identification des risques sur le terrain", "Mise en situation réelle", "Observation et analyse des pratiques"]
+                },
+                {
+                    title: "Sécurité Pratique",
+                    duration: "7h",
+                    topics: ["Prévention des risques en situation", "Application des équipements de protection", "Gestes et postures adaptés", "Situations d'urgence réelles"]
+                },
+                {
+                    title: "Développement Durable Appliqué",
+                    duration: "7h",
+                    topics: ["Intégration de solutions durables", "Réduction du gaspillage en pratique", "Éco-responsabilité au quotidien", "Amélioration continue"]
+                }
+            ],
+            prerequisites: "Pas de prérequis",
+            objectives: [
+                "Fournir aux participants les compétences essentielles pour comprendre les bonnes pratiques d'hygiène",
+                "Assurer la sécurité dans leur environnement de travail",
+                "Adopter des comportements responsables en matière de développement durable",
+                "Identifier les risques, les prévenir, et intégrer des solutions durables dans leurs activités quotidiennes",
+                "Développer des savoir-faire pratiques, directement applicables dans les situations réelles de travail"
+            ],
+            methods: [
+                "Formation en situation de travail (AFEST) avec l'accompagnement d'un formateur en visioconférence",
+                "L'apprentissage se fait directement sur le terrain, au sein de l'environnement professionnel des apprenants",
+                "Un formateur guide les apprenants dans l'acquisition des compétences en combinant temps de travail, observation, analyse des pratiques et mises en situation concrètes",
+                "L'AFEST repose sur une alternance entre phases de mises en situation professionnelles et réflexions guidées par un formateur en visioconférence",
+                "Chaque compétence est travaillée directement en contexte professionnel, avec des ajustements continus selon les besoins des apprenants"
+            ],
+            evaluationMethods: [
+                "La progression est suivie à travers des observations en situation de travail",
+                "Évaluations régulières par le formateur",
+                "Projet final validant les compétences acquises",
+                "Évaluation de début et fin de formation : Chaque apprenant est évalué en début et en fin de formation afin de mesurer les compétences acquises et l'évolution des connaissances tout au long du parcours"
+            ],
+            accessibility: "En cas de handicap, merci de bien vouloir nous contacter : E-mail : contact@deliverydigital.fr",
+            accessDelay: "1 semaine"
+        },
+        'reflex-espagnol-2': {
+            title: "Reflex Espagnol Niveau 2 B1/B2",
+            duration: "80 heures",
+            price: "4000€ par apprenant",
+            category: "languages",
+            description: "Apprentissage de l'espagnol niveau intermédiaire",
+            icon: <Languages className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Grammaire Intermédiaire",
+                    duration: "25h",
+                    topics: ["Temps complexes", "Subjonctif", "Conditionnels", "Expressions idiomatiques"]
+                },
+                {
+                    title: "Vocabulaire Thématique",
+                    duration: "30h",
+                    topics: ["Voyage", "Travail", "Culture", "Actualités"]
+                },
+                {
+                    title: "Expression Orale",
+                    duration: "25h",
+                    topics: ["Conversations", "Débats", "Présentations", "Prononciation"]
+                }
+            ]
+        },
+        'conduite-securitaire': {
+            title: "Conduite Sécuritaire et Prévention des Risques Routiers",
+            duration: "100 heures",
+            price: "3500€ par apprenant",
+            category: "safety",
+            description: "Formation complète pour améliorer les compétences en conduite sécuritaire et gestion des risques routiers",
+            icon: <Car className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Connaissance des Risques Routiers",
+                    duration: "15h",
+                    topics: ["Dangers en milieu urbain", "Conduite sur autoroute", "Conditions difficiles", "Gestion des imprévus"]
+                },
+                {
+                    title: "Conduite Défensive",
+                    duration: "20h",
+                    topics: ["Techniques de réduction des risques", "Anticipation des comportements", "Gestion des autres usagers", "Stratégies préventives"]
+                },
+                {
+                    title: "Sécurité et Premiers Secours",
+                    duration: "15h",
+                    topics: ["Sécurité des passagers", "Gestes de premiers secours", "Réaction en cas d'urgence", "Protocoles de sécurité"]
+                },
+                {
+                    title: "Gestion des Situations d'Urgence",
+                    duration: "15h",
+                    topics: ["Réaction en cas d'accident", "Gestion des pannes", "Incidents sur la route", "Procédures d'urgence"]
+                },
+                {
+                    title: "Conduite Adaptée aux Conditions",
+                    duration: "15h",
+                    topics: ["Conduite par temps de pluie", "Conduite sur neige et verglas", "Adaptation aux conditions climatiques", "Techniques spécialisées"]
+                },
+                {
+                    title: "Navigation et Planification",
+                    duration: "10h",
+                    topics: ["Outils de navigation modernes", "Planification de trajets", "Optimisation des déplacements", "Évitement des risques"]
+                },
+                {
+                    title: "Gestion du Stress",
+                    duration: "10h",
+                    topics: ["Techniques de gestion du stress", "Émotions négatives au volant", "Conduite sereine", "Risques psychosociaux"]
+                }
+            ],
+            prerequisites: "Accessible à tous les chauffeurs souhaitant améliorer leurs compétences en conduite sécuritaire, sans prérequis spécifiques. Un test de logique pourra être effectué lors du processus d'admission pour vérifier les connaissances de base en sécurité routière.",
+            objectives: [
+                "Appréhender les dangers liés à la conduite en milieu urbain, sur autoroute et en conditions difficiles",
+                "Maîtriser les techniques permettant de réduire les risques liés à la conduite en anticipant les comportements des autres usagers",
+                "Apprendre à garantir la sécurité des passagers et être en mesure de réagir en cas d'urgence avec des gestes de premiers secours",
+                "Savoir comment réagir en cas d'accident, de panne ou d'incident sur la route",
+                "Apprendre à adapter la conduite en fonction des conditions climatiques difficiles (pluie, neige, verglas)",
+                "Savoir utiliser des outils de navigation modernes et planifier les trajets pour optimiser les déplacements et éviter les risques",
+                "Acquérir des techniques pour gérer le stress et les émotions négatives au volant, afin de conduire de manière sereine"
+            ],
+            methods: [
+                "Séquences de travail en visioconférence : Des séances interactives en ligne, encadrées par un formateur, permettent d'approfondir les concepts et d'appliquer les compétences sur des exercices pratiques",
+                "Accès continu à la plateforme pédagogique : Tous les cours, quizz, et exercices sont accessibles en permanence, 24h/24 et 7j/7, via la plateforme pédagogique DELIVERY Digital. Vous pouvez y accéder à tout moment en vous connectant à votre Espace apprenant"
+            ],
+            evaluationMethods: [
+                "QCM, exercices et projets quotidiens : Ces éléments sont disponibles chaque jour sur votre Espace apprenant et permettent d'appliquer et de tester vos connaissances de manière continue",
+                "Évaluation de début et fin de formation : Chaque apprenant est évalué en début et en fin de formation afin de mesurer les compétences acquises et l'évolution des connaissances tout au long du parcours",
+                "Projet final : Ce projet synthétise et évalue l'ensemble des compétences acquises durant la formation, constituant une validation complète des apprentissages réalisés"
+            ],
+            accessibility: "En cas de handicap, merci de bien vouloir nous contacter pour obtenir les informations nécessaires à l'adaptation de la formation : E-mail : contact@deliverydigital.fr - Tel : 0749707773",
+            accessDelay: "1 semaine : Accès à la plateforme et début de la formation dans les 7 jours suivant l'inscription"
+        },
+        'reflex-espagnol-1': {
+            title: "Reflex Espagnol Niveau 1 A1/B1",
+            duration: "80 heures",
+            price: "4000€ par apprenant",
+            category: "languages",
+            description: "Apprentissage de l'espagnol niveau débutant",
+            icon: <Languages className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Bases de l'Espagnol",
+                    duration: "40h",
+                    topics: ["Alphabet", "Prononciation", "Grammaire de base", "Vocabulaire essentiel"]
+                },
+                {
+                    title: "Communication de Base",
+                    duration: "40h",
+                    topics: ["Présentations", "Situations courantes", "Dialogues simples", "Culture hispanique"]
+                }
+            ]
+        },
+        'management-complet': {
+            title: "Management Parcours Complet",
+            duration: "70 heures",
+            price: "2500€ par apprenant",
+            category: "management",
+            description: "Formation complète en management et leadership",
+            icon: <Target className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Fondamentaux du Management",
+                    duration: "21h",
+                    topics: ["Leadership", "Motivation", "Communication", "Délégation"]
+                },
+                {
+                    title: "Gestion d'Équipe",
+                    duration: "21h",
+                    topics: ["Recrutement", "Évaluation", "Gestion des conflits", "Développement"]
+                },
+                {
+                    title: "Management Stratégique",
+                    duration: "28h",
+                    topics: ["Planification", "Prise de décision", "Gestion du changement", "Performance"]
+                }
+            ]
+        },
+        'reflex-espagnol-3': {
+            title: "Reflex'Español - Niveau 3 (C1/C2)",
+            duration: "80 heures",
+            price: "4000€ par apprenant",
+            category: "languages",
+            description: "Apprentissage de l'espagnol niveau avancé",
+            icon: <Languages className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "Espagnol Avancé",
+                    duration: "40h",
+                    topics: ["Nuances linguistiques", "Littérature", "Registres de langue", "Culture approfondie"]
+                },
+                {
+                    title: "Maîtrise Professionnelle",
+                    duration: "40h",
+                    topics: ["Espagnol des affaires", "Négociation", "Rédaction", "Certification"]
+                }
+            ]
+        },
+        'autocad-sketchup-revit': {
+            title: "AutoCAD, SketchUp, et Revit",
+            duration: "100 heures",
+            price: "3500€ par apprenant",
+            category: "design",
+            description: "Maîtrise complète des outils AutoCAD, SketchUp, et Revit pour le design architectural et le BIM",
+            icon: <PenTool className="h-6 w-6" />,
+            modules: [
+                {
+                    title: "AutoCAD - Plans 2D et 3D",
+                    duration: "35h",
+                    topics: ["Interface AutoCAD", "Dessin 2D professionnel", "Modélisation 3D", "Cotation et annotations", "Mise en page et impression"]
+                },
+                {
+                    title: "SketchUp - Modélisation 3D",
+                    duration: "30h",
+                    topics: ["Interface SketchUp", "Modélisation 3D interactive", "Textures et matériaux", "Rendus réalistes", "Animations et présentations"]
+                },
+                {
+                    title: "Revit - BIM et Maquettes Numériques",
+                    duration: "35h",
+                    topics: ["Principes du BIM", "Interface Revit", "Conception de projets BIM", "Gestion des informations de construction", "Maquettes numériques collaboratives"]
+                }
+            ],
+            prerequisites: "Aucun pré-requis spécifique n'est nécessaire pour suivre cette formation. Toutefois, une connaissance de base en informatique et des notions générales de dessin technique ou d'architecture peuvent être un atout.",
+            objectives: [
+                "Créer et modéliser des plans 2D et 3D professionnels avec AutoCAD",
+                "Élaborer des modèles 3D interactifs et des rendus réalistes avec SketchUp",
+                "Utiliser Revit pour la conception de projets en BIM, incluant la gestion des informations de construction et la création de maquettes numériques",
+                "Appliquer les principes du dessin technique, de la modélisation 3D et du travail collaboratif en BIM sur un projet complet",
+                "Optimiser votre workflow avec ces logiciels pour gagner en efficacité et en qualité"
+            ],
+            methods: [
+                "Séquences de travail en visioconférence : Des séances interactives en ligne, encadrées par un formateur, permettent d'approfondir les concepts et d'appliquer les compétences sur des exercices pratiques",
+                "Accès continu à la plateforme pédagogique : Tous les cours, quizz, et exercices sont accessibles en permanence, 24h/24 et 7j/7, via la plateforme pédagogique DELIVERY Digital. Vous pouvez y accéder à tout moment en vous connectant à votre Espace apprenant"
+            ],
+            evaluationMethods: [
+                "QCM, exercices et projets quotidiens : Ces éléments sont disponibles chaque jour sur votre Espace apprenant et permettent d'appliquer et de tester vos connaissances de manière continue",
+                "Évaluation de début et fin de formation : Chaque apprenant est évalué en début et en fin de formation afin de mesurer les compétences acquises et l'évolution des connaissances tout au long du parcours"
+            ],
+            accessibility: "En cas de handicap, merci de bien vouloir nous contacter pour obtenir les informations nécessaires à l'adaptation de la formation : E-mail : contact@deliverydigital.fr - Tel : 0749707773",
+            accessDelay: "1 semaine : Accès à la plateforme et début de la formation dans les 7 jours suivant l'inscription"
+        }
+    };
+
+    // Add "all" category to the fetched categories
+    const allCategories = [
+        { id: 'all', name: 'Toutes les formations', slug: 'all', color: '#6b7280', icon: 'book-open' },
+        ...categories
+    ];
+
+    const filteredPrograms = programs.filter((program) => {
+        const matchesSearch = program.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            program.description.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory === 'all' || program.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
+
+
+    console.log('Programs------------------------------>',programs)
+    const currentProgram =  selectedProgram;
+
+    // Load documents for a specific program
+    const loadProgramDocuments = async (programId: string) => {
+        if (programDocuments[programId] || loadingDocuments[programId]) {
+            return; // Already loaded or loading
+        }
+
+        setLoadingDocuments(prev => ({ ...prev, [programId]: true }));
+        
+        try {
+            const docs = await TrainingProgramsApiService.getProgramDocuments(programId);
+            setProgramDocuments(prev => ({ ...prev, [programId]: docs }));
+        } catch (error) {
+            console.error(`Error loading documents for ${programId}:`, error);
+            // Fallback to static downloads if API fails
+            const program = Object.values(staticPrograms).find(p => p.id === programId);
+            if (program?.downloads) {
+                setProgramDocuments(prev => ({ 
+                    ...prev, 
+                    [programId]: program.downloads.map(download => ({
+                        id: `static-${Date.now()}-${Math.random()}`,
+                        title: download.title,
+                        document_type: 'program',
+                        file_size: 1024000, // Default size
+                        download_count: 0,
+                        uploaded_at: new Date(),
+                        download_url: '#' // Static placeholder
+                    }))
+                }));
+            }
+        } finally {
+            setLoadingDocuments(prev => ({ ...prev, [programId]: false }));
+        }
+    };
+
+    // Load documents when a program is selected
+    useEffect(() => {
+        if (selectedProgram?.program_id) {
+            console.log(selectedProgram.program_id);
+            loadProgramDocuments(selectedProgram?.program_id);
+        }
+    }, [selectedProgram]);
+
+    const handleDownloadDocument = (documentId: string, programId: string) => {
+        try {
+            TrainingProgramsApiService.downloadDocument(documentId, programId);
+        } catch (error) {
+            console.error('Error downloading document:', error);
+            // Fallback for static downloads
+            const program = Object.values(staticPrograms).find(p => p.id === programId);
+            const staticDownload = program?.downloads?.find(d => d.title.includes(documentId));
+            if (staticDownload) {
+                // For demo purposes, show an alert
+                alert(`Téléchargement: ${staticDownload.title}\n\nCe document sera disponible une fois le système de gestion documentaire configuré.`);
+            }
+        }
+    };
+
+    const programDocs = programDocuments[selectedProgram?.program_id || ''] || [];
+    const isLoadingDocs = loadingDocuments[selectedProgram?.program_id || ''] || false;
+
+    // Show loading state
+    if (programsLoading || categoriesLoading) {
+        return (
+            <section id="training" className="section bg-gradient-to-b from-gray-900 to-primary-950">
+                <div className="container">
+                    <div className="text-center py-20">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mx-auto mb-4"></div>
+                        <p className="text-gray-300">Chargement des formations...</p>
+                    </div>
+                </div>
+            </section>
+        );
     }
-  };
-
-  const getCategoryColor = (category: string) => {
-    const categoryData = categories.find(cat => cat.slug === category);
-    return categoryData?.color || '#3b82f6';
-  };
-
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case 'beginner': return 'bg-green-100 text-green-800';
-      case 'intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getLevelText = (level: string) => {
-    switch (level) {
-      case 'beginner': return 'Débutant';
-      case 'intermediate': return 'Intermédiaire';
-      case 'advanced': return 'Avancé';
-      default: return level;
-    }
-  };
-
-  const openModal = (program) => {
-    setSelectedProgram(program);
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setSelectedProgram(null);
-  };
-
-  // Filter programs based on category and search
-  const filteredPrograms = programs.filter(program => {
-    const matchesCategory = selectedCategory === 'all' || program.category === selectedCategory;
-    const matchesSearch = !searchQuery || 
-      program.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      program.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch && program.is_active;
-  });
-
-  const TrainingProgramModal = () => {
-    if (!selectedProgram) return null;
 
     return (
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-        >
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-            <div className="flex items-center">
-              <div 
-                className="w-12 h-12 rounded-lg flex items-center justify-center mr-4"
-                style={{ backgroundColor: `${getCategoryColor(selectedProgram.category)}20`, color: getCategoryColor(selectedProgram.category) }}
-              >
-                {getCategoryIcon(selectedProgram.category)}
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">{selectedProgram.title}</h3>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getLevelColor(selectedProgram.level)}`}>
-                  {getLevelText(selectedProgram.level)}
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={closeModal}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          <div className="p-6 space-y-8">
-            {/* Program Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-blue-50 rounded-lg p-4">
-                <div className="flex items-center mb-2">
-                  <Clock className="h-5 w-5 text-blue-600 mr-2" />
-                  <span className="font-medium text-blue-900">Durée</span>
-                </div>
-                <div className="text-2xl font-bold text-blue-600">{selectedProgram.duration_hours}h</div>
-              </div>
-              <div className="bg-green-50 rounded-lg p-4">
-                <div className="flex items-center mb-2">
-                  <Euro className="h-5 w-5 text-green-600 mr-2" />
-                  <span className="font-medium text-green-900">Prix</span>
-                </div>
-                <div className="text-2xl font-bold text-green-600">{selectedProgram.price}€</div>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-4">
-                <div className="flex items-center mb-2">
-                  <Users className="h-5 w-5 text-purple-600 mr-2" />
-                  <span className="font-medium text-purple-900">Participants max</span>
-                </div>
-                <div className="text-2xl font-bold text-purple-600">{selectedProgram.max_participants}</div>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div>
-              <h4 className="text-lg font-bold text-gray-900 mb-3">Description</h4>
-              <p className="text-gray-700 leading-relaxed">{selectedProgram.description}</p>
-            </div>
-
-            {/* Objectives */}
-            {selectedProgram.objectives && selectedProgram.objectives.length > 0 && (
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 mb-3 flex items-center">
-                  <Target className="h-5 w-5 mr-2 text-blue-600" />
-                  Objectifs pédagogiques
-                </h4>
-                <ul className="space-y-2">
-                  {selectedProgram.objectives.map((objective, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">{objective}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Prerequisites */}
-            {selectedProgram.prerequisites && (
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 mb-3">Prérequis</h4>
-                <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{selectedProgram.prerequisites}</p>
-              </div>
-            )}
-
-            {/* Methods */}
-            {selectedProgram.methods && selectedProgram.methods.length > 0 && (
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 mb-3">Méthodes pédagogiques</h4>
-                <ul className="space-y-2">
-                  {selectedProgram.methods.map((method, index) => (
-                    <li key={index} className="flex items-start">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-3 mt-2 flex-shrink-0"></div>
-                      <span className="text-gray-700">{method}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Modules */}
-            {selectedProgram.modules && selectedProgram.modules.length > 0 && (
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 mb-3">Modules de formation</h4>
-                <div className="space-y-4">
-                  {selectedProgram.modules.map((module, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <h5 className="font-medium text-gray-900">{module.title}</h5>
-                        <span className="text-sm text-gray-500">{module.duration_hours}h</span>
-                      </div>
-                      {module.topics && module.topics.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {module.topics.map((topic, topicIndex) => (
-                            <span key={topicIndex} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {topic}
-                            </span>
-                          ))}
+        <section id="training" className="section bg-gradient-to-b from-gray-900 to-primary-950">
+            <div ref={ref} className="container relative z-10">
+                <div className="text-center mb-12">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="mb-4"
+                    >
+                        <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-900/20 border border-green-500/20">
+                            <GraduationCap className="h-5 w-5 text-green-400 mr-2" />
+                            <span className="text-green-400">Formation Certifiée Qualiopi - Prise en charge OPCO 100%</span>
                         </div>
-                      )}
+                    </motion.div>
+
+                    <motion.h2
+                        className="text-2xl md:text-3xl font-bold mb-4 text-white"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                    >
+                        Formations Professionnelles
+                    </motion.h2>
+                    <motion.p
+                        className="text-lg text-gray-300 max-w-2xl mx-auto"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                    >
+                        Développez vos compétences avec nos {Object.keys(staticPrograms).length} formations certifiées - Financement intégral OPCO
+                    </motion.p>
+                </div>
+
+                {/* Search and Filters */}
+                <div className="mb-8 space-y-4">
+                    <div className="max-w-md mx-auto">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Rechercher une formation..."
+                                className="w-full px-4 py-2 pl-10 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {/* Certification and Financing */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Certification */}
-              {(selectedProgram.certification_type || selectedProgram.opco_eligible || selectedProgram.cpf_eligible) && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-                  <div className="flex items-center mb-4">
-                    <Award className="h-6 w-6 text-yellow-600 mr-2" />
-                    <h4 className="text-lg font-bold text-yellow-900">Certification & Financement</h4>
-                  </div>
-                  <div className="space-y-3">
-                    {selectedProgram.certification_type && (
-                      <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        <span className="text-yellow-800">Certification: {selectedProgram.certification_type}</span>
-                      </div>
-                    )}
-                    {selectedProgram.opco_eligible && (
-                      <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        <span className="text-yellow-800">Éligible OPCO</span>
-                      </div>
-                    )}
-                    {selectedProgram.cpf_eligible && (
-                      <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                        <span className="text-yellow-800">Éligible CPF</span>
-                      </div>
-                    )}
-                  </div>
+                    <div className="flex flex-wrap justify-center gap-2">
+                        {allCategories.map((category) => (
+                            <button
+                                key={category.slug || category.id}
+                                onClick={() => setSelectedCategory(category.id)}
+                                className={`px-4 py-2 rounded-full text-sm transition-all ${
+                                    selectedCategory === category.id
+                                        ? 'bg-primary-600 text-white'
+                                        : 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
+                                }`}
+                            >
+                                {category.name} ({Object.values(staticPrograms).filter(p => category.id === 'all' || p.category === category.id).length})
+                            </button>
+                        ))}
+                    </div>
                 </div>
-              )}
 
-              {/* Accessibility */}
-              {selectedProgram.accessibility_info && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                  <div className="flex items-center mb-4">
-                    <UserCheck className="h-6 w-6 text-blue-600 mr-2" />
-                    <h4 className="text-lg font-bold text-blue-900">Accessibilité</h4>
-                  </div>
-                  <p className="text-blue-800">{selectedProgram.accessibility_info}</p>
-                  {selectedProgram.access_delay && (
-                    <p className="text-blue-700 mt-2">
-                      <strong>Délai d'accès:</strong> {selectedProgram.access_delay}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Documents */}
-            {selectedProgram.documents && selectedProgram.documents.length > 0 && (
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 mb-3 flex items-center">
-                  <FileText className="h-5 w-5 mr-2 text-gray-600" />
-                  Documents disponibles
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {selectedProgram.documents.map((document, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h5 className="font-medium text-gray-900 mb-1">{document.title}</h5>
-                          {document.description && (
-                            <p className="text-gray-600 text-sm mb-2">{document.description}</p>
-                          )}
-                          <div className="flex items-center text-xs text-gray-500">
-                            <span>{(document.file_size / 1024 / 1024).toFixed(1)} MB</span>
-                            <span className="mx-2">•</span>
-                            <span>{document.download_count} téléchargements</span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => window.open(document.download_url, '_blank')}
-                          className="ml-4 text-blue-600 hover:text-blue-800 transition-colors"
+                {/* Programs Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+                    {filteredPrograms.map((program, key) => (
+                        <motion.div
+                            key={program.id || key}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6 }}
+                            className={`card p-6 cursor-pointer transition-all hover:scale-105 ${
+                                selectedProgram?.program_id === program.program_id ? 'ring-2 ring-primary-500 bg-primary-900/20' : ''
+                            }`}
+                            onClick={() => {console.log(program);setSelectedProgram(program)}}
                         >
-                          <Download className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                            <div className="flex items-center mb-4">
+                                <div className="bg-white/10 p-3 rounded-lg mr-3">
+                                    {program.icon}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-lg font-bold text-white truncate">{program.title}</h3>
+                                    <p className="text-primary-400 text-sm">{program.duration}</p>
+                                </div>
+                            </div>
+                            <p className="text-gray-300 text-sm mb-4 line-clamp-2">{program.description}</p>
+                            <div className="flex items-center justify-between">
+                                <span className="text-white font-bold text-sm">{program.price}</span>
+                                <div className="flex items-center text-xs text-green-400">
+                                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                                    <span>100% OPCO</span>
+                                </div>
+                            </div>
 
-            {/* Contact and Registration */}
-            <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-6">
-              <div className="text-center">
-                <h4 className="text-lg font-bold text-gray-900 mb-2">Intéressé par cette formation ?</h4>
-                <p className="text-gray-700 mb-6">
-                  Contactez-nous pour plus d'informations ou pour vous inscrire
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-                  <a
-                    href="mailto:contact@deliverydigital.fr"
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <Mail className="h-4 w-4 mr-2" />
-                    contact@deliverydigital.fr
-                  </a>
-                  <a
-                    href="tel:0749707773"
-                    className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    <Phone className="h-4 w-4 mr-2" />
-                    07 49 70 77 73
-                  </a>
+                            {docs.map((doc) => {
+
+                                if(doc.category === 'program'  && doc.program_name === program.title){
+
+                                    console.log('doc',doc);
+                                    return <div className="mt-4 pt-4 border-t border-white/10">
+                                        <button
+                                            onClick={(e) => {
+                                                console.log(doc)
+                                                // Use the correct API endpoint for training programs
+                                                const baseUrl = import.meta.env.VITE_API_URL || '';
+                                                const downloadUrl = `${baseUrl}/api/training-programs/${selectedProgram?.program_id}/documents/${doc.id}/download`;
+                                                window.open(downloadUrl, '_blank');
+                                            }}
+                                            className="flex items-center text-xs text-primary-400 hover:text-primary-300 transition-colors"
+                                        >
+                                            <Download className="h-4 w-4 mr-2" />
+                                            Télécharger PDF
+                                        </button>
+                                    </div>
+                                }
+
+                                return null;
+                            })}
+                        </motion.div>
+                    ))}
                 </div>
-                <div className="flex items-center justify-center text-gray-600 text-sm">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span>470 promenade des anglais, 06200 Nice</span>
+
+                {/* Selected Program Details */}
+                {currentProgram && (
+                    <motion.div
+                        key={selectedProgram?.program_id || ''}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12"
+                    >
+                        <div className="lg:col-span-1">
+                            <div className="card p-6">
+                                <div className="mb-6">
+                                    <h3 className="text-xl font-bold text-white mb-3">
+                                        {currentProgram.title}
+                                    </h3>
+                                    <p className="text-gray-300 text-sm mb-4">
+                                        {currentProgram.description}
+                                    </p>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center text-gray-300 text-sm">
+                                            <Clock className="h-4 w-4 mr-2 text-primary-400" />
+                                            <span>{currentProgram.duration}</span>
+                                        </div>
+                                        <div className="flex items-center text-gray-300 text-sm">
+                                            <Users className="h-4 w-4 mr-2 text-primary-400" />
+                                            <span>12 participants maximum</span>
+                                        </div>
+                                        {currentProgram.accessDelay && (
+                                            <div className="flex items-center text-gray-300 text-sm">
+                                                <Clock className="h-4 w-4 mr-2 text-primary-400" />
+                                                <span>Délai d'accès : {currentProgram.accessDelay}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="bg-green-900/50 rounded-lg p-4 mb-6">
+                                    <div className="flex items-center mb-2">
+                                        <CheckCircle2 className="h-4 w-4 text-green-400 mr-2" />
+                                        <span className="text-green-400 font-medium text-sm">
+                                            Prise en charge OPCO 100%
+                                        </span>
+                                    </div>
+                                    <p className="text-2xl font-bold text-white">
+                                        {currentProgram.price}
+                                    </p>
+                                    <p className="text-green-400 text-sm font-medium">
+                                        Reste à charge : 0€
+                                    </p>
+                                </div>
+
+                                <a
+                                    href="https://app.deliverydigital.fr/student/signup"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-primary w-full text-sm"
+                                >
+                                    S'inscrire
+                                </a>
+                            </div>
+
+                            {/* Additional info for specific programs */}
+                            {(selectedProgram?.program_id === 'hygiene-security' || selectedProgram?.program_id === 'hygiene-security-afest' || selectedProgram?.program_id === 'conduite-securitaire' || selectedProgram?.program_id === 'autocad-sketchup-revit') && currentProgram.prerequisites && (
+                                <div className="card p-6 mt-6">
+                                    <h4 className="text-lg font-bold text-white mb-4">Informations complémentaires</h4>
+
+                                    <div className="space-y-4">
+                                        <div>
+                                            <h5 className="text-sm font-medium text-white mb-2">Prérequis</h5>
+                                            <p className="text-gray-300 text-sm">{currentProgram.prerequisites}</p>
+                                        </div>
+
+                                        {currentProgram.objectives && (
+                                            <div>
+                                                <h5 className="text-sm font-medium text-white mb-2">Objectifs pédagogiques</h5>
+                                                <ul className="space-y-2">
+                                                    {currentProgram.objectives.map((objective, index) => (
+                                                        <li key={index} className="flex items-start text-gray-300 text-sm">
+                                                            <CheckCircle2 className="h-4 w-4 mr-2 mt-0.5 text-primary-400" />
+                                                            <span>{objective}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+
+                                        {currentProgram.methods && (
+                                            <div>
+                                                <h5 className="text-sm font-medium text-white mb-2">Méthodes pédagogiques</h5>
+                                                <ul className="space-y-2">
+                                                    {currentProgram.methods.map((method, index) => (
+                                                        <li key={index} className="flex items-start text-gray-300 text-sm">
+                                                            <CheckCircle2 className="h-4 w-4 mr-2 mt-0.5 text-primary-400" />
+                                                            <span>{method}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+
+                                        {currentProgram.evaluationMethods && (
+                                            <div>
+                                                <h5 className="text-sm font-medium text-white mb-2">Modalités d'évaluation</h5>
+                                                <ul className="space-y-2">
+                                                    {currentProgram.evaluationMethods.map((item, index) => (
+                                                        <li key={index} className="flex items-start text-gray-300 text-sm">
+                                                            <CheckCircle2 className="h-4 w-4 mr-2 mt-0.5 text-primary-400" />
+                                                            <span>{item}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+
+                                        {currentProgram.accessibility && (
+                                            <div>
+                                                <h5 className="text-sm font-medium text-white mb-2">Accessibilité</h5>
+                                                <p className="text-gray-300 text-sm">{currentProgram.accessibility}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Downloads Section */}
+                            {false && documents.length > 0 && (
+                                <div className="card p-6 mt-6">
+                                    <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                                        <Download className="h-5 w-5 mr-2" />
+                                        Documents à télécharger
+                                    </h4>
+                                    {documentsLoading ? (
+                                        <div className="text-center py-4">
+                                            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary-500 mx-auto"></div>
+                                            <p className="mt-2 text-gray-400 text-sm">Chargement des documents...</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {documents.map((document) => (
+                                                <button
+                                                    key={document.id}
+                                                    onClick={() => downloadDocument(document.id)}
+                                                    className="w-full flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group"
+                                                >
+                                                    <div className="flex items-center">
+                                                        <div className="bg-red-500/20 p-2 rounded-lg mr-3">
+                                                            <Download className="h-4 w-4 text-red-400" />
+                                                        </div>
+                                                        <div className="text-left">
+                                                            <span className="text-white text-sm font-medium block">{document.title}</span>
+                                                            {document.description && (
+                                                                <span className="text-gray-400 text-xs">{document.description}</span>
+                                                            )}
+                                                            <div className="flex items-center mt-1 space-x-2">
+                                                                <span className="text-gray-500 text-xs">
+                                                                    {(document.file_size / 1024 / 1024).toFixed(1)} MB
+                                                                </span>
+                                                                <span className="text-gray-500 text-xs">•</span>
+                                                                <span className="text-gray-500 text-xs">
+                                                                    {document.download_count} téléchargements
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <Download className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Fallback to static downloads if no API documents */}
+                            {false && documents.length === 0 && !documentsLoading && staticPrograms[selectedProgram].downloads && staticPrograms[selectedProgram?.program_id].downloads.length > 0 && (
+                                <div className="card p-6 mt-6">
+                                    <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                                        <Download className="h-5 w-5 mr-2" />
+                                        Documents à télécharger
+                                    </h4>
+                                    <div className="space-y-3">
+                                        {staticPrograms[selectedProgram?.program_id].downloads.map((download, index) => (
+                                            <a
+                                                key={index}
+                                                href={download.url}
+                                                download
+                                                className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group"
+                                            >
+                                                <div className="flex items-center">
+                                                    <div className="bg-red-500/20 p-2 rounded-lg mr-3">
+                                                        <Download className="h-4 w-4 text-red-400" />
+                                                    </div>
+                                                    <span className="text-white text-sm font-medium">{download.name}</span>
+                                                </div>
+                                                <Download className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors" />
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Dynamic Documents Section */}
+                            <div className="card p-6 mt-6">
+                                <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                                    <Download className="h-5 w-5 mr-2" />
+                                    Documents à télécharger
+                                </h4>
+                                
+                                {isLoadingDocs ? (
+                                    <div className="text-center py-8">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                                        <p className="text-gray-600">Chargement des documents...</p>
+                                    </div>
+                                ) : programDocs.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {programDocs.map((doc) => (
+                                            <div key={doc.id} className="p-4 bg-white/5 rounded-lg">
+                                                <h5 className="font-medium text-white mb-2">{doc.title}</h5>
+                                                {doc.description && (
+                                                    <p className="text-sm text-gray-600 mb-2">{doc.description}</p>
+                                                )}
+                                                <div className="flex items-center justify-between">
+                                                    <div className="text-sm text-gray-500">
+                                                        <span>PDF • {(doc.file_size / 1024).toFixed(0)} KB</span>
+                                                        {doc.download_count > 0 && (
+                                                            <span className="ml-2">• {doc.download_count} téléchargements</span>
+                                                        )}
+                                                    </div>
+                                                    <button
+                                                        className="btn btn-sm btn-primary"
+                                                        onClick={() => handleDownloadDocument(doc.id, selectedProgram!)}
+                                                    >
+                                                        <Download className="h-4 w-4 mr-1" />
+                                                        Télécharger
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-gray-500">
+                                        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                                        <p>Aucun document disponible pour cette formation</p>
+                                        <p className="text-sm mt-2">Les documents seront ajoutés prochainement</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="lg:col-span-2">
+                            <div className="space-y-4">
+                                {currentProgram?.modules?.map((module, index) => (
+                                    <div key={index} className="card p-4">
+                                        <div className="flex items-start">
+                                            <div className="bg-white/10 p-2 rounded-lg mr-3">
+                                                <BookOpen className="h-6 w-6" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <h4 className="text-lg font-bold text-white">
+                                                        {module.title}
+                                                    </h4>
+                                                    <span className="text-primary-400 font-medium text-sm">
+                                                        {module.duration}
+                                                    </span>
+                                                </div>
+                                                <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                    {module.topics.map((topic, topicIndex) => (
+                                                        <li
+                                                            key={topicIndex}
+                                                            className="flex items-center text-gray-300 text-sm"
+                                                        >
+                                                            <CheckCircle2 className="h-3 w-3 mr-2 text-primary-400" />
+                                                            {topic}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+
+                <div className="mt-12 card p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <div className="flex items-center mb-4">
+                                <Accessibility className="h-6 w-6 text-primary-400 mr-2" />
+                                <h3 className="text-xl font-bold text-white">Accessibilité</h3>
+                            </div>
+                            <p className="text-gray-300 mb-4">
+                                Toutes nos formations sont accessibles aux personnes en situation de handicap. Notre équipe est formée pour adapter nos programmes et méthodes pédagogiques selon vos besoins spécifiques.
+                            </p>
+                            <p className="text-gray-300">
+                                En cas de handicap, merci de nous contacter pour que nous puissions évaluer ensemble les meilleures adaptations possibles.
+                            </p>
+                        </div>
+
+                        <div>
+                            <div className="flex items-center mb-4">
+                                <Mail className="h-6 w-6 text-primary-400 mr-2" />
+                                <h3 className="text-xl font-bold text-white">Contact</h3>
+                            </div>
+                            <div className="space-y-4">
+                                <div className="flex items-center text-gray-300">
+                                    <Mail className="h-5 w-5 mr-3 text-primary-400" />
+                                    <a
+                                        href="mailto:contact@deliverydigital.fr"
+                                        className="hover:text-white transition-colors"
+                                    >
+                                        contact@deliverydigital.fr
+                                    </a>
+                                </div>
+                                <div className="flex items-center text-gray-300">
+                                    <Phone className="h-5 w-5 mr-3 text-primary-400" />
+                                    <a
+                                        href="tel:0749707773"
+                                        className="hover:text-white transition-colors"
+                                    >
+                                        07 49 70 77 73
+                                    </a>
+                                </div>
+                            </div>
+                            <p className="mt-4 text-sm text-gray-400">
+                                Notre équipe est à votre disposition pour répondre à toutes vos questions concernant l'accessibilité et l'adaptation de nos formations.
+                            </p>
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
-        </motion.div>
-      </div>
+        </section>
     );
-  };
+};
 
-  return (
-    <section id="training" className="section bg-gradient-to-b from-white to-blue-50">
-      <div className="container">
-        <div className="text-center mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.6 }}
-            className="mb-6"
-          >
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 border border-green-200">
-              <Award className="h-5 w-5 text-green-600 mr-2" />
-              <span className="text-green-800">Certifié Qualiopi</span>
-            </div>
-          </motion.div>
-          <motion.h2 
-            className="text-3xl md:text-4xl font-bold mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.6 }}
-          >
-            Formation Professionnelle
-          </motion.h2>
-          <motion.p 
-            className="text-lg text-gray-600 max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            Développez vos compétences avec nos formations certifiées Qualiopi
-          </motion.p>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher une formation..."
-              className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          </div>
-          <button
-            onClick={() => setShowCategories(!showCategories)}
-            className={`px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-              showCategories 
-                ? 'bg-blue-600 text-white border-blue-600' 
-                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            Catégories
-          </button>
-          <button
-            onClick={() => setShowCategories(!showCategories)}
-            className={`px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-              showCategories 
-                ? 'bg-blue-600 text-white border-blue-600' 
-                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            Catégories
-          </button>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">Toutes les catégories</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.slug}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Categories Display */}
-        <AnimatePresence>
-          {showCategories && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mb-8 overflow-hidden"
-            >
-              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                  <BookOpen className="h-6 w-6 mr-2 text-blue-600" />
-                  Catégories de Formation
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {categories.map((category) => {
-                    const categoryPrograms = programs.filter(program => program.category === category.slug);
-                    return (
-                      <motion.div
-                        key={category.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-gray-50 rounded-lg p-4 hover:shadow-md transition-all cursor-pointer border-l-4"
-                        style={{ borderLeftColor: category.color }}
-                        onClick={() => {
-                          setSelectedCategory(category.slug);
-                          setShowCategories(false);
-                        }}
-                      >
-                        <div className="flex items-center mb-3">
-                          <div 
-                            className="w-10 h-10 rounded-lg flex items-center justify-center mr-3"
-                            style={{ backgroundColor: `${category.color}20`, color: category.color }}
-                          >
-                            {getCategoryIcon(category.slug)}
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">{category.name}</h4>
-                            <p className="text-sm text-gray-600">{categoryPrograms.length} formation{categoryPrograms.length > 1 ? 's' : ''}</p>
-                          </div>
-                        </div>
-                        {category.description && (
-                          <p className="text-sm text-gray-600 line-clamp-2">{category.description}</p>
-                        )}
-                        <div className="mt-3 flex flex-wrap gap-1">
-                          {categoryPrograms.slice(0, 3).map((program) => (
-                            <span 
-                              key={program.id}
-                              className="inline-block px-2 py-1 bg-white rounded text-xs text-gray-600 border"
-                            >
-                              {program.title}
-                            </span>
-                          ))}
-                          {categoryPrograms.length > 3 && (
-                            <span className="inline-block px-2 py-1 bg-gray-200 rounded text-xs text-gray-500">
-                              +{categoryPrograms.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-                <div className="mt-6 text-center">
-                  <button
-                    onClick={() => setShowCategories(false)}
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                  >
-                    Masquer les catégories
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Categories Display */}
-        <AnimatePresence>
-          {showCategories && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mb-8 overflow-hidden"
-            >
-              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                  <BookOpen className="h-6 w-6 mr-2 text-blue-600" />
-                  Catégories de Formation
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {categories.map((category) => {
-                    const categoryPrograms = programs.filter(program => program.category === category.slug);
-                    return (
-                      <motion.div
-                        key={category.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-gray-50 rounded-lg p-4 hover:shadow-md transition-all cursor-pointer border-l-4"
-                        style={{ borderLeftColor: category.color }}
-                        onClick={() => {
-                          setSelectedCategory(category.slug);
-                          setShowCategories(false);
-                        }}
-                      >
-                        <div className="flex items-center mb-3">
-                          <div 
-                            className="w-10 h-10 rounded-lg flex items-center justify-center mr-3"
-                            style={{ backgroundColor: `${category.color}20`, color: category.color }}
-                          >
-                            {getCategoryIcon(category.slug)}
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">{category.name}</h4>
-                            <p className="text-sm text-gray-600">{categoryPrograms.length} formation{categoryPrograms.length > 1 ? 's' : ''}</p>
-                          </div>
-                        </div>
-                        {category.description && (
-                          <p className="text-sm text-gray-600 line-clamp-2">{category.description}</p>
-                        )}
-                        <div className="mt-3 flex flex-wrap gap-1">
-                          {categoryPrograms.slice(0, 3).map((program) => (
-                            <span 
-                              key={program.id}
-                              className="inline-block px-2 py-1 bg-white rounded text-xs text-gray-600 border"
-                            >
-                              {program.title}
-                            </span>
-                          ))}
-                          {categoryPrograms.length > 3 && (
-                            <span className="inline-block px-2 py-1 bg-gray-200 rounded text-xs text-gray-500">
-                              +{categoryPrograms.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-                <div className="mt-6 text-center">
-                  <button
-                    onClick={() => setShowCategories(false)}
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                  >
-                    Masquer les catégories
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <div ref={ref}>
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Chargement des formations...</p>
-            </div>
-          ) : error ? (
-            <div className="text-center py-12 bg-red-50 rounded-lg">
-              <div className="text-red-600 mb-4">Erreur lors du chargement des formations</div>
-              <p className="text-gray-600">{error}</p>
-            </div>
-          ) : filteredPrograms.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune formation trouvée</h3>
-              <p className="text-gray-600">
-                {searchQuery || selectedCategory !== 'all'
-                  ? 'Aucune formation ne correspond à vos critères de recherche.'
-                  : 'Aucune formation n\'est disponible pour le moment.'}
-              </p>
-            </div>
-          ) : (
-            <motion.div 
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-              initial={{ opacity: 0 }}
-              animate={inView ? { opacity: 1 } : { opacity: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              {filteredPrograms.map((program, index) => (
-                <motion.div
-                  key={program.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                  transition={{ duration: 0.6, delay: 0.1 * index }}
-                  className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer group"
-                  onClick={() => openModal(program)}
-                >
-                  <div 
-                    className="h-2"
-                    style={{ backgroundColor: getCategoryColor(program.category) }}
-                  ></div>
-                  
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div 
-                        className="w-12 h-12 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: `${getCategoryColor(program.category)}20`, color: getCategoryColor(program.category) }}
-                      >
-                        {getCategoryIcon(program.category)}
-                      </div>
-                      <div className="flex flex-col items-end space-y-2">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getLevelColor(program.level)}`}>
-                          {getLevelText(program.level)}
-                        </span>
-                        {program.is_featured && (
-                          <div className="flex items-center text-yellow-600">
-                            <Star className="h-4 w-4 mr-1" />
-                            <span className="text-xs font-medium">Populaire</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                      {program.title}
-                    </h3>
-                    <p className="text-gray-600 mb-4 line-clamp-3">{program.description}</p>
-
-                    <div className="space-y-3 mb-6">
-                      <div className="flex items-center text-gray-500">
-                        <Clock className="h-4 w-4 mr-2" />
-                        <span className="text-sm">{program.duration_hours} heures</span>
-                      </div>
-                      <div className="flex items-center text-gray-500">
-                        <Users className="h-4 w-4 mr-2" />
-                        <span className="text-sm">Max {program.max_participants} participants</span>
-                      </div>
-                      <div className="flex items-center text-gray-500">
-                        <Euro className="h-4 w-4 mr-2" />
-                        <span className="text-sm">{program.price}€</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        {program.opco_eligible && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800">
-                            OPCO
-                          </span>
-                        )}
-                        {program.cpf_eligible && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800">
-                            CPF
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-blue-600 group-hover:text-blue-800 transition-colors">
-                        <span className="text-sm font-medium">Voir les détails</span>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </div>
-
-        {/* Qualiopi Certification */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="mt-16 bg-white rounded-xl shadow-lg p-8"
-        >
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center mb-6 md:mb-0">
-              <img 
-                src="/LogoQualiopi-300dpi-Avec Marianne (1).png" 
-                alt="Certification Qualiopi" 
-                className="h-16 w-auto mr-6"
-              />
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Organisme de Formation Certifié Qualiopi
-                </h3>
-                <p className="text-gray-600">
-                  Certification qualité pour les actions de formation
-                  <br />
-                  N° de déclaration : 93061064306
-                </p>
-              </div>
-            </div>
-            <div className="text-center md:text-right">
-              <a
-                href="https://certifopac.fr/qualiopi/certification/verification/?siren=902945195#webApp"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Vérifier la certification
-                <ExternalLink className="h-4 w-4 ml-2" />
-              </a>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Training Program Modal */}
-      <AnimatePresence>
-        {showModal && <TrainingProgramModal />}
-      </AnimatePresence>
-    </section>
-  );
+// Helper function to get emoji icons for categories
+const getIconForCategory = (iconName: string) => {
+    const iconMap = {
+        'code': '💻',
+        'palette': '🎨',
+        'file-text': '📊',
+        'globe': '🌍',
+        'shield': '🛡️',
+        'users': '👥',
+        'briefcase': '💼',
+        'heart': '❤️'
+    };
+    return iconMap[iconName] || '📚';
 };
 
 export default Training;
