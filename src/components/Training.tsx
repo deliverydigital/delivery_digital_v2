@@ -86,7 +86,7 @@ const Training = () => {
   };
 
   return (
-    <section id="training" className="section bg-gradient-to-b from-gray-50 to-white">
+    <section id="training" className="relative bg-gradient-to-b from-gray-50 to-white">
       <div ref={ref} className="container">
         {/* Header */}
         <motion.div
