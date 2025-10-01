@@ -165,18 +165,13 @@ export class TrainingProgramsApiService {
   // Get single training program
   static async getProgram(programId: string): Promise<TrainingProgram | null> {
     try {
-      console.log('🔄 Fetching single program:', programId);
-      
       try {
         const response = await makeRequest(`/training-programs/${programId}`);
-        console.log('📊 Single program API response:', response);
         
         if (response.success && response.data.program) {
           const program = response.data.program;
-          const transformedProgram = {
+          return {
             ...program,
-            id: program.id || program.program_id,
-            name: program.name || program.title,
             created_at: new Date(program.created_at),
             updated_at: new Date(program.updated_at),
             documents: (program.documents || []).map((doc: any) => ({
@@ -184,13 +179,11 @@ export class TrainingProgramsApiService {
               uploaded_at: new Date(doc.uploaded_at)
             }))
           };
-          console.log('✅ Transformed single program:', transformedProgram);
-          return transformedProgram;
         }
         
         return null;
       } catch (apiError) {
-        console.log('⚠️ API endpoint not available for single program:', apiError.message);
+        console.log('API endpoint not available for single program');
         return null;
       }
     } catch (error) {
