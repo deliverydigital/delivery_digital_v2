@@ -44,7 +44,7 @@ const Training = () => {
 
   // Build categories array with API data
   const categoriesWithAll = [
-    { id: 'all', name: t('training.categories.all'), color: '#6b7280' },
+    { id: 'all', name: t('training.categories.all', 'Toutes les catégories'), color: '#6b7280' },
     ...categories.map(category => ({
       id: category.slug,
       name: category.name,
@@ -69,6 +69,14 @@ const Training = () => {
     }
   };
 
+  const getLevelText = (level: string) => {
+    switch (level) {
+      case 'beginner': return t('training.levels.beginner', 'Débutant');
+      case 'intermediate': return t('training.levels.intermediate', 'Intermédiaire');
+      case 'advanced': return t('training.levels.advanced', 'Avancé');
+      default: return level;
+    }
+  };
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('fr-FR', {
       day: 'numeric',
@@ -89,13 +97,13 @@ const Training = () => {
         >
           <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800 text-sm font-medium mb-4">
             <Award className="h-4 w-4 mr-2" />
-            {t('training.certification')}
+            {t('training.certification', 'Formation Certifiée')}
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            {t('training.title')}
+            {t('training.title', 'Nos Formations')}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            {t('training.subtitle')}
+            {t('training.subtitle', 'Développez vos compétences avec nos formations professionnelles certifiées Qualiopi')}
           </p>
         </motion.div>
 
@@ -111,7 +119,7 @@ const Training = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
-                placeholder={t('training.search.placeholder')}
+                placeholder={t('training.search.placeholder', 'Rechercher une formation...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -143,7 +151,7 @@ const Training = () => {
         {programsLoading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Chargement des formations...</p>
+            <p className="mt-4 text-gray-600">{t('training.loading', 'Chargement des formations...')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -175,7 +183,7 @@ const Training = () => {
                     </div>
                     <div className="flex flex-col items-end space-y-2">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getLevelBadgeColor(program.level)}`}>
-                        {t(`training.levels.${program.level}`)}
+                        {getLevelText(program.level)}
                       </span>
                       {program.opco_eligible && (
                         <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -204,7 +212,7 @@ const Training = () => {
                     </div>
                     <div className="flex items-center text-sm text-gray-500">
                       <Users className="h-4 w-4 mr-2" />
-                      Max {program.max_participants} participants
+                      {t('training.maxParticipants', 'Max {{count}} participants', { count: program.max_participants })}
                     </div>
                   </div>
 
@@ -216,7 +224,7 @@ const Training = () => {
                         </span>
                       )}
                       <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
-                        {program.certification_type || 'Attestation de formation'}
+                        {program.certification_type || t('training.defaultCertification', 'Attestation de formation')}
                       </span>
                     </div>
                     <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-primary-600 transition-colors" />
@@ -236,10 +244,10 @@ const Training = () => {
           className="text-center bg-primary-50 rounded-2xl p-8"
         >
           <h3 className="text-2xl font-bold text-gray-900 mb-4">
-            {t('training.cta.title')}
+            {t('training.cta.title', 'Prêt à commencer votre formation ?')}
           </h3>
           <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            {t('training.cta.description')}
+            {t('training.cta.description', 'Contactez-nous pour discuter de vos besoins en formation et obtenir un programme personnalisé.')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
@@ -247,14 +255,14 @@ const Training = () => {
               className="btn btn-primary"
             >
               <Mail className="h-5 w-5 mr-2" />
-              {t('training.cta.contact')}
+              {t('training.cta.contact', 'Nous contacter')}
             </a>
             <a
               href="tel:0749707773"
               className="btn btn-outline"
             >
               <Phone className="h-5 w-5 mr-2" />
-              {t('training.cta.call')}
+              {t('training.cta.call', 'Nous appeler')}
             </a>
           </div>
         </motion.div>
@@ -298,16 +306,16 @@ const Training = () => {
                       </h2>
                       <div className="flex items-center space-x-4">
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${getLevelBadgeColor(selectedProgram.level)}`}>
-                          {t(`training.levels.${selectedProgram.level}`)}
+                          {getLevelText(selectedProgram.level)}
                         </span>
                         {selectedProgram.opco_eligible && (
                           <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                            OPCO Eligible
+                            {t('training.opcoEligible', 'OPCO Éligible')}
                           </span>
                         )}
                         {selectedProgram.cpf_eligible && (
                           <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                            CPF Eligible
+                            {t('training.cpfEligible', 'CPF Éligible')}
                           </span>
                         )}
                       </div>
@@ -325,7 +333,7 @@ const Training = () => {
                   <div className="lg:col-span-2">
                     <div className="mb-6">
                       <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                        {t('training.modal.description')}
+                        {t('training.modal.description', 'Description')}
                       </h3>
                       <p className="text-gray-600">
                         {selectedProgram.description}
@@ -335,7 +343,7 @@ const Training = () => {
                     {selectedProgram.objectives && selectedProgram.objectives.length > 0 && (
                     <div className="mb-6">
                       <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                        {t('training.modal.objectives')}
+                        {t('training.modal.objectives', 'Objectifs pédagogiques')}
                       </h3>
                       <ul className="space-y-2">
                         {selectedProgram.objectives.map((objective, index) => (
@@ -351,7 +359,7 @@ const Training = () => {
                     {selectedProgram.methods && selectedProgram.methods.length > 0 && (
                       <div className="mb-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                          Méthodes pédagogiques
+                          {t('training.modal.methods', 'Méthodes pédagogiques')}
                         </h3>
                         <ul className="space-y-2">
                           {selectedProgram.methods.map((method, index) => (
@@ -367,7 +375,7 @@ const Training = () => {
                     {selectedProgram.evaluation_methods && selectedProgram.evaluation_methods.length > 0 && (
                       <div className="mb-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                          Méthodes d'évaluation
+                          {t('training.modal.evaluationMethods', 'Méthodes d\'évaluation')}
                         </h3>
                         <ul className="space-y-2">
                           {selectedProgram.evaluation_methods.map((method, index) => (
@@ -383,7 +391,7 @@ const Training = () => {
                     {selectedProgram.modules && selectedProgram.modules.length > 0 && (
                       <div className="mb-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                          Modules de formation
+                          {t('training.modal.modules', 'Modules de formation')}
                         </h3>
                         <div className="space-y-4">
                           {selectedProgram.modules.map((module, index) => (
@@ -410,7 +418,7 @@ const Training = () => {
                     {selectedProgram.prerequisites && (
                       <div className="mb-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                          {t('training.modal.prerequisites')}
+                          {t('training.modal.prerequisites', 'Prérequis')}
                         </h3>
                         <p className="text-gray-600">{selectedProgram.prerequisites}</p>
                       </div>
@@ -419,7 +427,7 @@ const Training = () => {
                     {selectedProgram.accessibility_info && (
                       <div className="mb-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                          Accessibilité
+                          {t('training.modal.accessibility', 'Accessibilité')}
                         </h3>
                         <p className="text-gray-600">{selectedProgram.accessibility_info}</p>
                       </div>
@@ -430,28 +438,28 @@ const Training = () => {
                     <div className="bg-gray-50 rounded-xl p-6 sticky top-6">
                       <div className="space-y-4 mb-6">
                         <div className="flex items-center justify-between">
-                          <span className="text-gray-600">{t('training.modal.duration')}</span>
+                          <span className="text-gray-600">{t('training.modal.duration', 'Durée')}</span>
                           <span className="font-semibold">{selectedProgram.duration_hours}h</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-gray-600">{t('training.modal.price')}</span>
+                          <span className="text-gray-600">{t('training.modal.price', 'Prix')}</span>
                           <span className="font-semibold">{selectedProgram.price}€</span>
                         </div>
                         {selectedProgram.max_participants && (
                           <div className="flex items-center justify-between">
-                            <span className="text-gray-600">Participants max</span>
+                            <span className="text-gray-600">{t('training.modal.maxParticipants', 'Participants max')}</span>
                             <span className="font-semibold">{selectedProgram.max_participants}</span>
                           </div>
                         )}
                         {selectedProgram.access_delay && (
                           <div className="flex items-center justify-between">
-                            <span className="text-gray-600">Délai d'accès</span>
+                            <span className="text-gray-600">{t('training.modal.accessDelay', 'Délai d\'accès')}</span>
                             <span className="font-semibold">{selectedProgram.access_delay}</span>
                           </div>
                         )}
                         <div className="flex items-center justify-between">
-                          <span className="text-gray-600">{t('training.modal.certification')}</span>
-                          <span className="font-semibold text-sm">{selectedProgram.certification_type || 'Attestation de formation'}</span>
+                          <span className="text-gray-600">{t('training.modal.certification', 'Certification')}</span>
+                          <span className="font-semibold text-sm">{selectedProgram.certification_type || t('training.defaultCertification', 'Attestation de formation')}</span>
                         </div>
                       </div>
 
@@ -460,19 +468,19 @@ const Training = () => {
                         {selectedProgram.opco_eligible && (
                           <div className="flex items-center p-2 bg-green-50 rounded-lg">
                             <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                            <span className="text-sm text-green-800">Éligible OPCO</span>
+                            <span className="text-sm text-green-800">{t('training.eligibility.opco', 'Éligible OPCO')}</span>
                           </div>
                         )}
                         {selectedProgram.cpf_eligible && (
                           <div className="flex items-center p-2 bg-blue-50 rounded-lg">
                             <CheckCircle className="h-4 w-4 text-blue-600 mr-2" />
-                            <span className="text-sm text-blue-800">Éligible CPF</span>
+                            <span className="text-sm text-blue-800">{t('training.eligibility.cpf', 'Éligible CPF')}</span>
                           </div>
                         )}
                         {selectedProgram.is_featured && (
                           <div className="flex items-center p-2 bg-yellow-50 rounded-lg">
                             <Star className="h-4 w-4 text-yellow-600 mr-2" />
-                            <span className="text-sm text-yellow-800">Formation phare</span>
+                            <span className="text-sm text-yellow-800">{t('training.featured', 'Formation phare')}</span>
                           </div>
                         )}
                       </div>
@@ -483,25 +491,25 @@ const Training = () => {
                           className="btn btn-primary w-full"
                         >
                           <Mail className="h-5 w-5 mr-2" />
-                          {t('training.modal.contact')}
+                          {t('training.modal.contact', 'Nous contacter')}
                         </a>
                         <a
                           href="tel:0749707773"
                           className="btn btn-outline w-full"
                         >
                           <Phone className="h-5 w-5 mr-2" />
-                          {t('training.modal.call')}
+                          {t('training.modal.call', 'Nous appeler')}
                         </a>
                       </div>
 
                       <div className="mt-6 pt-6 border-t border-gray-200">
                         <div className="flex items-center text-sm text-gray-500 mb-2">
                           <Building2 className="h-4 w-4 mr-2" />
-                          <span>Formation certifiée Qualiopi</span>
+                          <span>{t('training.qualiopiCertified', 'Formation certifiée Qualiopi')}</span>
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
                           <HelpCircle className="h-4 w-4 mr-2" />
-                          <span>{selectedProgram.accessibility_info || 'Accessible aux personnes handicapées'}</span>
+                          <span>{selectedProgram.accessibility_info || t('training.defaultAccessibility', 'Accessible aux personnes handicapées')}</span>
                         </div>
                       </div>
                     </div>
