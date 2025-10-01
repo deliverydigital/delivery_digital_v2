@@ -551,13 +551,13 @@ const TrainingProgramsManagement = () => {
                 </label>
                 <input
                   type="text"
-                  value={formData.title}
+                  value={formData.title || ''}
                   onChange={(e) => {
-                    console.log('📝 Title changed:', e.target.value);
-                    setFormData({ ...formData, title: e.target.value });
+                    console.log('Title changed to:', e.target.value);
+                    handleFormDataChange('title', e.target.value);
                   }}
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="Ex: Formation WordPress Avancée"
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Titre de la formation"
                   required
                   autoComplete="off"
                 />
@@ -571,12 +571,12 @@ const TrainingProgramsManagement = () => {
               <textarea
                 value={formData.description || ''}
                 onChange={(e) => {
-                  console.log('Description changed to:', e.target.value);
-                  handleFormDataChange('description', e.target.value);
+                  console.log('📝 Description changed:', e.target.value.substring(0, 50) + '...');
+                  setFormData({ ...formData, description: e.target.value });
                 }}
-                rows={3}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Description détaillée de la formation"
+                rows={4}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Description détaillée de la formation..."
                 required
                 autoComplete="off"
               />
@@ -1120,3 +1120,92 @@ const TrainingProgramsManagement = () => {
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
                       program.is_active ? 'bg-green-900/50 text-green-400' : 'bg-gray-700 text-gray-300'
                     }`}>
+                      {program.is_active ? 'Actif' : 'Inactif'}
+                    </span>
+                    {program.opco_eligible && (
+                      <span className="px-2 py-1 bg-blue-900/50 text-blue-400 rounded text-xs font-medium">
+                        OPCO
+                      </span>
+                    )}
+                    {program.cpf_eligible && (
+                      <span className="px-2 py-1 bg-purple-900/50 text-purple-400 rounded text-xs font-medium">
+                        CPF
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center text-sm text-gray-400">
+                      <Users className="h-4 w-4 mr-1" />
+                      <span>Max {program.max_participants}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleToggleStatus(program.id);
+                        }}
+                        className={`${
+                          program.is_active 
+                            ? 'text-red-400 hover:text-red-300' 
+                            : 'text-green-400 hover:text-green-300'
+                        }`}
+                        title={program.is_active ? 'Désactiver' : 'Activer'}
+                      >
+                        {program.is_active ? (
+                          <X className="h-4 w-4" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => openViewModal(program)}
+                        className="text-blue-400 hover:text-blue-300"
+                        title="Voir les détails"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          openEditModal(program);
+                        }}
+                        className="text-green-400 hover:text-green-300"
+                        title="Modifier"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDelete(program.id);
+                        }}
+                        className="text-red-400 hover:text-red-300"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Modal */}
+      <AnimatePresence>
+        {showModal && renderProgramModal()}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Add React import at the top if not already present
+import React from 'react';
+
+export default TrainingProgramsManagement;
