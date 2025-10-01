@@ -601,6 +601,8 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
       });
     }
 
+    console.log('✅ Found program to update:', program.title);
+
     // Update allowed fields
     const allowedFields = [
       'title', 'description', 'category', 'duration_hours', 'price', 'level', 'program_id',
@@ -611,17 +613,44 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
 
     for (const [key, value] of Object.entries(updates)) {
       if (allowedFields.includes(key) && value !== undefined) {
+        console.log(`🔄 Updating field ${key}:`, value);
         if (key === 'objectives' || key === 'methods' || key === 'evaluation_methods') {
-          program[key] = Array.isArray(value) ? value : value.split(',').map(item => item.trim());
+          program[key] = Array.isArray(value) ? value.filter(item => item && item.trim()) : 
+                       (typeof value === 'string' ? value.split(',').map(item => item.trim()).filter(item => item) : []);
         } else if (key === 'modules') {
           program[key] = typeof value === 'string' ? JSON.parse(value) : value;
         } else if (key === 'duration_hours' || key === 'price' || key === 'max_participants') {
-          program[key] = parseFloat(value) || 0;
+          program[key] = key === 'max_participants' ? parseInt(value) || 12 : parseFloat(value) || 0;
+        } else if (key === 'is_active' || key === 'is_featured' || key === 'opco_eligible' || key === 'cpf_eligible') {
+          program[key] = Boolean(value);
         } else {
           program[key] = value;
         }
       }
     }
+
+    console.log('📊 Program before save:', {
+      title: program.title,
+      description: program.description,
+      category: program.category,
+      duration_hours: program.duration_hours,
+      price: program.price,
+      level: program.level,
+      max_participants: program.max_participants,
+      prerequisites: program.prerequisites,
+      objectives: program.objectives,
+      methods: program.methods,
+      evaluation_methods: program.evaluation_methods,
+      accessibility_info: program.accessibility_info,
+      access_delay: program.access_delay,
+      is_active: program.is_active,
+      is_featured: program.is_featured,
+      opco_eligible: program.opco_eligible,
+      cpf_eligible: program.cpf_eligible,
+      certification_type: program.certification_type,
+      certification_provider: program.certification_provider,
+      modules: program.modules
+    });
 
     await program.save();
 
@@ -741,44 +770,17 @@ router.delete('/:programId', authenticate, authorize('admin'), async (req, res) 
     if (!program) {
       return res.status(404).json({
         success: false,
-        console.log(`🔄 Updating field ${key}:`, value);
         error: 'Training program not found'
-          program[key] = Array.isArray(value) ? value.filter(item => item && item.trim()) : 
-                       (typeof value === 'string' ? value.split(',').map(item => item.trim()).filter(item => item) : []);
+      });
     }
 
-    console.log('✅ Found program to update:', program.title);
-          program[key] = key === 'max_participants' ? parseInt(value) || 12 : parseFloat(value) || 0;
-        } else if (key === 'is_active' || key === 'is_featured' || key === 'opco_eligible' || key === 'cpf_eligible') {
-          program[key] = Boolean(value);
+    // Delete all associated documents from disk
     for (const document of program.documents) {
       if (fs.existsSync(document.file_path)) {
         await deleteFile(document.file_path);
       }
     }
 
-    console.log('📊 Program before save:', {
-      title: program.title,
-      description: program.description,
-      category: program.category,
-      duration_hours: program.duration_hours,
-      price: program.price,
-      level: program.level,
-      max_participants: program.max_participants,
-      prerequisites: program.prerequisites,
-      objectives: program.objectives,
-      methods: program.methods,
-      evaluation_methods: program.evaluation_methods,
-      accessibility_info: program.accessibility_info,
-      access_delay: program.access_delay,
-      is_active: program.is_active,
-      is_featured: program.is_featured,
-      opco_eligible: program.opco_eligible,
-      cpf_eligible: program.cpf_eligible,
-      certification_type: program.certification_type,
-      certification_provider: program.certification_provider,
-      modules: program.modules
-    });
     // Delete program from database
     await TrainingProgram.findByIdAndDelete(program._id);
 
