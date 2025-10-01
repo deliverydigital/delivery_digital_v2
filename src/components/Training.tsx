@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { Search, Filter, Download, ExternalLink, Clock, Users, Euro, Star, Award, CheckCircle, BookOpen, GraduationCap, Target, Code, PenTool, Languages, Car, Apple, Leaf, ShoppingCart, BarChart3, Globe, Utensils, Shield, Building2, Heart, Briefcase, FileText, Calendar, MapPin, Phone, Mail, User, ChevronDown, ChevronUp, X, Send, Eye, CreditCard as Edit, Trash2, Plus, Settings, Laptop, Database, Server, Cloud, Smartphone, Monitor, Palette, FileSpreadsheet, MessageSquare, HardHat, Zap, Briefcase as iefcase, Layers, TrendingUp, Camera, CheckCircle2, Accessibility, Tag, Grid3x3 as Grid3X3, List } from 'lucide-react'rogramsApiService } from '../services/trainingProgramsApi';
+import { Search, Filter, Download, ExternalLink, Clock, Users, Euro, Star, Award, CheckCircle, BookOpen, GraduationCap, Target, Code, PenTool, Languages, Car, Apple, Leaf, ShoppingCart, BarChart3, Globe, Utensils, Shield, Building2, Heart, Briefcase, FileText, Calendar, MapPin, Phone, Mail, User, ChevronDown, ChevronUp, X, Send, Eye, CreditCard as Edit, Trash2, Plus, Settings, Laptop, Database, Server, Cloud, Smartphone, Monitor, Palette, FileSpreadsheet, MessageSquare, HardHat, Zap, Briefcase as iefcase, Layers, TrendingUp, Camera, CheckCircle2, Accessibility } from 'lucide-react';
+import { TrainingProgramsApiService } from '../services/trainingProgramsApi';
 import {useTrainingPrograms} from "../hooks/useTrainingPrograms.ts";
 import {useTrainingDocuments} from "../hooks/useTrainingDocuments.ts";
 import {useCategories} from "../hooks/useCategories.ts";
