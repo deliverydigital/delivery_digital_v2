@@ -141,7 +141,7 @@ const Training = () => {
                   backgroundColor: selectedCategory === category.id ? category.color : undefined
                 }}
               >
-                {category.name} ({filteredPrograms.filter(p => category.id === 'all' || p.category === category.id).length})
+                {category.name} ({programs.filter(p => category.id === 'all' || p.category === category.id).length})
               </button>
             ))}
           </div>
