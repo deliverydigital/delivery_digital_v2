@@ -108,28 +108,35 @@ const TrainingProgramsManagement = () => {
   const openEditModal = (program: TrainingProgram) => {
     console.log('Opening edit modal for program:', program);
     
+    // Create a deep copy of the program data for editing
     const editData = {
       program_id: program.program_id || program.id || '',
       title: program.title || program.name || '',
       description: program.description || '',
       category: program.category || 'web',
-      duration_hours: program.duration_hours || 0,
-      price: program.price || 0,
+      duration_hours: Number(program.duration_hours) || 0,
+      price: Number(program.price) || 0,
       level: program.level || 'beginner',
-      max_participants: program.max_participants || 12,
+      max_participants: Number(program.max_participants) || 12,
       prerequisites: program.prerequisites || '',
-      objectives: program.objectives && program.objectives.length > 0 ? [...program.objectives] : [''],
-      methods: program.methods && program.methods.length > 0 ? [...program.methods] : [''],
-      evaluation_methods: program.evaluation_methods && program.evaluation_methods.length > 0 ? [...program.evaluation_methods] : [''],
+      objectives: Array.isArray(program.objectives) && program.objectives.length > 0 
+        ? [...program.objectives] 
+        : [''],
+      methods: Array.isArray(program.methods) && program.methods.length > 0 
+        ? [...program.methods] 
+        : [''],
+      evaluation_methods: Array.isArray(program.evaluation_methods) && program.evaluation_methods.length > 0 
+        ? [...program.evaluation_methods] 
+        : [''],
       accessibility_info: program.accessibility_info || 'Formation accessible aux personnes en situation de handicap',
       access_delay: program.access_delay || '1 semaine',
-      is_active: program.is_active !== undefined ? program.is_active : true,
-      is_featured: program.is_featured || false,
-      opco_eligible: program.opco_eligible !== undefined ? program.opco_eligible : true,
-      cpf_eligible: program.cpf_eligible || false,
+      is_active: Boolean(program.is_active),
+      is_featured: Boolean(program.is_featured),
+      opco_eligible: Boolean(program.opco_eligible),
+      cpf_eligible: Boolean(program.cpf_eligible),
       certification_type: program.certification_type || '',
       certification_provider: program.certification_provider || '',
-      modules: program.modules || []
+      modules: Array.isArray(program.modules) ? [...program.modules] : []
     };
     
     console.log('Edit data prepared:', editData);
