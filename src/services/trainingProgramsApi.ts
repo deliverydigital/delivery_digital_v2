@@ -205,9 +205,36 @@ export class TrainingProgramsApiService {
     try {
       console.log('Creating program with data:', programData);
       
+      // Ensure all required fields are present and properly formatted
+      const requestData = {
+        program_id: programData.program_id,
+        title: programData.title,
+        description: programData.description,
+        category: programData.category || 'web',
+        duration_hours: programData.duration_hours || 0,
+        price: programData.price || 0,
+        level: programData.level || 'beginner',
+        max_participants: programData.max_participants || 12,
+        prerequisites: programData.prerequisites || '',
+        objectives: programData.objectives || [],
+        methods: programData.methods || [],
+        evaluation_methods: programData.evaluation_methods || [],
+        accessibility_info: programData.accessibility_info || '',
+        access_delay: programData.access_delay || '',
+        modules: programData.modules || [],
+        is_active: programData.is_active !== undefined ? programData.is_active : true,
+        is_featured: programData.is_featured !== undefined ? programData.is_featured : false,
+        opco_eligible: programData.opco_eligible !== undefined ? programData.opco_eligible : true,
+        cpf_eligible: programData.cpf_eligible !== undefined ? programData.cpf_eligible : false,
+        certification_type: programData.certification_type || '',
+        certification_provider: programData.certification_provider || ''
+      };
+
+      console.log('📊 Sending request data:', requestData);
+
       const response = await makeRequest('/training-programs', {
         method: 'POST',
-        body: JSON.stringify(programData),
+        body: JSON.stringify(requestData),
       });
 
       console.log('Create program response:', response);
@@ -284,9 +311,32 @@ export class TrainingProgramsApiService {
     try {
       console.log('Updating program:', programId, 'with data:', updates);
       
+      // Ensure all fields are properly formatted for the API
+      const requestData = {
+        ...updates,
+        // Ensure boolean fields are properly converted
+        is_active: updates.is_active !== undefined ? Boolean(updates.is_active) : undefined,
+        is_featured: updates.is_featured !== undefined ? Boolean(updates.is_featured) : undefined,
+        opco_eligible: updates.opco_eligible !== undefined ? Boolean(updates.opco_eligible) : undefined,
+        cpf_eligible: updates.cpf_eligible !== undefined ? Boolean(updates.cpf_eligible) : undefined,
+        // Ensure numeric fields are properly converted
+        duration_hours: updates.duration_hours !== undefined ? Number(updates.duration_hours) : undefined,
+        price: updates.price !== undefined ? Number(updates.price) : undefined,
+        max_participants: updates.max_participants !== undefined ? Number(updates.max_participants) : undefined
+      };
+
+      // Remove undefined values
+      Object.keys(requestData).forEach(key => {
+        if (requestData[key] === undefined) {
+          delete requestData[key];
+        }
+      });
+
+      console.log('📊 Sending update data:', requestData);
+
       const response = await makeRequest(`/training-programs/${programId}`, {
         method: 'PUT',
-        body: JSON.stringify(updates),
+        body: JSON.stringify(requestData),
       });
 
       console.log('Update program response:', response);

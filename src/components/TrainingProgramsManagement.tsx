@@ -143,13 +143,32 @@ const TrainingProgramsManagement = () => {
       return;
     }
 
+    // Validate numeric fields
+    if (!formData.duration_hours || formData.duration_hours <= 0) {
+      alert('La durée doit être supérieure à 0');
+      return;
+    }
+
+    if (!formData.price || formData.price < 0) {
+      alert('Le prix doit être supérieur ou égal à 0');
+      return;
+    }
     try {
       // Clean up array fields
       const cleanedData = {
         ...formData,
-        objectives: formData.objectives?.filter(obj => obj.trim() !== '') || [],
-        methods: formData.methods?.filter(method => method.trim() !== '') || [],
-        evaluation_methods: formData.evaluation_methods?.filter(method => method.trim() !== '') || []
+        objectives: formData.objectives?.filter(obj => obj && obj.trim() !== '') || [],
+        methods: formData.methods?.filter(method => method && method.trim() !== '') || [],
+        evaluation_methods: formData.evaluation_methods?.filter(method => method && method.trim() !== '') || [],
+        // Ensure numeric fields are numbers
+        duration_hours: Number(formData.duration_hours) || 0,
+        price: Number(formData.price) || 0,
+        max_participants: Number(formData.max_participants) || 12,
+        // Ensure boolean fields are booleans
+        is_active: Boolean(formData.is_active),
+        is_featured: Boolean(formData.is_featured),
+        opco_eligible: Boolean(formData.opco_eligible),
+        cpf_eligible: Boolean(formData.cpf_eligible)
       };
 
       console.log('Cleaned data for submission:', cleanedData);
@@ -160,6 +179,7 @@ const TrainingProgramsManagement = () => {
         console.log('Create result:', result);
         if (result.success) {
           console.log('Program created successfully:', result.program);
+          alert('Programme créé avec succès !');
           closeModal();
           refetch();
         } else {
@@ -178,6 +198,7 @@ const TrainingProgramsManagement = () => {
         console.log('Update result:', result);
         if (result.success) {
           console.log('Program updated successfully:', result.program);
+          alert('Programme modifié avec succès !');
           closeModal();
           refetch();
         } else {
