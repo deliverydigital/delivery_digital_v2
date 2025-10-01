@@ -57,7 +57,22 @@ app.use(helmet({
 app.use(cors({
     origin: process.env.NODE_ENV === 'production'
         ? process.env.FRONTEND_URL
-        : '*',
+        : function (origin, callback) {
+            // Allow requests with no origin (like mobile apps or curl requests)
+            if (!origin) return callback(null, true);
+            
+            // Allow localhost and ngrok URLs
+            if (origin.includes('localhost') || 
+                origin.includes('127.0.0.1') || 
+                origin.includes('.ngrok.') ||
+                origin.includes('.ngrok-free.app') ||
+                origin.includes('.loca.lt')) {
+                return callback(null, true);
+            }
+            
+            // Allow any origin in development
+            return callback(null, true);
+        },
     // credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     // allowedHeaders: ['Content-Type', 'Authorization']
@@ -161,7 +176,7 @@ const startServer = async () => {
 
             console.log('<UNK> Connected');
 
-            if (false) {
+            if (true) {
                 console.log('<UNK> Connected');
                 console.log('✅ MongoDB connection successful');
                 await testMongoConnection();
