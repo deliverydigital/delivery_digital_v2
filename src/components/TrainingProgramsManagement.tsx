@@ -1239,5 +1239,6 @@ const TrainingProgramsManagement = () => {
 
 // Add React import at the top if not already present
 import React from 'react';
+import TrainingProgramsApiService from "../services/trainingProgramsApi.ts";
 
 export default TrainingProgramsManagement;
