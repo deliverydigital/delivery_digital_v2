@@ -312,7 +312,13 @@ const TrainingProgramsManagement = () => {
   const removeArrayField = (field: 'objectives' | 'methods' | 'evaluation_methods', index: number) => {
     setFormData(prevData => {
       const currentArray = prevData[field] || [];
-      const newArray = currentArray.filter((_, i) => i !== index);
+      const newArray = currentArray.filter((_, i) =
+      )
+      )
+    }
+    )
+  }
+}> i !== index);
       return {
         ...prevData,
         [field]: newArray.length > 0 ? newArray : ['']
@@ -960,7 +966,6 @@ const TrainingProgramsManagement = () => {
               </button>
             </div>
           </form>
-          )}
         )}
       </motion.div>
     </div>
@@ -1195,4 +1200,4 @@ const TrainingProgramsManagement = () => {
 // Add React import at the top if not already present
 import React from 'react';
 
-export default TrainingProgramsManagement;
+export default TrainingProgramsManagement;nagement;
