@@ -684,11 +684,9 @@ const Training = () => {
 const downloadDocument = async (type: string, programId: string) => {
   try {
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    const token = localStorage.getItem('authToken');
 
     const response = await fetch(`${apiUrl}/api/training/documents/${programId}`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
         'bypass-tunnel-reminder': 'true'
       }
     });

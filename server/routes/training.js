@@ -8,9 +8,6 @@ import path from 'path';
 import fs from 'fs';
 const router = express.Router();
 
-// Apply authentication to all routes
-router.use(authenticate);
-
 // Training Session Schema (using localStorage for demo)
 const getTrainingSessions = () => {
   try {
@@ -29,6 +26,115 @@ const saveTrainingSessions = (sessions) => {
     console.error('Error saving training sessions:', error);
   }
 };
+
+// PUBLIC ROUTES - No authentication required
+
+// Get training documents for a program (public)
+router.get('/documents/:programId', async (req, res) => {
+  try {
+    const { programId } = req.params;
+
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    const documents = await TrainingDocument.findByProgram(programId);
+
+    res.json({
+      success: true,
+      data: {
+        documents: documents.map(doc => ({
+          id: doc._id,
+          title: doc.title,
+          description: doc.description,
+          filename: doc.filename,
+          original_name: doc.original_name,
+          file_type: doc.file_type,
+          file_size: doc.file_size,
+          download_count: doc.download_count,
+          category: doc.category,
+          tags: doc.tags,
+          version: doc.version,
+          uploaded_by: doc.uploaded_by?.name,
+          created_at: doc.createdAt,
+          download_url: `${req.protocol}://${req.get('host')}/api/training/documents/${doc._id}/download`
+        }))
+      }
+    });
+
+  } catch (error) {
+    console.error('Get training documents error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch training documents'
+    });
+  }
+});
+
+// Download training document (public)
+router.get('/documents/:id/download', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    const document = await TrainingDocument.findById(id);
+
+    if (!document) {
+      return res.status(404).json({
+        success: false,
+        error: 'Document not found'
+      });
+    }
+
+    if (!document.is_public) {
+      return res.status(403).json({
+        success: false,
+        error: 'Document not available for download'
+      });
+    }
+
+    // Check if file exists on disk
+    if (!fs.existsSync(document.file_path)) {
+      return res.status(404).json({
+        success: false,
+        error: 'File not found on disk'
+      });
+    }
+
+    // Increment download count
+    await document.incrementDownloadCount();
+
+    // Set download headers
+    res.setHeader('Content-Type', document.file_type);
+    res.setHeader('Content-Disposition', `attachment; filename="${document.original_name}"`);
+    res.setHeader('Content-Length', document.file_size);
+
+    // Stream the file
+    const fileStream = fs.createReadStream(document.file_path);
+    fileStream.pipe(res);
+
+  } catch (error) {
+    console.error('Download training document error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to download document'
+    });
+  }
+});
+
+// PROTECTED ROUTES - Authentication required
+router.use(authenticate);
 
 // Get all training sessions
 router.get('/sessions', validatePagination, async (req, res) => {
@@ -633,54 +739,8 @@ router.put('/sessions/:sessionId/participants/:participantId',
   }
 );
 
-// Get training documents for a program
-router.get('/documents/:programId', async (req, res) => {
-  try {
-    const { programId } = req.params;
-
-    // Check if MongoDB is available
-    if (!isMongoAvailable()) {
-      return res.status(503).json({
-        success: false,
-        error: 'Database service unavailable'
-      });
-    }
-
-    const documents = await TrainingDocument.findByProgram(programId);
-
-    res.json({
-      success: true,
-      data: {
-        documents: documents.map(doc => ({
-          id: doc._id,
-          title: doc.title,
-          description: doc.description,
-          filename: doc.filename,
-          original_name: doc.original_name,
-          file_type: doc.file_type,
-          file_size: doc.file_size,
-          download_count: doc.download_count,
-          category: doc.category,
-          tags: doc.tags,
-          version: doc.version,
-          uploaded_by: doc.uploaded_by?.name,
-          created_at: doc.createdAt,
-          download_url: `${req.protocol}://${req.get('host')}/api/training/documents/${doc._id}/download`
-        }))
-      }
-    });
-
-  } catch (error) {
-    console.error('Get training documents error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch training documents'
-    });
-  }
-});
-
 // Upload training document (admin only)
-router.post('/documents', authenticate, authorize('admin'), uploadTrainingMaterials, handleUploadError, async (req, res) => {
+router.post('/documents', authorize('admin'), uploadTrainingMaterials, handleUploadError, async (req, res) => {
   try {
     const {
       program_id,
@@ -768,66 +828,8 @@ router.post('/documents', authenticate, authorize('admin'), uploadTrainingMateri
   }
 });
 
-// Download training document
-router.get('/documents/:id/download', async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Check if MongoDB is available
-    if (!isMongoAvailable()) {
-      return res.status(503).json({
-        success: false,
-        error: 'Database service unavailable'
-      });
-    }
-
-    const document = await TrainingDocument.findById(id);
-
-    if (!document) {
-      return res.status(404).json({
-        success: false,
-        error: 'Document not found'
-      });
-    }
-
-    if (!document.is_public) {
-      return res.status(403).json({
-        success: false,
-        error: 'Document not available for download'
-      });
-    }
-
-    // Check if file exists on disk
-    if (!fs.existsSync(document.file_path)) {
-      return res.status(404).json({
-        success: false,
-        error: 'File not found on disk'
-      });
-    }
-
-    // Increment download count
-    await document.incrementDownloadCount();
-
-    // Set download headers
-    res.setHeader('Content-Type', document.file_type);
-    res.setHeader('Content-Disposition', `attachment; filename="${document.original_name}"`);
-    res.setHeader('Content-Length', document.file_size);
-
-    // Stream the file
-    const fileStream = fs.createReadStream(document.file_path);
-    fileStream.pipe(res);
-
-  } catch (error) {
-    console.error('Download training document error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to download document'
-    });
-  }
-});
-
 // Get all training documents (admin only)
-router.get('/documents', authenticate, authorize('admin'), async (req, res) => {
+router.get('/documents', authorize('admin'), async (req, res) => {
   try {
     const { program_id, category, search } = req.query;
 
@@ -887,7 +889,7 @@ router.get('/documents', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // Delete training document (admin only)
-router.delete('/documents/:id', authenticate, authorize('admin'), async (req, res) => {
+router.delete('/documents/:id', authorize('admin'), async (req, res) => {
   try {
     const { id } = req.params;
 
