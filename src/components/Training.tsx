@@ -681,15 +681,41 @@ const Training = () => {
 };
 
 // Helper function to download training documents
-const downloadDocument = (type: string, programId: string) => {
-  // This would typically make an API call to download the document
-  console.log(`Downloading ${type} document for program ${programId}`);
-  
-  // For demo purposes, show an alert
-  alert(`Téléchargement du document "${type}" pour le programme ${programId}`);
-  
-  // In a real implementation, this would be:
-  // TrainingProgramsApiService.downloadDocument(documentId, programId);
+const downloadDocument = async (type: string, programId: string) => {
+  try {
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    const token = localStorage.getItem('authToken');
+
+    const response = await fetch(`${apiUrl}/api/training/documents/${programId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'bypass-tunnel-reminder': 'true'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch documents');
+    }
+
+    const result = await response.json();
+
+    if (result.success && result.data.documents.length > 0) {
+      const document = result.data.documents.find((doc: any) =>
+        doc.category === type || (type === 'program' && doc.category === 'program')
+      ) || result.data.documents[0];
+
+      if (document && document.download_url) {
+        window.open(document.download_url, '_blank');
+      } else {
+        alert('Document non disponible pour le téléchargement');
+      }
+    } else {
+      alert('Aucun document trouvé pour ce programme');
+    }
+  } catch (error) {
+    console.error('Download error:', error);
+    alert('Erreur lors du téléchargement du document');
+  }
 };
 
 export default Training;
