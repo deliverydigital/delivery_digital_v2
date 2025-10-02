@@ -70,6 +70,13 @@ const TrainingProgramsManagement = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleUploadFormChange = (field: string, value: any) => {
+    setUploadFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const resetForm = () => {
     setFormData({
       program_id: '',
