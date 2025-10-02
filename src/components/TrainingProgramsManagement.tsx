@@ -4,6 +4,7 @@ import { Plus, CreditCard as Edit, Trash2, Eye, Save, X, Upload, Download, FileT
 import { useTrainingPrograms } from '../hooks/useTrainingPrograms';
 import { useTrainingDocuments } from '../hooks/useTrainingDocuments';
 import { useCategories } from '../hooks/useCategories';
+import React from 'react';
 
 const TrainingProgramsManagement = () => {
   const { 
@@ -68,6 +69,14 @@ const TrainingProgramsManagement = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Memoized handlers to prevent re-creation on every render
+  const handleUploadFormChange = React.useCallback((field: string, value: any) => {
+    setUploadFormData(prevData => ({
+      ...prevData,
+      [field]: value
+    }));
+  }, []);
 
   const resetForm = () => {
     setFormData({
@@ -329,7 +338,7 @@ const TrainingProgramsManagement = () => {
               </label>
               <select
                 value={uploadFormData.category}
-                onChange={(e) => setUploadFormData({ ...uploadFormData, category: e.target.value })}
+                onChange={(e) => handleUploadFormChange('category', e.target.value)}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="program">Programme de formation</option>
@@ -348,10 +357,11 @@ const TrainingProgramsManagement = () => {
             <input
               type="text"
               value={uploadFormData.title}
-              onChange={(e) => setUploadFormData({ ...uploadFormData, title: e.target.value })}
+              onChange={(e) => handleUploadFormChange('title', e.target.value)}
               className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="Ex: Programme détaillé WordPress"
               required
+              autoComplete="off"
             />
           </div>
 
@@ -361,10 +371,11 @@ const TrainingProgramsManagement = () => {
             </label>
             <textarea
               value={uploadFormData.description}
-              onChange={(e) => setUploadFormData({ ...uploadFormData, description: e.target.value })}
+              onChange={(e) => handleUploadFormChange('description', e.target.value)}
               className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="Description du document..."
               rows={3}
+              autoComplete="off"
             />
           </div>
 
@@ -376,9 +387,10 @@ const TrainingProgramsManagement = () => {
               <input
                 type="text"
                 value={uploadFormData.tags}
-                onChange={(e) => setUploadFormData({ ...uploadFormData, tags: e.target.value })}
+                onChange={(e) => handleUploadFormChange('tags', e.target.value)}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="Ex: wordpress, guide, installation"
+                autoComplete="off"
               />
             </div>
             <div>
@@ -388,9 +400,10 @@ const TrainingProgramsManagement = () => {
               <input
                 type="text"
                 value={uploadFormData.version}
-                onChange={(e) => setUploadFormData({ ...uploadFormData, version: e.target.value })}
+                onChange={(e) => handleUploadFormChange('version', e.target.value)}
                 className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="1.0"
+                autoComplete="off"
               />
             </div>
           </div>
@@ -417,7 +430,7 @@ const TrainingProgramsManagement = () => {
                       accept=".pdf"
                       onChange={(e) => {
                         if (e.target.files) {
-                          setUploadFormData({ ...uploadFormData, files: Array.from(e.target.files) });
+                          handleUploadFormChange('files', Array.from(e.target.files));
                         }
                       }}
                     />
@@ -450,7 +463,7 @@ const TrainingProgramsManagement = () => {
                         type="button"
                         onClick={() => {
                           const newFiles = uploadFormData.files.filter((_, i) => i !== index);
-                          setUploadFormData({ ...uploadFormData, files: newFiles });
+                          handleUploadFormChange('files', newFiles);
                         }}
                         className="text-red-400 hover:text-red-300"
                       >
