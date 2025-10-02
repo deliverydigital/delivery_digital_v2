@@ -299,8 +299,8 @@ const TrainingProgramsManagement = () => {
     return matchesSearch && matchesCategory;
   });
 
-  // Document Upload Modal Component
-  const DocumentUploadModal = () => (
+  // Document Upload Modal Component - Memoized to prevent re-renders
+  const DocumentUploadModal = React.useMemo(() => () => (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -523,10 +523,10 @@ const TrainingProgramsManagement = () => {
         </form>
       </motion.div>
     </div>
-  );
+  ), [uploadFormData, isSubmitting, closeUploadModal, handleUploadFormChange, handleUploadSubmit]);
 
-  // Program Form Modal Component
-  const ProgramFormModal = () => (
+  // Program Form Modal Component - Memoized to prevent re-renders
+  const ProgramFormModal = React.useMemo(() => () => (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -884,7 +884,7 @@ const TrainingProgramsManagement = () => {
         </form>
       </motion.div>
     </div>
-  );
+  ), [formData, modalType, isSubmitting, categories, closeModal, handleSubmit]);
 
   return (
     <div className="space-y-6">
@@ -1080,9 +1080,17 @@ const TrainingProgramsManagement = () => {
       )}
 
       {/* Modals */}
-      <AnimatePresence>
-        {showModal && <ProgramFormModal />}
-        {showUploadModal && <DocumentUploadModal />}
+      <AnimatePresence mode="wait">
+        {showModal && (
+          <ProgramFormModal
+            key="program-form-modal"
+          />
+        )}
+        {showUploadModal && (
+          <DocumentUploadModal
+            key="document-upload-modal"
+          />
+        )}
       </AnimatePresence>
     </div>
   );
