@@ -371,7 +371,7 @@ const TrainingProgramsManagement = () => {
             </label>
             <textarea
               value={uploadFormData.description}
-             onChange={(e) => setUploadFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(e) => handleUploadFormChange('description', e.target.value)}
               className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="Description du document..."
               rows={3}
@@ -428,13 +428,7 @@ const TrainingProgramsManagement = () => {
                       className="sr-only"
                       multiple
                       accept=".pdf"
-                     onChange={(e) => {
-                       const newValue = e.target.value;
-                       setUploadFormData(prevData => ({
-                         ...prevData,
-                         description: newValue
-                       }));
-                     }}
+                      onChange={(e) => {
                         if (e.target.files) {
                           handleUploadFormChange('files', Array.from(e.target.files));
                         }
