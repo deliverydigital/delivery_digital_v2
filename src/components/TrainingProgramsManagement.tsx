@@ -70,14 +70,6 @@ const TrainingProgramsManagement = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Memoized handlers to prevent re-creation on every render
-  const handleUploadFormChange = React.useCallback((field: string, value: any) => {
-    setUploadFormData(prevData => ({
-      ...prevData,
-      [field]: value
-    }));
-  }, []);
-
   const resetForm = () => {
     setFormData({
       program_id: '',
