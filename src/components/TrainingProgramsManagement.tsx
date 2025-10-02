@@ -1,14 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Plus, Edit, Trash2, Eye, Save, X, Upload, Download, 
-  FileText, Search, Filter, RefreshCw, CheckCircle, 
-  AlertTriangle, Star, Award, Clock, Users, Euro,
-  BookOpen, Target, Globe, Code, Palette, Shield,
-  Briefcase, Heart, Folder, GraduationCap, Settings,
-  ExternalLink, Calendar, MapPin, Phone, Mail, Building2,
-  Tag, BarChart3, TrendingUp, Activity, Zap, PieChart
-} from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Eye, Save, X, Upload, Download, FileText, Search, Filter, RefreshCw, CheckCircle, AlertTriangle, Star, Award, Clock, Users, Euro, BookOpen, Target, Globe, Code, Palette, Shield, Briefcase, Heart, Folder, GraduationCap, Settings, ExternalLink, Calendar, MapPin, Phone, Mail, Building2, Tag, BarChart3, TrendingUp, Activity, Zap, PieChart } from 'lucide-react';
 import { useTrainingPrograms } from '../hooks/useTrainingPrograms';
 import { useTrainingDocuments } from '../hooks/useTrainingDocuments';
 import { useCategories } from '../hooks/useCategories';
