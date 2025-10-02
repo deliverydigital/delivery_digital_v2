@@ -371,7 +371,7 @@ const TrainingProgramsManagement = () => {
             </label>
             <textarea
               value={uploadFormData.description}
-              onChange={(e) => handleUploadFormChange('description', e.target.value)}
+             onChange={(e) => setUploadFormData(prev => ({ ...prev, description: e.target.value }))}
               className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="Description du document..."
               rows={3}
