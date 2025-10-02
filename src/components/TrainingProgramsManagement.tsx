@@ -428,7 +428,13 @@ const TrainingProgramsManagement = () => {
                       className="sr-only"
                       multiple
                       accept=".pdf"
-                      onChange={(e) => {
+                     onChange={(e) => {
+                       const newValue = e.target.value;
+                       setUploadFormData(prevData => ({
+                         ...prevData,
+                         description: newValue
+                       }));
+                     }}
                         if (e.target.files) {
                           handleUploadFormChange('files', Array.from(e.target.files));
                         }
