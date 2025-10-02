@@ -698,12 +698,22 @@ const downloadDocument = async (type: string, programId: string) => {
     const result = await response.json();
 
     if (result.success && result.data.documents.length > 0) {
-      const document = result.data.documents.find((doc: any) =>
+      const trainingDoc = result.data.documents.find((doc: any) =>
         doc.category === type || (type === 'program' && doc.category === 'program')
       ) || result.data.documents[0];
 
-      if (document && document.download_url) {
-        window.open(document.download_url, '_blank');
+      if (trainingDoc && trainingDoc.id) {
+        // Construct direct download URL
+        const downloadUrl = `${apiUrl}/api/training/documents/${trainingDoc.id}/download`;
+
+        // Create a hidden link and trigger download
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = trainingDoc.original_name || 'document.pdf';
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       } else {
         alert('Document non disponible pour le téléchargement');
       }
