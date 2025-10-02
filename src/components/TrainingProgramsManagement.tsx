@@ -317,12 +317,26 @@ const TrainingProgramsManagement = () => {
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Programme de formation *
               </label>
-              <input
-                type="text"
-                value={uploadFormData.program_name}
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-400"
-                disabled
-              />
+              <select
+                value={uploadFormData.program_id}
+                onChange={(e) => {
+                  const selectedProgram = programs.find(p => (p.program_id || p.id) === e.target.value);
+                  setUploadFormData(prev => ({
+                    ...prev,
+                    program_id: e.target.value,
+                    program_name: selectedProgram?.title || selectedProgram?.name || ''
+                  }));
+                }}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                required
+              >
+                <option value="">Sélectionner un programme</option>
+                {programs.map((program) => (
+                  <option key={program.program_id || program.id} value={program.program_id || program.id}>
+                    {program.title || program.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
