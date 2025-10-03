@@ -14,7 +14,8 @@ const ProgramFormModalComponent = memo(({
   categories,
   onClose,
   onSubmit,
-  onChange
+  onChange,
+                                          removeArrayItem
 }: any) => (
   <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <motion.div
@@ -77,6 +78,272 @@ const ProgramFormModalComponent = memo(({
           />
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Catégorie
+            </label>
+            <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              {categories.map((category) => (
+                  <option key={category.slug} value={category.slug}>
+                    {category.name}
+                  </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Niveau
+            </label>
+            <select
+                value={formData.level}
+                onChange={(e) => setFormData({ ...formData, level: e.target.value })}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="beginner">Débutant</option>
+              <option value="intermediate">Intermédiaire</option>
+              <option value="advanced">Avancé</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Durée (heures) *
+            </label>
+            <input
+                type="number"
+                value={formData.duration_hours}
+                onChange={(e) => setFormData({ ...formData, duration_hours: parseInt(e.target.value) || 0 })}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                min="1"
+                required
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Prix (€) *
+            </label>
+            <input
+                type="number"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                min="0"
+                step="0.01"
+                required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Participants max
+            </label>
+            <input
+                type="number"
+                value={formData.max_participants}
+                onChange={(e) => setFormData({ ...formData, max_participants: parseInt(e.target.value) || 12 })}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                min="1"
+            />
+          </div>
+        </div>
+
+        {/* Objectives */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Objectifs pédagogiques
+          </label>
+          <div className="space-y-2">
+            {formData.objectives.map((objective, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                      type="text"
+                      value={objective}
+                      onChange={(e) => updateArrayItem('objectives', index, e.target.value)}
+                      className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder={`Objectif ${index + 1}`}
+                  />
+                  {formData.objectives.length > 1 && (
+                      <button
+                          type="button"
+                          onClick={() => removeArrayItem('objectives', index)}
+                          className="text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                  )}
+                </div>
+            ))}
+            <button
+                type="button"
+                onClick={() => addArrayItem('objectives')}
+                className="text-primary-400 hover:text-primary-300 text-sm flex items-center"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Ajouter un objectif
+            </button>
+          </div>
+        </div>
+
+        {/* Methods */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Méthodes pédagogiques
+          </label>
+          <div className="space-y-2">
+            {formData.methods.map((method, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                      type="text"
+                      value={method}
+                      onChange={(e) => updateArrayItem('methods', index, e.target.value)}
+                      className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder={`Méthode ${index + 1}`}
+                  />
+                  {formData.methods.length > 1 && (
+                      <button
+                          type="button"
+                          onClick={() => removeArrayItem('methods', index)}
+                          className="text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                  )}
+                </div>
+            ))}
+            <button
+                type="button"
+                onClick={() => addArrayItem('methods')}
+                className="text-primary-400 hover:text-primary-300 text-sm flex items-center"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Ajouter une méthode
+            </button>
+          </div>
+        </div>
+
+        {/* Evaluation Methods */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Méthodes d'évaluation
+          </label>
+          <div className="space-y-2">
+            {formData.evaluation_methods.map((method, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                      type="text"
+                      value={method}
+                      onChange={(e) => updateArrayItem('evaluation_methods', index, e.target.value)}
+                      className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder={`Méthode d'évaluation ${index + 1}`}
+                  />
+                  {formData.evaluation_methods.length > 1 && (
+                      <button
+                          type="button"
+                          onClick={() => removeArrayItem('evaluation_methods', index)}
+                          className="text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                  )}
+                </div>
+            ))}
+            <button
+                type="button"
+                onClick={() => addArrayItem('evaluation_methods')}
+                className="text-primary-400 hover:text-primary-300 text-sm flex items-center"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Ajouter une méthode d'évaluation
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Prérequis
+          </label>
+          <textarea
+              value={formData.prerequisites}
+              onChange={(e) => setFormData({ ...formData, prerequisites: e.target.value })}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="Prérequis nécessaires..."
+              rows={2}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Type de certification
+            </label>
+            <input
+                type="text"
+                value={formData.certification_type}
+                onChange={(e) => setFormData({ ...formData, certification_type: e.target.value })}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Ex: Attestation de formation"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Organisme certificateur
+            </label>
+            <input
+                type="text"
+                value={formData.certification_provider}
+                onChange={(e) => setFormData({ ...formData, certification_provider: e.target.value })}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Ex: DELIVERY Digital"
+            />
+          </div>
+        </div>
+
+        {/* Settings */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <label className="flex items-center">
+            <input
+                type="checkbox"
+                checked={formData.is_active}
+                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                className="mr-2"
+            />
+            <span className="text-gray-300">Actif</span>
+          </label>
+          <label className="flex items-center">
+            <input
+                type="checkbox"
+                checked={formData.is_featured}
+                onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                className="mr-2"
+            />
+            <span className="text-gray-300">Formation phare</span>
+          </label>
+          <label className="flex items-center">
+            <input
+                type="checkbox"
+                checked={formData.opco_eligible}
+                onChange={(e) => setFormData({ ...formData, opco_eligible: e.target.checked })}
+                className="mr-2"
+            />
+            <span className="text-gray-300">OPCO Éligible</span>
+          </label>
+          <label className="flex items-center">
+            <input
+                type="checkbox"
+                checked={formData.cpf_eligible}
+                onChange={(e) => setFormData({ ...formData, cpf_eligible: e.target.checked })}
+                className="mr-2"
+            />
+            <span className="text-gray-300">CPF Éligible</span>
+          </label>
+        </div>
+
         <div className="flex justify-end gap-4">
           <button
             type="button"
@@ -110,21 +377,21 @@ const ProgramFormModalComponent = memo(({
 ));
 
 const TrainingProgramsManagement = () => {
-  const { 
-    programs, 
-    loading: programsLoading, 
-    createProgram, 
-    updateProgram, 
-    deleteProgram, 
-    refetch: refetchPrograms 
+  const {
+    programs,
+    loading: programsLoading,
+    createProgram,
+    updateProgram,
+    deleteProgram,
+    refetch: refetchPrograms
   } = useTrainingPrograms();
-  
-  const { 
-    uploadDocument, 
-    deleteDocument, 
-    downloadDocument 
+
+  const {
+    uploadDocument,
+    deleteDocument,
+    downloadDocument
   } = useTrainingDocuments();
-  
+
   const { categories } = useCategories();
 
   const [activeTab, setActiveTab] = useState<'list' | 'create' | 'edit' | 'documents'>('list');
@@ -134,7 +401,7 @@ const TrainingProgramsManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'view' | 'edit' | 'create' | 'upload'>('view');
   const [showUploadModal, setShowUploadModal] = useState(false);
-  
+
   // Form states
   const [formData, setFormData] = useState({
     program_id: '',
@@ -341,7 +608,7 @@ const TrainingProgramsManagement = () => {
       console.error('Error uploading documents:', error);
       alert(`Erreur lors du téléchargement: ${error.message || 'Erreur inconnue'}`);
     }
-    
+
     setIsSubmitting(false);
   };
 
@@ -408,10 +675,6 @@ const TrainingProgramsManagement = () => {
     return matchesSearch && matchesCategory;
   });
 
-  // Document Upload Modal Component
-  const DocumentUploadModal = () => (
-null
-  );
 
   return (
     <div className="space-y-6">
@@ -486,25 +749,25 @@ null
           {filteredPrograms.map((program) => {
             const categoryData = categories.find(cat => cat.slug === program.category);
             const IconComponent = getIconComponent(categoryData?.icon || 'book');
-            
+
             return (
               <div
                 key={program.id}
                 className="bg-gray-800 rounded-lg border border-gray-700 hover:border-gray-600 transition-all overflow-hidden"
               >
-                <div 
+                <div
                   className="h-2"
                   style={{ backgroundColor: categoryData?.color || '#3b82f6' }}
                 />
-                
+
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center">
-                      <div 
+                      <div
                         className="w-10 h-10 rounded-lg flex items-center justify-center mr-3"
-                        style={{ 
-                          backgroundColor: `${categoryData?.color || '#3b82f6'}20`, 
-                          color: categoryData?.color || '#3b82f6' 
+                        style={{
+                          backgroundColor: `${categoryData?.color || '#3b82f6'}20`,
+                          color: categoryData?.color || '#3b82f6'
                         }}
                       >
                         <IconComponent className="h-5 w-5" />
@@ -618,6 +881,7 @@ null
             onClose={closeModal}
             onSubmit={handleSubmit}
             onChange={handleFormChange}
+            removeArrayItem={removeArrayItem}
           />
         )}
         {showUploadModal && (

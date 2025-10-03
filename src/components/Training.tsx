@@ -438,7 +438,7 @@ const Training = () => {
                           </button>
                         </div>
                         
-                        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                       {/* <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
                           <div className="flex items-center">
                             <FileText className="h-5 w-5 text-green-600 mr-3" />
                             <div>
@@ -452,9 +452,9 @@ const Training = () => {
                           >
                             <Download className="h-5 w-5" />
                           </button>
-                        </div>
+                        </div>*/}
                         
-                        <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
+                        {/*<div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
                           <div className="flex items-center">
                             <Award className="h-5 w-5 text-purple-600 mr-3" />
                             <div>
@@ -468,7 +468,7 @@ const Training = () => {
                           >
                             <Download className="h-5 w-5" />
                           </button>
-                        </div>
+                        </div>*/}
                       </div>
                     </div>
 
