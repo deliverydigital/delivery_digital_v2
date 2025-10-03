@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import { useTranslation } from 'react-i18next';
 import {
   AlertTriangle,
   Mail,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 
 const Reclamation = () => {
+  const { t } = useTranslation();
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
@@ -66,22 +68,22 @@ const Reclamation = () => {
                 <CheckCircle className="h-10 w-10 text-green-600" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Réclamation envoyée avec succès
+                {t('reclamation.success.title')}
               </h2>
               <p className="text-lg text-gray-600 mb-6">
-                Nous avons bien reçu votre réclamation. Notre équipe vous contactera dans les plus brefs délais pour traiter votre demande.
+                {t('reclamation.success.message')}
               </p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <p className="text-sm text-blue-800">
                   <Clock className="inline h-4 w-4 mr-2" />
-                  Temps de réponse estimé : 24-48 heures ouvrées
+                  {t('reclamation.success.responseTime')}
                 </p>
               </div>
               <button
                 onClick={() => window.location.href = '/'}
                 className="btn btn-primary"
               >
-                Retour à l'accueil
+                {t('reclamation.success.backHome')}
               </button>
             </div>
           </motion.div>
@@ -102,13 +104,13 @@ const Reclamation = () => {
           <div className="text-center mb-12">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-orange-100 text-orange-800 text-sm font-medium mb-4">
               <AlertTriangle className="h-4 w-4 mr-2" />
-              Réclamation
+              {t('reclamation.badge')}
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Formulaire de réclamation
+              {t('reclamation.title')}
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Nous prenons vos préoccupations au sérieux. Veuillez remplir le formulaire ci-dessous et nous vous répondrons dans les plus brefs délais.
+              {t('reclamation.subtitle')}
             </p>
           </div>
 
@@ -118,34 +120,34 @@ const Reclamation = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8 border-l-4 border-primary-500"
           >
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Notre engagement qualité</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('reclamation.qualityCommitment.title')}</h2>
             <div className="prose prose-gray max-w-none text-gray-700">
               <p className="mb-4">
-                DELIVERY Digital Nice strives to provide training services that meet the needs and requirements of its customers. However, if you wish to submit a complaint to us:
+                {t('reclamation.qualityCommitment.intro')}
               </p>
               <p className="mb-4">
-                You can, at any time, address your questions, doubts, and problems encountered to your usual contacts, who will do everything possible to provide you with an answer.
+                {t('reclamation.qualityCommitment.contact')}
               </p>
               <p className="mb-4">
-                You also have the option of sending your request using the complaint form below.
+                {t('reclamation.qualityCommitment.formOption')}
               </p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
                   <FileText className="h-5 w-5 mr-2 text-blue-600" />
-                  Notre processus de traitement
+                  {t('reclamation.qualityCommitment.processTitle')}
                 </h3>
                 <ol className="space-y-2 text-sm">
-                  <li>1. You fill out the form which is automatically sent to the team responsible for processing complaints</li>
-                  <li>2. We acknowledge receipt of your complaint</li>
-                  <li>3. We analyze your request as quickly as possible and assess its admissibility</li>
-                  <li>4. If your request is admissible, we analyze the causes of the complaint</li>
-                  <li>5. We carefully examine the facts presented and carry out, if necessary, the necessary research. In this case, we keep you informed of the progress of the case</li>
-                  <li>6. We will inform you of our response, specifying the results of our investigation and any solutions we propose to resolve the problem</li>
+                  <li>1. {t('reclamation.qualityCommitment.steps.1')}</li>
+                  <li>2. {t('reclamation.qualityCommitment.steps.2')}</li>
+                  <li>3. {t('reclamation.qualityCommitment.steps.3')}</li>
+                  <li>4. {t('reclamation.qualityCommitment.steps.4')}</li>
+                  <li>5. {t('reclamation.qualityCommitment.steps.5')}</li>
+                  <li>6. {t('reclamation.qualityCommitment.steps.6')}</li>
                 </ol>
               </div>
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <p className="font-medium text-gray-900 mb-2">
-                  To contact the complaints handling team directly:
+                  {t('reclamation.qualityCommitment.directContact')}
                 </p>
                 <a
                   href="mailto:contact@deliverydigital.fr"
@@ -170,7 +172,7 @@ const Reclamation = () => {
                   <Mail className="h-6 w-6 text-primary-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Email</h3>
+                  <h3 className="font-semibold text-gray-900">{t('reclamation.contactCards.email')}</h3>
                   <a href="mailto:contact@deliverydigital.fr" className="text-sm text-primary-600 hover:text-primary-700">
                     contact@deliverydigital.fr
                   </a>
@@ -189,7 +191,7 @@ const Reclamation = () => {
                   <Phone className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Téléphone</h3>
+                  <h3 className="font-semibold text-gray-900">{t('reclamation.contactCards.phone')}</h3>
                   <a href="tel:0749707773" className="text-sm text-green-600 hover:text-green-700">
                     07 49 70 77 73
                   </a>
@@ -208,7 +210,7 @@ const Reclamation = () => {
                   <Clock className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Horaires</h3>
+                  <h3 className="font-semibold text-gray-900">{t('reclamation.contactCards.hours')}</h3>
                   <p className="text-sm text-gray-600">Lun - Ven: 9h - 18h</p>
                 </div>
               </div>
@@ -226,7 +228,7 @@ const Reclamation = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <User className="inline h-4 w-4 mr-1" />
-                    Prénom *
+                    {t('reclamation.form.firstName')} *
                   </label>
                   <input
                     type="text"
@@ -235,14 +237,14 @@ const Reclamation = () => {
                     value={formData.firstName}
                     onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Votre prénom"
+                    placeholder={t('reclamation.form.firstName')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <User className="inline h-4 w-4 mr-1" />
-                    Nom *
+                    {t('reclamation.form.lastName')} *
                   </label>
                   <input
                     type="text"
@@ -251,7 +253,7 @@ const Reclamation = () => {
                     value={formData.lastName}
                     onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Votre nom"
+                    placeholder={t('reclamation.form.lastName')}
                   />
                 </div>
               </div>
@@ -276,7 +278,7 @@ const Reclamation = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <Phone className="inline h-4 w-4 mr-1" />
-                    Téléphone
+                    {t('reclamation.form.phone')}
                   </label>
                   <input
                     type="tel"
@@ -293,7 +295,7 @@ const Reclamation = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <Building2 className="inline h-4 w-4 mr-1" />
-                    Entreprise
+                    {t('reclamation.form.company')}
                   </label>
                   <input
                     type="text"
@@ -308,7 +310,7 @@ const Reclamation = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <FileText className="inline h-4 w-4 mr-1" />
-                    Numéro de commande
+                    {t('reclamation.form.orderNumber')}
                   </label>
                   <input
                     type="text"
@@ -324,7 +326,7 @@ const Reclamation = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <MessageSquare className="inline h-4 w-4 mr-1" />
-                  Catégorie de réclamation *
+                  {t('reclamation.form.category')} *
                 </label>
                 <select
                   name="category"
@@ -333,18 +335,18 @@ const Reclamation = () => {
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
-                  <option value="service">Qualité du service</option>
-                  <option value="product">Produit/Livrable</option>
-                  <option value="billing">Facturation</option>
-                  <option value="support">Support technique</option>
-                  <option value="training">Formation</option>
-                  <option value="other">Autre</option>
+                  <option value="service">{t('reclamation.form.categoryOptions.service')}</option>
+                  <option value="product">{t('reclamation.form.categoryOptions.product')}</option>
+                  <option value="billing">{t('reclamation.form.categoryOptions.billing')}</option>
+                  <option value="support">{t('reclamation.form.categoryOptions.support')}</option>
+                  <option value="training">{t('reclamation.form.categoryOptions.training')}</option>
+                  <option value="other">{t('reclamation.form.categoryOptions.other')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Objet de la réclamation *
+                  {t('reclamation.form.subject')} *
                 </label>
                 <input
                   type="text"
@@ -353,13 +355,13 @@ const Reclamation = () => {
                   value={formData.subject}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="Résumé de votre réclamation"
+                  placeholder={t('reclamation.form.subjectPlaceholder')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description détaillée *
+                  {t('reclamation.form.description')} *
                 </label>
                 <textarea
                   name="description"
@@ -368,15 +370,14 @@ const Reclamation = () => {
                   onChange={handleChange}
                   rows={6}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="Veuillez décrire en détail votre réclamation..."
+                  placeholder={t('reclamation.form.descriptionPlaceholder')}
                 />
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
                   <CheckCircle className="inline h-4 w-4 mr-2" />
-                  Vos données sont traitées conformément à notre politique de confidentialité et au RGPD.
-                  Nous nous engageons à vous répondre dans un délai de 48 heures ouvrées.
+                  {t('reclamation.form.gdpr')}
                 </p>
               </div>
 
@@ -389,12 +390,12 @@ const Reclamation = () => {
                   {isSubmitting ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
-                      Envoi en cours...
+                      {t('reclamation.form.submitting')}
                     </>
                   ) : (
                     <>
                       <Send className="h-5 w-5 mr-2" />
-                      Envoyer la réclamation
+                      {t('reclamation.form.submit')}
                     </>
                   )}
                 </button>
@@ -410,15 +411,15 @@ const Reclamation = () => {
           >
             <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
               <AlertTriangle className="h-5 w-5 mr-2 text-yellow-600" />
-              Procédure de traitement des réclamations
+              {t('reclamation.procedure.title')}
             </h3>
             <div className="space-y-2 text-sm text-gray-700">
-              <p>1. Réception et accusé de réception sous 24h</p>
-              <p>2. Analyse de votre réclamation par notre équipe</p>
-              <p>3. Réponse détaillée sous 48h ouvrées</p>
-              <p>4. Suivi et résolution du problème</p>
+              <p>1. {t('reclamation.procedure.steps.1')}</p>
+              <p>2. {t('reclamation.procedure.steps.2')}</p>
+              <p>3. {t('reclamation.procedure.steps.3')}</p>
+              <p>4. {t('reclamation.procedure.steps.4')}</p>
               <p className="text-xs text-gray-600 mt-4">
-                Si vous n'êtes pas satisfait de notre réponse, vous pouvez contacter notre responsable qualité ou faire appel à un médiateur de la consommation.
+                {t('reclamation.procedure.mediator')}
               </p>
             </div>
           </motion.div>

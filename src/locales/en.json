@@ -133,5 +133,71 @@
       "terms": "Terms of Use",
       "sitemap": "Sitemap"
     }
+  },
+  "reclamation": {
+    "badge": "Complaint",
+    "title": "Complaint Form",
+    "subtitle": "We take your concerns seriously. Please fill out the form below and we will respond to you as soon as possible.",
+    "qualityCommitment": {
+      "title": "Our Quality Commitment",
+      "intro": "DELIVERY Digital Nice strives to provide training services that meet the needs and requirements of its customers. However, if you wish to submit a complaint to us:",
+      "contact": "You can, at any time, address your questions, doubts, and problems encountered to your usual contacts, who will do everything possible to provide you with an answer.",
+      "formOption": "You also have the option of sending your request using the complaint form below.",
+      "processTitle": "Our Processing Procedure",
+      "steps": {
+        "1": "You fill out the form which is automatically sent to the team responsible for processing complaints",
+        "2": "We acknowledge receipt of your complaint",
+        "3": "We analyze your request as quickly as possible and assess its admissibility",
+        "4": "If your request is admissible, we analyze the causes of the complaint",
+        "5": "We carefully examine the facts presented and carry out, if necessary, the necessary research. In this case, we keep you informed of the progress of the case",
+        "6": "We will inform you of our response, specifying the results of our investigation and any solutions we propose to resolve the problem"
+      },
+      "directContact": "To contact the complaints handling team directly:"
+    },
+    "contactCards": {
+      "email": "Email",
+      "phone": "Phone",
+      "hours": "Hours"
+    },
+    "form": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "company": "Company",
+      "orderNumber": "Order Number",
+      "category": "Complaint Category",
+      "categoryOptions": {
+        "service": "Service Quality",
+        "product": "Product/Deliverable",
+        "billing": "Billing",
+        "support": "Technical Support",
+        "training": "Training",
+        "other": "Other"
+      },
+      "subject": "Complaint Subject",
+      "subjectPlaceholder": "Summary of your complaint",
+      "description": "Detailed Description",
+      "descriptionPlaceholder": "Please describe your complaint in detail...",
+      "gdpr": "Your data is processed in accordance with our privacy policy and GDPR. We commit to responding to you within 48 business hours.",
+      "submit": "Submit Complaint",
+      "submitting": "Submitting..."
+    },
+    "procedure": {
+      "title": "Complaint Processing Procedure",
+      "steps": {
+        "1": "Reception and acknowledgment within 24h",
+        "2": "Analysis of your complaint by our team",
+        "3": "Detailed response within 48 business hours",
+        "4": "Follow-up and problem resolution"
+      },
+      "mediator": "If you are not satisfied with our response, you can contact our quality manager or appeal to a consumer mediator."
+    },
+    "success": {
+      "title": "Complaint Successfully Submitted",
+      "message": "We have received your complaint. Our team will contact you as soon as possible to process your request.",
+      "responseTime": "Estimated response time: 24-48 business hours",
+      "backHome": "Back to Home"
+    }
   }
 }

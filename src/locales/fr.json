@@ -133,5 +133,71 @@
       "terms": "Conditions d'utilisation",
       "sitemap": "Plan du site"
     }
+  },
+  "reclamation": {
+    "badge": "Réclamation",
+    "title": "Formulaire de réclamation",
+    "subtitle": "Nous prenons vos préoccupations au sérieux. Veuillez remplir le formulaire ci-dessous et nous vous répondrons dans les plus brefs délais.",
+    "qualityCommitment": {
+      "title": "Notre engagement qualité",
+      "intro": "DELIVERY Digital Nice s'efforce de fournir des services de formation qui répondent aux besoins et aux exigences de ses clients. Cependant, si vous souhaitez nous soumettre une réclamation :",
+      "contact": "Vous pouvez, à tout moment, adresser vos questions, doutes et problèmes rencontrés à vos contacts habituels, qui feront tout leur possible pour vous apporter une réponse.",
+      "formOption": "Vous avez également la possibilité d'envoyer votre demande en utilisant le formulaire de réclamation ci-dessous.",
+      "processTitle": "Notre processus de traitement",
+      "steps": {
+        "1": "Vous remplissez le formulaire qui est automatiquement envoyé à l'équipe chargée du traitement des réclamations",
+        "2": "Nous accusons réception de votre réclamation",
+        "3": "Nous analysons votre demande dans les plus brefs délais et évaluons sa recevabilité",
+        "4": "Si votre demande est recevable, nous analysons les causes de la réclamation",
+        "5": "Nous examinons attentivement les faits présentés et effectuons, si nécessaire, les recherches nécessaires. Dans ce cas, nous vous tenons informé de l'avancement du dossier",
+        "6": "Nous vous informons de notre réponse, en précisant les résultats de notre enquête et les solutions que nous proposons pour résoudre le problème"
+      },
+      "directContact": "Pour contacter directement l'équipe de traitement des réclamations :"
+    },
+    "contactCards": {
+      "email": "Email",
+      "phone": "Téléphone",
+      "hours": "Horaires"
+    },
+    "form": {
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "Email",
+      "phone": "Téléphone",
+      "company": "Entreprise",
+      "orderNumber": "Numéro de commande",
+      "category": "Catégorie de réclamation",
+      "categoryOptions": {
+        "service": "Qualité du service",
+        "product": "Produit/Livrable",
+        "billing": "Facturation",
+        "support": "Support technique",
+        "training": "Formation",
+        "other": "Autre"
+      },
+      "subject": "Objet de la réclamation",
+      "subjectPlaceholder": "Résumé de votre réclamation",
+      "description": "Description détaillée",
+      "descriptionPlaceholder": "Veuillez décrire en détail votre réclamation...",
+      "gdpr": "Vos données sont traitées conformément à notre politique de confidentialité et au RGPD. Nous nous engageons à vous répondre dans un délai de 48 heures ouvrées.",
+      "submit": "Envoyer la réclamation",
+      "submitting": "Envoi en cours..."
+    },
+    "procedure": {
+      "title": "Procédure de traitement des réclamations",
+      "steps": {
+        "1": "Réception et accusé de réception sous 24h",
+        "2": "Analyse de votre réclamation par notre équipe",
+        "3": "Réponse détaillée sous 48h ouvrées",
+        "4": "Suivi et résolution du problème"
+      },
+      "mediator": "Si vous n'êtes pas satisfait de notre réponse, vous pouvez contacter notre responsable qualité ou faire appel à un médiateur de la consommation."
+    },
+    "success": {
+      "title": "Réclamation envoyée avec succès",
+      "message": "Nous avons bien reçu votre réclamation. Notre équipe vous contactera dans les plus brefs délais pour traiter votre demande.",
+      "responseTime": "Temps de réponse estimé : 24-48 heures ouvrées",
+      "backHome": "Retour à l'accueil"
+    }
   }
 }
