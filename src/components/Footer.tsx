@@ -108,7 +108,8 @@ const Footer = () => {
     { label: t('footer.links.terms'), link: "#" },
     { label: t('footer.links.sitemap'), link: "#" },
     { label: "Mentions légales", link: "#" },
-    { label: "RGPD", link: "#" }
+    { label: "RGPD", link: "#" },
+    { label: "Réclamation", link: "/reclamation" }
   ];
 
   const socialLinks = [
@@ -187,19 +188,29 @@ const Footer = () => {
             </div>
             <div className="flex flex-wrap gap-4 md:justify-end">
               {legalLinks.map((link) => (
-                <button
-                  key={link.label}
-                  onClick={() => {
-                    const modalType = link.label === 'Politique de confidentialité' ? 'privacy' :
-                                    link.label === 'Conditions d\'utilisation' ? 'terms' :
-                                    link.label === 'Plan du site' ? 'sitemap' :
-                                    link.label === 'Mentions légales' ? 'legal' : 'privacy';
-                    window.dispatchEvent(new CustomEvent('openLegalModal', { detail: modalType }));
-                  }}
-                  className="text-gray-400 hover:text-white text-sm transition-colors cursor-pointer"
-                >
-                  {link.label}
-                </button>
+                link.link && link.link.startsWith('/') ? (
+                  <a
+                    key={link.label}
+                    href={link.link}
+                    className="text-gray-400 hover:text-white text-sm transition-colors cursor-pointer"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <button
+                    key={link.label}
+                    onClick={() => {
+                      const modalType = link.label === 'Politique de confidentialité' ? 'privacy' :
+                                      link.label === 'Conditions d\'utilisation' ? 'terms' :
+                                      link.label === 'Plan du site' ? 'sitemap' :
+                                      link.label === 'Mentions légales' ? 'legal' : 'privacy';
+                      window.dispatchEvent(new CustomEvent('openLegalModal', { detail: modalType }));
+                    }}
+                    className="text-gray-400 hover:text-white text-sm transition-colors cursor-pointer"
+                  >
+                    {link.label}
+                  </button>
+                )
               ))}
             </div>
           </div>

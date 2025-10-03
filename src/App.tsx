@@ -12,6 +12,7 @@ import ProjectSubmission from './components/ProjectSubmission';
 import AdminDashboard from './components/AdminDashboard';
 import ClientDashboard from './components/ClientDashboard';
 import LegalModals from './components/LegalModals';
+import Reclamation from './components/Reclamation';
 import { useAuth } from './hooks/useApi';
 
 function App() {
@@ -19,20 +20,26 @@ function App() {
   const { user, isAuthenticated, isAdmin } = useAuth();
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [authKey, setAuthKey] = useState(0);
+  const [currentPage, setCurrentPage] = useState('home');
 
   useEffect(() => {
-    document.title = i18n.language === 'fr' 
+    document.title = i18n.language === 'fr'
       ? 'DELIVERY Digital Technology | Expertise Informatique'
       : 'DELIVERY Digital Technology | IT Expertise';
   }, [i18n.language]);
 
-  // Check for admin access from URL
+  // Check for admin access or page route from URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const isAdminRoute = urlParams.get('admin') === 'true';
-    
+    const pathname = window.location.pathname;
+
     if (isAdminRoute) {
       setShowAdminDashboard(true);
+    } else if (pathname === '/reclamation') {
+      setCurrentPage('reclamation');
+    } else {
+      setCurrentPage('home');
     }
   }, []);
 
@@ -69,6 +76,20 @@ function App() {
         </div>
       );
     }
+  }
+
+  // Reclamation page
+  if (currentPage === 'reclamation') {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow">
+          <Reclamation />
+        </main>
+        <Footer />
+        <ScrollToTop />
+      </div>
+    );
   }
 
   // Regular website
