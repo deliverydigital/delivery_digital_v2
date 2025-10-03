@@ -71,13 +71,19 @@ const Contact = () => {
     setFormState(prev => ({ ...prev, [name]: value }));
   };
 
-  const nextStep = () => {
+  const nextStep = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     if (activeStep < 3) {
       setActiveStep(prev => prev + 1);
     }
   };
 
-  const prevStep = () => {
+  const prevStep = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     if (activeStep > 1) {
       setActiveStep(prev => prev - 1);
     }
@@ -85,9 +91,11 @@ const Contact = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const agreement = generateConfidentialityAgreement(formState);
-    setAgreement(agreement);
-    setShowConfidentialityModal(true);
+    if (activeStep === 3) {
+      const agreement = generateConfidentialityAgreement(formState);
+      setAgreement(agreement);
+      setShowConfidentialityModal(true);
+    }
   };
 
   const downloadAccessPlan = () => {
