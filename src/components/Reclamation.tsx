@@ -36,15 +36,35 @@ const Reclamation = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError('');
 
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/reclamation/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setSubmitted(true);
+      } else {
+        throw new Error(data.message || 'Failed to submit reclamation');
+      }
+    } catch (err) {
+      console.error('Error submitting reclamation:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
+    } finally {
       setIsSubmitting(false);
-      setSubmitted(true);
-    }, 1500);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -380,6 +400,15 @@ const Reclamation = () => {
                   {t('reclamation.form.gdpr')}
                 </p>
               </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-sm text-red-800">
+                    <AlertTriangle className="inline h-4 w-4 mr-2" />
+                    {error}
+                  </p>
+                </div>
+              )}
 
               <div className="flex justify-end">
                 <button
