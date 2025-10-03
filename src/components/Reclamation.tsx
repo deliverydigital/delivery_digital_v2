@@ -112,6 +112,52 @@ const Reclamation = () => {
             </p>
           </div>
 
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8 border-l-4 border-primary-500"
+          >
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Notre engagement qualité</h2>
+            <div className="prose prose-gray max-w-none text-gray-700">
+              <p className="mb-4">
+                DELIVERY Digital Nice strives to provide training services that meet the needs and requirements of its customers. However, if you wish to submit a complaint to us:
+              </p>
+              <p className="mb-4">
+                You can, at any time, address your questions, doubts, and problems encountered to your usual contacts, who will do everything possible to provide you with an answer.
+              </p>
+              <p className="mb-4">
+                You also have the option of sending your request using the complaint form below.
+              </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <FileText className="h-5 w-5 mr-2 text-blue-600" />
+                  Notre processus de traitement
+                </h3>
+                <ol className="space-y-2 text-sm">
+                  <li>1. You fill out the form which is automatically sent to the team responsible for processing complaints</li>
+                  <li>2. We acknowledge receipt of your complaint</li>
+                  <li>3. We analyze your request as quickly as possible and assess its admissibility</li>
+                  <li>4. If your request is admissible, we analyze the causes of the complaint</li>
+                  <li>5. We carefully examine the facts presented and carry out, if necessary, the necessary research. In this case, we keep you informed of the progress of the case</li>
+                  <li>6. We will inform you of our response, specifying the results of our investigation and any solutions we propose to resolve the problem</li>
+                </ol>
+              </div>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="font-medium text-gray-900 mb-2">
+                  To contact the complaints handling team directly:
+                </p>
+                <a
+                  href="mailto:contact@deliverydigital.fr"
+                  className="text-primary-600 hover:text-primary-700 font-medium flex items-center"
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  contact@deliverydigital.fr
+                </a>
+              </div>
+            </div>
+          </motion.div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
