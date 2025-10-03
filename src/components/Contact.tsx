@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle, Building2, Clock, Shield, ArrowRight, Download, Map } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle, Building2, Clock, Shield, ArrowRight, Download, Map, Loader } from 'lucide-react';
 
 const generateConfidentialityAgreement = (formData) => {
   const date = new Date().toLocaleDateString('fr-FR');
@@ -47,6 +47,8 @@ const Contact = () => {
   const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState(1);
   const [formStatus, setFormStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [showConfidentialityModal, setShowConfidentialityModal] = useState(false);
   const [agreement, setAgreement] = useState('');
   const { ref, inView } = useInView({
@@ -441,6 +443,14 @@ const Contact = () => {
               <pre className="whitespace-pre-wrap font-mono text-sm bg-gray-50 p-4 rounded-lg">
                 {agreement}
               </pre>
+              {errorMessage && (
+                <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-sm text-red-800">
+                    <AlertCircle className="inline h-4 w-4 mr-2" />
+                    {errorMessage}
+                  </p>
+                </div>
+              )}
             </div>
             <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
               <button
@@ -450,21 +460,67 @@ const Contact = () => {
                 Fermer
               </button>
               <button
-                onClick={() => {
-                  const blob = new Blob([agreement], { type: 'text/plain' });
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = 'accord-confidentialite.txt';
-                  a.click();
-                  window.URL.revokeObjectURL(url);
-                  setFormStatus('success');
-                  setShowConfidentialityModal(false);
+                onClick={async () => {
+                  setIsSubmitting(true);
+                  setErrorMessage('');
+
+                  try {
+                    const blob = new Blob([agreement], { type: 'text/plain' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'accord-confidentialite.txt';
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+
+                    const response = await fetch('/api/contact/submit', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(formState),
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                      setFormStatus('success');
+                      setShowConfidentialityModal(false);
+                      setFormState({
+                        name: '',
+                        email: '',
+                        phone: '',
+                        subject: '',
+                        budget: 'medium',
+                        timeline: 'flexible',
+                        message: ''
+                      });
+                      setActiveStep(1);
+                    } else {
+                      throw new Error(data.message || 'Failed to submit form');
+                    }
+                  } catch (error) {
+                    console.error('Error submitting contact form:', error);
+                    setErrorMessage(error instanceof Error ? error.message : 'An error occurred. Please try again.');
+                    setFormStatus('error');
+                  } finally {
+                    setIsSubmitting(false);
+                  }
                 }}
+                disabled={isSubmitting}
                 className="btn btn-primary"
               >
-                Télécharger et envoyer
-                <ArrowRight className="ml-2 h-5 w-5" />
+                {isSubmitting ? (
+                  <>
+                    <Loader className="animate-spin mr-2 h-5 w-5" />
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    Télécharger et envoyer
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </>
+                )}
               </button>
             </div>
           </div>

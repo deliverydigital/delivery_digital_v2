@@ -1,6 +1,18 @@
-# Email & CAPTCHA Configuration for Reclamation Form
+# Email & CAPTCHA Configuration
 
-The reclamation form sends emails to `contact@deliverydigital.fr` when a customer submits a complaint. It also includes Google reCAPTCHA to prevent spam submissions. This document explains how to configure both features.
+This document explains how to configure email functionality for both the Contact form and Reclamation form.
+
+## Forms Overview
+
+1. **Contact Form** (`/contact`):
+   - Sends emails to `contact@deliverydigital.fr` and confirmation to customer
+   - Multi-step form with project details (budget, timeline)
+   - Downloads confidentiality agreement
+
+2. **Reclamation Form** (`/reclamation`):
+   - Sends complaint emails to `contact@deliverydigital.fr` and confirmation to customer
+   - Includes reCAPTCHA v2 spam protection
+   - Priority handling for customer complaints
 
 ## Configuration
 
@@ -85,9 +97,30 @@ SMTP_FROM=contact@deliverydigital.fr
 
 ## How It Works
 
-When a customer submits a reclamation:
+### Contact Form Flow
 
-1. **CAPTCHA Verification**: The form validates the reCAPTCHA token to prevent spam submissions
+When a customer submits the contact form:
+
+1. **Multi-Step Form**: Collects customer information, project details (budget, timeline)
+2. **Confidentiality Agreement**: Generates and displays a confidentiality agreement
+3. **Download Agreement**: Customer downloads the agreement
+4. **Email to Company**: A detailed message is sent to `contact@deliverydigital.fr` with:
+   - Customer information (name, email, phone)
+   - Project subject
+   - Budget and timeline preferences
+   - Full message
+   - Submission timestamp
+5. **Confirmation Email to Customer**: Automatic confirmation with:
+   - Acknowledgment of receipt
+   - Summary of their request
+   - Expected response time (24-48 business hours)
+   - Contact information
+
+### Reclamation Form Flow
+
+When a customer submits a complaint:
+
+1. **CAPTCHA Verification**: The form validates the reCAPTCHA token to prevent spam
    - Frontend validates that CAPTCHA was completed
    - Backend verifies the token with Google's API
    - Submission is rejected if verification fails
@@ -100,7 +133,7 @@ When a customer submits a reclamation:
    - Submission timestamp
    - Alert about 48-hour response requirement
 
-3. **Confirmation Email to Customer**: An automatic confirmation email is sent to the customer with:
+3. **Confirmation Email to Customer**: Automatic confirmation with:
    - Acknowledgment of receipt
    - Subject of their complaint
    - Expected response time (24-48 business hours)
@@ -120,18 +153,27 @@ RECAPTCHA_SECRET_KEY=6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
 
 **Warning**: These test keys should NEVER be used in production!
 
-### Testing the Form
+### Testing the Forms
 
 To test the complete functionality:
 
-1. Make sure your `.env` file has valid SMTP credentials and reCAPTCHA keys
+**Contact Form:**
+1. Make sure your `.env` file has valid SMTP credentials
 2. Start the server: `npm run server`
 3. Start the frontend: `npm run dev`
-4. Navigate to the reclamation page: `http://localhost:5173/reclamation`
-5. Fill out the form
-6. Complete the CAPTCHA verification
-7. Submit the form
-8. Check both the company email (`contact@deliverydigital.fr`) and the customer email
+4. Navigate to: `http://localhost:5173/#contact`
+5. Fill out the 3-step form
+6. Review and download the confidentiality agreement
+7. Click "Télécharger et envoyer"
+8. Check both emails (`contact@deliverydigital.fr` and customer email)
+
+**Reclamation Form:**
+1. Make sure your `.env` file has valid SMTP credentials and reCAPTCHA keys
+2. Navigate to: `http://localhost:5173/reclamation`
+3. Fill out the form
+4. Complete the CAPTCHA verification
+5. Submit the form
+6. Check both emails (`contact@deliverydigital.fr` and customer email)
 
 ## Troubleshooting
 
