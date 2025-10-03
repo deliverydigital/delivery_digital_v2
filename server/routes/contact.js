@@ -34,6 +34,15 @@ router.post('/submit', async (req, res) => {
       });
     }
 
+    // Check if SMTP is configured
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.error('SMTP credentials not configured');
+      return res.status(500).json({
+        success: false,
+        message: 'Email service not configured. Please contact the administrator.'
+      });
+    }
+
     const budgetLabels = {
       small: 'Petit budget (< 5K€) / Small budget (< 5K€)',
       medium: 'Budget moyen (5-20K€) / Medium budget (5-20K€)',
