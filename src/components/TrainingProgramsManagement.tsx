@@ -344,6 +344,69 @@ const ProgramFormModalComponent = memo(({
           </label>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Taux de satisfaction (%)
+            </label>
+            <input
+              type="number"
+              value={formData.satisfaction_rate}
+              onChange={(e) => onChange('satisfaction_rate', parseFloat(e.target.value) || 0)}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="95"
+              min="0"
+              max="100"
+              step="0.1"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Taux de réussite (%)
+            </label>
+            <input
+              type="number"
+              value={formData.success_rate}
+              onChange={(e) => onChange('success_rate', parseFloat(e.target.value) || 0)}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="90"
+              min="0"
+              max="100"
+              step="0.1"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Taux de recommandation (%)
+            </label>
+            <input
+              type="number"
+              value={formData.recommendation_rate}
+              onChange={(e) => onChange('recommendation_rate', parseFloat(e.target.value) || 0)}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="92"
+              min="0"
+              max="100"
+              step="0.1"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Taux de présence (%)
+            </label>
+            <input
+              type="number"
+              value={formData.attendance_rate}
+              onChange={(e) => onChange('attendance_rate', parseFloat(e.target.value) || 0)}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="98"
+              min="0"
+              max="100"
+              step="0.1"
+            />
+          </div>
+        </div>
+
         <div className="flex justify-end gap-4">
           <button
             type="button"
@@ -424,7 +487,11 @@ const TrainingProgramsManagement = () => {
     cpf_eligible: false,
     certification_type: '',
     certification_provider: '',
-    modules: []
+    modules: [],
+    satisfaction_rate: 0,
+    success_rate: 0,
+    recommendation_rate: 0,
+    attendance_rate: 0
   });
 
   const [uploadFormData, setUploadFormData] = useState({
@@ -469,7 +536,11 @@ const TrainingProgramsManagement = () => {
       cpf_eligible: false,
       certification_type: '',
       certification_provider: '',
-      modules: []
+      modules: [],
+      satisfaction_rate: 0,
+      success_rate: 0,
+      recommendation_rate: 0,
+      attendance_rate: 0
     });
   };
 
@@ -514,7 +585,11 @@ const TrainingProgramsManagement = () => {
       cpf_eligible: program.cpf_eligible || false,
       certification_type: program.certification_type || '',
       certification_provider: program.certification_provider || '',
-      modules: program.modules || []
+      modules: program.modules || [],
+      satisfaction_rate: program.satisfaction_rate || 0,
+      success_rate: program.success_rate || 0,
+      recommendation_rate: program.recommendation_rate || 0,
+      attendance_rate: program.attendance_rate || 0
     });
     setSelectedProgram(program);
     setModalType('edit');
