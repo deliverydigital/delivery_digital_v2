@@ -86,7 +86,31 @@ const trainingProgramSchema = new Schema({
     type: Boolean,
     default: false
   },
-  
+  satisfaction_rate: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  success_rate: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  recommendation_rate: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  attendance_rate: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+
   // PDF Documents as embedded documents
   documents: [{
     title: {

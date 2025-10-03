@@ -201,7 +201,7 @@ router.get('/', validatePagination, async (req, res) => {
       console.log('📊 Final MongoDB query:', JSON.stringify(query, null, 2));
 
       const programs = await TrainingProgram.find(query)
-        .select('program_id title description category duration_hours price level max_participants prerequisites objectives methods evaluation_methods accessibility_info access_delay is_active is_featured opco_eligible cpf_eligible certification_type certification_provider modules')
+        .select('program_id title description category duration_hours price level max_participants prerequisites objectives methods evaluation_methods accessibility_info access_delay is_active is_featured opco_eligible cpf_eligible certification_type certification_provider modules satisfaction_rate success_rate recommendation_rate attendance_rate')
         .skip(skip)
         .limit(parseInt(limit))
         .sort({ is_featured: -1, title: 1 });
@@ -246,6 +246,10 @@ router.get('/', validatePagination, async (req, res) => {
             certification_type: program.certification_type || '',
             certification_provider: program.certification_provider || '',
             modules: program.modules || [],
+            satisfaction_rate: program.satisfaction_rate || 0,
+            success_rate: program.success_rate || 0,
+            recommendation_rate: program.recommendation_rate || 0,
+            attendance_rate: program.attendance_rate || 0,
             created_at: program.createdAt,
             updated_at: program.updatedAt
           })),
@@ -331,7 +335,11 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       opco_eligible,
       cpf_eligible,
       certification_type,
-      certification_provider
+      certification_provider,
+      satisfaction_rate,
+      success_rate,
+      recommendation_rate,
+      attendance_rate
     } = req.body;
 
     console.log('📊 Received request body:', req.body);
@@ -440,7 +448,11 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       opco_eligible: opco_eligible !== undefined ? opco_eligible : true,
       cpf_eligible: cpf_eligible !== undefined ? cpf_eligible : false,
       certification_type,
-      certification_provider
+      certification_provider,
+      satisfaction_rate: parseFloat(satisfaction_rate) || 0,
+      success_rate: parseFloat(success_rate) || 0,
+      recommendation_rate: parseFloat(recommendation_rate) || 0,
+      attendance_rate: parseFloat(attendance_rate) || 0
     };
 
     console.log('📊 Processed program data:', programData);
@@ -510,6 +522,10 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
           certification_type: program.certification_type,
           certification_provider: program.certification_provider,
           modules: program.modules,
+          satisfaction_rate: program.satisfaction_rate,
+          success_rate: program.success_rate,
+          recommendation_rate: program.recommendation_rate,
+          attendance_rate: program.attendance_rate,
           created_at: program.createdAt,
           updated_at: program.updatedAt
         }
@@ -763,9 +779,10 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
     // Update allowed fields
     const allowedFields = [
       'title', 'description', 'category', 'duration_hours', 'price', 'level', 'program_id',
-      'max_participants', 'prerequisites', 'objectives', 'methods', 
+      'max_participants', 'prerequisites', 'objectives', 'methods',
       'evaluation_methods', 'accessibility_info', 'access_delay', 'is_active', 'modules',
-      'is_featured', 'opco_eligible', 'cpf_eligible', 'certification_type', 'certification_provider'
+      'is_featured', 'opco_eligible', 'cpf_eligible', 'certification_type', 'certification_provider',
+      'satisfaction_rate', 'success_rate', 'recommendation_rate', 'attendance_rate'
     ];
 
     for (const [key, value] of Object.entries(updates)) {
@@ -776,7 +793,7 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
                        (typeof value === 'string' ? value.split(',').map(item => item.trim()).filter(item => item) : []);
         } else if (key === 'modules') {
           program[key] = typeof value === 'string' ? JSON.parse(value) : value;
-        } else if (key === 'duration_hours' || key === 'price' || key === 'max_participants') {
+        } else if (key === 'duration_hours' || key === 'price' || key === 'max_participants' || key === 'satisfaction_rate' || key === 'success_rate' || key === 'recommendation_rate' || key === 'attendance_rate') {
           program[key] = key === 'max_participants' ? parseInt(value) || 12 : parseFloat(value) || 0;
         } else if (key === 'is_active' || key === 'is_featured' || key === 'opco_eligible' || key === 'cpf_eligible') {
           program[key] = Boolean(value);
@@ -839,6 +856,10 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
           certification_type: program.certification_type,
           certification_provider: program.certification_provider,
           modules: program.modules,
+          satisfaction_rate: program.satisfaction_rate,
+          success_rate: program.success_rate,
+          recommendation_rate: program.recommendation_rate,
+          attendance_rate: program.attendance_rate,
           created_at: program.createdAt,
           updated_at: program.updatedAt
         }
