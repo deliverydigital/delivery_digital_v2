@@ -119,7 +119,7 @@ const Contact = () => {
   );
 
   return (
-    <section id="contact" className="section bg-gradient-to-b from-white to-primary-50">
+    <section id="contact" className="relative bg-gradient-to-b from-white to-primary-50">
       <div className="container">
         <div className="text-center mb-16">
           <motion.div
