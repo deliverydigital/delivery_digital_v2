@@ -2,7 +2,46 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle, Building2, Clock, Download, Map, Loader } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle, Building2, Clock, Shield, ArrowRight, Download, Map, Loader } from 'lucide-react';
+
+const generateConfidentialityAgreement = (formData) => {
+  const date = new Date().toLocaleDateString('fr-FR');
+  return `
+ACCORD DE CONFIDENTIALITÉ
+
+Date : ${date}
+
+ENTRE :
+DELIVERY Digital Technology
+470 promenade des anglais, 06200 Nice
+Ci-après dénommée "la Société"
+
+ET :
+${formData.name}
+${formData.email}
+Ci-après dénommé "le Client"
+
+1. OBJET
+Le présent accord a pour objet de définir les conditions de confidentialité applicables aux informations échangées dans le cadre du projet suivant :
+
+${formData.message}
+
+2. INFORMATIONS CONFIDENTIELLES
+Les parties s'engagent à :
+- Maintenir la confidentialité des informations échangées
+- Ne pas utiliser ces informations à d'autres fins que l'évaluation et la réalisation du projet
+- Ne pas divulguer ces informations à des tiers sans accord préalable
+
+3. DURÉE
+Cet accord est valable pour une durée de 5 ans à compter de sa date de signature.
+
+4. PROTECTION DES DONNÉES
+Les données personnelles sont traitées conformément au RGPD et à notre politique de confidentialité.
+
+Pour DELIVERY Digital Technology                    Pour le Client
+_______________________                            _______________________
+`;
+};
 
 const Contact = () => {
   const { t } = useTranslation();
@@ -10,6 +49,8 @@ const Contact = () => {
   const [formStatus, setFormStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showConfidentialityModal, setShowConfidentialityModal] = useState(false);
+  const [agreement, setAgreement] = useState('');
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
@@ -42,44 +83,11 @@ const Contact = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setErrorMessage('');
-
-    try {
-      const response = await fetch('/api/contact/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formState),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setFormStatus('success');
-        setFormState({
-          name: '',
-          email: '',
-          phone: '',
-          subject: '',
-          budget: 'medium',
-          timeline: 'flexible',
-          message: ''
-        });
-        setActiveStep(1);
-      } else {
-        throw new Error(data.message || 'Failed to submit form');
-      }
-    } catch (error) {
-      console.error('Error submitting contact form:', error);
-      setErrorMessage(error instanceof Error ? error.message : 'An error occurred. Please try again.');
-      setFormStatus('error');
-    } finally {
-      setIsSubmitting(false);
-    }
+    const agreement = generateConfidentialityAgreement(formState);
+    setAgreement(agreement);
+    setShowConfidentialityModal(true);
   };
 
   const downloadAccessPlan = () => {
@@ -422,6 +430,102 @@ const Contact = () => {
           </motion.div>
         </div>
       </div>
+
+      {showConfidentialityModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900">
+                Accord de Confidentialité
+              </h3>
+            </div>
+            <div className="p-6">
+              <pre className="whitespace-pre-wrap font-mono text-sm bg-gray-50 p-4 rounded-lg">
+                {agreement}
+              </pre>
+              {errorMessage && (
+                <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-sm text-red-800">
+                    <AlertCircle className="inline h-4 w-4 mr-2" />
+                    {errorMessage}
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
+              <button
+                onClick={() => setShowConfidentialityModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Fermer
+              </button>
+              <button
+                onClick={async () => {
+                  setIsSubmitting(true);
+                  setErrorMessage('');
+
+                  try {
+                    const blob = new Blob([agreement], { type: 'text/plain' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'accord-confidentialite.txt';
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+
+                    const response = await fetch('/api/contact/submit', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(formState),
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                      setFormStatus('success');
+                      setShowConfidentialityModal(false);
+                      setFormState({
+                        name: '',
+                        email: '',
+                        phone: '',
+                        subject: '',
+                        budget: 'medium',
+                        timeline: 'flexible',
+                        message: ''
+                      });
+                      setActiveStep(1);
+                    } else {
+                      throw new Error(data.message || 'Failed to submit form');
+                    }
+                  } catch (error) {
+                    console.error('Error submitting contact form:', error);
+                    setErrorMessage(error instanceof Error ? error.message : 'An error occurred. Please try again.');
+                    setFormStatus('error');
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }}
+                disabled={isSubmitting}
+                className="btn btn-primary"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader className="animate-spin mr-2 h-5 w-5" />
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    Télécharger et envoyer
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
