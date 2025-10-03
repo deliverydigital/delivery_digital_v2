@@ -180,6 +180,8 @@
       "description": "Detailed Description",
       "descriptionPlaceholder": "Please describe your complaint in detail...",
       "gdpr": "Your data is processed in accordance with our privacy policy and GDPR. We commit to responding to you within 48 business hours.",
+      "captcha": "Security Verification",
+      "captchaRequired": "Please complete the security verification",
       "submit": "Submit Complaint",
       "submitting": "Submitting..."
     },

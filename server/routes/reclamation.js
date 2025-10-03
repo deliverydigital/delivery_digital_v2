@@ -1,5 +1,6 @@
 import express from 'express';
 import nodemailer from 'nodemailer';
+import axios from 'axios';
 
 const router = express.Router();
 
@@ -16,6 +17,39 @@ const createTransporter = () => {
   });
 };
 
+// Verify reCAPTCHA token
+const verifyCaptcha = async (token) => {
+  try {
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+
+    // Skip verification in development if no secret key is set
+    if (!secretKey && process.env.NODE_ENV === 'development') {
+      console.warn('Warning: RECAPTCHA_SECRET_KEY not set. Skipping verification in development mode.');
+      return true;
+    }
+
+    if (!secretKey) {
+      throw new Error('RECAPTCHA_SECRET_KEY is not configured');
+    }
+
+    const response = await axios.post(
+      'https://www.google.com/recaptcha/api/siteverify',
+      null,
+      {
+        params: {
+          secret: secretKey,
+          response: token
+        }
+      }
+    );
+
+    return response.data.success;
+  } catch (error) {
+    console.error('Error verifying CAPTCHA:', error);
+    return false;
+  }
+};
+
 // Submit reclamation
 router.post('/submit', async (req, res) => {
   try {
@@ -28,7 +62,8 @@ router.post('/submit', async (req, res) => {
       orderNumber,
       category,
       subject,
-      description
+      description,
+      captchaToken
     } = req.body;
 
     // Validate required fields
@@ -36,6 +71,22 @@ router.post('/submit', async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Required fields are missing'
+      });
+    }
+
+    // Verify CAPTCHA
+    if (!captchaToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'CAPTCHA verification is required'
+      });
+    }
+
+    const isCaptchaValid = await verifyCaptcha(captchaToken);
+    if (!isCaptchaValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'CAPTCHA verification failed. Please try again.'
       });
     }
 

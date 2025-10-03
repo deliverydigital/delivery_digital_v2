@@ -180,6 +180,8 @@
       "description": "Description détaillée",
       "descriptionPlaceholder": "Veuillez décrire en détail votre réclamation...",
       "gdpr": "Vos données sont traitées conformément à notre politique de confidentialité et au RGPD. Nous nous engageons à vous répondre dans un délai de 48 heures ouvrées.",
+      "captcha": "Vérification de sécurité",
+      "captchaRequired": "Veuillez compléter la vérification de sécurité",
       "submit": "Envoyer la réclamation",
       "submitting": "Envoi en cours..."
     },

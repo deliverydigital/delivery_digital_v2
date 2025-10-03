@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { useTranslation } from 'react-i18next';
+import ReCAPTCHA from 'react-google-recaptcha';
 import {
   AlertTriangle,
   Mail,
@@ -12,7 +13,8 @@ import {
   Clock,
   User,
   MessageSquare,
-  Building2
+  Building2,
+  Shield
 } from 'lucide-react';
 
 const Reclamation = () => {
@@ -37,11 +39,20 @@ const Reclamation = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
+
+    // Validate CAPTCHA
+    if (!captchaToken) {
+      setError(t('reclamation.form.captchaRequired') || 'Please complete the CAPTCHA verification');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const response = await fetch('/api/reclamation/submit', {
@@ -49,7 +60,10 @@ const Reclamation = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          captchaToken
+        }),
       });
 
       const data = await response.json();
@@ -62,9 +76,19 @@ const Reclamation = () => {
     } catch (err) {
       console.error('Error submitting reclamation:', err);
       setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
+      // Reset captcha on error
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
+        setCaptchaToken(null);
+      }
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleCaptchaChange = (token: string | null) => {
+    setCaptchaToken(token);
+    setError('');
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -399,6 +423,21 @@ const Reclamation = () => {
                   <CheckCircle className="inline h-4 w-4 mr-2" />
                   {t('reclamation.form.gdpr')}
                 </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <Shield className="inline h-4 w-4 mr-1" />
+                  {t('reclamation.form.captcha') || 'Security Verification'} *
+                </label>
+                <div className="flex justify-center">
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
+                    onChange={handleCaptchaChange}
+                    theme="light"
+                  />
+                </div>
               </div>
 
               {error && (
