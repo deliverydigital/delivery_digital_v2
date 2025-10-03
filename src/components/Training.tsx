@@ -630,6 +630,74 @@ const Training = () => {
                         </div>
                       </div>
 
+                      {/* Performance Rates */}
+                      {(selectedProgram.satisfaction_rate > 0 || selectedProgram.success_rate > 0 || selectedProgram.recommendation_rate > 0 || selectedProgram.attendance_rate > 0) && (
+                        <div className="mb-6 p-4 bg-gradient-to-br from-green-50 to-blue-50 rounded-lg border border-green-200">
+                          <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                            <BarChart3 className="h-4 w-4 mr-2 text-green-600" />
+                            {t('training.modal.performanceRates', 'Indicateurs de performance')}
+                          </h4>
+                          <div className="space-y-3">
+                            {selectedProgram.satisfaction_rate > 0 && (
+                              <div>
+                                <div className="flex items-center justify-between text-sm mb-1">
+                                  <span className="text-gray-700">{t('training.modal.satisfactionRate', 'Taux de satisfaction')}</span>
+                                  <span className="font-semibold text-green-700">{selectedProgram.satisfaction_rate}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-500"
+                                    style={{ width: `${selectedProgram.satisfaction_rate}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            )}
+                            {selectedProgram.success_rate > 0 && (
+                              <div>
+                                <div className="flex items-center justify-between text-sm mb-1">
+                                  <span className="text-gray-700">{t('training.modal.successRate', 'Taux de réussite')}</span>
+                                  <span className="font-semibold text-blue-700">{selectedProgram.success_rate}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
+                                    style={{ width: `${selectedProgram.success_rate}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            )}
+                            {selectedProgram.recommendation_rate > 0 && (
+                              <div>
+                                <div className="flex items-center justify-between text-sm mb-1">
+                                  <span className="text-gray-700">{t('training.modal.recommendationRate', 'Taux de recommandation')}</span>
+                                  <span className="font-semibold text-purple-700">{selectedProgram.recommendation_rate}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full transition-all duration-500"
+                                    style={{ width: `${selectedProgram.recommendation_rate}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            )}
+                            {selectedProgram.attendance_rate > 0 && (
+                              <div>
+                                <div className="flex items-center justify-between text-sm mb-1">
+                                  <span className="text-gray-700">{t('training.modal.attendanceRate', 'Taux de présence')}</span>
+                                  <span className="font-semibold text-orange-700">{selectedProgram.attendance_rate}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full transition-all duration-500"
+                                    style={{ width: `${selectedProgram.attendance_rate}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="space-y-3">
                         <a
                           href="mailto:contact@deliverydigital.fr"
