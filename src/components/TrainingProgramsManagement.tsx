@@ -586,6 +586,7 @@ const TrainingProgramsManagement = () => {
       program_id: program.program_id || program.id,
       title: program.title || program.name,
       description: program.description || '',
+      target_audience: program.target_audience || '',
       category: program.category || 'web',
       duration_hours: program.duration_hours || 0,
       price: program.price || 0,
