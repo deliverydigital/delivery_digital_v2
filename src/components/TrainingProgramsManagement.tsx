@@ -16,7 +16,9 @@ const ProgramFormModalComponent = memo(({
   onSubmit,
   onChange,
   removeArrayItem,
-  addArrayItem
+  addArrayItem,
+                                          updateArrayItem,
+                                          setFormData
 }: any) => (
   <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <motion.div
@@ -959,6 +961,8 @@ const TrainingProgramsManagement = () => {
             onChange={handleFormChange}
             removeArrayItem={removeArrayItem}
             addArrayItem={addArrayItem}
+            updateArrayItem={updateArrayItem}
+            setFormData={setFormData }
           />
         )}
         {showUploadModal && (
