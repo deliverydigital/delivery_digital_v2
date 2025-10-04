@@ -14,6 +14,7 @@ import {
   MessageSquare,
   Building2
 } from 'lucide-react';
+import { reclamationApi } from '../services/reclamationApi';
 
 const Reclamation = () => {
   const { t } = useTranslation();
@@ -43,28 +44,15 @@ const Reclamation = () => {
     setIsSubmitting(true);
     setError('');
 
-    try {
-      const response = await fetch('/api/reclamation/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+    const result = await reclamationApi.submitReclamation(formData);
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setSubmitted(true);
-      } else {
-        throw new Error(data.message || 'Failed to submit reclamation');
-      }
-    } catch (err) {
-      console.error('Error submitting reclamation:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+    if (result.success) {
+      setSubmitted(true);
+    } else {
+      setError(result.error || 'An error occurred. Please try again.');
     }
+
+    setIsSubmitting(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
