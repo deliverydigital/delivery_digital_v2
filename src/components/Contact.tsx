@@ -406,21 +406,23 @@ const Contact = () => {
                 </motion.div>
               </AnimatePresence>
 
-              <div className="mt-8 flex justify-between">
-                {activeStep > 1 && (
+              <div className="mt-8 flex justify-between items-center">
+                {activeStep > 1 ? (
                   <button
                     type="button"
                     onClick={prevStep}
-                    className="btn btn-secondary"
+                    className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                   >
-                    Précédent
+                    ← Précédent
                   </button>
+                ) : (
+                  <div></div>
                 )}
                 {activeStep < 3 ? (
                   <button
                     type="button"
                     onClick={nextStep}
-                    className="btn btn-primary ml-auto"
+                    className="btn btn-primary ml-auto flex items-center"
                   >
                     Suivant
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -428,7 +430,7 @@ const Contact = () => {
                 ) : (
                   <button
                     type="submit"
-                    className="btn btn-primary ml-auto"
+                    className="btn btn-primary ml-auto flex items-center"
                   >
                     {t('contact.submit')}
                     <Send className="ml-2 h-5 w-5" />
