@@ -196,7 +196,7 @@ const ProgramFormModalComponent = memo(({
         {/* Methods */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            Méthodes pédagogiques
+            Méthodes mobilisées
           </label>
           <div className="space-y-2">
             {formData.methods.map((method, index) => (
