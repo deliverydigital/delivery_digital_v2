@@ -341,6 +341,20 @@ const Training = () => {
                       </p>
                     </div>
 
+                    {selectedProgram.target_audience && (
+                      <div className="mb-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                          {t('training.modal.targetAudience', 'Public visé')}
+                        </h3>
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <div className="flex items-start">
+                            <Users className="h-5 w-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+                            <p className="text-blue-800">{selectedProgram.target_audience}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {selectedProgram.objectives && selectedProgram.objectives.length > 0 && (
                     <div className="mb-6">
                       <h3 className="text-lg font-semibold text-gray-900 mb-3">
