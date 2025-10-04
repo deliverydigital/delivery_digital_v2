@@ -390,7 +390,7 @@ const Training = () => {
                     {selectedProgram.methods && selectedProgram.methods.length > 0 && (
                       <div className="mb-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                          {t('training.modal.methods', 'Méthodes pédagogiques')}
+                          {t('training.modal.methods', 'Méthodes mobilisées')}
                         </h3>
                         <ul className="space-y-2">
                           {selectedProgram.methods.map((method, index) => (
