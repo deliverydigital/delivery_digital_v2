@@ -463,9 +463,10 @@ const Contact = () => {
             <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
               <button
                 onClick={() => setShowConfidentialityModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                disabled={isSubmitting}
+                className="btn btn-secondary"
               >
-                Fermer
+                Annuler
               </button>
               <button
                 onClick={async () => {
