@@ -81,6 +81,20 @@ const ProgramFormModalComponent = memo(({
           />
         </div>
 
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Public visé *
+          </label>
+          <textarea
+            value={formData.target_audience}
+            onChange={(e) => onChange('target_audience', e.target.value)}
+            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="Décrivez le public visé par cette formation..."
+            rows={4}
+            required
+          />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -473,6 +487,7 @@ const TrainingProgramsManagement = () => {
     program_id: '',
     title: '',
     description: '',
+    target_audience: '',
     category: 'web',
     duration_hours: 0,
     price: 0,
