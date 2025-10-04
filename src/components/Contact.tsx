@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle, Building2, Clock, Shield, ArrowRight, Download, Map, Loader } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle, Building2, Clock, Shield, ArrowRight, Download, Map, Loader, X } from 'lucide-react';
 
 const generateConfidentialityAgreement = (formData) => {
   const date = new Date().toLocaleDateString('fr-FR');
@@ -442,10 +442,17 @@ const Contact = () => {
       {showConfidentialityModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl">
-            <div className="p-6 border-b border-gray-200">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-xl font-bold text-gray-900">
                 Accord de Confidentialité
               </h3>
+              <button
+                onClick={() => setShowConfidentialityModal(false)}
+                disabled={isSubmitting}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
             </div>
             <div className="p-6">
               <pre className="whitespace-pre-wrap font-mono text-sm bg-gray-50 p-4 rounded-lg">
