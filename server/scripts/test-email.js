@@ -40,10 +40,11 @@ const testEmail = async () => {
 
   try {
     console.log('\nCreating transporter...');
+    const port = parseInt(config.SMTP_PORT);
     const transporter = nodemailer.createTransport({
       host: config.SMTP_HOST,
-      port: parseInt(config.SMTP_PORT),
-      secure: false,
+      port: port,
+      secure: port === 465,
       auth: {
         user: config.SMTP_USER,
         pass: config.SMTP_PASS

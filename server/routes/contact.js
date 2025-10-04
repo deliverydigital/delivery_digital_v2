@@ -4,10 +4,11 @@ import nodemailer from 'nodemailer';
 const router = express.Router();
 
 const createTransporter = () => {
+  const port = parseInt(process.env.SMTP_PORT || '587');
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: process.env.SMTP_PORT || 587,
-    secure: false,
+    port: port,
+    secure: port === 465,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS
@@ -30,6 +31,7 @@ router.get('/test-email', async (req, res) => {
       });
     }
 
+    const port = parseInt(process.env.SMTP_PORT || '587');
     const transporter = createTransporter();
 
     const testEmail = req.query.email || process.env.SMTP_USER;
@@ -123,7 +125,7 @@ router.get('/test-email', async (req, res) => {
         smtp: {
           host: process.env.SMTP_HOST || 'smtp.gmail.com',
           port: process.env.SMTP_PORT || '587',
-          secure: false
+          secure: port === 465
         }
       }
     });
