@@ -201,7 +201,7 @@ router.get('/', validatePagination, async (req, res) => {
       console.log('📊 Final MongoDB query:', JSON.stringify(query, null, 2));
 
       const programs = await TrainingProgram.find(query)
-        .select('program_id title description category duration_hours price level max_participants prerequisites objectives methods evaluation_methods accessibility_info access_delay is_active is_featured opco_eligible cpf_eligible certification_type certification_provider modules satisfaction_rate success_rate recommendation_rate attendance_rate')
+        .select('program_id title description target_audience category duration_hours price level max_participants prerequisites objectives methods evaluation_methods accessibility_info access_delay is_active is_featured opco_eligible cpf_eligible certification_type certification_provider modules satisfaction_rate success_rate recommendation_rate attendance_rate')
         .skip(skip)
         .limit(parseInt(limit))
         .sort({ is_featured: -1, title: 1 });
@@ -228,6 +228,7 @@ router.get('/', validatePagination, async (req, res) => {
             name: program.title,
             title: program.title,
             description: program.description,
+            target_audience: program.target_audience,
             category: program.category,
             duration_hours: program.duration_hours,
             price: program.price,
@@ -318,6 +319,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       program_id,
       title,
       description,
+      target_audience,
       category,
       duration_hours,
       price,
@@ -385,11 +387,11 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
     }
 
     // Validate required fields
-    if (!program_id || !title || !description) {
-      console.error('❌ Missing required fields:', { program_id, title, description });
+    if (!program_id || !title || !description || !target_audience) {
+      console.error('❌ Missing required fields:', { program_id, title, description, target_audience });
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields: program_id, title, and description are required'
+        error: 'Missing required fields: program_id, title, description, and target_audience are required'
       });
     }
 
@@ -430,6 +432,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       program_id,
       title,
       description,
+      target_audience,
       category,
       duration_hours: parseInt(duration_hours) || 0,
       price: parseFloat(price) || 0,
@@ -458,7 +461,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
     console.log('📊 Processed program data:', programData);
     
     // Validate processed data before saving
-    if (!programData.program_id || !programData.title || !programData.description) {
+    if (!programData.program_id || !programData.title || !programData.description || !programData.target_audience) {
       console.error('❌ Processed data missing required fields:', programData);
       return res.status(400).json({
         success: false,
@@ -498,12 +501,13 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Training program created successfully',
-      data: { 
+      data: {
         program: {
           id: program._id,
           program_id: program.program_id,
           title: program.title,
           description: program.description,
+          target_audience: program.target_audience,
           category: program.category,
           duration_hours: program.duration_hours,
           price: program.price,
@@ -778,7 +782,7 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
 
     // Update allowed fields
     const allowedFields = [
-      'title', 'description', 'category', 'duration_hours', 'price', 'level', 'program_id',
+      'title', 'description', 'target_audience', 'category', 'duration_hours', 'price', 'level', 'program_id',
       'max_participants', 'prerequisites', 'objectives', 'methods',
       'evaluation_methods', 'accessibility_info', 'access_delay', 'is_active', 'modules',
       'is_featured', 'opco_eligible', 'cpf_eligible', 'certification_type', 'certification_provider',
@@ -832,12 +836,13 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
     res.json({
       success: true,
       message: 'Training program updated successfully',
-      data: { 
+      data: {
         program: {
           id: program._id,
           program_id: program.program_id,
           title: program.title,
           description: program.description,
+          target_audience: program.target_audience,
           category: program.category,
           duration_hours: program.duration_hours,
           price: program.price,
