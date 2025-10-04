@@ -207,6 +207,20 @@ const ProgramFormModalComponent = memo(({
           </div>
         </div>
 
+        {/* Training Modalities */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Modalités de la formation
+          </label>
+          <textarea
+            value={formData.training_modalities || ''}
+            onChange={(e) => onChange('training_modalities', e.target.value)}
+            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="Décrivez les modalités de la formation (présentiel, distanciel, mixte, etc.)..."
+            rows={3}
+          />
+        </div>
+
         {/* Methods */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -495,6 +509,7 @@ const TrainingProgramsManagement = () => {
     max_participants: 12,
     prerequisites: '',
     objectives: [''],
+    training_modalities: '',
     methods: [''],
     evaluation_methods: [''],
     accessibility_info: 'Formation accessible aux personnes en situation de handicap',
@@ -544,6 +559,7 @@ const TrainingProgramsManagement = () => {
       max_participants: 12,
       prerequisites: '',
       objectives: [''],
+      training_modalities: '',
       methods: [''],
       evaluation_methods: [''],
       accessibility_info: 'Formation accessible aux personnes en situation de handicap',
@@ -594,6 +610,7 @@ const TrainingProgramsManagement = () => {
       max_participants: program.max_participants || 12,
       prerequisites: program.prerequisites || '',
       objectives: program.objectives && program.objectives.length > 0 ? program.objectives : [''],
+      training_modalities: program.training_modalities || '',
       methods: program.methods && program.methods.length > 0 ? program.methods : [''],
       evaluation_methods: program.evaluation_methods && program.evaluation_methods.length > 0 ? program.evaluation_methods : [''],
       accessibility_info: program.accessibility_info || 'Formation accessible aux personnes en situation de handicap',
