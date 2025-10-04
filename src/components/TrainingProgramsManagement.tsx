@@ -207,6 +207,43 @@ const ProgramFormModalComponent = memo(({
           </div>
         </div>
 
+        {/* Training Modalities */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Modalités de la formation
+          </label>
+          <div className="space-y-2">
+            {formData.training_modalities.map((modality, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                      type="text"
+                      value={modality}
+                      onChange={(e) => updateArrayItem('training_modalities', index, e.target.value)}
+                      className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder={`Modalité ${index + 1}`}
+                  />
+                  {formData.training_modalities.length > 1 && (
+                      <button
+                          type="button"
+                          onClick={() => removeArrayItem('training_modalities', index)}
+                          className="text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                  )}
+                </div>
+            ))}
+            <button
+                type="button"
+                onClick={() => addArrayItem('training_modalities')}
+                className="text-primary-400 hover:text-primary-300 text-sm flex items-center"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Ajouter une modalité
+            </button>
+          </div>
+        </div>
+
         {/* Methods */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -495,6 +532,7 @@ const TrainingProgramsManagement = () => {
     max_participants: 12,
     prerequisites: '',
     objectives: [''],
+    training_modalities: [''],
     methods: [''],
     evaluation_methods: [''],
     accessibility_info: 'Formation accessible aux personnes en situation de handicap',
@@ -594,6 +632,7 @@ const TrainingProgramsManagement = () => {
       max_participants: program.max_participants || 12,
       prerequisites: program.prerequisites || '',
       objectives: program.objectives && program.objectives.length > 0 ? program.objectives : [''],
+      training_modalities: program.training_modalities && program.training_modalities.length > 0 ? program.training_modalities : [''],
       methods: program.methods && program.methods.length > 0 ? program.methods : [''],
       evaluation_methods: program.evaluation_methods && program.evaluation_methods.length > 0 ? program.evaluation_methods : [''],
       accessibility_info: program.accessibility_info || 'Formation accessible aux personnes en situation de handicap',
