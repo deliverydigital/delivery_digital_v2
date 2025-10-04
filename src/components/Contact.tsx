@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle, Building2, Clock, Shield, ArrowRight, Download, Map, Loader, X } from 'lucide-react';
+import { contactApi } from '../services/contactApi';
 
 const generateConfidentialityAgreement = (formData) => {
   const date = new Date().toLocaleDateString('fr-FR');
@@ -489,17 +490,9 @@ const Contact = () => {
                     a.click();
                     window.URL.revokeObjectURL(url);
 
-                    const response = await fetch('/api/contact/submit', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify(formState),
-                    });
+                    const result = await contactApi.submitContact(formState);
 
-                    const data = await response.json();
-
-                    if (response.ok && data.success) {
+                    if (result.success) {
                       setFormStatus('success');
                       setShowConfidentialityModal(false);
                       setFormState({
@@ -513,7 +506,7 @@ const Contact = () => {
                       });
                       setActiveStep(1);
                     } else {
-                      throw new Error(data.message || 'Failed to submit form');
+                      throw new Error(result.error || 'Failed to submit form');
                     }
                   } catch (error) {
                     console.error('Error submitting contact form:', error);
