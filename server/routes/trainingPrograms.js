@@ -201,7 +201,7 @@ router.get('/', validatePagination, async (req, res) => {
       console.log('📊 Final MongoDB query:', JSON.stringify(query, null, 2));
 
       const programs = await TrainingProgram.find(query)
-        .select('program_id title description target_audience category duration_hours price level max_participants prerequisites objectives methods evaluation_methods accessibility_info access_delay is_active is_featured opco_eligible cpf_eligible certification_type certification_provider modules satisfaction_rate success_rate recommendation_rate attendance_rate')
+        .select('program_id title description target_audience category duration_hours price level max_participants prerequisites objectives methods evaluation_methods accessibility_info access_delay is_active is_featured opco_eligible cpf_eligible certification_type certification_provider modules satisfaction_rate success_rate recommendation_rate attendance_rate training_modalities')
         .skip(skip)
         .limit(parseInt(limit))
         .sort({ is_featured: -1, title: 1 });
@@ -251,6 +251,7 @@ router.get('/', validatePagination, async (req, res) => {
             success_rate: program.success_rate || 0,
             recommendation_rate: program.recommendation_rate || 0,
             attendance_rate: program.attendance_rate || 0,
+            training_modalities: program.training_modalities || [],
             created_at: program.createdAt,
             updated_at: program.updatedAt
           })),
@@ -341,7 +342,8 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       satisfaction_rate,
       success_rate,
       recommendation_rate,
-      attendance_rate
+      attendance_rate,
+      training_modalities
     } = req.body;
 
     console.log('📊 Received request body:', req.body);
@@ -433,6 +435,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       title,
       description,
       target_audience,
+      training_modalities,
       category,
       duration_hours: parseInt(duration_hours) || 0,
       price: parseFloat(price) || 0,
@@ -531,7 +534,8 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
           recommendation_rate: program.recommendation_rate,
           attendance_rate: program.attendance_rate,
           created_at: program.createdAt,
-          updated_at: program.updatedAt
+          updated_at: program.updatedAt,
+          training_modalities : program.training_modalities
         }
       }
     });
@@ -786,7 +790,7 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
       'max_participants', 'prerequisites', 'objectives', 'methods',
       'evaluation_methods', 'accessibility_info', 'access_delay', 'is_active', 'modules',
       'is_featured', 'opco_eligible', 'cpf_eligible', 'certification_type', 'certification_provider',
-      'satisfaction_rate', 'success_rate', 'recommendation_rate', 'attendance_rate'
+      'satisfaction_rate', 'success_rate', 'recommendation_rate', 'attendance_rate', 'training_modalities'
     ];
 
     for (const [key, value] of Object.entries(updates)) {
@@ -866,7 +870,8 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
           recommendation_rate: program.recommendation_rate,
           attendance_rate: program.attendance_rate,
           created_at: program.createdAt,
-          updated_at: program.updatedAt
+          updated_at: program.updatedAt,
+          training_modalities : program.training_modalities
         }
       }
     });
