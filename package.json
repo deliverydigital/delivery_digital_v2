@@ -14,6 +14,7 @@
     "db:seed": "node server/scripts/seed.js",
     "db:setup": "node server/scripts/setup-local-db.js",
     "mongodb:install": "node server/scripts/install-mongodb.js",
+    "test:email": "node server/scripts/test-email.js",
     "start": "npm run server"
   },
   "dependencies": {

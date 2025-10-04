@@ -15,6 +15,135 @@ const createTransporter = () => {
   });
 };
 
+router.get('/test-email', async (req, res) => {
+  try {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      return res.status(500).json({
+        success: false,
+        message: 'SMTP credentials not configured',
+        details: {
+          SMTP_USER: process.env.SMTP_USER ? 'Set' : 'Not set',
+          SMTP_PASS: process.env.SMTP_PASS ? 'Set' : 'Not set',
+          SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com (default)',
+          SMTP_PORT: process.env.SMTP_PORT || '587 (default)'
+        }
+      });
+    }
+
+    const transporter = createTransporter();
+
+    const testEmail = req.query.email || process.env.SMTP_USER;
+
+    const info = await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: testEmail,
+      subject: 'Test Email - DELIVERY Digital',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+              color: white;
+              padding: 20px;
+              text-align: center;
+              border-radius: 8px 8px 0 0;
+            }
+            .content {
+              background-color: #f9fafb;
+              padding: 30px;
+              border: 1px solid #e5e7eb;
+            }
+            .footer {
+              background-color: #1f2937;
+              color: #9ca3af;
+              padding: 15px;
+              text-align: center;
+              font-size: 12px;
+              border-radius: 0 0 8px 8px;
+            }
+            .success {
+              background-color: #d1fae5;
+              border-left: 4px solid #10b981;
+              padding: 15px;
+              margin: 20px 0;
+              border-radius: 4px;
+              color: #065f46;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>✅ Email Configuration Test</h1>
+            </div>
+            <div class="content">
+              <div class="success">
+                <strong>Success!</strong> Your email configuration is working correctly.
+              </div>
+              <p>This is a test email from DELIVERY Digital contact form system.</p>
+              <p><strong>Test Details:</strong></p>
+              <ul>
+                <li>Timestamp: ${new Date().toLocaleString('fr-FR')}</li>
+                <li>From: ${process.env.SMTP_FROM || process.env.SMTP_USER}</li>
+                <li>To: ${testEmail}</li>
+                <li>SMTP Host: ${process.env.SMTP_HOST || 'smtp.gmail.com'}</li>
+                <li>SMTP Port: ${process.env.SMTP_PORT || '587'}</li>
+              </ul>
+              <p>If you received this email, your SMTP configuration is correct and the contact form can send emails.</p>
+            </div>
+            <div class="footer">
+              DELIVERY Digital Nice<br>
+              470 promenade des anglais, 06200 Nice
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    });
+
+    res.json({
+      success: true,
+      message: 'Test email sent successfully',
+      details: {
+        messageId: info.messageId,
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        to: testEmail,
+        smtp: {
+          host: process.env.SMTP_HOST || 'smtp.gmail.com',
+          port: process.env.SMTP_PORT || '587',
+          secure: false
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error sending test email:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send test email',
+      error: error.message,
+      details: {
+        errorCode: error.code,
+        command: error.command,
+        response: error.response,
+        responseCode: error.responseCode
+      }
+    });
+  }
+});
+
 router.post('/submit', async (req, res) => {
   try {
     const {
