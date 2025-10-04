@@ -201,7 +201,7 @@ router.get('/', validatePagination, async (req, res) => {
       console.log('📊 Final MongoDB query:', JSON.stringify(query, null, 2));
 
       const programs = await TrainingProgram.find(query)
-        .select('program_id title description target_audience category duration_hours price level max_participants prerequisites objectives training_modalities methods evaluation_methods accessibility_info access_delay is_active is_featured opco_eligible cpf_eligible certification_type certification_provider modules satisfaction_rate success_rate recommendation_rate attendance_rate')
+        .select('program_id title description target_audience category duration_hours price level max_participants prerequisites objectives methods evaluation_methods accessibility_info access_delay is_active is_featured opco_eligible cpf_eligible certification_type certification_provider modules satisfaction_rate success_rate recommendation_rate attendance_rate')
         .skip(skip)
         .limit(parseInt(limit))
         .sort({ is_featured: -1, title: 1 });
@@ -236,7 +236,6 @@ router.get('/', validatePagination, async (req, res) => {
             max_participants: program.max_participants,
             prerequisites: program.prerequisites,
             objectives: program.objectives || [],
-            training_modalities: program.training_modalities || [],
             methods: program.methods || [],
             evaluation_methods: program.evaluation_methods || [],
             accessibility_info: program.accessibility_info,
@@ -328,7 +327,6 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       max_participants,
       prerequisites,
       objectives,
-      training_modalities,
       methods,
       evaluation_methods,
       accessibility_info,
@@ -414,10 +412,8 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
     }
 
     // Process array fields properly
-    const processedObjectives = objectives ?
+    const processedObjectives = objectives ? 
       (Array.isArray(objectives) ? objectives : objectives.split(',').map(o => o.trim()).filter(o => o)) : [];
-    const processedTrainingModalities = training_modalities ?
-      (Array.isArray(training_modalities) ? training_modalities : training_modalities.split(',').map(m => m.trim()).filter(m => m)) : [];
     const processedMethods = methods ? 
       (Array.isArray(methods) ? methods : methods.split(',').map(m => m.trim()).filter(m => m)) : [];
     const processedEvaluationMethods = evaluation_methods ? 
@@ -427,7 +423,6 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
 
     console.log('📊 Processed arrays:', {
       processedObjectives,
-      processedTrainingModalities,
       processedMethods,
       processedEvaluationMethods,
       processedModules
@@ -445,7 +440,6 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       max_participants: parseInt(max_participants) || 12,
       prerequisites,
       objectives: processedObjectives,
-      training_modalities: processedTrainingModalities,
       methods: processedMethods,
       evaluation_methods: processedEvaluationMethods,
       accessibility_info,
@@ -521,7 +515,6 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
           max_participants: program.max_participants,
           prerequisites: program.prerequisites,
           objectives: program.objectives,
-          training_modalities: program.training_modalities,
           methods: program.methods,
           evaluation_methods: program.evaluation_methods,
           accessibility_info: program.accessibility_info,
@@ -790,7 +783,7 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
     // Update allowed fields
     const allowedFields = [
       'title', 'description', 'target_audience', 'category', 'duration_hours', 'price', 'level', 'program_id',
-      'max_participants', 'prerequisites', 'objectives', 'training_modalities', 'methods',
+      'max_participants', 'prerequisites', 'objectives', 'methods',
       'evaluation_methods', 'accessibility_info', 'access_delay', 'is_active', 'modules',
       'is_featured', 'opco_eligible', 'cpf_eligible', 'certification_type', 'certification_provider',
       'satisfaction_rate', 'success_rate', 'recommendation_rate', 'attendance_rate'
@@ -799,7 +792,7 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
     for (const [key, value] of Object.entries(updates)) {
       if (allowedFields.includes(key) && value !== undefined) {
         console.log(`🔄 Updating field ${key}:`, value);
-        if (key === 'objectives' || key === 'training_modalities' || key === 'methods' || key === 'evaluation_methods') {
+        if (key === 'objectives' || key === 'methods' || key === 'evaluation_methods') {
           program[key] = Array.isArray(value) ? value.filter(item => item && item.trim()) : 
                        (typeof value === 'string' ? value.split(',').map(item => item.trim()).filter(item => item) : []);
         } else if (key === 'modules') {
@@ -857,7 +850,6 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
           max_participants: program.max_participants,
           prerequisites: program.prerequisites,
           objectives: program.objectives,
-          training_modalities: program.training_modalities,
           methods: program.methods,
           evaluation_methods: program.evaluation_methods,
           accessibility_info: program.accessibility_info,

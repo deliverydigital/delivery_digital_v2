@@ -57,7 +57,6 @@ const trainingProgramSchema = new Schema({
     default: ''
   },
   objectives: [String],
-  training_modalities: [String],
   methods: [String],
   evaluation_methods: [String],
   accessibility_info: {
