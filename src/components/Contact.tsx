@@ -441,9 +441,9 @@ const Contact = () => {
 
       {showConfidentialityModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-900">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+              <h3 className="text-lg font-bold text-gray-900">
                 Accord de Confidentialité
               </h3>
               <button
@@ -451,23 +451,23 @@ const Contact = () => {
                 disabled={isSubmitting}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-6">
-              <pre className="whitespace-pre-wrap font-mono text-sm bg-gray-50 p-4 rounded-lg">
+            <div className="p-4 overflow-y-auto flex-grow">
+              <pre className="whitespace-pre-wrap font-mono text-xs bg-gray-50 p-3 rounded-lg">
                 {agreement}
               </pre>
               {errorMessage && (
-                <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-sm text-red-800">
+                <div className="mt-3 bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-xs text-red-800">
                     <AlertCircle className="inline h-4 w-4 mr-2" />
                     {errorMessage}
                   </p>
                 </div>
               )}
             </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-4">
+            <div className="p-4 border-t border-gray-200 flex justify-end gap-3 flex-shrink-0">
               <button
                 onClick={() => setShowConfidentialityModal(false)}
                 disabled={isSubmitting}
