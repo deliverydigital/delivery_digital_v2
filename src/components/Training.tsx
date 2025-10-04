@@ -357,6 +357,22 @@ const Training = () => {
                     </div>
                     )}
 
+                    {selectedProgram.training_modalities && selectedProgram.training_modalities.length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                          {t('training.modal.trainingModalities', 'Modalités de la formation')}
+                        </h3>
+                        <ul className="space-y-2">
+                          {selectedProgram.training_modalities.map((modality, index) => (
+                            <li key={index} className="flex items-start">
+                              <Target className="h-5 w-5 text-orange-500 mr-2 mt-0.5 flex-shrink-0" />
+                              <span className="text-gray-600">{modality}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     {selectedProgram.methods && selectedProgram.methods.length > 0 && (
                       <div className="mb-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-3">
