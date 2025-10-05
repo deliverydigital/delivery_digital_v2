@@ -661,7 +661,7 @@ const Training = () => {
                       </div>
 
                       {/* Performance Rates */}
-                      {(selectedProgram.satisfaction_rate > 0 || selectedProgram.success_rate > 0 || selectedProgram.recommendation_rate > 0 || selectedProgram.attendance_rate > 0) && (
+                      {(selectedProgram.satisfaction_rate > 0 || selectedProgram.success_rate > 0 || selectedProgram.recommendation_rate > 0 || selectedProgram.attendance_rate > 0 || (selectedProgram.satisfaction && selectedProgram.satisfaction > 0)) && (
                         <div className="mb-6 p-4 bg-gradient-to-br from-green-50 to-blue-50 rounded-lg border border-green-200">
                           <h4 className="font-medium text-gray-900 mb-3 flex items-center">
                             <BarChart3 className="h-4 w-4 mr-2 text-green-600" />
@@ -721,6 +721,28 @@ const Training = () => {
                                     className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full transition-all duration-500"
                                     style={{ width: `${selectedProgram.attendance_rate}%` }}
                                   ></div>
+                                </div>
+                              </div>
+                            )}
+                            {selectedProgram.satisfaction && selectedProgram.satisfaction > 0 && (
+                              <div className="pt-3 border-t border-gray-200">
+                                <div className="flex items-center justify-between text-sm mb-2">
+                                  <span className="text-gray-700 font-medium">{t('training.modal.satisfaction', 'Satisfaction')}</span>
+                                  <span className="font-bold text-yellow-600">{selectedProgram.satisfaction.toFixed(1)}/10</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  {[...Array(10)].map((_, index) => (
+                                    <Star
+                                      key={index}
+                                      className={`h-4 w-4 ${
+                                        index < Math.floor(selectedProgram.satisfaction || 0)
+                                          ? 'fill-yellow-400 text-yellow-400'
+                                          : index < (selectedProgram.satisfaction || 0)
+                                          ? 'fill-yellow-200 text-yellow-400'
+                                          : 'text-gray-300'
+                                      }`}
+                                    />
+                                  ))}
                                 </div>
                               </div>
                             )}
