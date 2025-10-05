@@ -461,6 +461,39 @@ const ProgramFormModalComponent = memo(({
           </div>
         </div>
 
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Progression (1-10)
+            </label>
+            <input
+              type="number"
+              value={formData.progress || 1}
+              onChange={(e) => onChange('progress', parseInt(e.target.value) || 1)}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="5"
+              min="1"
+              max="10"
+              step="1"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Taux de satisfaction (1-10)
+            </label>
+            <input
+              type="number"
+              value={formData.satisfaction_rating || 1}
+              onChange={(e) => onChange('satisfaction_rating', parseInt(e.target.value) || 1)}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="8"
+              min="1"
+              max="10"
+              step="1"
+            />
+          </div>
+        </div>
+
         <div className="flex justify-end gap-4">
           <button
             type="button"
@@ -547,7 +580,9 @@ const TrainingProgramsManagement = () => {
     satisfaction_rate: 0,
     success_rate: 0,
     recommendation_rate: 0,
-    attendance_rate: 0
+    attendance_rate: 0,
+    progress: 1,
+    satisfaction_rating: 1
   });
 
   const [uploadFormData, setUploadFormData] = useState({
@@ -597,7 +632,9 @@ const TrainingProgramsManagement = () => {
       satisfaction_rate: 0,
       success_rate: 0,
       recommendation_rate: 0,
-      attendance_rate: 0
+      attendance_rate: 0,
+      progress: 1,
+      satisfaction_rating: 1
     });
   };
 
