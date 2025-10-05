@@ -215,6 +215,12 @@ const Training = () => {
                       <Users className="h-4 w-4 mr-2" />
                       {t('training.maxParticipants', 'Max {{count}} participants', { count: program.max_participants })}
                     </div>
+                    {program.satisfaction_rate > 0 && (
+                      <div className="flex items-center text-sm text-green-600 font-medium">
+                        <Star className="h-4 w-4 mr-2 fill-current" />
+                        {program.satisfaction_rate}% {t('training.satisfaction', 'Satisfaction')}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between">
