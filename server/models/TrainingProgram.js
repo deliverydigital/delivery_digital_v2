@@ -92,7 +92,7 @@ const trainingProgramSchema = new Schema({
     type: Boolean,
     default: false
   },
-  satisfaction_rate_2: {
+  satisfaction_rate: {
     type: Number,
     default: 0,
     min: 0,
@@ -115,12 +115,6 @@ const trainingProgramSchema = new Schema({
     default: 0,
     min: 0,
     max: 100
-  },
-  satisfaction_rating: {
-    type: Number,
-    default: 1,
-    min: 1,
-    max: 10
   },
 
   // PDF Documents as embedded documents

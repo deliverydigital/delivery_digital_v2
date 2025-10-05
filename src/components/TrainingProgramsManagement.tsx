@@ -461,22 +461,6 @@ const ProgramFormModalComponent = memo(({
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Taux de satisfaction (1-10)
-          </label>
-          <input
-            type="number"
-            value={formData.satisfaction_rating || 1}
-            onChange={(e) => onChange('satisfaction_rating', parseInt(e.target.value) || 1)}
-            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="8"
-            min="1"
-            max="10"
-            step="1"
-          />
-        </div>
-
         <div className="flex justify-end gap-4">
           <button
             type="button"
@@ -560,11 +544,10 @@ const TrainingProgramsManagement = () => {
     certification_type: '',
     certification_provider: '',
     modules: [],
-    satisfaction_rate_2: 0,
+    satisfaction_rate: 0,
     success_rate: 0,
     recommendation_rate: 0,
-    attendance_rate: 0,
-    satisfaction_rating: 1
+    attendance_rate: 0
   });
 
   const [uploadFormData, setUploadFormData] = useState({
@@ -614,8 +597,7 @@ const TrainingProgramsManagement = () => {
       satisfaction_rate: 0,
       success_rate: 0,
       recommendation_rate: 0,
-      attendance_rate: 0,
-      satisfaction_rating: 1
+      attendance_rate: 0
     });
   };
 
@@ -663,11 +645,10 @@ const TrainingProgramsManagement = () => {
       certification_type: program.certification_type || '',
       certification_provider: program.certification_provider || '',
       modules: program.modules || [],
-      satisfaction_rate_2: program.satisfaction_rate_2 || 0,
+      satisfaction_rate: program.satisfaction_rate || 0,
       success_rate: program.success_rate || 0,
       recommendation_rate: program.recommendation_rate || 0,
-      attendance_rate: program.attendance_rate || 0,
-      satisfaction_rating: program.satisfaction_rating || 1
+      attendance_rate: program.attendance_rate || 0
     });
     setSelectedProgram(program);
     setModalType('edit');
