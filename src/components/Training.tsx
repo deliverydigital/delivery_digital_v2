@@ -667,13 +667,27 @@ const Training = () => {
                       </div>
 
                       {/* Performance Rates */}
-                      {(selectedProgram.satisfaction_rate > 0 || selectedProgram.success_rate > 0 || selectedProgram.recommendation_rate > 0 || selectedProgram.attendance_rate > 0) && (
+                      {(selectedProgram.satisfaction > 0 || selectedProgram.satisfaction_rate > 0 || selectedProgram.success_rate > 0 || selectedProgram.recommendation_rate > 0 || selectedProgram.attendance_rate > 0) && (
                         <div className="mb-6 p-4 bg-gradient-to-br from-green-50 to-blue-50 rounded-lg border border-green-200">
                           <h4 className="font-medium text-gray-900 mb-3 flex items-center">
                             <BarChart3 className="h-4 w-4 mr-2 text-green-600" />
                             {t('training.modal.performanceRates', 'Indicateurs de performance')}
                           </h4>
                           <div className="space-y-3">
+                            {selectedProgram.satisfaction > 0 && (
+                              <div>
+                                <div className="flex items-center justify-between text-sm mb-1">
+                                  <span className="text-gray-700">Taux de satisfaction</span>
+                                  <span className="font-semibold text-green-700">{selectedProgram.satisfaction}/10</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-500"
+                                    style={{ width: `${(selectedProgram.satisfaction / 10) * 100}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            )}
                             {selectedProgram.satisfaction_rate > 0 && (
                               <div>
                                 <div className="flex items-center justify-between text-sm mb-1">
