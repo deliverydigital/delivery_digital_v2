@@ -686,7 +686,11 @@ const Training = () => {
                           </h4>
                           <div className="space-y-3">
                             {selectedProgram.satisfaction > 0 && (
-                              <div className="flex items-center justify-between">
+                              <div>
+                                <div className="flex items-center justify-between text-sm mb-2">
+                                  <span className="text-gray-700">Taux de satisfaction</span>
+                                  <span className="font-semibold text-green-700">{selectedProgram.satisfaction}/10</span>
+                                </div>
                                 <div className="flex items-center gap-1">
                                   {[...Array(10)].map((_, index) => (
                                     <Star
@@ -699,7 +703,6 @@ const Training = () => {
                                     />
                                   ))}
                                 </div>
-                                <span className="font-semibold text-yellow-600">{selectedProgram.satisfaction}/10</span>
                               </div>
                             )}
                             {selectedProgram.satisfaction_rate > 0 && (
