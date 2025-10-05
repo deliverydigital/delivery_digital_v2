@@ -116,6 +116,12 @@ const trainingProgramSchema = new Schema({
     min: 0,
     max: 100
   },
+  satisfaction: {
+    type: Number,
+    default: 0,
+    min: 1,
+    max: 10
+  },
 
   // PDF Documents as embedded documents
   documents: [{

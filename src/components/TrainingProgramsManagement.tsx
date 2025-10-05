@@ -461,6 +461,22 @@ const ProgramFormModalComponent = memo(({
           </div>
         </div>
 
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Taux de satisfaction de 1 à 10
+          </label>
+          <input
+            type="number"
+            value={formData.satisfaction}
+            onChange={(e) => onChange('satisfaction', parseFloat(e.target.value) || 0)}
+            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="8"
+            min="1"
+            max="10"
+            step="0.1"
+          />
+        </div>
+
         <div className="flex justify-end gap-4">
           <button
             type="button"
@@ -547,7 +563,8 @@ const TrainingProgramsManagement = () => {
     satisfaction_rate: 0,
     success_rate: 0,
     recommendation_rate: 0,
-    attendance_rate: 0
+    attendance_rate: 0,
+    satisfaction: 0
   });
 
   const [uploadFormData, setUploadFormData] = useState({
@@ -597,7 +614,8 @@ const TrainingProgramsManagement = () => {
       satisfaction_rate: 0,
       success_rate: 0,
       recommendation_rate: 0,
-      attendance_rate: 0
+      attendance_rate: 0,
+      satisfaction: 0
     });
   };
 
@@ -648,7 +666,8 @@ const TrainingProgramsManagement = () => {
       satisfaction_rate: program.satisfaction_rate || 0,
       success_rate: program.success_rate || 0,
       recommendation_rate: program.recommendation_rate || 0,
-      attendance_rate: program.attendance_rate || 0
+      attendance_rate: program.attendance_rate || 0,
+      satisfaction: program.satisfaction || 0
     });
     setSelectedProgram(program);
     setModalType('edit');
