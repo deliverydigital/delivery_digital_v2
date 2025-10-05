@@ -217,8 +217,19 @@ const Training = () => {
                     </div>
                     {program.satisfaction && program.satisfaction > 0 && (
                       <div className="flex items-center text-sm text-gray-500">
-                        <Star className="h-4 w-4 mr-2 text-yellow-500" />
-                        <span>Taux de satisfaction: <span className="font-semibold text-green-600">{program.satisfaction}/10</span></span>
+                        <div className="flex items-center">
+                          {[...Array(10)].map((_, index) => (
+                            <Star
+                              key={index}
+                              className={`h-4 w-4 ${
+                                index < program.satisfaction
+                                  ? 'text-yellow-500 fill-yellow-500'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                          <span className="ml-2 font-semibold text-gray-700">{program.satisfaction}/10</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -676,15 +687,21 @@ const Training = () => {
                           <div className="space-y-3">
                             {selectedProgram.satisfaction > 0 && (
                               <div>
-                                <div className="flex items-center justify-between text-sm mb-1">
+                                <div className="flex items-center justify-between text-sm mb-2">
                                   <span className="text-gray-700">Taux de satisfaction</span>
                                   <span className="font-semibold text-green-700">{selectedProgram.satisfaction}/10</span>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                  <div
-                                    className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-500"
-                                    style={{ width: `${(selectedProgram.satisfaction / 10) * 100}%` }}
-                                  ></div>
+                                <div className="flex items-center gap-1">
+                                  {[...Array(10)].map((_, index) => (
+                                    <Star
+                                      key={index}
+                                      className={`h-5 w-5 ${
+                                        index < selectedProgram.satisfaction
+                                          ? 'text-yellow-500 fill-yellow-500'
+                                          : 'text-gray-300'
+                                      }`}
+                                    />
+                                  ))}
                                 </div>
                               </div>
                             )}
