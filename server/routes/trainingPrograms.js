@@ -251,6 +251,7 @@ router.get('/', validatePagination, async (req, res) => {
             success_rate: program.success_rate || 0,
             recommendation_rate: program.recommendation_rate || 0,
             attendance_rate: program.attendance_rate || 0,
+            satisfaction: program.satisfaction || 0,
             training_modalities: program.training_modalities || [],
             created_at: program.createdAt,
             updated_at: program.updatedAt
@@ -343,6 +344,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       success_rate,
       recommendation_rate,
       attendance_rate,
+      satisfaction,
       training_modalities
     } = req.body;
 
@@ -458,7 +460,8 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       satisfaction_rate: parseFloat(satisfaction_rate) || 0,
       success_rate: parseFloat(success_rate) || 0,
       recommendation_rate: parseFloat(recommendation_rate) || 0,
-      attendance_rate: parseFloat(attendance_rate) || 0
+      attendance_rate: parseFloat(attendance_rate) || 0,
+      satisfaction: parseFloat(satisfaction) || 0
     };
 
     console.log('📊 Processed program data:', programData);
@@ -533,6 +536,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
           success_rate: program.success_rate,
           recommendation_rate: program.recommendation_rate,
           attendance_rate: program.attendance_rate,
+          satisfaction: program.satisfaction,
           created_at: program.createdAt,
           updated_at: program.updatedAt,
           training_modalities : program.training_modalities
@@ -790,7 +794,7 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
       'max_participants', 'prerequisites', 'objectives', 'methods',
       'evaluation_methods', 'accessibility_info', 'access_delay', 'is_active', 'modules',
       'is_featured', 'opco_eligible', 'cpf_eligible', 'certification_type', 'certification_provider',
-      'satisfaction_rate', 'success_rate', 'recommendation_rate', 'attendance_rate', 'training_modalities'
+      'satisfaction_rate', 'success_rate', 'recommendation_rate', 'attendance_rate', 'satisfaction', 'training_modalities'
     ];
 
     for (const [key, value] of Object.entries(updates)) {
@@ -801,7 +805,7 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
                        (typeof value === 'string' ? value.split(',').map(item => item.trim()).filter(item => item) : []);
         } else if (key === 'modules') {
           program[key] = typeof value === 'string' ? JSON.parse(value) : value;
-        } else if (key === 'duration_hours' || key === 'price' || key === 'max_participants' || key === 'satisfaction_rate' || key === 'success_rate' || key === 'recommendation_rate' || key === 'attendance_rate') {
+        } else if (key === 'duration_hours' || key === 'price' || key === 'max_participants' || key === 'satisfaction_rate' || key === 'success_rate' || key === 'recommendation_rate' || key === 'attendance_rate' || key === 'satisfaction') {
           program[key] = key === 'max_participants' ? parseInt(value) || 12 : parseFloat(value) || 0;
         } else if (key === 'is_active' || key === 'is_featured' || key === 'opco_eligible' || key === 'cpf_eligible') {
           program[key] = Boolean(value);
@@ -869,6 +873,7 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
           success_rate: program.success_rate,
           recommendation_rate: program.recommendation_rate,
           attendance_rate: program.attendance_rate,
+          satisfaction: program.satisfaction,
           created_at: program.createdAt,
           updated_at: program.updatedAt,
           training_modalities : program.training_modalities
