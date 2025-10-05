@@ -20,6 +20,8 @@ export interface TrainingProgram {
   objectives: string[];
   methods: string[];
   evaluation_methods: string[];
+  training_modalities?: string[];
+  target_audience?: string;
   accessibility_info?: string;
   access_delay?: string;
   is_active: boolean;
@@ -28,6 +30,11 @@ export interface TrainingProgram {
   cpf_eligible?: boolean;
   certification_type?: string;
   certification_provider?: string;
+  satisfaction_rate?: number;
+  success_rate?: number;
+  recommendation_rate?: number;
+  attendance_rate?: number;
+  satisfaction?: number;
   modules: {
     title: string;
     duration_hours: number;
