@@ -116,12 +116,6 @@ const trainingProgramSchema = new Schema({
     min: 0,
     max: 100
   },
-  progress: {
-    type: Number,
-    default: 1,
-    min: 1,
-    max: 10
-  },
   satisfaction_rating: {
     type: Number,
     default: 1,
