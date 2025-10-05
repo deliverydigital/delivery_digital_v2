@@ -473,7 +473,7 @@ const ProgramFormModalComponent = memo(({
             placeholder="8"
             min="1"
             max="10"
-            step="0.1"
+            step="1"
           />
         </div>
 
