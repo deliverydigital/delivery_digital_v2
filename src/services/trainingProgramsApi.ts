@@ -28,7 +28,7 @@ export interface TrainingProgram {
   cpf_eligible?: boolean;
   certification_type?: string;
   certification_provider?: string;
-  satisfaction_rate?: number;
+  satisfaction_rate_2?: number;
   success_rate?: number;
   recommendation_rate?: number;
   attendance_rate?: number;

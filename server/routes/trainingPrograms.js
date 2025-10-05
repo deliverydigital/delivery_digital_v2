@@ -339,7 +339,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       cpf_eligible,
       certification_type,
       certification_provider,
-      satisfaction_rate,
+      satisfaction_rate_2,
       success_rate,
       recommendation_rate,
       attendance_rate,
@@ -456,7 +456,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       cpf_eligible: cpf_eligible !== undefined ? cpf_eligible : false,
       certification_type,
       certification_provider,
-      satisfaction_rate: parseFloat(satisfaction_rate) || 0,
+      satisfaction_rate_2: parseFloat(satisfaction_rate_2) || 0,
       success_rate: parseFloat(success_rate) || 0,
       recommendation_rate: parseFloat(recommendation_rate) || 0,
       attendance_rate: parseFloat(attendance_rate) || 0,
@@ -792,7 +792,7 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
       'max_participants', 'prerequisites', 'objectives', 'methods',
       'evaluation_methods', 'accessibility_info', 'access_delay', 'is_active', 'modules',
       'is_featured', 'opco_eligible', 'cpf_eligible', 'certification_type', 'certification_provider',
-      'satisfaction_rate', 'success_rate', 'recommendation_rate', 'attendance_rate', 'satisfaction_rating', 'training_modalities'
+      'satisfaction_rate_2', 'success_rate', 'recommendation_rate', 'attendance_rate', 'satisfaction_rating', 'training_modalities'
     ];
 
     for (const [key, value] of Object.entries(updates)) {
@@ -803,7 +803,7 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
                        (typeof value === 'string' ? value.split(',').map(item => item.trim()).filter(item => item) : []);
         } else if (key === 'modules') {
           program[key] = typeof value === 'string' ? JSON.parse(value) : value;
-        } else if (key === 'duration_hours' || key === 'price' || key === 'max_participants' || key === 'satisfaction_rate' || key === 'success_rate' || key === 'recommendation_rate' || key === 'attendance_rate') {
+        } else if (key === 'duration_hours' || key === 'price' || key === 'max_participants' || key === 'satisfaction_rate_2' || key === 'success_rate' || key === 'recommendation_rate' || key === 'attendance_rate') {
           program[key] = key === 'max_participants' ? parseInt(value) || 12 : parseFloat(value) || 0;
         } else if (key === 'satisfaction_rating') {
           program[key] = parseInt(value) || 1;

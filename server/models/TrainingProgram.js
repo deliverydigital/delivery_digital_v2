@@ -92,7 +92,7 @@ const trainingProgramSchema = new Schema({
     type: Boolean,
     default: false
   },
-  satisfaction_rate: {
+  satisfaction_rate_2: {
     type: Number,
     default: 0,
     min: 0,

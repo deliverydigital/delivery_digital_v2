@@ -560,7 +560,7 @@ const TrainingProgramsManagement = () => {
     certification_type: '',
     certification_provider: '',
     modules: [],
-    satisfaction_rate: 0,
+    satisfaction_rate_2: 0,
     success_rate: 0,
     recommendation_rate: 0,
     attendance_rate: 0,
@@ -663,10 +663,11 @@ const TrainingProgramsManagement = () => {
       certification_type: program.certification_type || '',
       certification_provider: program.certification_provider || '',
       modules: program.modules || [],
-      satisfaction_rate: program.satisfaction_rate || 0,
+      satisfaction_rate_2: program.satisfaction_rate_2 || 0,
       success_rate: program.success_rate || 0,
       recommendation_rate: program.recommendation_rate || 0,
-      attendance_rate: program.attendance_rate || 0
+      attendance_rate: program.attendance_rate || 0,
+      satisfaction_rating: program.satisfaction_rating || 1
     });
     setSelectedProgram(program);
     setModalType('edit');
