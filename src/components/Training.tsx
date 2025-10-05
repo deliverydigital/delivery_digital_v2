@@ -677,13 +677,13 @@ const Training = () => {
                             {selectedProgram.satisfaction_rate > 0 && (
                               <div>
                                 <div className="flex items-center justify-between text-sm mb-1">
-                                  <span className="text-gray-700">{t('training.modal.satisfactionRate', 'Taux de satisfaction')}</span>
-                                  <span className="font-semibold text-green-700">{selectedProgram.satisfaction_rate}%</span>
+                                  <span className="text-gray-700">Taux de satisfaction de 1 à 10</span>
+                                  <span className="font-semibold text-green-700">{selectedProgram.satisfaction_rate}/10</span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2">
                                   <div
                                     className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-500"
-                                    style={{ width: `${selectedProgram.satisfaction_rate}%` }}
+                                    style={{ width: `${(selectedProgram.satisfaction_rate / 10) * 100}%` }}
                                   ></div>
                                 </div>
                               </div>
