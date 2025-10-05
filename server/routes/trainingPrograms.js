@@ -343,6 +343,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       success_rate,
       recommendation_rate,
       attendance_rate,
+      satisfaction_rating,
       training_modalities
     } = req.body;
 
@@ -458,7 +459,8 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
       satisfaction_rate: parseFloat(satisfaction_rate) || 0,
       success_rate: parseFloat(success_rate) || 0,
       recommendation_rate: parseFloat(recommendation_rate) || 0,
-      attendance_rate: parseFloat(attendance_rate) || 0
+      attendance_rate: parseFloat(attendance_rate) || 0,
+      satisfaction_rating: parseInt(satisfaction_rating) || 1
     };
 
     console.log('📊 Processed program data:', programData);
@@ -790,7 +792,7 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
       'max_participants', 'prerequisites', 'objectives', 'methods',
       'evaluation_methods', 'accessibility_info', 'access_delay', 'is_active', 'modules',
       'is_featured', 'opco_eligible', 'cpf_eligible', 'certification_type', 'certification_provider',
-      'satisfaction_rate', 'success_rate', 'recommendation_rate', 'attendance_rate', 'training_modalities'
+      'satisfaction_rate', 'success_rate', 'recommendation_rate', 'attendance_rate', 'satisfaction_rating', 'training_modalities'
     ];
 
     for (const [key, value] of Object.entries(updates)) {
@@ -803,6 +805,8 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
           program[key] = typeof value === 'string' ? JSON.parse(value) : value;
         } else if (key === 'duration_hours' || key === 'price' || key === 'max_participants' || key === 'satisfaction_rate' || key === 'success_rate' || key === 'recommendation_rate' || key === 'attendance_rate') {
           program[key] = key === 'max_participants' ? parseInt(value) || 12 : parseFloat(value) || 0;
+        } else if (key === 'satisfaction_rating') {
+          program[key] = parseInt(value) || 1;
         } else if (key === 'is_active' || key === 'is_featured' || key === 'opco_eligible' || key === 'cpf_eligible') {
           program[key] = Boolean(value);
         } else {
