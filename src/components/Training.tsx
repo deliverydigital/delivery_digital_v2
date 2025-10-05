@@ -677,33 +677,9 @@ const Training = () => {
                         </div>
                       </div>
 
-                      <div className="space-y-3">
-                        <a
-                          href="mailto:contact@deliverydigital.fr"
-                          className="btn btn-primary w-full"
-                        >
-                          <Mail className="h-5 w-5 mr-2" />
-                          {t('training.modal.contact', 'Nous contacter')}
-                        </a>
-                        <a
-                          href="tel:0749707773"
-                          className="btn btn-outline w-full"
-                        >
-                          <Phone className="h-5 w-5 mr-2" />
-                          {t('training.modal.call', 'Nous appeler')}
-                        </a>
-                        <button
-                          onClick={() => window.open('https://app.deliverydigital.fr/student/signup', '_blank')}
-                          className="btn btn-secondary w-full"
-                        >
-                          <ExternalLink className="h-5 w-5 mr-2" />
-                          {t('training.modal.register', 'S\'inscrire en ligne')}
-                        </button>
-                      </div>
-
                       {/* Performance Rates */}
                       {(selectedProgram.satisfaction > 0 || selectedProgram.satisfaction_rate > 0 || selectedProgram.success_rate > 0 || selectedProgram.recommendation_rate > 0 || selectedProgram.attendance_rate > 0) && (
-                        <div className="mt-6 p-4 bg-gradient-to-br from-green-50 to-blue-50 rounded-lg border border-green-200">
+                        <div className="mb-6 p-4 bg-gradient-to-br from-green-50 to-blue-50 rounded-lg border border-green-200">
                           <h4 className="font-medium text-gray-900 mb-3 flex items-center">
                             <BarChart3 className="h-4 w-4 mr-2 text-green-600" />
                             {t('training.modal.performanceRates', 'Indicateurs de performance')}
@@ -788,6 +764,30 @@ const Training = () => {
                           </div>
                         </div>
                       )}
+
+                      <div className="space-y-3">
+                        <a
+                          href="mailto:contact@deliverydigital.fr"
+                          className="btn btn-primary w-full"
+                        >
+                          <Mail className="h-5 w-5 mr-2" />
+                          {t('training.modal.contact', 'Nous contacter')}
+                        </a>
+                        <a
+                          href="tel:0749707773"
+                          className="btn btn-outline w-full"
+                        >
+                          <Phone className="h-5 w-5 mr-2" />
+                          {t('training.modal.call', 'Nous appeler')}
+                        </a>
+                        <button
+                          onClick={() => window.open('https://app.deliverydigital.fr/student/signup', '_blank')}
+                          className="btn btn-secondary w-full"
+                        >
+                          <ExternalLink className="h-5 w-5 mr-2" />
+                          {t('training.modal.register', 'S\'inscrire en ligne')}
+                        </button>
+                      </div>
 
                       <div className="mt-6 pt-6 border-t border-gray-200">
                         <div className="flex items-center text-sm text-gray-500 mb-2">
