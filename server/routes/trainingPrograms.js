@@ -201,7 +201,7 @@ router.get('/', validatePagination, async (req, res) => {
       console.log('📊 Final MongoDB query:', JSON.stringify(query, null, 2));
 
       const programs = await TrainingProgram.find(query)
-        .select('program_id title description target_audience category duration_hours price level max_participants prerequisites objectives methods evaluation_methods accessibility_info access_delay is_active is_featured opco_eligible cpf_eligible certification_type certification_provider modules satisfaction_rate success_rate recommendation_rate attendance_rate training_modalities')
+        .select('program_id title description target_audience category duration_hours price level max_participants prerequisites objectives methods evaluation_methods accessibility_info access_delay is_active is_featured opco_eligible cpf_eligible certification_type certification_provider modules satisfaction_rate success_rate recommendation_rate attendance_rate training_modalities satisfaction')
         .skip(skip)
         .limit(parseInt(limit))
         .sort({ is_featured: -1, title: 1 });
@@ -794,7 +794,7 @@ router.put('/:programId', authenticate, authorize('admin'), async (req, res) => 
       'max_participants', 'prerequisites', 'objectives', 'methods',
       'evaluation_methods', 'accessibility_info', 'access_delay', 'is_active', 'modules',
       'is_featured', 'opco_eligible', 'cpf_eligible', 'certification_type', 'certification_provider',
-      'satisfaction_rate', 'success_rate', 'recommendation_rate', 'attendance_rate', 'satisfaction', 'training_modalities'
+      'satisfaction_rate', 'satisfaction', 'success_rate', 'recommendation_rate', 'attendance_rate', 'satisfaction', 'training_modalities'
     ];
 
     for (const [key, value] of Object.entries(updates)) {
