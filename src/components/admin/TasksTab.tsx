@@ -143,12 +143,6 @@ const TasksTab = () => {
           <h3 className="text-lg font-medium text-white mb-2">Aucun projet sélectionné</h3>
           <p className="text-gray-400">Sélectionnez un projet pour voir les tâches associées.</p>
         </div>
-      ) : tasks.length === 0 ? (
-        <div className="text-center py-12 bg-gray-800 rounded-lg">
-          <ClipboardList className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">Aucune tâche</h3>
-          <p className="text-gray-400">Aucune tâche n'a été créée pour ce projet.</p>
-        </div>
       ) : (
         <TaskBoard projectId={selectedProject.id} isAdmin={true} />
       )}
