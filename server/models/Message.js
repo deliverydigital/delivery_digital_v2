@@ -5,17 +5,14 @@ const { Schema } = mongoose;
 // Message schema
 const messageSchema = new Schema({
   project_id: {
-    type: Schema.Types.ObjectId,
-    ref: 'Project'
+    type: String
   },
   sender_id: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
+    type: String,
     required: true
   },
   recipient_id: {
-    type: Schema.Types.ObjectId,
-    ref: 'User'
+    type: String
   },
   subject: {
     type: String,
@@ -43,11 +40,10 @@ const messageSchema = new Schema({
   },
   read_at: Date,
   parent_message_id: {
-    type: Schema.Types.ObjectId,
-    ref: 'Message'
+    type: String
   },
   thread_id: {
-    type: Schema.Types.ObjectId,
+    type: String,
     ref: 'Message'
   },
   

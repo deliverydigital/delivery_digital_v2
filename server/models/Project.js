@@ -5,8 +5,7 @@ const { Schema } = mongoose;
 // Project schema
 const projectSchema = new Schema({
   client_id: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
+    type: String,
     required: true
   },
   title: {
