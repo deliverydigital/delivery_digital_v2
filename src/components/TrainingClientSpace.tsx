@@ -23,7 +23,7 @@ const TrainingClientSpace = ({ isOpen, onClose }: TrainingClientSpaceProps) => {
     duration: '21 heures',
     price: 525,
     level: 'beginner',
-    nextSession: new Date('2024-03-15'),
+    nextSession: new Date('2025-10-20'),
     available: true
   };
 
