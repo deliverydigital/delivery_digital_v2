@@ -1019,7 +1019,7 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
                               comment.authorRole === 'client' ? 'bg-blue-600' :
                               comment.authorRole === 'admin' ? 'bg-purple-600' : 'bg-green-600'
                             }`}>
-                              <span className="text-white text-sm">{comment.author.charAt(0)}</span>
+                              <span className="text-white text-sm">{comment?.author?.charAt(0)}</span>
                             </div>
                             <div>
                               <p className="font-medium text-white">{comment.author}</p>
