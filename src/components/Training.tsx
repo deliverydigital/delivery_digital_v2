@@ -792,7 +792,7 @@ const Training = () => {
                       <div className="mt-6 pt-6 border-t border-gray-200">
                         <div className="flex items-center text-sm text-gray-500 mb-2">
                           <Building2 className="h-4 w-4 mr-2" />
-                          <span>{t('training.qualiopiCertified', 'Formation certifiée Qualiopi')}</span>
+                          <span>{t('training.qualiopiCertified', 'Formations')}</span>
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
                           <HelpCircle className="h-4 w-4 mr-2" />
