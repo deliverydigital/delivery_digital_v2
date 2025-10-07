@@ -16,44 +16,15 @@ const handleValidationErrors = (req, res, next) => {
 // MongoDB ObjectId validation
 const validateMongoId = [
   param('id')
-    .custom((value) => {
-      // Accept both MongoDB ObjectId (24 hex chars) and UUID formats
-      const isMongoId = /^[0-9a-fA-F]{24}$/.test(value);
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-      if (!isMongoId && !isUUID) {
-        throw new Error('Invalid ID format - must be MongoDB ObjectId or UUID');
-      }
-      return true;
-    }),
+    .matches(/^[0-9a-fA-F]{24}$/)
+    .withMessage('Invalid MongoDB ObjectId format'),
   handleValidationErrors
 ];
 
 const validateMongoIdParam = (paramName) => [
   param(paramName)
-    .custom((value) => {
-      // Accept both MongoDB ObjectId (24 hex chars) and UUID formats
-      const isMongoId = /^[0-9a-fA-F]{24}$/.test(value);
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-      if (!isMongoId && !isUUID) {
-        throw new Error(`Invalid ID format for ${paramName} - must be MongoDB ObjectId or UUID`);
-      }
-      return true;
-    }),
-  handleValidationErrors
-];
-
-// UUID validation (for Supabase)
-const validateUUID = [
-  param('id')
-    .isUUID()
-    .withMessage('Invalid UUID format'),
-  handleValidationErrors
-];
-
-const validateUUIDParam = (paramName) => [
-  param(paramName)
-    .isUUID()
-    .withMessage(`Invalid UUID format for ${paramName}`),
+    .matches(/^[0-9a-fA-F]{24}$/)
+    .withMessage(`Invalid MongoDB ObjectId format for ${paramName}`),
   handleValidationErrors
 ];
 
@@ -191,15 +162,8 @@ const validateTaskCreation = [
   body('project_id')
     .notEmpty()
     .withMessage('Project ID is required')
-    .custom((value) => {
-      // Accept both MongoDB ObjectId and UUID formats
-      const isMongoId = /^[0-9a-fA-F]{24}$/.test(value);
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-      if (!isMongoId && !isUUID) {
-        throw new Error('Invalid project ID format');
-      }
-      return true;
-    }),
+    .isMongoId()
+    .withMessage('Invalid project ID format'),
   body('title')
     .trim()
     .isLength({ min: 3, max: 255 })
@@ -223,16 +187,8 @@ const validateTaskCreation = [
     .withMessage('Invalid due date format'),
   body('assigned_to')
     .optional()
-    .custom((value) => {
-      if (!value) return true;
-      // Accept both MongoDB ObjectId and UUID formats
-      const isMongoId = /^[0-9a-fA-F]{24}$/.test(value);
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-      if (!isMongoId && !isUUID) {
-        throw new Error('Invalid assigned user ID format');
-      }
-      return true;
-    }),
+    .isMongoId()
+    .withMessage('Invalid assigned user ID format'),
   handleValidationErrors
 ];
 
@@ -313,6 +269,14 @@ const validateTrainingSessionCreation = [
   handleValidationErrors
 ];
 
+// Parameter validation
+const validateUUID = [
+  param('id')
+    .isUUID()
+    .withMessage('Invalid ID format'),
+  handleValidationErrors
+];
+
 // Query validation
 const validatePagination = [
   query('page')
@@ -348,8 +312,6 @@ export {
   validateMongoId,
   validateMongoIdParam,
   validateStringId,
-  validateUUID,
-  validateUUIDParam,
   validateUserRegistration,
   validateUserLogin,
   validateUserUpdate,
@@ -359,6 +321,7 @@ export {
   validateTaskUpdate,
   validateMessageCreation,
   validateTrainingSessionCreation,
+  validateUUID,
   validatePagination,
   validateSearch
 };
