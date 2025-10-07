@@ -336,22 +336,33 @@ export class TasksApiService {
   // Time Tracking
   static async startTimeTracking(taskId: string, userId: string, description: string = ''): Promise<{ success: boolean; error?: string }> {
     try {
-      // For demo purposes, just return success
-      // The actual timer is managed in the useTimeTracking hook
-      console.log('Starting time tracking for task:', taskId, 'user:', userId);
-      return { success: true };
+      const response = await makeRequest(`/tasks/${taskId}/time-tracking/start`, {
+        method: 'POST',
+        body: JSON.stringify({ description }),
+      });
+
+      if (response.success) {
+        return { success: true };
+      }
+
+      return { success: false, error: 'Failed to start time tracking' };
     } catch (error) {
       console.error('Erreur lors du démarrage du suivi du temps:', error);
-      return { success: false, error: 'Erreur lors du démarrage du suivi du temps' };
+      return { success: false, error: error.message || 'Erreur lors du démarrage du suivi du temps' };
     }
   }
 
   static async stopTimeTracking(taskId: string, userId: string): Promise<{ success: boolean; duration?: number; error?: string }> {
     try {
-      // For demo purposes, just return success
-      // The actual timer is managed in the useTimeTracking hook
-      console.log('Stopping time tracking for task:', taskId, 'user:', userId);
-      return { success: true, duration: 0 };
+      const response = await makeRequest(`/tasks/${taskId}/time-tracking/stop`, {
+        method: 'POST',
+      });
+
+      if (response.success) {
+        return { success: true, duration: response.data.duration };
+      }
+
+      return { success: false, error: 'Failed to stop time tracking' };
     } catch (error) {
       console.error('Erreur lors de l\'arrêt du suivi du temps:', error);
       return { success: false, error: 'Erreur lors de l\'arrêt du suivi du temps' };

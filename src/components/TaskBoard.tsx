@@ -193,7 +193,7 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
   const TaskCard = ({ task }: { task: Task }) => {
     const currentUser = ApiService.getCurrentUser();
     const userId = currentUser?.id || currentUser?.email || 'anonymous';
-    const { isTracking, currentDuration, startTracking, stopTracking } = useTimeTracking(task.id, userId);
+    const { isTracking, currentDuration, startTracking, stopTracking } = useTimeTracking(task.id, userId, task);
     const [showQuickActions, setShowQuickActions] = useState(false);
     const [showComments, setShowComments] = useState(false);
     const [newComment, setNewComment] = useState('');

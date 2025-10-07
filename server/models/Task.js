@@ -123,6 +123,29 @@ const taskSchema = new Schema({
       type: Date,
       default: Date.now
     }
+  }],
+
+  // Time tracking as embedded documents
+  time_tracking: [{
+    user_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    start_time: {
+      type: Date,
+      required: true
+    },
+    end_time: Date,
+    duration: {
+      type: Number,
+      default: 0
+    },
+    description: String,
+    created_at: {
+      type: Date,
+      default: Date.now
+    }
   }]
 }, {
   timestamps: true
@@ -168,6 +191,54 @@ taskSchema.methods.updateProgress = function() {
     this.completion_percentage = Math.round((completedItems / this.checklist.length) * 100);
   }
   return this.save();
+};
+
+taskSchema.methods.startTimeTracking = function(userId, description = '') {
+  // Stop any existing active tracking for this user
+  const activeEntry = this.time_tracking.find(
+    entry => entry.user_id.toString() === userId.toString() && !entry.end_time
+  );
+
+  if (activeEntry) {
+    const now = new Date();
+    const duration = Math.round((now - activeEntry.start_time) / 60000);
+    activeEntry.end_time = now;
+    activeEntry.duration = duration;
+    this.actual_hours = (this.actual_hours || 0) + (duration / 60);
+  }
+
+  // Start new tracking
+  this.time_tracking.push({
+    user_id: userId,
+    start_time: new Date(),
+    description
+  });
+
+  return this.save();
+};
+
+taskSchema.methods.stopTimeTracking = function(userId) {
+  const activeEntry = this.time_tracking.find(
+    entry => entry.user_id.toString() === userId.toString() && !entry.end_time
+  );
+
+  if (!activeEntry) {
+    throw new Error('No active time tracking found for this user');
+  }
+
+  const now = new Date();
+  const duration = Math.round((now - activeEntry.start_time) / 60000);
+  activeEntry.end_time = now;
+  activeEntry.duration = duration;
+  this.actual_hours = (this.actual_hours || 0) + (duration / 60);
+
+  return this.save();
+};
+
+taskSchema.methods.getActiveTimeTracking = function(userId) {
+  return this.time_tracking.find(
+    entry => entry.user_id.toString() === userId.toString() && !entry.end_time
+  );
 };
 
 // Static methods

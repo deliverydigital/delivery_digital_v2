@@ -312,10 +312,26 @@ export const useTaskTemplates = () => {
 };
 
 // Hook pour le suivi du temps en temps réel
-export const useTimeTracking = (taskId: string, userId: string) => {
+export const useTimeTracking = (taskId: string, userId: string, task?: Task) => {
   const [isTracking, setIsTracking] = useState(false);
   const [currentDuration, setCurrentDuration] = useState(0);
   const [startTime, setStartTime] = useState<Date | null>(null);
+
+  // Initialize from task data if active tracking exists
+  useEffect(() => {
+    if (task && task.timeTracking) {
+      const activeEntry = task.timeTracking.find(
+        (entry: any) => entry.userId === userId && !entry.endTime
+      );
+
+      if (activeEntry) {
+        setIsTracking(true);
+        setStartTime(new Date(activeEntry.startTime));
+        const elapsed = Math.round((new Date().getTime() - new Date(activeEntry.startTime).getTime()) / 1000);
+        setCurrentDuration(elapsed);
+      }
+    }
+  }, [task, userId]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;

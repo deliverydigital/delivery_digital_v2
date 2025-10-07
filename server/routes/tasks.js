@@ -55,32 +55,40 @@ router.get('/project/:projectId', validateMongoIdParam('projectId'), async (req,
 
     res.json({
       success: true,
-      data: { 
-        tasks: tasks.map(task => ({
-          id: task._id,
-          projectId: task.project_id,
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          priority: task.priority,
-          assignedTo: task.assigned_to?._id,
-          assignedToName: task.assigned_to?.name,
-          createdBy: task.created_by?._id,
-          createdByName: task.created_by?.name,
-          dueDate: task.due_date,
-          estimatedHours: task.estimated_hours,
-          actualHours: task.actual_hours,
-          completionPercentage: task.completion_percentage,
-          tags: task.tags,
-          dependencies: task.dependencies,
-          watchers: task.watchers,
-          position: task.position,
-          attachments: task.attachments,
-          comments: task.comments,
-          checklist: task.checklist,
-          createdAt: task.createdAt,
-          updatedAt: task.updatedAt
-        }))
+      data: {
+        tasks: tasks.map(task => {
+          const activeTracking = task.getActiveTimeTracking(req.user.id);
+          return {
+            id: task._id,
+            projectId: task.project_id,
+            title: task.title,
+            description: task.description,
+            status: task.status,
+            priority: task.priority,
+            assignedTo: task.assigned_to?._id,
+            assignedToName: task.assigned_to?.name,
+            createdBy: task.created_by?._id,
+            createdByName: task.created_by?.name,
+            dueDate: task.due_date,
+            estimatedHours: task.estimated_hours,
+            actualHours: task.actual_hours,
+            completionPercentage: task.completion_percentage,
+            tags: task.tags,
+            dependencies: task.dependencies,
+            watchers: task.watchers,
+            position: task.position,
+            attachments: task.attachments,
+            comments: task.comments,
+            checklist: task.checklist,
+            timeTracking: task.time_tracking,
+            activeTimeTracking: activeTracking ? {
+              startTime: activeTracking.start_time,
+              description: activeTracking.description
+            } : null,
+            createdAt: task.createdAt,
+            updatedAt: task.updatedAt
+          };
+        })
       }
     });
 
@@ -680,7 +688,7 @@ router.get('/overdue', authorize('admin'), async (req, res) => {
 
     res.json({
       success: true,
-      data: { 
+      data: {
         tasks: overdueTasks.map(task => ({
           id: task._id,
           projectId: task.project_id._id,
@@ -702,6 +710,168 @@ router.get('/overdue', authorize('admin'), async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch overdue tasks'
+    });
+  }
+});
+
+// Start time tracking
+router.post('/:id/time-tracking/start', validateMongoId, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { description } = req.body;
+
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    // Find task and check authorization
+    const task = await Task.findById(id)
+      .populate('project_id', 'client_id');
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        error: 'Task not found'
+      });
+    }
+
+    // Check authorization
+    if (req.user.role !== 'admin' && task.project_id.client_id.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied'
+      });
+    }
+
+    // Start time tracking
+    await task.startTimeTracking(req.user.id, description || '');
+
+    res.json({
+      success: true,
+      message: 'Time tracking started successfully',
+      data: {
+        startTime: new Date()
+      }
+    });
+
+  } catch (error) {
+    console.error('Start time tracking error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to start time tracking'
+    });
+  }
+});
+
+// Stop time tracking
+router.post('/:id/time-tracking/stop', validateMongoId, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    // Find task and check authorization
+    const task = await Task.findById(id)
+      .populate('project_id', 'client_id');
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        error: 'Task not found'
+      });
+    }
+
+    // Check authorization
+    if (req.user.role !== 'admin' && task.project_id.client_id.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied'
+      });
+    }
+
+    // Stop time tracking
+    await task.stopTimeTracking(req.user.id);
+
+    // Get the completed entry
+    const completedEntry = task.time_tracking[task.time_tracking.length - 1];
+
+    res.json({
+      success: true,
+      message: 'Time tracking stopped successfully',
+      data: {
+        duration: completedEntry.duration,
+        actualHours: task.actual_hours
+      }
+    });
+
+  } catch (error) {
+    console.error('Stop time tracking error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to stop time tracking'
+    });
+  }
+});
+
+// Get active time tracking for a task
+router.get('/:id/time-tracking/active', validateMongoId, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    // Find task
+    const task = await Task.findById(id)
+      .populate('project_id', 'client_id');
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        error: 'Task not found'
+      });
+    }
+
+    // Check authorization
+    if (req.user.role !== 'admin' && task.project_id.client_id.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied'
+      });
+    }
+
+    // Get active time tracking
+    const activeTracking = task.getActiveTimeTracking(req.user.id);
+
+    res.json({
+      success: true,
+      data: {
+        isTracking: !!activeTracking,
+        startTime: activeTracking?.start_time || null,
+        description: activeTracking?.description || null
+      }
+    });
+
+  } catch (error) {
+    console.error('Get active time tracking error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch active time tracking'
     });
   }
 });
