@@ -319,11 +319,11 @@ export const useTimeTracking = (taskId: string, userId: string) => {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
+
     if (isTracking && startTime) {
       interval = setInterval(() => {
         const now = new Date();
-        const duration = Math.round((now.getTime() - startTime.getTime()) / 60000); // en minutes
+        const duration = Math.round((now.getTime() - startTime.getTime()) / 1000); // en secondes
         setCurrentDuration(duration);
       }, 1000);
     }
