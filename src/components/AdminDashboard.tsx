@@ -52,6 +52,7 @@ import MessagesTab from './admin/MessagesTab';
 import SettingsTab from './admin/SettingsTab';
 import TrainingProgramsManagement from './TrainingProgramsManagement';
 import CategoriesTab from './admin/CategoriesTab';
+import TasksTab from './admin/TasksTab';
 
 // Define the upload form data type
 interface UploadDocumentFormDataType {
@@ -337,7 +338,7 @@ const AdminDashboard = () => {
             case 'categories':
                 return <CategoriesTab />;
             case 'tasks':
-                return <TaskBoard projectId="admin-tasks" isAdmin={true} />;
+                return <TasksTab />;
             case 'settings':
                 return <SettingsTab />;
             default:
