@@ -221,18 +221,6 @@ const validateTaskCreation = [
     .optional()
     .isISO8601()
     .withMessage('Invalid due date format'),
-  body('assigned_to')
-    .optional()
-    .custom((value) => {
-      if (!value) return true;
-      // Accept both MongoDB ObjectId and UUID formats
-      const isMongoId = /^[0-9a-fA-F]{24}$/.test(value);
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-      if (!isMongoId && !isUUID) {
-        throw new Error('Invalid assigned user ID format');
-      }
-      return true;
-    }),
   handleValidationErrors
 ];
 

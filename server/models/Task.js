@@ -5,7 +5,8 @@ const { Schema } = mongoose;
 // Task schema
 const taskSchema = new Schema({
   project_id: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref: 'Project',
     required: true
   },
   title: {
@@ -29,10 +30,11 @@ const taskSchema = new Schema({
     default: 'medium'
   },
   assigned_to: {
-    type: String
+    type: String,
   },
   created_by: {
-    type: String
+    type: Schema.Types.ObjectId,
+    ref: 'User'
   },
   due_date: Date,
   estimated_hours: {
@@ -51,17 +53,24 @@ const taskSchema = new Schema({
     max: 100
   },
   tags: [String],
-  dependencies: [String],
-  watchers: [String],
+  dependencies: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Task'
+  }],
+  watchers: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   position: {
     type: Number,
     default: 0
   },
-  
+
   // Comments as embedded documents
   comments: [{
     author_id: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: 'User',
       required: true
     },
     content: {
@@ -78,7 +87,7 @@ const taskSchema = new Schema({
       default: Date.now
     }
   }],
-  
+
   // Attachments as embedded documents
   attachments: [{
     filename: String,
@@ -87,14 +96,15 @@ const taskSchema = new Schema({
     file_size: Number,
     file_path: String,
     uploaded_by: {
-      type: String
+      type: Schema.Types.ObjectId,
+      ref: 'User'
     },
     uploaded_at: {
       type: Date,
       default: Date.now
     }
   }],
-  
+
   // Checklist as embedded documents
   checklist: [{
     title: {
@@ -163,16 +173,16 @@ taskSchema.methods.updateProgress = function() {
 // Static methods
 taskSchema.statics.findByProject = function(projectId, filters = {}) {
   let query = { project_id: projectId };
-  
+
   if (filters.status) query.status = filters.status;
   if (filters.assigned_to) query.assigned_to = filters.assigned_to;
   if (filters.priority) query.priority = filters.priority;
-  
+
   return this.find(query)
-    .populate('assigned_to', 'name email')
-    .populate('created_by', 'name email')
-    .populate('comments.author_id', 'name email role')
-    .sort({ position: 1, createdAt: -1 });
+      .populate('assigned_to', 'name email')
+      .populate('created_by', 'name email')
+      .populate('comments.author_id', 'name email role')
+      .sort({ position: 1, createdAt: -1 });
 };
 
 taskSchema.statics.findOverdue = function() {
@@ -180,13 +190,13 @@ taskSchema.statics.findOverdue = function() {
     due_date: { $lt: new Date() },
     status: { $ne: 'done' }
   }).populate('assigned_to', 'name email')
-    .populate('project_id', 'title client_id');
+      .populate('project_id', 'title client_id');
 };
 
 taskSchema.statics.findByAssignee = function(userId) {
   return this.find({ assigned_to: userId })
-    .populate('project_id', 'title client_id')
-    .sort({ due_date: 1 });
+      .populate('project_id', 'title client_id')
+      .sort({ due_date: 1 });
 };
 
 const Task = mongoose.model('Task', taskSchema);

@@ -12,6 +12,7 @@ router.use(authenticate);
 // Get tasks for a project
 router.get('/project/:projectId', validateMongoIdParam('projectId'), async (req, res) => {
   try {
+    console.log
     const { projectId } = req.params;
     const { status, assigned_to, priority } = req.query;
 
@@ -46,7 +47,11 @@ router.get('/project/:projectId', validateMongoIdParam('projectId'), async (req,
     if (assigned_to) filters.assigned_to = assigned_to;
     if (priority) filters.priority = priority;
 
+    console.log('Filters:', projectId, filters);
+
     const tasks = await Task.findByProject(projectId, filters);
+
+    console.log('Tasks:', tasks);
 
     res.json({
       success: true,
