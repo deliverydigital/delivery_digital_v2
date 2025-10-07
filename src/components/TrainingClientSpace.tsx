@@ -95,18 +95,18 @@ const TrainingClientSpace = ({ isOpen, onClose }: TrainingClientSpaceProps) => {
             <div className="space-y-6">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Formation Certifiée Qualiopi
+                  Formations
                 </h2>
                 <p className="text-gray-600">
                   Formation spécialisée pour le secteur de la restauration
                 </p>
-                <div className="mt-4 flex justify-center">
+                {/**<div className="mt-4 flex justify-center">
                   <img 
                     src="/LogoQualiopi-300dpi-Avec Marianne (1).png" 
                     alt="Certification Qualiopi" 
                     className="h-16 object-contain"
                   />
-                </div>
+                </div>**/}
               </div>
 
               <div className="max-w-2xl mx-auto">
