@@ -336,6 +336,8 @@ const AdminDashboard = () => {
                 return <TrainingProgramsManagement />;
             case 'categories':
                 return <CategoriesTab />;
+            case 'tasks':
+                return <TaskBoard projectId="admin-tasks" isAdmin={true} />;
             case 'settings':
                 return <SettingsTab />;
             default:
@@ -427,6 +429,18 @@ const AdminDashboard = () => {
                         >
                             <Tag className="h-5 w-5 mr-3"/>
                             Catégories
+                        </button>
+
+                        <button
+                            onClick={() => setActiveTab('tasks')}
+                            className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
+                                activeTab === 'tasks'
+                                    ? 'bg-primary-600 text-white'
+                                    : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+                            }`}
+                        >
+                            <Kanban className="h-5 w-5 mr-3"/>
+                            Mes Tâches
                         </button>
 
                         <button
