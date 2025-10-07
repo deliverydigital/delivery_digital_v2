@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
   Plus, X, Edit, Trash2, Clock, User, Tag, Calendar,
   CheckCircle2, AlertTriangle, RefreshCw, Eye, MessageCircle,
   GripVertical, Save, MoreVertical, Archive, Play, Pause,
@@ -11,6 +11,7 @@ import {
   Send
 } from 'lucide-react';
 import { useTasks, useTaskBoard, useTaskStatistics, useTimeTracking, Task } from '../hooks/useTasks';
+import { ApiService } from '../services/api';
 
 interface TaskBoardProps {
   projectId: string;
@@ -190,7 +191,9 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
   };
 
   const TaskCard = ({ task }: { task: Task }) => {
-    const { isTracking, currentDuration, startTracking, stopTracking } = useTimeTracking(task.id, 'current-user');
+    const currentUser = ApiService.getCurrentUser();
+    const userId = currentUser?.id || currentUser?.email || 'anonymous';
+    const { isTracking, currentDuration, startTracking, stopTracking } = useTimeTracking(task.id, userId);
     const [showQuickActions, setShowQuickActions] = useState(false);
     const [showComments, setShowComments] = useState(false);
     const [newComment, setNewComment] = useState('');
