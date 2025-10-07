@@ -192,7 +192,7 @@ const TrainingClientSpace = ({ isOpen, onClose }: TrainingClientSpaceProps) => {
                   Inscription à la Formation
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  Inscrivez-vous directement sur notre plateforme de formation pour accéder à notre programme certifié Qualiopi.
+                  Inscrivez-vous directement sur notre plateforme de formation pour accéder à notre programme.
                 </p>
                 <a
                   href="https://app.deliverydigital.fr/student/signup"
