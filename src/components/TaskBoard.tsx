@@ -1199,6 +1199,171 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
           </div>
         </div>
       )}
+
+      {/* Edit Task Modal */}
+      {editingTask && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl">
+            <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-white">
+                Modifier la tâche
+              </h3>
+              <button
+                onClick={() => setEditingTask(null)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+
+              const formData = new FormData(e.currentTarget);
+              const tagsArray = formData.get('tags')?.toString()
+                ? formData.get('tags')?.toString().split(',').map(tag => tag.trim())
+                : [];
+
+              await updateTask(editingTask.id, {
+                title: formData.get('title') as string,
+                description: formData.get('description') as string,
+                priority: formData.get('priority') as any,
+                dueDate: formData.get('dueDate') ? new Date(formData.get('dueDate') as string) : undefined,
+                assignedTo: formData.get('assignedTo') as string || undefined,
+                tags: tagsArray,
+                status: formData.get('status') as any,
+                updatedAt: new Date()
+              });
+
+              setEditingTask(null);
+            }} className="p-6 space-y-6">
+              <div>
+                <label htmlFor="edit-title" className="block text-sm font-medium text-gray-300 mb-2">
+                  Titre *
+                </label>
+                <input
+                  type="text"
+                  id="edit-title"
+                  name="title"
+                  defaultValue={editingTask.title}
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-description" className="block text-sm font-medium text-gray-300 mb-2">
+                  Description
+                </label>
+                <textarea
+                  id="edit-description"
+                  name="description"
+                  defaultValue={editingTask.description}
+                  rows={3}
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="edit-status" className="block text-sm font-medium text-gray-300 mb-2">
+                    Statut
+                  </label>
+                  <select
+                    id="edit-status"
+                    name="status"
+                    defaultValue={editingTask.status}
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="todo">À faire</option>
+                    <option value="in_progress">En cours</option>
+                    <option value="review">En révision</option>
+                    <option value="done">Terminé</option>
+                    <option value="blocked">Bloqué</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="edit-priority" className="block text-sm font-medium text-gray-300 mb-2">
+                    Priorité
+                  </label>
+                  <select
+                    id="edit-priority"
+                    name="priority"
+                    defaultValue={editingTask.priority}
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="low">Basse</option>
+                    <option value="medium">Moyenne</option>
+                    <option value="high">Haute</option>
+                    <option value="urgent">Urgente</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="edit-dueDate" className="block text-sm font-medium text-gray-300 mb-2">
+                    Date d'échéance
+                  </label>
+                  <input
+                    type="date"
+                    id="edit-dueDate"
+                    name="dueDate"
+                    defaultValue={editingTask.dueDate ? new Date(editingTask.dueDate).toISOString().split('T')[0] : ''}
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="edit-assignedTo" className="block text-sm font-medium text-gray-300 mb-2">
+                    Assigné à
+                  </label>
+                  <input
+                    type="text"
+                    id="edit-assignedTo"
+                    name="assignedTo"
+                    defaultValue={editingTask.assignedTo}
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="Nom de la personne"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="edit-tags" className="block text-sm font-medium text-gray-300 mb-2">
+                  Tags (séparés par des virgules)
+                </label>
+                <input
+                  type="text"
+                  id="edit-tags"
+                  name="tags"
+                  defaultValue={editingTask.tags.join(', ')}
+                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="frontend, design, urgent"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setEditingTask(null)}
+                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+                >
+                  <Save className="h-4 w-4 mr-2 inline" />
+                  Enregistrer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
