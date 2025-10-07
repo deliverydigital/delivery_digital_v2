@@ -159,6 +159,11 @@ const validateProjectUpdate = [
 
 // Task validation rules
 const validateTaskCreation = [
+  body('project_id')
+    .notEmpty()
+    .withMessage('Project ID is required')
+    .isMongoId()
+    .withMessage('Invalid project ID format'),
   body('title')
     .trim()
     .isLength({ min: 3, max: 255 })
@@ -180,6 +185,10 @@ const validateTaskCreation = [
     .optional()
     .isISO8601()
     .withMessage('Invalid due date format'),
+  body('assigned_to')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid assigned user ID format'),
   handleValidationErrors
 ];
 
