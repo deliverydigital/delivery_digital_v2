@@ -5,7 +5,8 @@ const { Schema } = mongoose;
 // Task schema
 const taskSchema = new Schema({
   project_id: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref: 'Project',
     required: true
   },
   title: {
@@ -29,10 +30,12 @@ const taskSchema = new Schema({
     default: 'medium'
   },
   assigned_to: {
-    type: String
+    type: Schema.Types.ObjectId,
+    ref: 'User'
   },
   created_by: {
-    type: String
+    type: Schema.Types.ObjectId,
+    ref: 'User'
   },
   due_date: Date,
   estimated_hours: {
@@ -51,8 +54,14 @@ const taskSchema = new Schema({
     max: 100
   },
   tags: [String],
-  dependencies: [String],
-  watchers: [String],
+  dependencies: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Task'
+  }],
+  watchers: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   position: {
     type: Number,
     default: 0
@@ -61,7 +70,8 @@ const taskSchema = new Schema({
   // Comments as embedded documents
   comments: [{
     author_id: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: 'User',
       required: true
     },
     content: {
@@ -87,7 +97,8 @@ const taskSchema = new Schema({
     file_size: Number,
     file_path: String,
     uploaded_by: {
-      type: String
+      type: Schema.Types.ObjectId,
+      ref: 'User'
     },
     uploaded_at: {
       type: Date,
