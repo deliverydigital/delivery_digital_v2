@@ -223,14 +223,28 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
       await handleAddChecklistItem(task.id, newTaskChecklistItem);
     };
 
-    const handleStartTracking = (e: React.MouseEvent) => {
+    const handleStartTracking = async (e: React.MouseEvent) => {
       e.stopPropagation();
-      startTracking();
+      try {
+        const result = await startTracking();
+        if (!result.success) {
+          console.error('Failed to start tracking:', result.error);
+        }
+      } catch (error) {
+        console.error('Error starting tracking:', error);
+      }
     };
 
-    const handleStopTracking = (e: React.MouseEvent) => {
+    const handleStopTracking = async (e: React.MouseEvent) => {
       e.stopPropagation();
-      stopTracking();
+      try {
+        const result = await stopTracking();
+        if (!result.success) {
+          console.error('Failed to stop tracking:', result.error);
+        }
+      } catch (error) {
+        console.error('Error stopping tracking:', error);
+      }
     };
 
     return (
