@@ -38,15 +38,11 @@ router.post('/register', validateUserRegistration, async (req, res) => {
       });
     }
 
-    // Hash password
-    console.log('🔐 Hashing password for:', email);
-    const passwordHash = await User.hashPassword(password);
-
-    // Create user
+    // Create user (password will be hashed by pre-save middleware)
     console.log('👤 Creating user:', email);
     const userData = {
       email,
-      password_hash: passwordHash,
+      password_hash: password,
       name,
       company,
       phone,
@@ -278,11 +274,8 @@ router.post('/reset-password', async (req, res) => {
       });
     }
 
-    // Hash new password
-    const passwordHash = await User.hashPassword(newPassword);
-
-    // Update user password and clear reset token
-    user.password_hash = passwordHash;
+    // Update user password and clear reset token (password will be hashed by pre-save middleware)
+    user.password_hash = newPassword;
     user.password_reset_token = undefined;
     user.password_reset_expires = undefined;
     await user.save();
