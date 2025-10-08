@@ -156,13 +156,13 @@ const createRateLimit = (windowMs, max, message) => {
 
 // Different rate limits for different endpoints
 const authRateLimit = createRateLimit(
-  15 * 60 * 1000, // 15 minutes
+    process.env.NODE_ENV === 'production' ? 0 * 60 * 1000 : 0, // 0 minutes
   5, // limit each IP to 5 requests per windowMs
   'Too many authentication attempts, please try again later'
 );
 
 const apiRateLimit = createRateLimit(
-  15 * 60 * 1000, // 15 minutes
+    process.env.NODE_ENV === 'production' ? 0 * 60 * 1000 : 0, // 0 minutes
   500, // limit each IP to 500 requests per windowMs
   'Too many API requests, please try again later'
 );
