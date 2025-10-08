@@ -4,6 +4,23 @@ import { generateToken, authRateLimit } from '../middleware/auth.js';
 import { validateUserRegistration, validateUserLogin } from '../middleware/validation.js';
 import { User } from '../models/index.js';
 import { isMongoAvailable } from '../config/mongodb.js';
+import nodemailer from "nodemailer";
+
+
+
+// Create nodemailer transporter
+const createTransporter = () => {
+  const port = parseInt(process.env.SMTP_PORT || '587');
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: port,
+    secure: port === 465,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+};
 
 const router = express.Router();
 
@@ -222,15 +239,7 @@ router.post('/forgot-password', async (req, res) => {
       const nodemailer = await import('nodemailer');
 
       // Create transporter
-      const transporter = nodemailer.default.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: false,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS
-        }
-      });
+      const transporter = createTransporter()
 
       // Create reset URL
       const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
