@@ -13,6 +13,7 @@ import AdminDashboard from './components/AdminDashboard';
 import ClientDashboard from './components/ClientDashboard';
 import LegalModals from './components/LegalModals';
 import Reclamation from './components/Reclamation';
+import ResetPassword from './components/ResetPassword';
 import { useAuth } from './hooks/useApi';
 
 function App() {
@@ -38,6 +39,8 @@ function App() {
       setShowAdminDashboard(true);
     } else if (pathname === '/reclamation') {
       setCurrentPage('reclamation');
+    } else if (pathname === '/reset-password') {
+      setCurrentPage('reset-password');
     } else {
       setCurrentPage('home');
     }
@@ -76,6 +79,11 @@ function App() {
         </div>
       );
     }
+  }
+
+  // Reset Password page
+  if (currentPage === 'reset-password') {
+    return <ResetPassword />;
   }
 
   // Reclamation page

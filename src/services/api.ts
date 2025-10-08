@@ -237,6 +237,24 @@ export class ApiService {
     }
   }
 
+  static async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await this.makeRequest('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ token, newPassword }),
+      });
+
+      if (response.success) {
+        return { success: true };
+      }
+
+      return { success: false, error: response.error || 'Failed to reset password' };
+    } catch (error) {
+      console.error('Reset password error:', error);
+      return { success: false, error: error.message || 'Failed to reset password' };
+    }
+  }
+
   static logout(): void {
     this.removeAuthToken();
   }
