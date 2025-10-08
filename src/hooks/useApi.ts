@@ -151,12 +151,18 @@ export const useAuth = () => {
     window.dispatchEvent(new CustomEvent('authStateChanged'));
   };
 
+  const forgotPassword = async (email: string) => {
+    const result = await ApiService.forgotPassword(email);
+    return result;
+  };
+
   return {
     user,
     loading,
     login,
     register,
     logout,
+    forgotPassword,
     isAuthenticated: !!user && !!ApiService.getAuthToken(),
     isAdmin: user?.role === 'admin'
   };

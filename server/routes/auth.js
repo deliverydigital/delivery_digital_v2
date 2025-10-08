@@ -217,8 +217,60 @@ router.post('/forgot-password', async (req, res) => {
     const resetToken = user.generatePasswordResetToken();
     await user.save();
 
-    // TODO: Send email with reset link
-    console.log(`Password reset token for ${email}: ${resetToken}`);
+    // Send password reset email
+    try {
+      const nodemailer = await import('nodemailer');
+
+      // Create transporter
+      const transporter = nodemailer.default.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS
+        }
+      });
+
+      // Create reset URL
+      const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+
+      // Send email
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        to: email,
+        subject: 'Réinitialisation de votre mot de passe - Delivery Digital',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2563eb;">Réinitialisation de mot de passe</h2>
+            <p>Bonjour,</p>
+            <p>Vous avez demandé à réinitialiser votre mot de passe sur Delivery Digital.</p>
+            <p>Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe :</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" style="background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Réinitialiser mon mot de passe
+              </a>
+            </div>
+            <p>Ou copiez ce lien dans votre navigateur :</p>
+            <p style="background-color: #f3f4f6; padding: 10px; border-radius: 5px; word-break: break-all;">
+              ${resetUrl}
+            </p>
+            <p><strong>Ce lien est valable pendant 1 heure.</strong></p>
+            <p>Si vous n'avez pas demandé cette réinitialisation, ignorez simplement cet email.</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+            <p style="color: #6b7280; font-size: 12px;">
+              Delivery Digital<br>
+              Support: contact@deliverydigital.fr
+            </p>
+          </div>
+        `
+      });
+
+      console.log(`✅ Password reset email sent to ${email}`);
+    } catch (emailError) {
+      console.error('Failed to send reset email:', emailError);
+      // Still return success to prevent email enumeration
+    }
 
     res.json({
       success: true,

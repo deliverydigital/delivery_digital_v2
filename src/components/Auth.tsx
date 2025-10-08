@@ -11,6 +11,7 @@ interface AuthProps {
 
 const Auth = ({ isOpen, onClose, onSuccess }: AuthProps) => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -21,8 +22,8 @@ const Auth = ({ isOpen, onClose, onSuccess }: AuthProps) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-  const { login, register } = useAuth();
+
+  const { login, register, forgotPassword } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +31,24 @@ const Auth = ({ isOpen, onClose, onSuccess }: AuthProps) => {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (isForgotPassword) {
+        console.log('🔄 Requesting password reset for:', formData.email);
+        const result = await forgotPassword(formData.email);
+
+        if (!result.success) {
+          console.error('❌ Password reset request failed:', result.error);
+          throw new Error(result.error || 'Password reset request failed');
+        }
+
+        console.log('✅ Password reset email sent');
+        setSuccess(true);
+        setError('');
+        setTimeout(() => {
+          setSuccess(false);
+          setIsForgotPassword(false);
+          setFormData({ name: '', company: '', email: '', password: '' });
+        }, 3000);
+      } else if (isLogin) {
         console.log('🔄 Attempting login with:', formData.email);
         const result = await login(formData.email, formData.password);
         
@@ -133,7 +151,7 @@ const Auth = ({ isOpen, onClose, onSuccess }: AuthProps) => {
         
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-xl font-bold text-gray-900">
-            {isLogin ? 'Connexion' : 'Créer un compte'}
+            {isForgotPassword ? 'Réinitialiser le mot de passe' : isLogin ? 'Connexion' : 'Créer un compte'}
           </h3>
           <button
             onClick={onClose}
@@ -144,103 +162,151 @@ const Auth = ({ isOpen, onClose, onSuccess }: AuthProps) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {!isLogin && (
+          {isForgotPassword ? (
             <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nom complet
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Votre nom"
-                    required
-                  />
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                </div>
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+                </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nom de l'entreprise
+                  Email
                 </label>
                 <div className="relative">
                   <input
-                    type="text"
-                    name="company"
-                    value={formData.company}
+                    type="email"
+                    name="email"
+                    value={formData.email}
                     onChange={handleChange}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Votre entreprise"
+                    placeholder="votre@email.com"
                     required
                   />
-                  <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 </div>
               </div>
             </>
-          )}
+          ) : (
+            <>
+              {!isLogin && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nom complet
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Votre nom"
+                        required
+                      />
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    </div>
+                  </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <div className="relative">
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="votre@email.com"
-                required
-              />
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            </div>
-          </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nom de l'entreprise
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="company"
+                        value={formData.company}
+                        onChange={handleChange}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Votre entreprise"
+                        required
+                      />
+                      <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    </div>
+                  </div>
+                </>
+              )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mot de passe
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="••••••••"
-                minLength={8}
-                required
-              />
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
-                  <Eye className="h-5 w-5" />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="votre@email.com"
+                    required
+                  />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mot de passe
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="••••••••"
+                    minLength={8}
+                    required
+                  />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+                {!isLogin && (
+                  <p className="mt-1 text-sm text-gray-500">
+                    Minimum 8 caractères
+                  </p>
                 )}
-              </button>
-            </div>
-            {!isLogin && (
-              <p className="mt-1 text-sm text-gray-500">
-                Minimum 8 caractères
-              </p>
-            )}
-          </div>
+              </div>
+
+              {isLogin && (
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotPassword(true)}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    Mot de passe oublié ?
+                  </button>
+                </div>
+              )}
+            </>
+          )}
 
 
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {error}
+            </div>
+          )}
+
+          {success && isForgotPassword && (
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+              Un email de réinitialisation a été envoyé à votre adresse.
             </div>
           )}
 
@@ -254,21 +320,34 @@ const Auth = ({ isOpen, onClose, onSuccess }: AuthProps) => {
             ) : success ? (
               <span className="flex items-center justify-center">
                 <CheckCircle2 className="h-5 w-5 mr-2" />
-                {isLogin ? 'Connecté !' : 'Compte créé !'}
+                {isForgotPassword ? 'Email envoyé !' : isLogin ? 'Connecté !' : 'Compte créé !'}
               </span>
             ) : (
-              isLogin ? 'Se connecter' : 'Créer le compte'
+              isForgotPassword ? 'Envoyer le lien' : isLogin ? 'Se connecter' : 'Créer le compte'
             )}
           </button>
 
           <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-blue-600 hover:text-blue-800 text-sm"
-            >
-              {isLogin ? "Pas encore de compte ? S'inscrire" : 'Déjà un compte ? Se connecter'}
-            </button>
+            {isForgotPassword ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsForgotPassword(false);
+                  setError('');
+                }}
+                className="text-blue-600 hover:text-blue-800 text-sm"
+              >
+                Retour à la connexion
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-blue-600 hover:text-blue-800 text-sm"
+              >
+                {isLogin ? "Pas encore de compte ? S'inscrire" : 'Déjà un compte ? Se connecter'}
+              </button>
+            )}
           </div>
         </form>
       </motion.div>

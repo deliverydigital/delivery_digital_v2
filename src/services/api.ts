@@ -219,6 +219,24 @@ export class ApiService {
     }
   }
 
+  static async forgotPassword(email: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await this.makeRequest('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.success) {
+        return { success: true };
+      }
+
+      return { success: false, error: response.error || 'Failed to send reset email' };
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      return { success: false, error: error.message || 'Failed to send reset email' };
+    }
+  }
+
   static logout(): void {
     this.removeAuthToken();
   }
