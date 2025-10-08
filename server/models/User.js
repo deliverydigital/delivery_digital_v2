@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const { Schema } = mongoose;
 
@@ -111,7 +112,6 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 };
 
 userSchema.methods.generatePasswordResetToken = function() {
-  const crypto = require('crypto');
   const resetToken = crypto.randomBytes(32).toString('hex');
   this.password_reset_token = resetToken;
   this.password_reset_expires = Date.now() + 3600000; // 1 hour
