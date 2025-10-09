@@ -33,7 +33,7 @@ router.post('/register', validateUserRegistration, async (req, res) => {
     console.log('🔄 Registration attempt for:', req.body.email);
     console.log('📊 Request body:', { ...req.body, password: '[HIDDEN]' });
     
-    const { email, password, name, company, phone } = req.body;
+    const { email, password, name, company, phone, role } = req.body;
 
     // Check if MongoDB is available
     if (!isMongoAvailable()) {
@@ -55,15 +55,19 @@ router.post('/register', validateUserRegistration, async (req, res) => {
       });
     }
 
+    // Validate role if provided
+    const validRoles = ['client', 'admin', 'project_manager', 'trainer', 'developer'];
+    const userRole = role && validRoles.includes(role) ? role : 'client';
+
     // Create user (password will be hashed by pre-save middleware)
-    console.log('👤 Creating user:', email);
+    console.log('👤 Creating user:', email, 'with role:', userRole);
     const userData = {
       email,
       password_hash: password,
       name,
       company,
       phone,
-      role: 'client',
+      role: userRole,
       status: 'active',
       email_verified: false
     };
