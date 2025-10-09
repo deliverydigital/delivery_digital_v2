@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, FolderOpen, Calendar, User, Building2, Clock, CheckCircle, AlertTriangle, Star, ChevronDown, ChevronUp, X, Save, FileText, ExternalLink, MessageCircle, Settings } from 'lucide-react';
+import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, FolderOpen, Calendar, User, Building2, Clock, CheckCircle, AlertTriangle, Star, ChevronDown, ChevronUp, X, Save, FileText, ExternalLink, MessageCircle, Settings, UserCog } from 'lucide-react';
 import { useProjects, useClients } from '../../hooks/useApi';
+import { ApiService } from '../../services/api';
 
 const ProjectsTab = () => {
   const { projects, loading, updateProject, refreshProjects } = useProjects();
   const { clients } = useClients();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedPriority, setSelectedPriority] = useState('all');
@@ -14,6 +15,25 @@ const ProjectsTab = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
   const [editData, setEditData] = useState<any>({});
+  const [projectManagers, setProjectManagers] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadProjectManagers();
+  }, []);
+
+  const loadProjectManagers = async () => {
+    const managers = await ApiService.getProjectManagers();
+    setProjectManagers(managers);
+  };
+
+  const handleAssignManager = async (projectId: string, managerId: string) => {
+    try {
+      await ApiService.assignProjectToManager(projectId, managerId);
+      refreshProjects();
+    } catch (error) {
+      console.error('Error assigning project manager:', error);
+    }
+  };
 
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -52,7 +72,10 @@ const ProjectsTab = () => {
 
   const openEditModal = (project: any) => {
     setSelectedProject(project);
-    setEditData(project);
+    setEditData({
+      ...project,
+      assignedTo: project.assignedTo?.id || ''
+    });
     setModalMode('edit');
     setShowModal(true);
   };
@@ -156,6 +179,15 @@ const ProjectsTab = () => {
                       <span className="text-gray-400">Budget:</span>
                       <span className="text-white">{selectedProject.budget}</span>
                     </div>
+                    {selectedProject.assignedTo && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Chef de Projet:</span>
+                        <span className="text-white flex items-center">
+                          <UserCog className="h-4 w-4 mr-2 text-blue-400" />
+                          {selectedProject.assignedTo.name}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -246,6 +278,32 @@ const ProjectsTab = () => {
                       className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <UserCog className="h-4 w-4 inline mr-2" />
+                    Chef de Projet
+                  </label>
+                  <select
+                    value={editData.assignedTo || ''}
+                    onChange={(e) => {
+                      const managerId = e.target.value;
+                      setEditData({ ...editData, assignedTo: managerId });
+                      if (managerId && selectedProject) {
+                        handleAssignManager(selectedProject.id, managerId);
+                      }
+                    }}
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                  >
+                    <option value="">Non assigné</option>
+                    {projectManagers.map(manager => (
+                      <option key={manager.id} value={manager.id}>
+                        {manager.name} ({manager.email})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-sm text-gray-400 mt-1">Assignez un chef de projet pour gérer ce projet</p>
                 </div>
 
                 <div>

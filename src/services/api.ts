@@ -33,7 +33,11 @@ export interface Project {
   gitlabUrl?: string;
   notes: string;
   estimatedHours?: number;
-  assignedTo?: string;
+  assignedTo?: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 export interface Message {
