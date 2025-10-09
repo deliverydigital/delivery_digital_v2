@@ -454,8 +454,9 @@ router.get('/client/:clientId', validateMongoIdParam('clientId'), authorize('adm
 });
 
 // Assign project to project manager (admin only)
-router.post('/:id/assign', authorize(['admin']), validateMongoIdParam('id'), async (req, res) => {
+router.post('/:id/assign', authorize('admin'), validateMongoIdParam('id'), async (req, res) => {
   try {
+    console.log('Assigning project. User role:', req.user?.role);
     const { managerId } = req.body;
 
     if (!isMongoAvailable()) {

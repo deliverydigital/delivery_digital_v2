@@ -241,8 +241,10 @@ router.put('/password', async (req, res) => {
 });
 
 // Get all project managers (admin only)
-router.get('/project-managers', authorize(['admin']), async (req, res) => {
+router.get('/project-managers', authorize('admin'), async (req, res) => {
   try {
+    console.log('Getting project managers. User role:', req.user?.role);
+
     if (!isMongoAvailable()) {
       return res.status(503).json({
         success: false,
