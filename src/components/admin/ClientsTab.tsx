@@ -389,6 +389,14 @@ const ClientsTab = () => {
                   </div>
                 )}
                 <div className="flex items-center text-gray-300 text-sm">
+                  <UserCog className="h-4 w-4 mr-2 text-orange-400" />
+                  {client.role === 'admin' && 'Administrateur'}
+                  {client.role === 'client' && 'Client'}
+                  {client.role === 'project_manager' && 'Chef de Projet'}
+                  {client.role === 'trainer' && 'Formateur'}
+                  {client.role === 'developer' && 'Développeur'}
+                </div>
+                <div className="flex items-center text-gray-300 text-sm">
                   <Calendar className="h-4 w-4 mr-2 text-purple-400" />
                   Inscrit le {new Date(client.joinDate).toLocaleDateString('fr-FR')}
                 </div>
@@ -469,6 +477,16 @@ const ClientsTab = () => {
                     <div>
                       <label className="text-sm font-medium text-gray-400">Email</label>
                       <div className="text-white">{selectedClient.email}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-400">Type d'utilisateur</label>
+                      <div className="text-white">
+                        {selectedClient.role === 'admin' && 'Administrateur'}
+                        {selectedClient.role === 'client' && 'Client'}
+                        {selectedClient.role === 'project_manager' && 'Chef de Projet'}
+                        {selectedClient.role === 'trainer' && 'Formateur'}
+                        {selectedClient.role === 'developer' && 'Développeur'}
+                      </div>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-400">Entreprise</label>
