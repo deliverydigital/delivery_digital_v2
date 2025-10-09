@@ -1,17 +1,29 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, Users, Calendar, Building2, Mail, Phone, MapPin, CheckCircle, AlertTriangle, Star, X, Save, User } from 'lucide-react';
+import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, Users, Calendar, Building2, Mail, Phone, MapPin, CheckCircle, AlertTriangle, Star, X, Save, User, UserCog } from 'lucide-react';
 import { useClients } from '../../hooks/useApi';
+import { ApiService } from '../../services/api';
 
 const ClientsTab = () => {
   const { clients, loading, updateClient, refreshClients } = useClients();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
+  const [modalMode, setModalMode] = useState<'view' | 'edit' | 'create'>('view');
   const [editData, setEditData] = useState<any>({});
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createData, setCreateData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    company: '',
+    phone: '',
+    role: 'client'
+  });
+  const [createError, setCreateError] = useState('');
+  const [createSuccess, setCreateSuccess] = useState(false);
 
   const filteredClients = clients.filter(client => {
     const matchesSearch = client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -51,13 +63,79 @@ const ClientsTab = () => {
 
   const handleSave = async () => {
     if (!selectedClient) return;
-    
+
     try {
       await updateClient(selectedClient.id, editData);
       closeModal();
       refreshClients();
     } catch (error) {
       console.error('Error updating client:', error);
+    }
+  };
+
+  const openCreateModal = () => {
+    setCreateData({
+      name: '',
+      email: '',
+      password: '',
+      company: '',
+      phone: '',
+      role: 'client'
+    });
+    setCreateError('');
+    setCreateSuccess(false);
+    setShowCreateModal(true);
+  };
+
+  const closeCreateModal = () => {
+    setShowCreateModal(false);
+    setCreateData({
+      name: '',
+      email: '',
+      password: '',
+      company: '',
+      phone: '',
+      role: 'client'
+    });
+    setCreateError('');
+    setCreateSuccess(false);
+  };
+
+  const handleCreateUser = async () => {
+    setCreateError('');
+
+    if (!createData.name || !createData.email || !createData.password) {
+      setCreateError('Nom, email et mot de passe sont requis');
+      return;
+    }
+
+    if (createData.password.length < 8) {
+      setCreateError('Le mot de passe doit contenir au moins 8 caractères');
+      return;
+    }
+
+    try {
+      const response = await ApiService.register({
+        name: createData.name,
+        email: createData.email,
+        password: createData.password,
+        company: createData.company,
+        phone: createData.phone,
+        role: createData.role
+      });
+
+      if (response.success) {
+        setCreateSuccess(true);
+        setTimeout(() => {
+          closeCreateModal();
+          refreshClients();
+        }, 2000);
+      } else {
+        setCreateError(response.error || 'Erreur lors de la création');
+      }
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      setCreateError(error.message || 'Erreur lors de la création');
     }
   };
 
@@ -216,10 +294,17 @@ const ClientsTab = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-white">Gestion des Clients</h2>
-          <p className="text-gray-400">Gérez tous vos clients</p>
+          <h2 className="text-2xl font-bold text-white">Gestion des Utilisateurs</h2>
+          <p className="text-gray-400">Gérez tous vos clients et chefs de projet</p>
         </div>
         <div className="flex items-center space-x-4">
+          <button
+            onClick={openCreateModal}
+            className="btn btn-primary"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Créer Utilisateur
+          </button>
           <button
             onClick={refreshClients}
             className="btn btn-secondary"
@@ -476,6 +561,144 @@ const ClientsTab = () => {
                     </select>
                   </div>
                 </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl"
+          >
+            <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-white">Créer un Utilisateur</h3>
+              <button onClick={closeCreateModal} className="text-gray-400 hover:text-white">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {createSuccess ? (
+                <div className="text-center py-8">
+                  <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-white mb-2">Utilisateur créé avec succès!</h3>
+                  <p className="text-gray-400">L'utilisateur a été créé et peut maintenant se connecter.</p>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <UserCog className="h-4 w-4 inline mr-2" />
+                      Type d'utilisateur
+                    </label>
+                    <select
+                      value={createData.role}
+                      onChange={(e) => setCreateData({ ...createData, role: e.target.value })}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    >
+                      <option value="client">Client</option>
+                      <option value="project_manager">Chef de Projet</option>
+                      <option value="developer">Développeur</option>
+                      <option value="trainer">Formateur</option>
+                    </select>
+                    <p className="text-sm text-gray-400 mt-1">
+                      {createData.role === 'project_manager' && 'Les chefs de projet peuvent gérer des projets qui leur sont assignés.'}
+                      {createData.role === 'client' && 'Les clients peuvent soumettre des projets et suivre leur progression.'}
+                      {createData.role === 'developer' && 'Les développeurs travaillent sur les projets.'}
+                      {createData.role === 'trainer' && 'Les formateurs gèrent les programmes de formation.'}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Nom*</label>
+                      <input
+                        type="text"
+                        value={createData.name}
+                        onChange={(e) => setCreateData({ ...createData, name: e.target.value })}
+                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                        placeholder="Nom complet"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Email*</label>
+                      <input
+                        type="email"
+                        value={createData.email}
+                        onChange={(e) => setCreateData({ ...createData, email: e.target.value })}
+                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                        placeholder="email@exemple.com"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Mot de passe*</label>
+                    <input
+                      type="password"
+                      value={createData.password}
+                      onChange={(e) => setCreateData({ ...createData, password: e.target.value })}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      placeholder="Minimum 8 caractères"
+                      minLength={8}
+                      required
+                    />
+                    <p className="text-sm text-gray-400 mt-1">Le mot de passe doit contenir au moins 8 caractères.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Entreprise</label>
+                      <input
+                        type="text"
+                        value={createData.company}
+                        onChange={(e) => setCreateData({ ...createData, company: e.target.value })}
+                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                        placeholder="Nom de l'entreprise"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Téléphone</label>
+                      <input
+                        type="tel"
+                        value={createData.phone}
+                        onChange={(e) => setCreateData({ ...createData, phone: e.target.value })}
+                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                        placeholder="+33 6 12 34 56 78"
+                      />
+                    </div>
+                  </div>
+
+                  {createError && (
+                    <div className="p-4 bg-red-900/50 border border-red-700 rounded-lg flex items-start">
+                      <AlertTriangle className="h-5 w-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" />
+                      <p className="text-red-200 text-sm">{createError}</p>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-4 pt-4 border-t border-gray-800">
+                    <button
+                      onClick={closeCreateModal}
+                      className="btn btn-secondary"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      onClick={handleCreateUser}
+                      className="btn btn-primary"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Créer l'utilisateur
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </motion.div>
