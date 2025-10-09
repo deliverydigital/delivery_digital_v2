@@ -453,4 +453,93 @@ router.get('/client/:clientId', validateMongoIdParam('clientId'), authorize('adm
   }
 });
 
+// Assign project to project manager (admin only)
+router.post('/:id/assign', authorize(['admin']), validateMongoIdParam('id'), async (req, res) => {
+  try {
+    const { managerId } = req.body;
+
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    // Validate managerId is provided
+    if (!managerId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Manager ID is required'
+      });
+    }
+
+    // Verify the manager exists and has the correct role
+    const manager = await User.findById(managerId);
+    if (!manager) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project manager not found'
+      });
+    }
+
+    if (manager.role !== 'project_manager') {
+      return res.status(400).json({
+        success: false,
+        error: 'User is not a project manager'
+      });
+    }
+
+    // Update project
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      { assigned_to: managerId },
+      { new: true }
+    )
+    .populate('client_id', 'name email company')
+    .populate('assigned_to', 'name email');
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Project assigned successfully',
+      project: {
+        id: project._id,
+        title: project.title,
+        description: project.description,
+        status: project.status,
+        priority: project.priority,
+        budget: project.budget,
+        timeline: project.timeline,
+        client_id: project.client_id?._id,
+        clientName: project.client_id?.name,
+        assigned_to: project.assigned_to ? {
+          id: project.assigned_to._id,
+          name: project.assigned_to.name,
+          email: project.assigned_to.email
+        } : null,
+        attachments: project.attachments,
+        figma_url: project.figma_url,
+        gitlab_url: project.gitlab_url,
+        notes: project.notes,
+        completion_percentage: project.completion_percentage,
+        submittedAt: project.createdAt,
+        lastUpdate: project.updatedAt
+      }
+    });
+
+  } catch (error) {
+    console.error('Assign project error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to assign project'
+    });
+  }
+});
+
 export default router;

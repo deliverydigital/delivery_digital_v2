@@ -240,4 +240,40 @@ router.put('/password', async (req, res) => {
   }
 });
 
+// Get all project managers (admin only)
+router.get('/project-managers', authorize(['admin']), async (req, res) => {
+  try {
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    const projectManagers = await User.find({
+      role: 'project_manager',
+      status: 'active'
+    })
+    .select('name email role')
+    .sort({ name: 1 });
+
+    res.json({
+      success: true,
+      projectManagers: projectManagers.map(pm => ({
+        id: pm._id.toString(),
+        name: pm.name,
+        email: pm.email,
+        role: pm.role
+      }))
+    });
+
+  } catch (error) {
+    console.error('Get project managers error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch project managers'
+    });
+  }
+});
+
 export default router;

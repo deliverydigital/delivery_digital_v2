@@ -524,6 +524,32 @@ export class ApiService {
     }
   }
 
+  // Get project managers
+  static async getProjectManagers(): Promise<any[]> {
+    try {
+      const response = await this.makeRequest('/users/project-managers');
+      return response.projectManagers || [];
+    } catch (error) {
+      console.error('Error fetching project managers:', error);
+      return [];
+    }
+  }
+
+  // Assign project to manager
+  static async assignProjectToManager(projectId: string, managerId: string): Promise<any> {
+    try {
+      const response = await this.makeRequest(`/projects/${projectId}/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ managerId })
+      });
+      return response;
+    } catch (error) {
+      console.error('Error assigning project to manager:', error);
+      throw error;
+    }
+  }
+
   // Statistics (pour admin)
   static async getStatistics(): Promise<{
     totalClients: number;
