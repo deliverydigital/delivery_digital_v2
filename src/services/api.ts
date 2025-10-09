@@ -5,6 +5,7 @@ export interface Client {
   email: string;
   company: string;
   phone?: string;
+  role: 'client' | 'admin' | 'project_manager' | 'trainer' | 'developer';
   joinDate: Date;
   projectsCount: number;
   status: 'active' | 'inactive' | 'pending';

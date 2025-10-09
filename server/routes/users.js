@@ -59,7 +59,7 @@ router.get('/profile', async (req, res) => {
   }
 });
 
-// Get all clients (admin only)
+// Get all users (admin only) - renamed from clients to get all users
 router.get('/clients', authorize('admin'), async (req, res) => {
   try {
     // Check if MongoDB is available
@@ -70,22 +70,24 @@ router.get('/clients', authorize('admin'), async (req, res) => {
       });
     }
 
-    const clients = await User.findByRole('client')
+    // Get all users, not just clients
+    const users = await User.find({})
       .select('-password_hash -password_reset_token -email_verification_token')
       .sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      clients: clients.map(client => ({
-        id: client._id,
-        email: client.email,
-        name: client.name,
-        company: client.company,
-        phone: client.phone,
-        status: client.status,
-        created_at: client.createdAt,
-        last_login: client.last_login,
-        client_info: client.client_info
+      clients: users.map(user => ({
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        company: user.company,
+        phone: user.phone,
+        role: user.role,
+        status: user.status,
+        joinDate: user.createdAt,
+        lastActivity: user.last_login,
+        projectsCount: 0
       }))
     });
 
