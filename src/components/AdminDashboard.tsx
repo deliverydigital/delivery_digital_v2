@@ -317,6 +317,7 @@ const UploadDocumentModal = ({
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
     const [activeTab, setActiveTab] = useState('overview');
+    const isProjectManager = user?.role === 'project_manager';
 
     const handleLogout = () => {
         logout();
@@ -352,7 +353,9 @@ const AdminDashboard = () => {
                 {/* Sidebar */}
                 <div className="w-64 bg-gray-800 min-h-screen p-4">
                     <div className="mb-8">
-                        <h2 className="text-xl font-bold text-white mb-2">Admin Dashboard</h2>
+                        <h2 className="text-xl font-bold text-white mb-2">
+                            {isProjectManager ? 'Project Manager' : 'Admin Dashboard'}
+                        </h2>
                         <p className="text-sm text-gray-400">Gestion des clients et projets</p>
                         {user && (
                             <p className="text-xs text-gray-500 mt-2">{user.name}</p>
@@ -372,17 +375,19 @@ const AdminDashboard = () => {
                             Vue d'ensemble
                         </button>
 
-                        <button
-                            onClick={() => setActiveTab('clients')}
-                            className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
-                                activeTab === 'clients'
-                                    ? 'bg-primary-600 text-white'
-                                    : 'text-gray-400 hover:bg-gray-700 hover:text-white'
-                            }`}
-                        >
-                            <Users className="h-5 w-5 mr-3"/>
-                            Clients
-                        </button>
+                        {!isProjectManager && (
+                            <button
+                                onClick={() => setActiveTab('clients')}
+                                className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
+                                    activeTab === 'clients'
+                                        ? 'bg-primary-600 text-white'
+                                        : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+                                }`}
+                            >
+                                <Users className="h-5 w-5 mr-3"/>
+                                Clients
+                            </button>
+                        )}
 
                         <button
                             onClick={() => setActiveTab('projects')}
@@ -408,29 +413,33 @@ const AdminDashboard = () => {
                             Messages
                         </button>
 
-                        <button
-                            onClick={() => setActiveTab('training')}
-                            className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
-                                activeTab === 'training'
-                                    ? 'bg-primary-600 text-white'
-                                    : 'text-gray-400 hover:bg-gray-700 hover:text-white'
-                            }`}
-                        >
-                            <GraduationCap className="h-5 w-5 mr-3"/>
-                            Formation
-                        </button>
+                        {!isProjectManager && (
+                            <button
+                                onClick={() => setActiveTab('training')}
+                                className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
+                                    activeTab === 'training'
+                                        ? 'bg-primary-600 text-white'
+                                        : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+                                }`}
+                            >
+                                <GraduationCap className="h-5 w-5 mr-3"/>
+                                Formation
+                            </button>
+                        )}
 
-                        <button
-                            onClick={() => setActiveTab('categories')}
-                            className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
-                                activeTab === 'categories'
-                                    ? 'bg-primary-600 text-white'
-                                    : 'text-gray-400 hover:bg-gray-700 hover:text-white'
-                            }`}
-                        >
-                            <Tag className="h-5 w-5 mr-3"/>
-                            Catégories
-                        </button>
+                        {!isProjectManager && (
+                            <button
+                                onClick={() => setActiveTab('categories')}
+                                className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
+                                    activeTab === 'categories'
+                                        ? 'bg-primary-600 text-white'
+                                        : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+                                }`}
+                            >
+                                <Tag className="h-5 w-5 mr-3"/>
+                                Catégories
+                            </button>
+                        )}
 
                         <button
                             onClick={() => setActiveTab('tasks')}

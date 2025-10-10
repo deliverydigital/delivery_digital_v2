@@ -25,8 +25,14 @@ router.get('/', validatePagination, async (req, res) => {
 
     let query = {};
 
-    // If not admin, only show user's projects
-    if (req.user.role !== 'admin') {
+    // Role-based filtering
+    if (req.user.role === 'admin') {
+      // Admins see all projects
+    } else if (req.user.role === 'project_manager') {
+      // Project managers see only assigned projects
+      query.assigned_to = req.user.id;
+    } else {
+      // Clients see only their own projects
       query.client_id = req.user.id;
     }
 

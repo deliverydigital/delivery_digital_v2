@@ -18,7 +18,7 @@ import { useAuth } from './hooks/useApi';
 
 function App() {
   const { i18n } = useTranslation();
-  const { user, isAuthenticated, isAdmin } = useAuth();
+  const { user, isAuthenticated, isAdmin, isProjectManager } = useAuth();
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [authKey, setAuthKey] = useState(0);
   const [currentPage, setCurrentPage] = useState('home');
@@ -57,9 +57,9 @@ function App() {
   }, []);
   // Admin Dashboard - only show if explicitly requested via URL
   if (showAdminDashboard) {
-    if (isAuthenticated && isAdmin) {
+    if (isAuthenticated && (isAdmin || isProjectManager)) {
       return <AdminDashboard />;
-    } else if (isAuthenticated && !isAdmin) {
+    } else if (isAuthenticated && !isAdmin && !isProjectManager) {
       return <ClientDashboard />;
     } else {
       return (

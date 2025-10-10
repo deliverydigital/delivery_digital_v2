@@ -164,7 +164,8 @@ export const useAuth = () => {
     logout,
     forgotPassword,
     isAuthenticated: !!user && !!ApiService.getAuthToken(),
-    isAdmin: user?.role === 'admin'
+    isAdmin: user?.role === 'admin',
+    isProjectManager: user?.role === 'project_manager'
   };
 };
 
