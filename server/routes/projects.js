@@ -313,7 +313,20 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
       });
     }
 
-    // Update allowed fields
+    // Map camelCase to snake_case for field names
+    const fieldMapping = {
+      'completionPercentage': 'completion_percentage',
+      'budgetRange': 'budget_range',
+      'estimatedBudget': 'estimated_budget',
+      'startDate': 'start_date',
+      'endDate': 'end_date',
+      'assignedTo': 'assigned_to',
+      'figmaUrl': 'figma_url',
+      'gitlabUrl': 'gitlab_url',
+      'technicalSpecs': 'technical_specs'
+    };
+
+    // Update allowed fields (snake_case)
     const allowedFields = [
       'title', 'description', 'status', 'priority', 'budget_range', 'estimated_budget',
       'timeline', 'start_date', 'end_date', 'completion_percentage', 'assigned_to',
@@ -325,13 +338,16 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
     const fieldsToCheck = req.user.role === 'admin' ? allowedFields : clientAllowedFields;
 
     for (const [key, value] of Object.entries(updates)) {
-      if (fieldsToCheck.includes(key) && value !== undefined) {
-        if (key === 'start_date' || key === 'end_date') {
-          project[key] = value ? new Date(value) : undefined;
-        } else if (key === 'requirements' || key === 'technical_specs') {
-          project[key] = typeof value === 'string' ? JSON.parse(value) : value;
+      // Convert camelCase to snake_case if mapping exists
+      const fieldName = fieldMapping[key] || key;
+
+      if (fieldsToCheck.includes(fieldName) && value !== undefined) {
+        if (fieldName === 'start_date' || fieldName === 'end_date') {
+          project[fieldName] = value ? new Date(value) : undefined;
+        } else if (fieldName === 'requirements' || fieldName === 'technical_specs') {
+          project[fieldName] = typeof value === 'string' ? JSON.parse(value) : value;
         } else {
-          project[key] = value;
+          project[fieldName] = value;
         }
       }
     }
