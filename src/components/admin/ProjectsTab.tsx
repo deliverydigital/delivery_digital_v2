@@ -17,6 +17,9 @@ const ProjectsTab = () => {
   const [editData, setEditData] = useState<any>({});
   const [projectManagers, setProjectManagers] = useState<any[]>([]);
 
+  const currentUser = ApiService.getCurrentUser();
+  const isAdmin = currentUser?.role === 'admin';
+
   useEffect(() => {
     loadProjectManagers();
   }, []);
@@ -341,7 +344,7 @@ const ProjectsTab = () => {
                         <span className="text-gray-400">Budget:</span>
                         <span className="text-white">{selectedProject.budget}</span>
                       </div>
-                      {selectedProject.assignedTo && (
+                      {isAdmin && selectedProject.assignedTo && (
                         <div className="flex items-center justify-between">
                           <span className="text-gray-400">Chef de Projet:</span>
                           <span className="text-white flex items-center">
@@ -442,28 +445,30 @@ const ProjectsTab = () => {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      <UserCog className="h-4 w-4 inline mr-2" />
-                      Chef de Projet
-                    </label>
-                    <select
-                      value={editData.assignedTo || ''}
-                      onChange={(e) => {
-                        const managerId = e.target.value;
-                        setEditData({ ...editData, assignedTo: managerId || null });
-                      }}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                    >
-                      <option value="">Non assigné</option>
-                      {projectManagers.map(manager => (
-                        <option key={manager.id} value={manager.id}>
-                          {manager.name} ({manager.email})
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-sm text-gray-400 mt-1">Assignez un chef de projet pour gérer ce projet</p>
-                  </div>
+                  {isAdmin && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <UserCog className="h-4 w-4 inline mr-2" />
+                        Chef de Projet
+                      </label>
+                      <select
+                        value={editData.assignedTo || ''}
+                        onChange={(e) => {
+                          const managerId = e.target.value;
+                          setEditData({ ...editData, assignedTo: managerId || null });
+                        }}
+                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">Non assigné</option>
+                        {projectManagers.map(manager => (
+                          <option key={manager.id} value={manager.id}>
+                            {manager.name} ({manager.email})
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-sm text-gray-400 mt-1">Assignez un chef de projet pour gérer ce projet</p>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Notes</label>
