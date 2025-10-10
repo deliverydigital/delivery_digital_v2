@@ -73,7 +73,11 @@ router.get('/', validatePagination, async (req, res) => {
           start_date: project.start_date,
           end_date: project.end_date,
           completion_percentage: project.completion_percentage,
-          assigned_to: project.assigned_to,
+          assignedTo: project.assigned_to ? {
+            id: project.assigned_to._id,
+            name: project.assigned_to.name,
+            email: project.assigned_to.email
+          } : null,
           figma_url: project.figma_url,
           gitlab_url: project.gitlab_url,
           notes: project.notes,
@@ -133,7 +137,7 @@ router.get('/:id', validateMongoId, async (req, res) => {
 
     res.json({
       success: true,
-      data: { 
+      data: {
         project: {
           id: project._id,
           clientId: project.client_id._id,
@@ -149,7 +153,11 @@ router.get('/:id', validateMongoId, async (req, res) => {
           start_date: project.start_date,
           end_date: project.end_date,
           completion_percentage: project.completion_percentage,
-          assigned_to: project.assigned_to,
+          assignedTo: project.assigned_to ? {
+            id: project.assigned_to._id,
+            name: project.assigned_to.name,
+            email: project.assigned_to.email
+          } : null,
           figma_url: project.figma_url,
           gitlab_url: project.gitlab_url,
           notes: project.notes,
@@ -348,7 +356,11 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
         estimated_budget: project.estimated_budget,
         timeline: project.timeline,
         completion_percentage: project.completion_percentage,
-        assigned_to: project.assigned_to,
+        assignedTo: project.assigned_to ? {
+          id: project.assigned_to._id,
+          name: project.assigned_to.name,
+          email: project.assigned_to.email
+        } : null,
         figma_url: project.figma_url,
         gitlab_url: project.gitlab_url,
         notes: project.notes,
@@ -523,9 +535,9 @@ router.post('/:id/assign', authorize('admin'), validateMongoIdParam('id'), async
         priority: project.priority,
         budget: project.budget,
         timeline: project.timeline,
-        client_id: project.client_id?._id,
+        clientId: project.client_id?._id,
         clientName: project.client_id?.name,
-        assigned_to: project.assigned_to ? {
+        assignedTo: project.assigned_to ? {
           id: project.assigned_to._id,
           name: project.assigned_to.name,
           email: project.assigned_to.email
