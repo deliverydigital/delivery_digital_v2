@@ -98,230 +98,6 @@ const ProjectsTab = () => {
     }
   };
 
-  const ProjectModal = () => {
-    if (!selectedProject) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className="bg-gray-900 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-        >
-          <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-            <h3 className="text-xl font-bold text-white">
-              {modalMode === 'edit' ? 'Modifier le Projet' : 'Détails du Projet'}
-            </h3>
-            <div className="flex items-center space-x-2">
-              {modalMode === 'view' && (
-                <button
-                  onClick={() => openEditModal(selectedProject)}
-                  className="btn btn-secondary"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Modifier
-                </button>
-              )}
-              {modalMode === 'edit' && (
-                <button
-                  onClick={handleSave}
-                  className="btn btn-primary"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Sauvegarder
-                </button>
-              )}
-              <button onClick={closeModal} className="text-gray-400 hover:text-white">
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-          </div>
-
-          <div className="p-6 space-y-6">
-            {modalMode === 'view' ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="text-lg font-bold text-white mb-4">{selectedProject.title}</h4>
-                    <p className="text-gray-300 mb-4">{selectedProject.description}</p>
-                    <div className="space-y-2">
-                      <div className="flex items-center">
-                        <User className="h-4 w-4 text-blue-400 mr-2" />
-                        <span className="text-gray-300">{selectedProject.clientName}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 text-green-400 mr-2" />
-                        <span className="text-gray-300">
-                          {new Date(selectedProject.submittedAt).toLocaleDateString('fr-FR')}
-                        </span>
-                      </div>
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 text-purple-400 mr-2" />
-                        <span className="text-gray-300">{selectedProject.timeline}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Statut:</span>
-                      <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(selectedProject.status)}`}>
-                        {selectedProject.status}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Priorité:</span>
-                      <span className={`font-medium ${getPriorityColor(selectedProject.priority)}`}>
-                        {selectedProject.priority}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Budget:</span>
-                      <span className="text-white">{selectedProject.budget}</span>
-                    </div>
-                    {selectedProject.assignedTo && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400">Chef de Projet:</span>
-                        <span className="text-white flex items-center">
-                          <UserCog className="h-4 w-4 mr-2 text-blue-400" />
-                          {selectedProject.assignedTo.name}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {selectedProject.figmaUrl && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Figma URL:</label>
-                    <a
-                      href={selectedProject.figmaUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block text-blue-400 hover:text-blue-300 mt-1"
-                    >
-                      {selectedProject.figmaUrl}
-                      <ExternalLink className="h-4 w-4 inline ml-1" />
-                    </a>
-                  </div>
-                )}
-
-                {selectedProject.notes && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Notes:</label>
-                    <p className="text-gray-300 mt-1 p-3 bg-gray-800 rounded-lg">
-                      {selectedProject.notes}
-                    </p>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Titre</label>
-                    <input
-                      type="text"
-                      value={editData.title || ''}
-                      onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Statut</label>
-                    <select
-                      value={editData.status || ''}
-                      onChange={(e) => setEditData({ ...editData, status: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                    >
-                      <option value="submitted">Soumis</option>
-                      <option value="reviewing">En révision</option>
-                      <option value="in_progress">En cours</option>
-                      <option value="completed">Terminé</option>
-                      <option value="on_hold">En pause</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
-                  <textarea
-                    value={editData.description || ''}
-                    onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-                    rows={4}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Priorité</label>
-                    <select
-                      value={editData.priority || ''}
-                      onChange={(e) => setEditData({ ...editData, priority: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                    >
-                      <option value="low">Faible</option>
-                      <option value="medium">Moyenne</option>
-                      <option value="high">Haute</option>
-                      <option value="urgent">Urgente</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Progression (%)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={editData.completionPercentage || 0}
-                      onChange={(e) => setEditData({ ...editData, completionPercentage: parseInt(e.target.value) })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    <UserCog className="h-4 w-4 inline mr-2" />
-                    Chef de Projet
-                  </label>
-                  <select
-                    value={editData.assignedTo || ''}
-                    onChange={(e) => {
-                      const managerId = e.target.value;
-                      setEditData({ ...editData, assignedTo: managerId });
-                      if (managerId && selectedProject) {
-                        handleAssignManager(selectedProject.id, managerId);
-                      }
-                    }}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                  >
-                    <option value="">Non assigné</option>
-                    {projectManagers.map(manager => (
-                      <option key={manager.id} value={manager.id}>
-                        {manager.name} ({manager.email})
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-sm text-gray-400 mt-1">Assignez un chef de projet pour gérer ce projet</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Notes</label>
-                  <textarea
-                    value={editData.notes || ''}
-                    onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
-                    rows={3}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </motion.div>
-      </div>
-    );
-  };
 
   return (
     <div className="space-y-6">
@@ -487,7 +263,226 @@ const ProjectsTab = () => {
       )}
 
       {/* Project Modal */}
-      {showModal && <ProjectModal />}
+      {showModal && selectedProject && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="bg-gray-900 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-white">
+                {modalMode === 'edit' ? 'Modifier le Projet' : 'Détails du Projet'}
+              </h3>
+              <div className="flex items-center space-x-2">
+                {modalMode === 'view' && (
+                  <button
+                    onClick={() => openEditModal(selectedProject)}
+                    className="btn btn-secondary"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Modifier
+                  </button>
+                )}
+                {modalMode === 'edit' && (
+                  <button
+                    onClick={handleSave}
+                    className="btn btn-primary"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Sauvegarder
+                  </button>
+                )}
+                <button onClick={closeModal} className="text-gray-400 hover:text-white">
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {modalMode === 'view' ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="text-lg font-bold text-white mb-4">{selectedProject.title}</h4>
+                      <p className="text-gray-300 mb-4">{selectedProject.description}</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 text-blue-400 mr-2" />
+                          <span className="text-gray-300">{selectedProject.clientName}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 text-green-400 mr-2" />
+                          <span className="text-gray-300">
+                            {new Date(selectedProject.submittedAt).toLocaleDateString('fr-FR')}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <Clock className="h-4 w-4 text-purple-400 mr-2" />
+                          <span className="text-gray-300">{selectedProject.timeline}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Statut:</span>
+                        <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(selectedProject.status)}`}>
+                          {selectedProject.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Priorité:</span>
+                        <span className={`font-medium ${getPriorityColor(selectedProject.priority)}`}>
+                          {selectedProject.priority}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Budget:</span>
+                        <span className="text-white">{selectedProject.budget}</span>
+                      </div>
+                      {selectedProject.assignedTo && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-400">Chef de Projet:</span>
+                          <span className="text-white flex items-center">
+                            <UserCog className="h-4 w-4 mr-2 text-blue-400" />
+                            {selectedProject.assignedTo.name}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedProject.figmaUrl && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-400">Figma URL:</label>
+                      <a
+                        href={selectedProject.figmaUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-blue-400 hover:text-blue-300 mt-1"
+                      >
+                        {selectedProject.figmaUrl}
+                        <ExternalLink className="h-4 w-4 inline ml-1" />
+                      </a>
+                    </div>
+                  )}
+
+                  {selectedProject.notes && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-400">Notes:</label>
+                      <p className="text-gray-300 mt-1 p-3 bg-gray-800 rounded-lg">
+                        {selectedProject.notes}
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Titre</label>
+                      <input
+                        type="text"
+                        value={editData.title || ''}
+                        onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Statut</label>
+                      <select
+                        value={editData.status || ''}
+                        onChange={(e) => setEditData({ ...editData, status: e.target.value })}
+                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="submitted">Soumis</option>
+                        <option value="reviewing">En révision</option>
+                        <option value="in_progress">En cours</option>
+                        <option value="completed">Terminé</option>
+                        <option value="on_hold">En pause</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                    <textarea
+                      value={editData.description || ''}
+                      onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                      rows={4}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Priorité</label>
+                      <select
+                        value={editData.priority || ''}
+                        onChange={(e) => setEditData({ ...editData, priority: e.target.value })}
+                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="low">Faible</option>
+                        <option value="medium">Moyenne</option>
+                        <option value="high">Haute</option>
+                        <option value="urgent">Urgente</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Progression (%)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={editData.completionPercentage || 0}
+                        onChange={(e) => setEditData({ ...editData, completionPercentage: parseInt(e.target.value) })}
+                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <UserCog className="h-4 w-4 inline mr-2" />
+                      Chef de Projet
+                    </label>
+                    <select
+                      value={editData.assignedTo || ''}
+                      onChange={(e) => {
+                        const managerId = e.target.value;
+                        setEditData({ ...editData, assignedTo: managerId });
+                        if (managerId && selectedProject) {
+                          handleAssignManager(selectedProject.id, managerId);
+                        }
+                      }}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    >
+                      <option value="">Non assigné</option>
+                      {projectManagers.map(manager => (
+                        <option key={manager.id} value={manager.id}>
+                          {manager.name} ({manager.email})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-sm text-gray-400 mt-1">Assignez un chef de projet pour gérer ce projet</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Notes</label>
+                    <textarea
+                      value={editData.notes || ''}
+                      onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
+                      rows={3}
+                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
