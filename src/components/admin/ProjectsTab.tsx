@@ -451,10 +451,7 @@ const ProjectsTab = () => {
                       value={editData.assignedTo || ''}
                       onChange={(e) => {
                         const managerId = e.target.value;
-                        setEditData({ ...editData, assignedTo: managerId });
-                        if (managerId && selectedProject) {
-                          handleAssignManager(selectedProject.id, managerId);
-                        }
+                        setEditData({ ...editData, assignedTo: managerId || null });
                       }}
                       className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
                     >

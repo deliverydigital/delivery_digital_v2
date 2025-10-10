@@ -347,6 +347,9 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
           project[fieldName] = value ? new Date(value) : undefined;
         } else if (fieldName === 'requirements' || fieldName === 'technical_specs') {
           project[fieldName] = typeof value === 'string' ? JSON.parse(value) : value;
+        } else if (fieldName === 'assigned_to') {
+          // Handle empty string or null for assigned_to - should unassign
+          project[fieldName] = (value === '' || value === null) ? null : value;
         } else {
           project[fieldName] = value;
         }
