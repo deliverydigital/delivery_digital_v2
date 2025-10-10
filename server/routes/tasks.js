@@ -34,7 +34,11 @@ router.get('/project/:projectId', validateMongoIdParam('projectId'), async (req,
     }
 
     // Check authorization
-    if (req.user.role !== 'admin' && project.client_id.toString() !== req.user.id) {
+    const isAdmin = req.user.role === 'admin';
+    const isProjectManager = req.user.role === 'project_manager' && project.assigned_to?.toString() === req.user.id;
+    const isClient = project.client_id.toString() === req.user.id;
+
+    if (!isAdmin && !isProjectManager && !isClient) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -117,7 +121,7 @@ router.get('/:id', validateMongoId, async (req, res) => {
     const task = await Task.findById(id)
       .populate('assigned_to', 'name email')
       .populate('created_by', 'name email')
-      .populate('project_id', 'title client_id')
+      .populate('project_id', 'title client_id assigned_to')
       .populate('comments.author_id', 'name email role');
 
     if (!task) {
@@ -128,7 +132,11 @@ router.get('/:id', validateMongoId, async (req, res) => {
     }
 
     // Check authorization
-    if (req.user.role !== 'admin' && task.project_id.client_id.toString() !== req.user.id) {
+    const isAdmin = req.user.role === 'admin';
+    const isProjectManager = req.user.role === 'project_manager' && task.project_id.assigned_to?.toString() === req.user.id;
+    const isClient = task.project_id.client_id.toString() === req.user.id;
+
+    if (!isAdmin && !isProjectManager && !isClient) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -216,11 +224,20 @@ router.post('/', uploadTaskFiles, handleUploadError, validateTaskCreation, async
       });
     }
 
-    // Only admins can create tasks
-    if (req.user.role !== 'admin') {
+    // Only admins and project managers can create tasks
+    if (req.user.role !== 'admin' && req.user.role !== 'project_manager') {
       return res.status(403).json({
         success: false,
-        error: 'Only administrators can create tasks'
+        error: 'Only administrators and project managers can create tasks'
+      });
+    }
+
+    // Project managers can only create tasks for their assigned projects
+    if (req.user.role === 'project_manager' &&
+        project.assigned_to?.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        error: 'You can only create tasks for projects assigned to you'
       });
     }
 
@@ -317,7 +334,7 @@ router.put('/:id', validateMongoId, validateTaskUpdate, async (req, res) => {
 
     // Find task and check authorization
     const task = await Task.findById(id)
-      .populate('project_id', 'client_id');
+      .populate('project_id', 'client_id assigned_to');
 
     if (!task) {
       return res.status(404).json({
@@ -327,7 +344,11 @@ router.put('/:id', validateMongoId, validateTaskUpdate, async (req, res) => {
     }
 
     // Check authorization
-    if (req.user.role !== 'admin' && task.project_id.client_id.toString() !== req.user.id) {
+    const isAdmin = req.user.role === 'admin';
+    const isProjectManager = req.user.role === 'project_manager' && task.project_id.assigned_to?.toString() === req.user.id;
+    const isClient = task.project_id.client_id.toString() === req.user.id;
+
+    if (!isAdmin && !isProjectManager && !isClient) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -340,9 +361,12 @@ router.put('/:id', validateMongoId, validateTaskUpdate, async (req, res) => {
       'estimated_hours', 'actual_hours', 'completion_percentage', 'tags', 'position'
     ];
 
-    // Clients can only update certain fields
+    // Clients can only update certain fields, project managers can update all fields
     const clientAllowedFields = ['completion_percentage'];
-    const fieldsToCheck = req.user.role === 'admin' ? allowedFields : clientAllowedFields;
+    let fieldsToCheck = allowedFields;
+    if (isClient && !isAdmin && !isProjectManager) {
+      fieldsToCheck = clientAllowedFields;
+    }
 
     for (const [key, value] of Object.entries(updates)) {
       if (fieldsToCheck.includes(key) && value !== undefined) {
@@ -425,7 +449,7 @@ router.post('/:id/comments', validateMongoId, async (req, res) => {
 
     // Find task and check authorization
     const task = await Task.findById(id)
-      .populate('project_id', 'client_id');
+      .populate('project_id', 'client_id assigned_to');
 
     if (!task) {
       return res.status(404).json({
@@ -435,7 +459,11 @@ router.post('/:id/comments', validateMongoId, async (req, res) => {
     }
 
     // Check authorization
-    if (req.user.role !== 'admin' && task.project_id.client_id.toString() !== req.user.id) {
+    const isAdmin = req.user.role === 'admin';
+    const isProjectManager = req.user.role === 'project_manager' && task.project_id.assigned_to?.toString() === req.user.id;
+    const isClient = task.project_id.client_id.toString() === req.user.id;
+
+    if (!isAdmin && !isProjectManager && !isClient) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -473,8 +501,8 @@ router.post('/:id/comments', validateMongoId, async (req, res) => {
   }
 });
 
-// Add checklist item (admin only)
-router.post('/:id/checklist', validateMongoId, authorize('admin'), async (req, res) => {
+// Add checklist item (admin and project manager only)
+router.post('/:id/checklist', validateMongoId, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, position } = req.body;
@@ -494,11 +522,24 @@ router.post('/:id/checklist', validateMongoId, authorize('admin'), async (req, r
       });
     }
 
-    const task = await Task.findById(id);
+    const task = await Task.findById(id)
+      .populate('project_id', 'client_id assigned_to');
+
     if (!task) {
       return res.status(404).json({
         success: false,
         error: 'Task not found'
+      });
+    }
+
+    // Check authorization - only admin and project managers can add checklist items
+    const isAdmin = req.user.role === 'admin';
+    const isProjectManager = req.user.role === 'project_manager' && task.project_id.assigned_to?.toString() === req.user.id;
+
+    if (!isAdmin && !isProjectManager) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only administrators and project managers can add checklist items'
       });
     }
 
@@ -546,7 +587,7 @@ router.put('/checklist/:taskId/:itemId', validateMongoIdParam('taskId'), async (
 
     // Find task and check authorization
     const task = await Task.findById(taskId)
-      .populate('project_id', 'client_id');
+      .populate('project_id', 'client_id assigned_to');
 
     if (!task) {
       return res.status(404).json({
@@ -556,7 +597,11 @@ router.put('/checklist/:taskId/:itemId', validateMongoIdParam('taskId'), async (
     }
 
     // Check authorization
-    if (req.user.role !== 'admin' && task.project_id.client_id.toString() !== req.user.id) {
+    const isAdmin = req.user.role === 'admin';
+    const isProjectManager = req.user.role === 'project_manager' && task.project_id.assigned_to?.toString() === req.user.id;
+    const isClient = task.project_id.client_id.toString() === req.user.id;
+
+    if (!isAdmin && !isProjectManager && !isClient) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -730,7 +775,7 @@ router.post('/:id/time-tracking/start', validateMongoId, async (req, res) => {
 
     // Find task and check authorization
     const task = await Task.findById(id)
-      .populate('project_id', 'client_id');
+      .populate('project_id', 'client_id assigned_to');
 
     if (!task) {
       return res.status(404).json({
@@ -740,7 +785,11 @@ router.post('/:id/time-tracking/start', validateMongoId, async (req, res) => {
     }
 
     // Check authorization
-    if (req.user.role !== 'admin' && task.project_id.client_id.toString() !== req.user.id) {
+    const isAdmin = req.user.role === 'admin';
+    const isProjectManager = req.user.role === 'project_manager' && task.project_id.assigned_to?.toString() === req.user.id;
+    const isClient = task.project_id.client_id.toString() === req.user.id;
+
+    if (!isAdmin && !isProjectManager && !isClient) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -782,7 +831,7 @@ router.post('/:id/time-tracking/stop', validateMongoId, async (req, res) => {
 
     // Find task and check authorization
     const task = await Task.findById(id)
-      .populate('project_id', 'client_id');
+      .populate('project_id', 'client_id assigned_to');
 
     if (!task) {
       return res.status(404).json({
@@ -792,7 +841,11 @@ router.post('/:id/time-tracking/stop', validateMongoId, async (req, res) => {
     }
 
     // Check authorization
-    if (req.user.role !== 'admin' && task.project_id.client_id.toString() !== req.user.id) {
+    const isAdmin = req.user.role === 'admin';
+    const isProjectManager = req.user.role === 'project_manager' && task.project_id.assigned_to?.toString() === req.user.id;
+    const isClient = task.project_id.client_id.toString() === req.user.id;
+
+    if (!isAdmin && !isProjectManager && !isClient) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -838,7 +891,7 @@ router.get('/:id/time-tracking/active', validateMongoId, async (req, res) => {
 
     // Find task
     const task = await Task.findById(id)
-      .populate('project_id', 'client_id');
+      .populate('project_id', 'client_id assigned_to');
 
     if (!task) {
       return res.status(404).json({
@@ -848,7 +901,11 @@ router.get('/:id/time-tracking/active', validateMongoId, async (req, res) => {
     }
 
     // Check authorization
-    if (req.user.role !== 'admin' && task.project_id.client_id.toString() !== req.user.id) {
+    const isAdmin = req.user.role === 'admin';
+    const isProjectManager = req.user.role === 'project_manager' && task.project_id.assigned_to?.toString() === req.user.id;
+    const isClient = task.project_id.client_id.toString() === req.user.id;
+
+    if (!isAdmin && !isProjectManager && !isClient) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
