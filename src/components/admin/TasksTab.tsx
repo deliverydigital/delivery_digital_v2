@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { RefreshCw, FolderOpen, ClipboardList, AlertTriangle } from 'lucide-react';
+import { RefreshCw, FolderOpen, ClipboardList, AlertTriangle, Link, ExternalLink } from 'lucide-react';
 import { useProjects } from '../../hooks/useApi';
 import { useTasks } from '../../hooks/useTasks';
 import TaskBoard from '../TaskBoard';
@@ -71,6 +71,33 @@ const TasksTab = () => {
           </button>
         </div>
       </div>
+
+      {/* Project Links */}
+      {selectedProject && selectedProject.links && selectedProject.links.length > 0 && (
+        <div className="bg-gray-800 rounded-lg p-6 mb-8">
+          <div className="flex items-center mb-4">
+            <Link className="h-5 w-5 text-blue-400 mr-2" />
+            <h3 className="text-lg font-semibold text-white">Liens du Projet</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {selectedProject.links.map((link: any, index: number) => (
+              <a
+                key={index}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between bg-gray-900 hover:bg-gray-700 p-4 rounded-lg border border-gray-700 hover:border-blue-500 transition-all group"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="text-white font-medium mb-1 truncate">{link.title}</div>
+                  <div className="text-gray-400 text-xs truncate">{link.url}</div>
+                </div>
+                <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-400 ml-2 flex-shrink-0" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Task Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
