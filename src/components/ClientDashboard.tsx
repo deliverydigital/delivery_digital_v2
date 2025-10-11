@@ -177,22 +177,6 @@ const ClientDashboard = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-400">Progression</label>
-                  <div className="mt-1">
-                    <div className="flex items-center">
-                      <div className="flex-1 bg-gray-700 rounded-full h-2 mr-3">
-                        <div 
-                          className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${selectedTask.completionPercentage || 0}%` }}
-                        />
-                      </div>
-                      <span className="text-white text-sm font-medium">
-                        {selectedTask.completionPercentage || 0}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div>
                   <label className="text-sm font-medium text-gray-400">Temps</label>
                   <div className="mt-1 text-white text-sm">
                     {selectedTask.estimatedHours ? `${selectedTask.estimatedHours}h estimées` : 'Non estimé'}
@@ -392,11 +376,6 @@ const ClientDashboard = () => {
             </div>
           )}
         </div>
-        {task.completionPercentage > 0 && (
-          <div className="text-xs text-gray-400">
-            {task.completionPercentage}%
-          </div>
-        )}
       </div>
     </div>
   );
@@ -453,7 +432,6 @@ const ClientDashboard = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Priorité</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Assigné à</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Échéance</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Progression</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Actions</th>
             </tr>
           </thead>
@@ -504,19 +482,6 @@ const ClientDashboard = () => {
                       : 'text-gray-300'
                   }`}>
                     {task.dueDate ? new Date(task.dueDate).toLocaleDateString('fr-FR') : 'Non définie'}
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center">
-                    <div className="w-16 bg-gray-700 rounded-full h-2 mr-2">
-                      <div 
-                        className="bg-blue-500 h-2 rounded-full"
-                        style={{ width: `${task.completionPercentage || 0}%` }}
-                      />
-                    </div>
-                    <span className="text-gray-300 text-xs">
-                      {task.completionPercentage || 0}%
-                    </span>
                   </div>
                 </td>
                 <td className="px-6 py-4">
