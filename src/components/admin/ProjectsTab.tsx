@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, FolderOpen, Calendar, User, Building2, Clock, CheckCircle, AlertTriangle, Star, ChevronDown, ChevronUp, X, Save, FileText, ExternalLink, MessageCircle, Settings, UserCog, Link as LinkIcon } from 'lucide-react';
+import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, FolderOpen, Calendar, User, Building2, Clock, CheckCircle, AlertTriangle, Star, ChevronDown, ChevronUp, X, Save, FileText, ExternalLink, MessageCircle, Settings, UserCog, Link as LinkIcon, Shield, Users } from 'lucide-react';
 import { useProjects, useClients } from '../../hooks/useApi';
 import { ApiService } from '../../services/api';
 
@@ -105,13 +105,27 @@ const ProjectsTab = () => {
   const addLink = () => {
     setEditData({
       ...editData,
-      links: [...(editData.links || []), { title: '', url: '' }]
+      links: [...(editData.links || []), { title: '', url: '', visibleTo: ['admin', 'project_manager', 'client'] }]
     });
   };
 
   const updateLink = (index: number, field: 'title' | 'url', value: string) => {
     const updatedLinks = [...(editData.links || [])];
     updatedLinks[index] = { ...updatedLinks[index], [field]: value };
+    setEditData({ ...editData, links: updatedLinks });
+  };
+
+  const toggleLinkVisibility = (index: number, role: string) => {
+    const updatedLinks = [...(editData.links || [])];
+    const link = updatedLinks[index];
+    const visibleTo = link.visibleTo || ['admin', 'project_manager', 'client'];
+
+    if (visibleTo.includes(role)) {
+      link.visibleTo = visibleTo.filter((r: string) => r !== role);
+    } else {
+      link.visibleTo = [...visibleTo, role];
+    }
+
     setEditData({ ...editData, links: updatedLinks });
   };
 
@@ -541,30 +555,77 @@ const ProjectsTab = () => {
                     </div>
                     <div className="space-y-3">
                       {(editData.links || []).map((link: any, index: number) => (
-                        <div key={index} className="flex gap-3 items-start bg-gray-800 p-3 rounded-lg border border-gray-700">
-                          <div className="flex-1 space-y-2">
-                            <input
-                              type="text"
-                              value={link.title || ''}
-                              onChange={(e) => updateLink(index, 'title', e.target.value)}
-                              placeholder="Titre du lien"
-                              className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
-                            />
-                            <input
-                              type="url"
-                              value={link.url || ''}
-                              onChange={(e) => updateLink(index, 'url', e.target.value)}
-                              placeholder="https://example.com"
-                              className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
-                            />
+                        <div key={index} className="bg-gray-800 p-4 rounded-lg border border-gray-700 space-y-3">
+                          <div className="flex gap-3 items-start">
+                            <div className="flex-1 space-y-2">
+                              <input
+                                type="text"
+                                value={link.title || ''}
+                                onChange={(e) => updateLink(index, 'title', e.target.value)}
+                                placeholder="Titre du lien"
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
+                              />
+                              <input
+                                type="url"
+                                value={link.url || ''}
+                                onChange={(e) => updateLink(index, 'url', e.target.value)}
+                                placeholder="https://example.com"
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeLink(index)}
+                              className="text-red-400 hover:text-red-300 mt-1"
+                            >
+                              <X className="h-5 w-5" />
+                            </button>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => removeLink(index)}
-                            className="text-red-400 hover:text-red-300 mt-1"
-                          >
-                            <X className="h-5 w-5" />
-                          </button>
+
+                          <div className="border-t border-gray-700 pt-3">
+                            <label className="text-xs font-medium text-gray-400 mb-2 flex items-center">
+                              <Shield className="h-3 w-3 mr-1" />
+                              Visible par:
+                            </label>
+                            <div className="flex flex-wrap gap-3">
+                              <label className="flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={(link.visibleTo || ['admin', 'project_manager', 'client']).includes('admin')}
+                                  onChange={() => toggleLinkVisibility(index, 'admin')}
+                                  className="mr-2 h-4 w-4 text-blue-600 border-gray-600 rounded focus:ring-blue-500"
+                                />
+                                <span className="text-sm text-gray-300 flex items-center">
+                                  <Shield className="h-3 w-3 mr-1" />
+                                  Admin
+                                </span>
+                              </label>
+                              <label className="flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={(link.visibleTo || ['admin', 'project_manager', 'client']).includes('project_manager')}
+                                  onChange={() => toggleLinkVisibility(index, 'project_manager')}
+                                  className="mr-2 h-4 w-4 text-blue-600 border-gray-600 rounded focus:ring-blue-500"
+                                />
+                                <span className="text-sm text-gray-300 flex items-center">
+                                  <UserCog className="h-3 w-3 mr-1" />
+                                  Chef de Projet
+                                </span>
+                              </label>
+                              <label className="flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={(link.visibleTo || ['admin', 'project_manager', 'client']).includes('client')}
+                                  onChange={() => toggleLinkVisibility(index, 'client')}
+                                  className="mr-2 h-4 w-4 text-blue-600 border-gray-600 rounded focus:ring-blue-500"
+                                />
+                                <span className="text-sm text-gray-300 flex items-center">
+                                  <User className="h-3 w-3 mr-1" />
+                                  Client
+                                </span>
+                              </label>
+                            </div>
+                          </div>
                         </div>
                       ))}
                       {(!editData.links || editData.links.length === 0) && (

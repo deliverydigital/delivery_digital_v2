@@ -9,6 +9,19 @@ const router = express.Router();
 // Apply authentication to all routes
 router.use(authenticate);
 
+// Helper function to filter links based on user role
+function filterLinksByRole(links, userRole) {
+  if (!links || links.length === 0) return [];
+
+  return links.filter(link => {
+    if (!link.visibleTo || link.visibleTo.length === 0) {
+      // If no visibility set, show to everyone
+      return true;
+    }
+    return link.visibleTo.includes(userRole);
+  });
+}
+
 // Get all projects (admin only) or user's projects
 router.get('/', validatePagination, async (req, res) => {
   try {
@@ -81,7 +94,7 @@ router.get('/', validatePagination, async (req, res) => {
           figmaUrl: project.figma_url,
           gitlabUrl: project.gitlab_url,
           notes: project.notes,
-          links: project.links || [],
+          links: filterLinksByRole(project.links, req.user.role),
           attachments: project.attachments,
           createdAt: project.createdAt,
           updatedAt: project.updatedAt,
@@ -163,7 +176,7 @@ router.get('/:id', validateMongoId, async (req, res) => {
           figmaUrl: project.figma_url,
           gitlabUrl: project.gitlab_url,
           notes: project.notes,
-          links: project.links || [],
+          links: filterLinksByRole(project.links, req.user.role),
           attachments: project.attachments,
           milestones: project.milestones,
           createdAt: project.createdAt,
@@ -386,7 +399,7 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
         figmaUrl: project.figma_url,
         gitlabUrl: project.gitlab_url,
         notes: project.notes,
-        links: project.links || [],
+        links: filterLinksByRole(project.links, req.user.role),
         attachments: project.attachments,
         updatedAt: project.updatedAt
       }
@@ -569,7 +582,7 @@ router.post('/:id/assign', authorize('admin'), validateMongoIdParam('id'), async
         figmaUrl: project.figma_url,
         gitlabUrl: project.gitlab_url,
         notes: project.notes,
-        links: project.links || [],
+        links: filterLinksByRole(project.links, req.user.role),
         completionPercentage: project.completion_percentage,
         submittedAt: project.createdAt,
         lastUpdate: project.updatedAt

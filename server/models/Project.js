@@ -123,6 +123,11 @@ const projectSchema = new Schema({
         },
         message: 'Invalid URL format'
       }
+    },
+    visibleTo: {
+      type: [String],
+      enum: ['admin', 'project_manager', 'client'],
+      default: ['admin', 'project_manager', 'client']
     }
   }],
 
