@@ -9,6 +9,32 @@ const router = express.Router();
 // Apply authentication to all routes
 router.use(authenticate);
 
+// Helper function to update project progress based on tasks
+async function updateProjectProgress(projectId) {
+  try {
+    const tasks = await Task.find({ project_id: projectId });
+
+    if (tasks.length === 0) {
+      // No tasks, set progress to 0
+      await Project.findByIdAndUpdate(projectId, { completion_percentage: 0 });
+      return;
+    }
+
+    // Calculate progress based on completed tasks
+    const completedTasks = tasks.filter(task => task.status === 'done').length;
+    const progressPercentage = Math.round((completedTasks / tasks.length) * 100);
+
+    // Update project progress
+    await Project.findByIdAndUpdate(projectId, {
+      completion_percentage: progressPercentage
+    });
+
+    console.log(`Updated project ${projectId} progress to ${progressPercentage}%`);
+  } catch (error) {
+    console.error('Error updating project progress:', error);
+  }
+}
+
 // Get tasks for a project
 router.get('/project/:projectId', validateMongoIdParam('projectId'), async (req, res) => {
   try {
@@ -271,6 +297,9 @@ router.post('/', uploadTaskFiles, handleUploadError, validateTaskCreation, async
     const task = new Task(taskData);
     await task.save();
 
+    // Update project progress
+    await updateProjectProgress(project_id);
+
     // Populate the created task
     await task.populate('assigned_to', 'name email');
     await task.populate('created_by', 'name email');
@@ -381,6 +410,12 @@ router.put('/:id', validateMongoId, validateTaskUpdate, async (req, res) => {
     }
 
     await task.save();
+
+    // Update project progress if status changed
+    if (updates.status) {
+      await updateProjectProgress(task.project_id._id);
+    }
+
     await task.populate('assigned_to', 'name email');
     await task.populate('created_by', 'name email');
 
@@ -659,6 +694,9 @@ router.delete('/:id', validateMongoId, authorize('admin'), async (req, res) => {
         error: 'Task not found'
       });
     }
+
+    // Update project progress after task deletion
+    await updateProjectProgress(task.project_id);
 
     res.json({
       success: true,

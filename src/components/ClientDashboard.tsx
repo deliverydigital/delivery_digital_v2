@@ -103,10 +103,8 @@ const ClientDashboard = () => {
     overdue: tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done').length
   };
 
-  // Calculate project progress based on completed tasks
-  const projectProgress = taskStats.total > 0
-    ? Math.round((taskStats.done / taskStats.total) * 100)
-    : 0;
+  // Get project progress from API (completion_percentage)
+  const projectProgress = selectedProject?.completionPercentage || 0;
 
   const TaskDetailModal = () => {
     if (!selectedTask) return null;
