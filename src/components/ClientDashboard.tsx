@@ -103,6 +103,11 @@ const ClientDashboard = () => {
     overdue: tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done').length
   };
 
+  // Calculate project progress based on completed tasks
+  const projectProgress = taskStats.total > 0
+    ? Math.round((taskStats.done / taskStats.total) * 100)
+    : 0;
+
   const TaskDetailModal = () => {
     if (!selectedTask) return null;
 
@@ -635,6 +640,46 @@ const ClientDashboard = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Project Progress Bar */}
+              {selectedProject && taskStats.total > 0 && (
+                <div className="bg-gray-800 rounded-lg p-6 mb-8">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-1">
+                        {selectedProject.title}
+                      </h3>
+                      <p className="text-sm text-gray-400">
+                        Progression du projet
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-white">
+                        {projectProgress}%
+                      </div>
+                      <p className="text-sm text-gray-400">
+                        {taskStats.done} / {taskStats.total} tâches
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${projectProgress}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        projectProgress === 100
+                          ? 'bg-green-500'
+                          : projectProgress >= 75
+                          ? 'bg-blue-500'
+                          : projectProgress >= 50
+                          ? 'bg-yellow-500'
+                          : 'bg-orange-500'
+                      }`}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Task Statistics */}
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
