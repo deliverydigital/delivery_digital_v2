@@ -108,7 +108,24 @@ const projectSchema = new Schema({
     probability: { type: String, enum: ['low', 'medium', 'high'] },
     mitigation: String
   }],
-  
+  links: [{
+    title: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    url: {
+      type: String,
+      required: true,
+      validate: {
+        validator: function(v) {
+          return /^https?:\/\/.+/.test(v);
+        },
+        message: 'Invalid URL format'
+      }
+    }
+  }],
+
   // Attachments as embedded documents
   attachments: [{
     filename: String,

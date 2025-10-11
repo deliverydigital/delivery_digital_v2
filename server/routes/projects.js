@@ -81,6 +81,7 @@ router.get('/', validatePagination, async (req, res) => {
           figmaUrl: project.figma_url,
           gitlabUrl: project.gitlab_url,
           notes: project.notes,
+          links: project.links || [],
           attachments: project.attachments,
           createdAt: project.createdAt,
           updatedAt: project.updatedAt,
@@ -162,6 +163,7 @@ router.get('/:id', validateMongoId, async (req, res) => {
           figmaUrl: project.figma_url,
           gitlabUrl: project.gitlab_url,
           notes: project.notes,
+          links: project.links || [],
           attachments: project.attachments,
           milestones: project.milestones,
           createdAt: project.createdAt,
@@ -331,11 +333,11 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
     const allowedFields = [
       'title', 'description', 'status', 'priority', 'budget_range', 'estimated_budget',
       'timeline', 'start_date', 'end_date', 'completion_percentage', 'assigned_to',
-      'figma_url', 'gitlab_url', 'notes', 'requirements', 'technical_specs'
+      'figma_url', 'gitlab_url', 'notes', 'requirements', 'technical_specs', 'links'
     ];
 
     // Clients can only update certain fields
-    const clientAllowedFields = ['description', 'figma_url', 'gitlab_url', 'notes'];
+    const clientAllowedFields = ['description', 'figma_url', 'gitlab_url', 'notes', 'links'];
     const fieldsToCheck = req.user.role === 'admin' ? allowedFields : clientAllowedFields;
 
     for (const [key, value] of Object.entries(updates)) {
@@ -384,6 +386,7 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
         figmaUrl: project.figma_url,
         gitlabUrl: project.gitlab_url,
         notes: project.notes,
+        links: project.links || [],
         attachments: project.attachments,
         updatedAt: project.updatedAt
       }
@@ -566,6 +569,7 @@ router.post('/:id/assign', authorize('admin'), validateMongoIdParam('id'), async
         figmaUrl: project.figma_url,
         gitlabUrl: project.gitlab_url,
         notes: project.notes,
+        links: project.links || [],
         completionPercentage: project.completion_percentage,
         submittedAt: project.createdAt,
         lastUpdate: project.updatedAt

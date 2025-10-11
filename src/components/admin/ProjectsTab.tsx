@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, FolderOpen, Calendar, User, Building2, Clock, CheckCircle, AlertTriangle, Star, ChevronDown, ChevronUp, X, Save, FileText, ExternalLink, MessageCircle, Settings, UserCog } from 'lucide-react';
+import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, FolderOpen, Calendar, User, Building2, Clock, CheckCircle, AlertTriangle, Star, ChevronDown, ChevronUp, X, Save, FileText, ExternalLink, MessageCircle, Settings, UserCog, Link as LinkIcon } from 'lucide-react';
 import { useProjects, useClients } from '../../hooks/useApi';
 import { ApiService } from '../../services/api';
 
@@ -77,7 +77,8 @@ const ProjectsTab = () => {
     setSelectedProject(project);
     setEditData({
       ...project,
-      assignedTo: project.assignedTo?.id || ''
+      assignedTo: project.assignedTo?.id || '',
+      links: project.links || []
     });
     setModalMode('edit');
     setShowModal(true);
@@ -91,7 +92,7 @@ const ProjectsTab = () => {
 
   const handleSave = async () => {
     if (!selectedProject) return;
-    
+
     try {
       await updateProject(selectedProject.id, editData);
       closeModal();
@@ -99,6 +100,24 @@ const ProjectsTab = () => {
     } catch (error) {
       console.error('Error updating project:', error);
     }
+  };
+
+  const addLink = () => {
+    setEditData({
+      ...editData,
+      links: [...(editData.links || []), { title: '', url: '' }]
+    });
+  };
+
+  const updateLink = (index: number, field: 'title' | 'url', value: string) => {
+    const updatedLinks = [...(editData.links || [])];
+    updatedLinks[index] = { ...updatedLinks[index], [field]: value };
+    setEditData({ ...editData, links: updatedLinks });
+  };
+
+  const removeLink = (index: number) => {
+    const updatedLinks = (editData.links || []).filter((_: any, i: number) => i !== index);
+    setEditData({ ...editData, links: updatedLinks });
   };
 
 
@@ -379,6 +398,31 @@ const ProjectsTab = () => {
                       </p>
                     </div>
                   )}
+
+                  {selectedProject.links && selectedProject.links.length > 0 && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-400 mb-2 block">
+                        <LinkIcon className="h-4 w-4 inline mr-2" />
+                        Liens:
+                      </label>
+                      <div className="space-y-2">
+                        {selectedProject.links.map((link: any, index: number) => (
+                          <div key={index} className="bg-gray-800 p-3 rounded-lg">
+                            <div className="text-white font-medium mb-1">{link.title}</div>
+                            <a
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-400 hover:text-blue-300 text-sm flex items-center"
+                            >
+                              {link.url}
+                              <ExternalLink className="h-3 w-3 inline ml-1" />
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="space-y-6">
@@ -478,6 +522,55 @@ const ProjectsTab = () => {
                       rows={3}
                       className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
                     />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="block text-sm font-medium text-gray-300">
+                        <LinkIcon className="h-4 w-4 inline mr-2" />
+                        Liens
+                      </label>
+                      <button
+                        type="button"
+                        onClick={addLink}
+                        className="btn btn-secondary btn-sm"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Ajouter un lien
+                      </button>
+                    </div>
+                    <div className="space-y-3">
+                      {(editData.links || []).map((link: any, index: number) => (
+                        <div key={index} className="flex gap-3 items-start bg-gray-800 p-3 rounded-lg border border-gray-700">
+                          <div className="flex-1 space-y-2">
+                            <input
+                              type="text"
+                              value={link.title || ''}
+                              onChange={(e) => updateLink(index, 'title', e.target.value)}
+                              placeholder="Titre du lien"
+                              className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
+                            />
+                            <input
+                              type="url"
+                              value={link.url || ''}
+                              onChange={(e) => updateLink(index, 'url', e.target.value)}
+                              placeholder="https://example.com"
+                              className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeLink(index)}
+                            className="text-red-400 hover:text-red-300 mt-1"
+                          >
+                            <X className="h-5 w-5" />
+                          </button>
+                        </div>
+                      ))}
+                      {(!editData.links || editData.links.length === 0) && (
+                        <p className="text-gray-500 text-sm italic">Aucun lien ajouté</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
