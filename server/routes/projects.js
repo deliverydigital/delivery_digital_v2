@@ -1,5 +1,5 @@
 import express from 'express';
-import { Project, User } from '../models/index.js';
+import { Project, User, Task } from '../models/index.js';
 import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize, authorizeOwnerOrAdmin } from '../middleware/auth.js';
 import { validateProjectCreation, validateProjectUpdate, validateMongoId, validateMongoIdParam, validatePagination } from '../middleware/validation.js';
@@ -68,10 +68,16 @@ router.get('/', validatePagination, async (req, res) => {
 
     const total = await Project.countDocuments(query);
 
-    res.json({
-      success: true,
-      data: {
-        projects: projects.map(project => ({
+    // Check for urgent tasks in each project
+    const projectsWithUrgentFlags = await Promise.all(
+      projects.map(async (project) => {
+        const urgentTaskCount = await Task.countDocuments({
+          project_id: project._id,
+          priority: 'urgent',
+          status: { $ne: 'done' }
+        });
+
+        return {
           id: project._id,
           clientId: project.client_id._id,
           clientName: project.client_id.name,
@@ -96,10 +102,19 @@ router.get('/', validatePagination, async (req, res) => {
           notes: project.notes,
           links: filterLinksByRole(project.links, req.user.role),
           attachments: project.attachments,
+          hasUrgentTasks: urgentTaskCount > 0,
+          urgentTaskCount: urgentTaskCount,
           createdAt: project.createdAt,
           updatedAt: project.updatedAt,
           lastUpdate: project.updatedAt
-        })),
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: {
+        projects: projectsWithUrgentFlags,
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
