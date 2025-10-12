@@ -20,7 +20,7 @@ interface TaskBoardProps {
 }
 
 const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoardProps) => {
-  const { tasks, createTask, updateTask, deleteTask, addComment, addChecklistItem, toggleChecklistItem, duplicateTask, loading } = useTasks(projectId);
+  const { tasks, createTask, updateTask, deleteTask, addComment, addChecklistItem, toggleChecklistItem, duplicateTask, loading, refreshTasks } = useTasks(projectId);
   const { board } = useTaskBoard(projectId);
   const { statistics } = useTaskStatistics(projectId);
   
@@ -227,7 +227,10 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
       e.stopPropagation();
       try {
         const result = await startTracking();
-        if (!result.success) {
+        if (result.success) {
+          // Refresh tasks to get updated tracking data
+          await refreshTasks();
+        } else {
           console.error('Failed to start tracking:', result.error);
         }
       } catch (error) {
@@ -239,7 +242,10 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
       e.stopPropagation();
       try {
         const result = await stopTracking();
-        if (!result.success) {
+        if (result.success) {
+          // Refresh tasks to get updated tracking data
+          await refreshTasks();
+        } else {
           console.error('Failed to stop tracking:', result.error);
         }
       } catch (error) {
