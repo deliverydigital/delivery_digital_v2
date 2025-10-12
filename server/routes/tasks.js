@@ -673,6 +673,146 @@ router.put('/checklist/:taskId/:itemId', validateMongoIdParam('taskId'), async (
   }
 });
 
+// Update checklist item (admin and project manager only)
+router.patch('/:taskId/checklist/:itemId', validateMongoIdParam('taskId'), async (req, res) => {
+  try {
+    const { taskId, itemId } = req.params;
+    const { title } = req.body;
+
+    if (!title || title.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Checklist item title is required'
+      });
+    }
+
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    const task = await Task.findById(taskId)
+      .populate('project_id', 'client_id assigned_to');
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        error: 'Task not found'
+      });
+    }
+
+    // Check authorization - only admin and project managers can update checklist items
+    const isAdmin = req.user.role === 'admin';
+    const isProjectManager = req.user.role === 'project_manager' && task.project_id.assigned_to?.toString() === req.user.id;
+
+    if (!isAdmin && !isProjectManager) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only administrators and project managers can update checklist items'
+      });
+    }
+
+    // Find and update the checklist item
+    const checklistItem = task.checklist.id(itemId);
+    if (!checklistItem) {
+      return res.status(404).json({
+        success: false,
+        error: 'Checklist item not found'
+      });
+    }
+
+    checklistItem.title = title.trim();
+    await task.save();
+
+    res.json({
+      success: true,
+      message: 'Checklist item updated successfully',
+      data: {
+        item: {
+          id: checklistItem._id,
+          title: checklistItem.title,
+          completed: checklistItem.completed,
+          position: checklistItem.position
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Update checklist item error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update checklist item'
+    });
+  }
+});
+
+// Delete checklist item (admin and project manager only)
+router.delete('/:taskId/checklist/:itemId', validateMongoIdParam('taskId'), async (req, res) => {
+  try {
+    const { taskId, itemId } = req.params;
+
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    const task = await Task.findById(taskId)
+      .populate('project_id', 'client_id assigned_to');
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        error: 'Task not found'
+      });
+    }
+
+    // Check authorization - only admin and project managers can delete checklist items
+    const isAdmin = req.user.role === 'admin';
+    const isProjectManager = req.user.role === 'project_manager' && task.project_id.assigned_to?.toString() === req.user.id;
+
+    if (!isAdmin && !isProjectManager) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only administrators and project managers can delete checklist items'
+      });
+    }
+
+    // Remove the checklist item
+    const checklistItem = task.checklist.id(itemId);
+    if (!checklistItem) {
+      return res.status(404).json({
+        success: false,
+        error: 'Checklist item not found'
+      });
+    }
+
+    checklistItem.remove();
+    await task.save();
+    await task.updateProgress();
+
+    res.json({
+      success: true,
+      message: 'Checklist item deleted successfully',
+      data: {
+        taskProgress: task.completion_percentage
+      }
+    });
+
+  } catch (error) {
+    console.error('Delete checklist item error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete checklist item'
+    });
+  }
+});
+
 // Delete task (admin only)
 router.delete('/:id', validateMongoId, authorize('admin'), async (req, res) => {
   try {

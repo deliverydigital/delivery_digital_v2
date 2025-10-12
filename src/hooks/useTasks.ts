@@ -137,6 +137,22 @@ export const useTasks = (projectId: string) => {
     return result;
   };
 
+  const updateChecklistItem = async (taskId: string, itemId: string, title: string) => {
+    const result = await TasksApiService.updateChecklistItem(taskId, itemId, title);
+    if (result.success) {
+      await loadTasks();
+    }
+    return result;
+  };
+
+  const deleteChecklistItem = async (taskId: string, itemId: string) => {
+    const result = await TasksApiService.deleteChecklistItem(taskId, itemId);
+    if (result.success) {
+      await loadTasks();
+    }
+    return result;
+  };
+
   const duplicateTask = async (taskId: string) => {
     const result = await TasksApiService.duplicateTask(taskId);
     if (result.success) {
@@ -165,6 +181,8 @@ export const useTasks = (projectId: string) => {
     stopTimeTracking,
     addChecklistItem,
     toggleChecklistItem,
+    updateChecklistItem,
+    deleteChecklistItem,
     duplicateTask,
     bulkUpdateTasks,
     refreshTasks: loadTasks

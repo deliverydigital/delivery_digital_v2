@@ -20,10 +20,11 @@ interface TaskBoardProps {
 }
 
 const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoardProps) => {
-  const { tasks, createTask, updateTask, deleteTask, addComment, addChecklistItem, toggleChecklistItem, duplicateTask, loading } = useTasks(projectId);
+  const { tasks, createTask, updateTask, deleteTask, addComment, addChecklistItem, toggleChecklistItem, updateChecklistItem, deleteChecklistItem, duplicateTask, loading } = useTasks(projectId);
   const { board } = useTaskBoard(projectId);
   const { statistics } = useTaskStatistics(projectId);
-  
+  const user = ApiService.getCurrentUser();
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
@@ -38,6 +39,7 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
   const [viewMode, setViewMode] = useState<'kanban' | 'list' | 'calendar'>('kanban');
   const [newTaskComment, setNewTaskComment] = useState('');
   const [newTaskChecklistItem, setNewTaskChecklistItem] = useState('');
+  const [editingChecklistItem, setEditingChecklistItem] = useState<{ taskId: string; itemId: string; title: string } | null>(null);
   const [newTaskData, setNewTaskData] = useState({
     title: '',
     description: '',
@@ -197,6 +199,23 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
       setNewTaskChecklistItem('');
     } catch (error) {
       console.error('Error adding checklist item:', error);
+    }
+  };
+
+  const handleUpdateChecklistItem = async (taskId: string, itemId: string, title: string) => {
+    try {
+      await updateChecklistItem(taskId, itemId, title);
+      setEditingChecklistItem(null);
+    } catch (error) {
+      console.error('Error updating checklist item:', error);
+    }
+  };
+
+  const handleDeleteChecklistItem = async (taskId: string, itemId: string) => {
+    try {
+      await deleteChecklistItem(taskId, itemId);
+    } catch (error) {
+      console.error('Error deleting checklist item:', error);
     }
   };
 
@@ -985,7 +1004,7 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="text-lg font-medium text-white">Checklist</h4>
-                  {isAdmin && (
+                  {(isAdmin || user?.role === 'project_manager') && (
                     <div className="flex items-center">
                       <input
                         type="text"
@@ -993,6 +1012,11 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
                         onChange={(e) => setNewTaskChecklistItem(e.target.value)}
                         placeholder="Nouvel élément..."
                         className="px-3 py-1 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm mr-2"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && newTaskChecklistItem.trim()) {
+                            handleAddChecklistItem(selectedTask.id, newTaskChecklistItem);
+                          }
+                        }}
                       />
                       <button
                         onClick={() => handleAddChecklistItem(selectedTask.id, newTaskChecklistItem)}
@@ -1012,16 +1036,64 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
                 ) : (
                   <div className="space-y-2">
                     {selectedTask.checklist.map((item) => (
-                      <div key={item.id} className="flex items-center bg-gray-800 p-3 rounded-lg">
+                      <div key={item.id} className="flex items-center bg-gray-800 p-3 rounded-lg group">
                         <input
                           type="checkbox"
                           checked={item.completed}
                           onChange={() => toggleChecklistItem(selectedTask.id, item.id)}
-                          className="mr-3"
+                          className="mr-3 flex-shrink-0"
                         />
-                        <span className={`text-sm ${item.completed ? 'text-gray-500 line-through' : 'text-white'}`}>
-                          {item.title}
-                        </span>
+                        {editingChecklistItem?.itemId === item.id ? (
+                          <div className="flex-1 flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={editingChecklistItem.title}
+                              onChange={(e) => setEditingChecklistItem({ ...editingChecklistItem, title: e.target.value })}
+                              className="flex-1 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+                              autoFocus
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleUpdateChecklistItem(selectedTask.id, item.id, editingChecklistItem.title);
+                                }
+                              }}
+                            />
+                            <button
+                              onClick={() => handleUpdateChecklistItem(selectedTask.id, item.id, editingChecklistItem.title)}
+                              className="text-green-400 hover:text-green-300"
+                              disabled={!editingChecklistItem.title.trim()}
+                            >
+                              <Save className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => setEditingChecklistItem(null)}
+                              className="text-gray-400 hover:text-gray-300"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <span className={`flex-1 text-sm ${item.completed ? 'text-gray-500 line-through' : 'text-white'}`}>
+                              {item.title}
+                            </span>
+                            {(isAdmin || user?.role === 'project_manager') && (
+                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => setEditingChecklistItem({ taskId: selectedTask.id, itemId: item.id, title: item.title })}
+                                  className="text-blue-400 hover:text-blue-300"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteChecklistItem(selectedTask.id, item.id)}
+                                  className="text-red-400 hover:text-red-300"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>

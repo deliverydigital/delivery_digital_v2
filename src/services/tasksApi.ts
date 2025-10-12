@@ -399,11 +399,46 @@ export class TasksApiService {
       if (response.success) {
         return { success: true };
       }
-      
+
       return { success: true };
     } catch (error) {
       console.error('Erreur lors de la modification de l\'élément de checklist:', error);
       return { success: false, error: error.message || 'Erreur lors de la modification de l\'élément de checklist' };
+    }
+  }
+
+  static async updateChecklistItem(taskId: string, itemId: string, title: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await makeRequest(`/tasks/${taskId}/checklist/${itemId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ title }),
+      });
+
+      if (response.success) {
+        return { success: true };
+      }
+
+      return { success: false, error: 'Failed to update checklist item' };
+    } catch (error) {
+      console.error('Erreur lors de la modification de l\'élément de checklist:', error);
+      return { success: false, error: error.message || 'Erreur lors de la modification de l\'élément de checklist' };
+    }
+  }
+
+  static async deleteChecklistItem(taskId: string, itemId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await makeRequest(`/tasks/${taskId}/checklist/${itemId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.success) {
+        return { success: true };
+      }
+
+      return { success: false, error: 'Failed to delete checklist item' };
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'élément de checklist:', error);
+      return { success: false, error: error.message || 'Erreur lors de la suppression de l\'élément de checklist' };
     }
   }
 
