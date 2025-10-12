@@ -8,10 +8,6 @@ const TasksTab = () => {
   const { projects, loading } = useProjects();
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
-  // Load ALL tasks to check urgency for all projects
-  const { tasks: allTasks, loading: allTasksLoading } = useTasks('');
-
-  // Load tasks for selected project
   const { tasks, loading: tasksLoading, error: tasksError, refreshTasks } = useTasks(
     selectedProject?.id || ''
   );
@@ -52,7 +48,7 @@ const TasksTab = () => {
         <div className="flex items-center space-x-4">
           {/* Urgent Badge */}
           {selectedProject && (() => {
-            const hasUrgent = allTasks.some(t => {
+            const hasUrgent = tasks.some(t => {
               const isProjectTask = t.projectId === selectedProject.id || t.project_id === selectedProject.id;
               const isUrgent = t.priority === 'urgent';
               const isOverdue = t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done';
@@ -77,7 +73,7 @@ const TasksTab = () => {
             >
               <option value="">Tous les projets</option>
               {projects.map((project) => {
-                const hasUrgent = allTasks.some(t => {
+                const hasUrgent = tasks.some(t => {
                   const isProjectTask = t.projectId === project.id || t.project_id === project.id;
                   const isUrgent = t.priority === 'urgent';
                   const isOverdue = t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done';
