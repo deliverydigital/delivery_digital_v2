@@ -337,13 +337,27 @@ const ClientDashboard = () => {
                   {isEditingTask ? (
                     <input
                       type="date"
-                      value={editedTask.dueDate ? new Date(editedTask.dueDate).toISOString().split('T')[0] : ''}
+                      value={editedTask.dueDate ? (() => {
+                        try {
+                          const date = new Date(editedTask.dueDate);
+                          return !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : '';
+                        } catch {
+                          return '';
+                        }
+                      })() : ''}
                       onChange={(e) => setEditedTask({ ...editedTask, dueDate: e.target.value ? new Date(e.target.value) : null })}
                       className="mt-1 w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
                     />
                   ) : (
                     <div className="mt-1 text-white">
-                      {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString('fr-FR') : 'Non définie'}
+                      {selectedTask.dueDate ? (() => {
+                        try {
+                          const date = new Date(selectedTask.dueDate);
+                          return !isNaN(date.getTime()) ? date.toLocaleDateString('fr-FR') : 'Non définie';
+                        } catch {
+                          return 'Non définie';
+                        }
+                      })() : 'Non définie'}
                     </div>
                   )}
                 </div>
