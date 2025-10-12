@@ -110,15 +110,7 @@ router.get('/project/:projectId', validateMongoIdParam('projectId'), async (req,
             attachments: task.attachments,
             comments: task.comments,
             checklist: task.checklist,
-            timeTracking: task.time_tracking.map(entry => ({
-              id: entry._id,
-              userId: entry.user_id?.toString() || entry.user_id,
-              startTime: entry.start_time,
-              endTime: entry.end_time,
-              duration: entry.duration,
-              description: entry.description,
-              createdAt: entry.created_at
-            })),
+            timeTracking: task.time_tracking,
             activeTimeTracking: activeTracking ? {
               startTime: activeTracking.start_time,
               description: activeTracking.description
@@ -177,11 +169,9 @@ router.get('/:id', validateMongoId, async (req, res) => {
       });
     }
 
-    const activeTracking = task.getActiveTimeTracking(req.user.id);
-
     res.json({
       success: true,
-      data: {
+      data: { 
         task: {
           id: task._id,
           projectId: task.project_id._id,
@@ -214,19 +204,6 @@ router.get('/:id', validateMongoId, async (req, res) => {
             createdAt: comment.created_at
           })),
           checklist: task.checklist,
-          timeTracking: task.time_tracking.map(entry => ({
-            id: entry._id,
-            userId: entry.user_id?.toString() || entry.user_id,
-            startTime: entry.start_time,
-            endTime: entry.end_time,
-            duration: entry.duration,
-            description: entry.description,
-            createdAt: entry.created_at
-          })),
-          activeTimeTracking: activeTracking ? {
-            startTime: activeTracking.start_time,
-            description: activeTracking.description
-          } : null,
           createdAt: task.createdAt,
           updatedAt: task.updatedAt
         }

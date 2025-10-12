@@ -12,7 +12,7 @@ export const useTasks = (projectId: string) => {
     // Check authentication first
     const token = ApiService.getAuthToken();
     const currentUser = ApiService.getCurrentUser();
-
+    
     if (!token || !currentUser || !projectId) {
       console.log('🔒 No authentication or project ID, using demo tasks');
       setTasks(TasksApiService.getDemoTasks(projectId));
@@ -24,11 +24,6 @@ export const useTasks = (projectId: string) => {
     setError(null);
     try {
       const projectTasks = await TasksApiService.getProjectTasks(projectId);
-      console.log('📋 Loaded tasks with time tracking:', projectTasks.map(t => ({
-        id: t.id,
-        title: t.title,
-        timeTracking: t.timeTracking
-      })));
       setTasks(projectTasks);
     } catch (err) {
       console.error('Erreur lors du chargement des tâches:', err);
@@ -324,37 +319,19 @@ export const useTimeTracking = (taskId: string, userId: string, task?: Task) => 
 
   // Initialize from task data if active tracking exists
   useEffect(() => {
-    if (task && task.timeTracking && Array.isArray(task.timeTracking)) {
+    if (task && task.timeTracking) {
       const activeEntry = task.timeTracking.find(
-        (entry: any) => String(entry.userId) === String(userId) && !entry.endTime
+        (entry: any) => entry.userId === userId && !entry.endTime
       );
 
       if (activeEntry) {
-        console.log('🔄 Restoring active time tracking:', {
-          taskId: task.id,
-          userId,
-          entryUserId: activeEntry.userId,
-          startTime: activeEntry.startTime,
-          elapsed: Math.round((new Date().getTime() - new Date(activeEntry.startTime).getTime()) / 1000)
-        });
         setIsTracking(true);
         setStartTime(new Date(activeEntry.startTime));
         const elapsed = Math.round((new Date().getTime() - new Date(activeEntry.startTime).getTime()) / 1000);
         setCurrentDuration(elapsed);
-      } else {
-        // No active tracking found, reset state
-        console.log('❌ No active tracking found. Time tracking data:', task.timeTracking);
-        setIsTracking(false);
-        setStartTime(null);
-        setCurrentDuration(0);
       }
-    } else {
-      // No time tracking data, reset state
-      setIsTracking(false);
-      setStartTime(null);
-      setCurrentDuration(0);
     }
-  }, [task, userId, task?.timeTracking]);
+  }, [task, userId]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -375,29 +352,21 @@ export const useTimeTracking = (taskId: string, userId: string, task?: Task) => 
   }, [isTracking, startTime]);
 
   const startTracking = async (description?: string) => {
-    console.log('▶️ Starting time tracking:', { taskId, userId, description });
     const result = await TasksApiService.startTimeTracking(taskId, userId, description);
     if (result.success) {
-      console.log('✅ Time tracking started successfully');
       setIsTracking(true);
       setStartTime(new Date());
       setCurrentDuration(0);
-    } else {
-      console.error('❌ Failed to start time tracking:', result.error);
     }
     return result;
   };
 
   const stopTracking = async () => {
-    console.log('⏸️ Stopping time tracking:', { taskId, userId });
     const result = await TasksApiService.stopTimeTracking(taskId, userId);
     if (result.success) {
-      console.log('✅ Time tracking stopped successfully. Duration:', result.duration);
       setIsTracking(false);
       setStartTime(null);
       setCurrentDuration(0);
-    } else {
-      console.error('❌ Failed to stop time tracking:', result.error);
     }
     return result;
   };
