@@ -195,6 +195,7 @@ router.get('/:id', validateMongoId, async (req, res) => {
           links: filterLinksByRole(project.links, req.user.role),
           attachments: project.attachments,
           milestones: project.milestones,
+          taskPermissions: project.task_permissions,
           createdAt: project.createdAt,
           updatedAt: project.updatedAt
         }
@@ -355,14 +356,15 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
       'assignedTo': 'assigned_to',
       'figmaUrl': 'figma_url',
       'gitlabUrl': 'gitlab_url',
-      'technicalSpecs': 'technical_specs'
+      'technicalSpecs': 'technical_specs',
+      'taskPermissions': 'task_permissions'
     };
 
     // Update allowed fields (snake_case)
     const allowedFields = [
       'title', 'description', 'status', 'priority', 'budget_range', 'estimated_budget',
       'timeline', 'start_date', 'end_date', 'completion_percentage', 'assigned_to',
-      'figma_url', 'gitlab_url', 'notes', 'requirements', 'technical_specs', 'links'
+      'figma_url', 'gitlab_url', 'notes', 'requirements', 'technical_specs', 'links', 'task_permissions'
     ];
 
     // Clients can only update certain fields
@@ -417,6 +419,7 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
         notes: project.notes,
         links: filterLinksByRole(project.links, req.user.role),
         attachments: project.attachments,
+        taskPermissions: project.task_permissions,
         updatedAt: project.updatedAt
       }
     });
