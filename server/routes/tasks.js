@@ -59,15 +59,18 @@ router.get('/project/:projectId', validateMongoIdParam('projectId'), async (req,
       });
     }
 
-    // Check authorization
-    const isAdmin = req.user.role === 'admin';
-    const isProjectManager = req.user.role === 'project_manager' && project.assigned_to?.toString() === req.user.id;
+    // Check authorization using project-level task permissions
+    const userRole = req.user.role;
+    const hasViewPermission = project.hasTaskPermission(userRole, 'view');
+
+    // Also check if user is the project manager or client
+    const isProjectManager = userRole === 'project_manager' && project.assigned_to?.toString() === req.user.id;
     const isClient = project.client_id.toString() === req.user.id;
 
-    if (!isAdmin && !isProjectManager && !isClient) {
+    if (!hasViewPermission && !isProjectManager && !isClient) {
       return res.status(403).json({
         success: false,
-        error: 'Access denied'
+        error: 'You do not have permission to view tasks for this project'
       });
     }
 
@@ -250,20 +253,17 @@ router.post('/', uploadTaskFiles, handleUploadError, validateTaskCreation, async
       });
     }
 
-    // Only admins and project managers can create tasks
-    if (req.user.role !== 'admin' && req.user.role !== 'project_manager') {
-      return res.status(403).json({
-        success: false,
-        error: 'Only administrators and project managers can create tasks'
-      });
-    }
+    // Check if user has permission to add tasks
+    const userRole = req.user.role;
+    const hasAddPermission = project.hasTaskPermission(userRole, 'add');
 
     // Project managers can only create tasks for their assigned projects
-    if (req.user.role === 'project_manager' &&
-        project.assigned_to?.toString() !== req.user.id) {
+    const isProjectManager = userRole === 'project_manager' && project.assigned_to?.toString() === req.user.id;
+
+    if (!hasAddPermission && !isProjectManager) {
       return res.status(403).json({
         success: false,
-        error: 'You can only create tasks for projects assigned to you'
+        error: 'You do not have permission to add tasks to this project'
       });
     }
 
@@ -372,15 +372,18 @@ router.put('/:id', validateMongoId, validateTaskUpdate, async (req, res) => {
       });
     }
 
-    // Check authorization
-    const isAdmin = req.user.role === 'admin';
-    const isProjectManager = req.user.role === 'project_manager' && task.project_id.assigned_to?.toString() === req.user.id;
-    const isClient = task.project_id.client_id.toString() === req.user.id;
+    // Check authorization using project-level task permissions
+    const userRole = req.user.role;
+    const project = task.project_id;
+    const hasUpdatePermission = project.hasTaskPermission(userRole, 'update');
 
-    if (!isAdmin && !isProjectManager && !isClient) {
+    const isProjectManager = userRole === 'project_manager' && project.assigned_to?.toString() === req.user.id;
+    const isClient = project.client_id.toString() === req.user.id;
+
+    if (!hasUpdatePermission && !isProjectManager && !isClient) {
       return res.status(403).json({
         success: false,
-        error: 'Access denied'
+        error: 'You do not have permission to update tasks in this project'
       });
     }
 
@@ -390,10 +393,10 @@ router.put('/:id', validateMongoId, validateTaskUpdate, async (req, res) => {
       'estimated_hours', 'actual_hours', 'completion_percentage', 'tags', 'position'
     ];
 
-    // Clients can only update certain fields, project managers can update all fields
+    // Clients can only update certain fields unless they have full update permission
     const clientAllowedFields = ['completion_percentage'];
     let fieldsToCheck = allowedFields;
-    if (isClient && !isAdmin && !isProjectManager) {
+    if (isClient && !hasUpdatePermission && !isProjectManager) {
       fieldsToCheck = clientAllowedFields;
     }
 
@@ -813,8 +816,8 @@ router.delete('/:taskId/checklist/:itemId', validateMongoIdParam('taskId'), asyn
   }
 });
 
-// Delete task (admin only)
-router.delete('/:id', validateMongoId, authorize('admin'), async (req, res) => {
+// Delete task (requires delete permission)
+router.delete('/:id', validateMongoId, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -826,7 +829,7 @@ router.delete('/:id', validateMongoId, authorize('admin'), async (req, res) => {
       });
     }
 
-    const task = await Task.findByIdAndDelete(id);
+    const task = await Task.findById(id).populate('project_id');
 
     if (!task) {
       return res.status(404).json({
@@ -834,6 +837,22 @@ router.delete('/:id', validateMongoId, authorize('admin'), async (req, res) => {
         error: 'Task not found'
       });
     }
+
+    // Check authorization using project-level task permissions
+    const userRole = req.user.role;
+    const project = task.project_id;
+    const hasDeletePermission = project.hasTaskPermission(userRole, 'delete');
+
+    const isProjectManager = userRole === 'project_manager' && project.assigned_to?.toString() === req.user.id;
+
+    if (!hasDeletePermission && !isProjectManager) {
+      return res.status(403).json({
+        success: false,
+        error: 'You do not have permission to delete tasks in this project'
+      });
+    }
+
+    await Task.findByIdAndDelete(id);
 
     // Update project progress after task deletion
     await updateProjectProgress(task.project_id);

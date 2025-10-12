@@ -146,7 +146,35 @@ const projectSchema = new Schema({
       type: Date,
       default: Date.now
     }
-  }]
+  }],
+
+  // Task permissions by role
+  task_permissions: {
+    client: {
+      view: { type: Boolean, default: true },
+      add: { type: Boolean, default: false },
+      update: { type: Boolean, default: false },
+      delete: { type: Boolean, default: false }
+    },
+    project_manager: {
+      view: { type: Boolean, default: true },
+      add: { type: Boolean, default: true },
+      update: { type: Boolean, default: true },
+      delete: { type: Boolean, default: true }
+    },
+    developer: {
+      view: { type: Boolean, default: true },
+      add: { type: Boolean, default: false },
+      update: { type: Boolean, default: true },
+      delete: { type: Boolean, default: false }
+    },
+    trainer: {
+      view: { type: Boolean, default: true },
+      add: { type: Boolean, default: false },
+      update: { type: Boolean, default: false },
+      delete: { type: Boolean, default: false }
+    }
+  }
 }, {
   timestamps: true
 });
@@ -185,6 +213,24 @@ projectSchema.methods.completeMilestone = function(milestoneId) {
     milestone.completed_at = new Date();
   }
   return this.save();
+};
+
+projectSchema.methods.hasTaskPermission = function(role, action) {
+  if (role === 'admin') {
+    return true;
+  }
+
+  if (!this.task_permissions || !this.task_permissions[role]) {
+    const defaults = {
+      client: { view: true, add: false, update: false, delete: false },
+      project_manager: { view: true, add: true, update: true, delete: true },
+      developer: { view: true, add: false, update: true, delete: false },
+      trainer: { view: true, add: false, update: false, delete: false }
+    };
+    return defaults[role]?.[action] || false;
+  }
+
+  return this.task_permissions[role][action] || false;
 };
 
 // Static methods

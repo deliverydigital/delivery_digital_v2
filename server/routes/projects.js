@@ -102,6 +102,7 @@ router.get('/', validatePagination, async (req, res) => {
           notes: project.notes,
           links: filterLinksByRole(project.links, req.user.role),
           attachments: project.attachments,
+          taskPermissions: project.task_permissions,
           hasUrgentTasks: urgentTaskCount > 0,
           urgentTaskCount: urgentTaskCount,
           createdAt: project.createdAt,
@@ -609,6 +610,60 @@ router.post('/:id/assign', authorize('admin'), validateMongoIdParam('id'), async
     res.status(500).json({
       success: false,
       error: 'Failed to assign project'
+    });
+  }
+});
+
+router.patch('/:id/task-permissions', validateMongoId, authorize('admin', 'project_manager'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { task_permissions } = req.body;
+
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    const project = await Project.findById(id);
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project not found'
+      });
+    }
+
+    if (req.user.role === 'project_manager' && project.assigned_to?.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        error: 'You can only update permissions for projects assigned to you'
+      });
+    }
+
+    if (task_permissions) {
+      project.task_permissions = {
+        ...project.task_permissions,
+        ...task_permissions
+      };
+    }
+
+    await project.save();
+
+    res.json({
+      success: true,
+      message: 'Task permissions updated successfully',
+      data: {
+        task_permissions: project.task_permissions
+      }
+    });
+
+  } catch (error) {
+    console.error('Update task permissions error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update task permissions'
     });
   }
 });

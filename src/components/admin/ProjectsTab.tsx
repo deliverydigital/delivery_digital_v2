@@ -29,6 +29,16 @@ const ProjectsTab = () => {
     setProjectManagers(managers);
   };
 
+  const getDefaultPermission = (role: string, action: string) => {
+    const defaults: any = {
+      client: { view: true, add: false, update: false, delete: false },
+      project_manager: { view: true, add: true, update: true, delete: true },
+      developer: { view: true, add: false, update: true, delete: false },
+      trainer: { view: true, add: false, update: false, delete: false }
+    };
+    return defaults[role]?.[action] || false;
+  };
+
   const handleAssignManager = async (projectId: string, managerId: string) => {
     try {
       await ApiService.assignProjectToManager(projectId, managerId);
@@ -78,7 +88,8 @@ const ProjectsTab = () => {
     setEditData({
       ...project,
       assignedTo: project.assignedTo?.id || '',
-      links: project.links || []
+      links: project.links || [],
+      taskPermissions: project.taskPermissions || {}
     });
     setModalMode('edit');
     setShowModal(true);
@@ -633,6 +644,56 @@ const ProjectsTab = () => {
                       )}
                     </div>
                   </div>
+
+                  {isAdmin && (
+                    <div className="border-t border-gray-700 pt-6">
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          <Shield className="h-4 w-4 inline mr-2" />
+                          Permissions des Tâches
+                        </label>
+                        <p className="text-sm text-gray-400">Définir les permissions pour gérer les tâches de ce projet par rôle d'utilisateur</p>
+                      </div>
+
+                      <div className="space-y-4">
+                        {['client', 'project_manager', 'developer', 'trainer'].map((role) => (
+                          <div key={role} className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                            <h4 className="text-white font-medium mb-3 flex items-center">
+                              {role === 'client' && <User className="h-4 w-4 mr-2" />}
+                              {role === 'project_manager' && <UserCog className="h-4 w-4 mr-2" />}
+                              {role === 'developer' && <Users className="h-4 w-4 mr-2" />}
+                              {role === 'trainer' && <Users className="h-4 w-4 mr-2" />}
+                              {role === 'client' ? 'Client' : role === 'project_manager' ? 'Chef de Projet' : role === 'developer' ? 'Développeur' : 'Formateur'}
+                            </h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              {['view', 'add', 'update', 'delete'].map((action) => (
+                                <label key={action} className="flex items-center cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={editData.taskPermissions?.[role]?.[action] ?? getDefaultPermission(role, action)}
+                                    onChange={(e) => {
+                                      const newPermissions = {
+                                        ...editData.taskPermissions,
+                                        [role]: {
+                                          ...(editData.taskPermissions?.[role] || {}),
+                                          [action]: e.target.checked
+                                        }
+                                      };
+                                      setEditData({ ...editData, taskPermissions: newPermissions });
+                                    }}
+                                    className="mr-2 h-4 w-4 text-blue-600 border-gray-600 rounded focus:ring-blue-500"
+                                  />
+                                  <span className="text-sm text-gray-300 capitalize">
+                                    {action === 'view' ? 'Voir' : action === 'add' ? 'Ajouter' : action === 'update' ? 'Modifier' : 'Supprimer'}
+                                  </span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
