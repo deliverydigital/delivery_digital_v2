@@ -66,6 +66,17 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
     }
   }, [tasks]);
 
+  const formatDate = (dateValue: any, format: 'time' | 'datetime' = 'datetime'): string => {
+    if (!dateValue) return 'Date non disponible';
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return 'Date non disponible';
+      return format === 'time' ? date.toLocaleTimeString('fr-FR') : date.toLocaleString('fr-FR');
+    } catch {
+      return 'Date non disponible';
+    }
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent': return 'bg-red-500';
@@ -463,7 +474,7 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
                   <div key={comment.id} className="bg-gray-700 p-2 rounded text-xs">
                     <div className="flex justify-between items-start mb-1">
                       <span className="text-primary-400 font-medium">{comment.author}</span>
-                      <span className="text-gray-500">{comment.timestamp.toLocaleTimeString()}</span>
+                      <span className="text-gray-500">{formatDate(comment.timestamp, 'time')}</span>
                     </div>
                     <p className="text-gray-300">{comment.content}</p>
                   </div>
@@ -1123,7 +1134,7 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
                             <div>
                               <p className="font-medium text-white">{comment.author}</p>
                               <p className="text-xs text-gray-400">
-                                {comment.timestamp.toLocaleString('fr-FR')}
+                                {formatDate(comment.timestamp, 'datetime')}
                                 {comment.edited && ' (modifié)'}
                               </p>
                             </div>
