@@ -88,10 +88,7 @@ const TasksTab = () => {
                 rel="noopener noreferrer"
                 className="flex items-center justify-between bg-gray-900 hover:bg-gray-700 p-4 rounded-lg border border-gray-700 hover:border-blue-500 transition-all group"
               >
-                <div className="flex-1 min-w-0">
-                  <div className="text-white font-medium mb-1 truncate">{link.title}</div>
-                  <div className="text-gray-400 text-xs truncate">{link.url}</div>
-                </div>
+                <div className="text-white font-medium truncate">{link.title}</div>
                 <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-400 ml-2 flex-shrink-0" />
               </a>
             ))}
