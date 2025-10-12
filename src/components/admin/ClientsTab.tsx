@@ -75,7 +75,8 @@ const ClientsTab = () => {
       await updateClient(selectedClient.id, editData);
 
       const token = localStorage.getItem('authToken');
-      await fetch(`http://localhost:5000/api/users/clients/${selectedClient.id}/task-permissions`, {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      await fetch(`${apiUrl}/api/users/clients/${selectedClient.id}/task-permissions`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
