@@ -23,7 +23,10 @@ const ClientDashboard = () => {
     assignee: 'all'
   });
 
-  // Only load tasks if we have a selected project and user is authenticated
+  // Load ALL tasks for the user (not filtered by project) to check urgency
+  const { tasks: allTasks, loading: allTasksLoading } = useTasks('');
+
+  // Load tasks for selected project
   const { tasks, loading: tasksLoading, error: tasksError, refreshTasks } = useTasks(
     (selectedProject?.id && user) ? selectedProject.id : ''
   );
@@ -615,7 +618,7 @@ const ClientDashboard = () => {
                 <div className="flex items-center space-x-4">
                   {/* Urgent Badge */}
                   {selectedProject && (() => {
-                    const hasUrgent = tasks.some(t => {
+                    const hasUrgent = allTasks.some(t => {
                       const isProjectTask = t.projectId === selectedProject.id || t.project_id === selectedProject.id;
                       const isUrgent = t.priority === 'urgent';
                       const isOverdue = t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done';
@@ -640,7 +643,7 @@ const ClientDashboard = () => {
                     >
                       <option value="">Tous les projets</option>
                       {projects.map((project) => {
-                        const hasUrgent = tasks.some(t => {
+                        const hasUrgent = allTasks.some(t => {
                           const isProjectTask = t.projectId === project.id || t.project_id === project.id;
                           const isUrgent = t.priority === 'urgent';
                           const isOverdue = t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done';
