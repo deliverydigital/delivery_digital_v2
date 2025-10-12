@@ -59,7 +59,7 @@ const TasksTab = () => {
               <option value="">Tous les projets</option>
               {projects.map((project) => (
                 <option key={project.id} value={project.id}>
-                  {project.hasUrgentTasks ? '⚠ ' : ''}{project.title}
+                  {project.hasUrgentTasks ? '🔴 ' : ''}{project.title}
                 </option>
               ))}
             </select>
