@@ -613,6 +613,21 @@ const ClientDashboard = () => {
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-2xl font-bold text-white">Gestion des Tâches</h2>
                 <div className="flex items-center space-x-4">
+                  {/* Urgent Badge */}
+                  {selectedProject && (() => {
+                    const hasUrgent = tasks.some(t => {
+                      const isProjectTask = t.projectId === selectedProject.id || t.project_id === selectedProject.id;
+                      const isUrgent = t.priority === 'urgent';
+                      const isOverdue = t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done';
+                      return isProjectTask && (isUrgent || isOverdue);
+                    });
+                    return hasUrgent ? (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-red-500/20 border-2 border-red-500 rounded-lg animate-pulse">
+                        <AlertTriangle className="h-5 w-5 text-red-500" />
+                        <span className="text-red-500 font-bold text-sm whitespace-nowrap">URGENT</span>
+                      </div>
+                    ) : null;
+                  })()}
                   {/* Project Selector */}
                   <div className="relative">
                     <select
@@ -621,7 +636,7 @@ const ClientDashboard = () => {
                         const project = projects.find(p => p.id === e.target.value);
                         setSelectedProject(project);
                       }}
-                      className="px-4 py-2 pr-10 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm appearance-none"
+                      className="px-4 py-2 pr-10 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm appearance-none min-w-[200px]"
                     >
                       <option value="">Tous les projets</option>
                       {projects.map((project) => {
@@ -633,22 +648,11 @@ const ClientDashboard = () => {
                         });
                         return (
                           <option key={project.id} value={project.id}>
-                            {hasUrgent ? '[!] ' : ''}{project.title}
+                            {hasUrgent ? '⚠ ' : ''}{project.title}
                           </option>
                         );
                       })}
                     </select>
-                    {selectedProject && (() => {
-                      const hasUrgent = tasks.some(t => {
-                        const isProjectTask = t.projectId === selectedProject.id || t.project_id === selectedProject.id;
-                        const isUrgent = t.priority === 'urgent';
-                        const isOverdue = t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done';
-                        return isProjectTask && (isUrgent || isOverdue);
-                      });
-                      return hasUrgent ? (
-                        <AlertTriangle className="absolute right-8 top-1/2 transform -translate-y-1/2 h-4 w-4 text-red-500 pointer-events-none animate-pulse" />
-                      ) : null;
-                    })()}
                     <ChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 rotate-90 h-4 w-4 text-gray-400 pointer-events-none" />
                   </div>
                   <button
