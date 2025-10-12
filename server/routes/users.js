@@ -87,8 +87,7 @@ router.get('/clients', authorize('admin'), async (req, res) => {
         status: user.status,
         joinDate: user.createdAt,
         lastActivity: user.last_login,
-        projectsCount: 0,
-        taskPermissions: user.task_permissions || { can_create: false, can_update: false, can_delete: false }
+        projectsCount: 0
       }))
     });
 
@@ -277,112 +276,6 @@ router.get('/project-managers', authorize('admin'), async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch project managers'
-    });
-  }
-});
-
-// Update a client/user (admin only)
-router.put('/:userId', authorize('admin'), async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const updates = req.body;
-
-    if (!isMongoAvailable()) {
-      return res.status(503).json({
-        success: false,
-        error: 'Database service unavailable'
-      });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-    }
-
-    // Update allowed fields
-    const allowedFields = ['name', 'email', 'company', 'phone', 'status', 'role'];
-
-    for (const [key, value] of Object.entries(updates)) {
-      if (allowedFields.includes(key) && value !== undefined) {
-        user[key] = value;
-      }
-    }
-
-    await user.save();
-
-    res.json({
-      success: true,
-      message: 'User updated successfully',
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        company: user.company,
-        phone: user.phone,
-        role: user.role,
-        status: user.status,
-        joinDate: user.createdAt,
-        lastActivity: user.last_login,
-        taskPermissions: user.task_permissions || { can_create: false, can_update: false, can_delete: false }
-      }
-    });
-
-  } catch (error) {
-    console.error('Update user error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update user'
-    });
-  }
-});
-
-// Update client task permissions (admin only)
-router.put('/clients/:clientId/task-permissions', authorize('admin'), async (req, res) => {
-  try {
-    const { clientId } = req.params;
-    const { can_create, can_update, can_delete } = req.body;
-
-    if (!isMongoAvailable()) {
-      return res.status(503).json({
-        success: false,
-        error: 'Database service unavailable'
-      });
-    }
-
-    const user = await User.findById(clientId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found'
-      });
-    }
-
-    if (!user.task_permissions) {
-      user.task_permissions = {};
-    }
-
-    if (can_create !== undefined) user.task_permissions.can_create = can_create;
-    if (can_update !== undefined) user.task_permissions.can_update = can_update;
-    if (can_delete !== undefined) user.task_permissions.can_delete = can_delete;
-
-    await user.save();
-
-    res.json({
-      success: true,
-      message: 'Task permissions updated successfully',
-      data: {
-        taskPermissions: user.task_permissions
-      }
-    });
-
-  } catch (error) {
-    console.error('Update task permissions error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update task permissions'
     });
   }
 });

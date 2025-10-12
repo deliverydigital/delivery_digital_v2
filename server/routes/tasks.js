@@ -250,20 +250,20 @@ router.post('/', uploadTaskFiles, handleUploadError, validateTaskCreation, async
       });
     }
 
-    // Get user to check task permissions
-    const user = await User.findById(req.user.id);
-
-    // Check permissions: admins, project managers, or clients with can_create permission
-    const isAdmin = req.user.role === 'admin';
-    const isProjectManager = req.user.role === 'project_manager' && project.assigned_to?.toString() === req.user.id;
-    const isClientWithPermission = req.user.role === 'client' &&
-                                   project.client_id.toString() === req.user.id &&
-                                   user.task_permissions?.can_create === true;
-
-    if (!isAdmin && !isProjectManager && !isClientWithPermission) {
+    // Only admins and project managers can create tasks
+    if (req.user.role !== 'admin' && req.user.role !== 'project_manager') {
       return res.status(403).json({
         success: false,
-        error: 'You do not have permission to create tasks'
+        error: 'Only administrators and project managers can create tasks'
+      });
+    }
+
+    // Project managers can only create tasks for their assigned projects
+    if (req.user.role === 'project_manager' &&
+        project.assigned_to?.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        error: 'You can only create tasks for projects assigned to you'
       });
     }
 
@@ -372,19 +372,15 @@ router.put('/:id', validateMongoId, validateTaskUpdate, async (req, res) => {
       });
     }
 
-    // Get user to check task permissions
-    const user = await User.findById(req.user.id);
-
     // Check authorization
     const isAdmin = req.user.role === 'admin';
     const isProjectManager = req.user.role === 'project_manager' && task.project_id.assigned_to?.toString() === req.user.id;
     const isClient = task.project_id.client_id.toString() === req.user.id;
-    const hasUpdatePermission = isClient && user.task_permissions?.can_update === true;
 
-    if (!isAdmin && !isProjectManager && !hasUpdatePermission) {
+    if (!isAdmin && !isProjectManager && !isClient) {
       return res.status(403).json({
         success: false,
-        error: 'You do not have permission to update tasks'
+        error: 'Access denied'
       });
     }
 
@@ -394,10 +390,8 @@ router.put('/:id', validateMongoId, validateTaskUpdate, async (req, res) => {
       'estimated_hours', 'actual_hours', 'completion_percentage', 'tags', 'position'
     ];
 
-    // Clients with update permission have more fields available than before
-    const clientAllowedFields = hasUpdatePermission ?
-      ['title', 'description', 'status', 'priority', 'completion_percentage'] :
-      ['completion_percentage'];
+    // Clients can only update certain fields, project managers can update all fields
+    const clientAllowedFields = ['completion_percentage'];
     let fieldsToCheck = allowedFields;
     if (isClient && !isAdmin && !isProjectManager) {
       fieldsToCheck = clientAllowedFields;
@@ -819,8 +813,8 @@ router.delete('/:taskId/checklist/:itemId', validateMongoIdParam('taskId'), asyn
   }
 });
 
-// Delete task
-router.delete('/:id', validateMongoId, async (req, res) => {
+// Delete task (admin only)
+router.delete('/:id', validateMongoId, authorize('admin'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -832,9 +826,7 @@ router.delete('/:id', validateMongoId, async (req, res) => {
       });
     }
 
-    // Find task first to check authorization
-    const task = await Task.findById(id)
-      .populate('project_id', 'client_id assigned_to');
+    const task = await Task.findByIdAndDelete(id);
 
     if (!task) {
       return res.status(404).json({
@@ -843,27 +835,8 @@ router.delete('/:id', validateMongoId, async (req, res) => {
       });
     }
 
-    // Get user to check task permissions
-    const user = await User.findById(req.user.id);
-
-    // Check authorization: admin, project manager, or client with delete permission
-    const isAdmin = req.user.role === 'admin';
-    const isProjectManager = req.user.role === 'project_manager' && task.project_id.assigned_to?.toString() === req.user.id;
-    const isClient = task.project_id.client_id.toString() === req.user.id;
-    const hasDeletePermission = isClient && user.task_permissions?.can_delete === true;
-
-    if (!isAdmin && !isProjectManager && !hasDeletePermission) {
-      return res.status(403).json({
-        success: false,
-        error: 'You do not have permission to delete tasks'
-      });
-    }
-
-    // Delete the task
-    await Task.findByIdAndDelete(id);
-
     // Update project progress after task deletion
-    await updateProjectProgress(task.project_id._id);
+    await updateProjectProgress(task.project_id);
 
     res.json({
       success: true,

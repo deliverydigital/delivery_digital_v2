@@ -48,20 +48,6 @@ const userSchema = new Schema({
     type: Boolean,
     default: false
   },
-  task_permissions: {
-    can_create: {
-      type: Boolean,
-      default: false
-    },
-    can_update: {
-      type: Boolean,
-      default: false
-    },
-    can_delete: {
-      type: Boolean,
-      default: false
-    }
-  },
   email_verification_token: String,
   password_reset_token: String,
   password_reset_expires: Date,
