@@ -51,6 +51,10 @@ export const useTasks = (projectId: string) => {
     });
     if (result.success) {
       await loadTasks();
+      // Trigger project refresh if an urgent task was created
+      if (taskData.priority === 'urgent') {
+        window.dispatchEvent(new CustomEvent('refreshProjects'));
+      }
     }
     return result;
   };
@@ -64,14 +68,26 @@ export const useTasks = (projectId: string) => {
     const result = await TasksApiService.updateTask(taskId, updates);
     if (result.success) {
       await loadTasks();
+      // Trigger project refresh if priority was updated
+      if (updates.priority !== undefined) {
+        window.dispatchEvent(new CustomEvent('refreshProjects'));
+      }
     }
     return result;
   };
 
   const deleteTask = async (taskId: string) => {
+    // Check if the task being deleted is urgent before deleting
+    const taskToDelete = tasks.find(t => t.id === taskId);
+    const wasUrgent = taskToDelete?.priority === 'urgent';
+
     const result = await TasksApiService.deleteTask(taskId);
     if (result.success) {
       await loadTasks();
+      // Trigger project refresh if an urgent task was deleted
+      if (wasUrgent) {
+        window.dispatchEvent(new CustomEvent('refreshProjects'));
+      }
     }
     return result;
   };
