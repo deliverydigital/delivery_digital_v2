@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, Users, Calendar, Building2, Mail, Phone, MapPin, CheckCircle, AlertTriangle, Star, X, Save, User, UserCog } from 'lucide-react';
+import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, Users, Calendar, Building2, Mail, Phone, MapPin, CheckCircle, AlertTriangle, Star, X, Save, User, UserCog, Shield } from 'lucide-react';
 import { useClients } from '../../hooks/useApi';
 import { ApiService } from '../../services/api';
 
@@ -24,6 +24,11 @@ const ClientsTab = () => {
   });
   const [createError, setCreateError] = useState('');
   const [createSuccess, setCreateSuccess] = useState(false);
+  const [taskPermissions, setTaskPermissions] = useState({
+    can_create: false,
+    can_update: false,
+    can_delete: false
+  });
 
   const filteredClients = clients.filter(client => {
     const matchesSearch = client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -45,12 +50,14 @@ const ClientsTab = () => {
   const openViewModal = (client: any) => {
     setSelectedClient(client);
     setModalMode('view');
+    setTaskPermissions(client.taskPermissions || { can_create: false, can_update: false, can_delete: false });
     setShowModal(true);
   };
 
   const openEditModal = (client: any) => {
     setSelectedClient(client);
     setEditData(client);
+    setTaskPermissions(client.taskPermissions || { can_create: false, can_update: false, can_delete: false });
     setModalMode('edit');
     setShowModal(true);
   };
@@ -66,6 +73,17 @@ const ClientsTab = () => {
 
     try {
       await updateClient(selectedClient.id, editData);
+
+      const token = localStorage.getItem('authToken');
+      await fetch(`http://localhost:5000/api/users/clients/${selectedClient.id}/task-permissions`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(taskPermissions)
+      });
+
       closeModal();
       refreshClients();
     } catch (error) {
@@ -181,50 +199,90 @@ const ClientsTab = () => {
 
           <div className="p-6 space-y-6">
             {modalMode === 'view' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Nom</label>
-                    <div className="text-white font-medium">{selectedClient.name}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Email</label>
-                    <div className="text-white">{selectedClient.email}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Entreprise</label>
-                    <div className="text-white">{selectedClient.company || 'Non renseigné'}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Téléphone</label>
-                    <div className="text-white">{selectedClient.phone || 'Non renseigné'}</div>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Statut</label>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedClient.status)}`}>
-                      {selectedClient.status}
-                    </span>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Date d'inscription</label>
-                    <div className="text-white">
-                      {new Date(selectedClient.joinDate).toLocaleDateString('fr-FR')}
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-400">Nom</label>
+                      <div className="text-white font-medium">{selectedClient.name}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-400">Email</label>
+                      <div className="text-white">{selectedClient.email}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-400">Entreprise</label>
+                      <div className="text-white">{selectedClient.company || 'Non renseigné'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-400">Téléphone</label>
+                      <div className="text-white">{selectedClient.phone || 'Non renseigné'}</div>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Dernière connexion</label>
-                    <div className="text-white">
-                      {selectedClient.lastActivity ? new Date(selectedClient.lastActivity).toLocaleDateString('fr-FR') : 'Jamais'}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-400">Statut</label>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedClient.status)}`}>
+                        {selectedClient.status}
+                      </span>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-400">Date d'inscription</label>
+                      <div className="text-white">
+                        {new Date(selectedClient.joinDate).toLocaleDateString('fr-FR')}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-400">Dernière connexion</label>
+                      <div className="text-white">
+                        {selectedClient.lastActivity ? new Date(selectedClient.lastActivity).toLocaleDateString('fr-FR') : 'Jamais'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-400">Nombre de projets</label>
+                      <div className="text-white">{selectedClient.projectsCount}</div>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Nombre de projets</label>
-                    <div className="text-white">{selectedClient.projectsCount}</div>
-                  </div>
                 </div>
-              </div>
+
+                {selectedClient.role === 'client' && (
+                  <div className="mt-6 pt-6 border-t border-gray-700">
+                    <div className="flex items-center mb-4">
+                      <Shield className="h-5 w-5 text-blue-400 mr-2" />
+                      <h4 className="text-lg font-semibold text-white">Permissions des Tâches</h4>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-gray-800 rounded-lg p-4">
+                        <div className="flex items-center">
+                          <div className={`w-3 h-3 rounded-full mr-3 ${taskPermissions.can_create ? 'bg-green-500' : 'bg-gray-600'}`}></div>
+                          <div>
+                            <div className="text-white font-medium">Créer des tâches</div>
+                            <div className="text-gray-400 text-sm">{taskPermissions.can_create ? 'Autorisé' : 'Non autorisé'}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-gray-800 rounded-lg p-4">
+                        <div className="flex items-center">
+                          <div className={`w-3 h-3 rounded-full mr-3 ${taskPermissions.can_update ? 'bg-green-500' : 'bg-gray-600'}`}></div>
+                          <div>
+                            <div className="text-white font-medium">Modifier des tâches</div>
+                            <div className="text-gray-400 text-sm">{taskPermissions.can_update ? 'Autorisé' : 'Non autorisé'}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-gray-800 rounded-lg p-4">
+                        <div className="flex items-center">
+                          <div className={`w-3 h-3 rounded-full mr-3 ${taskPermissions.can_delete ? 'bg-green-500' : 'bg-gray-600'}`}></div>
+                          <div>
+                            <div className="text-white font-medium">Supprimer des tâches</div>
+                            <div className="text-gray-400 text-sm">{taskPermissions.can_delete ? 'Autorisé' : 'Non autorisé'}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -281,6 +339,73 @@ const ClientsTab = () => {
                     <option value="pending">En attente</option>
                   </select>
                 </div>
+
+                {selectedClient.role === 'client' && (
+                  <div className="mt-6 pt-6 border-t border-gray-700">
+                    <div className="flex items-center mb-4">
+                      <Shield className="h-5 w-5 text-blue-400 mr-2" />
+                      <h4 className="text-lg font-semibold text-white">Permissions des Tâches</h4>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between bg-gray-800 rounded-lg p-4">
+                        <div className="flex items-center">
+                          <Plus className="h-5 w-5 text-blue-400 mr-3" />
+                          <div>
+                            <div className="text-white font-medium">Créer des tâches</div>
+                            <div className="text-gray-400 text-sm">Permettre au client de créer de nouvelles tâches</div>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={taskPermissions.can_create}
+                            onChange={(e) => setTaskPermissions({ ...taskPermissions, can_create: e.target.checked })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                      </div>
+
+                      <div className="flex items-center justify-between bg-gray-800 rounded-lg p-4">
+                        <div className="flex items-center">
+                          <Edit className="h-5 w-5 text-green-400 mr-3" />
+                          <div>
+                            <div className="text-white font-medium">Modifier des tâches</div>
+                            <div className="text-gray-400 text-sm">Permettre au client de modifier les tâches existantes</div>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={taskPermissions.can_update}
+                            onChange={(e) => setTaskPermissions({ ...taskPermissions, can_update: e.target.checked })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                      </div>
+
+                      <div className="flex items-center justify-between bg-gray-800 rounded-lg p-4">
+                        <div className="flex items-center">
+                          <Trash2 className="h-5 w-5 text-red-400 mr-3" />
+                          <div>
+                            <div className="text-white font-medium">Supprimer des tâches</div>
+                            <div className="text-gray-400 text-sm">Permettre au client de supprimer des tâches</div>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={taskPermissions.can_delete}
+                            onChange={(e) => setTaskPermissions({ ...taskPermissions, can_delete: e.target.checked })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
