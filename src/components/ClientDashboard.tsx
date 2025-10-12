@@ -11,12 +11,94 @@ const ClientDashboard = () => {
   const { user, logout } = useAuth();
   const { projects, loading: projectsLoading } = useProjects(user?.id);
   const [selectedProject, setSelectedProject] = useState<any>(null);
+
+  const getTaskPermissions = () => {
+    if (!selectedProject || !user) {
+      return { view: true, add: false, update: false, delete: false };
+    }
+
+    if (user.role === 'admin') {
+      return { view: true, add: true, update: true, delete: true };
+    }
+
+    const permissions = selectedProject.taskPermissions?.[user.role];
+    if (!permissions) {
+      const defaults: any = {
+        client: { view: true, add: false, update: false, delete: false },
+        project_manager: { view: true, add: true, update: true, delete: true },
+        developer: { view: true, add: false, update: true, delete: false },
+        trainer: { view: true, add: false, update: false, delete: false }
+      };
+      return defaults[user.role] || { view: true, add: false, update: false, delete: false };
+    }
+
+    return permissions;
+  };
+
+  const taskPermissions = getTaskPermissions();
+
+  const handleEditTask = () => {
+    setEditedTask({ ...selectedTask });
+    setIsEditingTask(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditedTask(null);
+    setIsEditingTask(false);
+  };
+
+  const handleSaveTask = async () => {
+    if (!editedTask) return;
+
+    try {
+      const TasksApi = (await import('../services/tasksApi')).default;
+      const result = await TasksApi.updateTask(editedTask.id, editedTask);
+
+      if (result.success) {
+        await refreshTasks();
+        setIsEditingTask(false);
+        setEditedTask(null);
+      } else {
+        alert('Erreur lors de la mise à jour de la tâche: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error updating task:', error);
+      alert('Erreur lors de la mise à jour de la tâche');
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!selectedTask) return;
+
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) {
+      return;
+    }
+
+    try {
+      const TasksApi = (await import('../services/tasksApi')).default;
+      const result = await TasksApi.deleteTask(selectedTask.id);
+
+      if (result.success) {
+        setShowTaskModal(false);
+        setSelectedTask(null);
+        await refreshTasks();
+      } else {
+        alert('Erreur lors de la suppression de la tâche: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      alert('Erreur lors de la suppression de la tâche');
+    }
+  };
+
   const [activeTab, setActiveTab] = useState('overview');
   const [activeSubTab, setActiveSubTab] = useState('kanban');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [isEditingTask, setIsEditingTask] = useState(false);
+  const [editedTask, setEditedTask] = useState<any>(null);
   const [filters, setFilters] = useState({
     status: 'all',
     priority: 'all',
@@ -128,7 +210,7 @@ const ClientDashboard = () => {
           className="bg-gray-900 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
         >
           <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-            <div className="flex items-center">
+            <div className="flex items-center flex-1">
               <div className={`w-3 h-3 rounded-full mr-3 ${
                 selectedTask.priority === 'urgent' ? 'bg-red-500' :
                 selectedTask.priority === 'high' ? 'bg-orange-500' :
@@ -136,15 +218,55 @@ const ClientDashboard = () => {
               }`}></div>
               <h3 className="text-xl font-bold text-white">{selectedTask.title}</h3>
             </div>
-            <button
-              onClick={() => {
-                setShowTaskModal(false);
-                setSelectedTask(null);
-              }}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              <X className="h-6 w-6" />
-            </button>
+            <div className="flex items-center space-x-2">
+              {!isEditingTask && taskPermissions.update && (
+                <button
+                  onClick={handleEditTask}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center transition-colors"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Modifier
+                </button>
+              )}
+              {!isEditingTask && taskPermissions.delete && (
+                <button
+                  onClick={handleDeleteTask}
+                  className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center transition-colors"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Supprimer
+                </button>
+              )}
+              {isEditingTask && (
+                <>
+                  <button
+                    onClick={handleSaveTask}
+                    className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center transition-colors"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Enregistrer
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg flex items-center transition-colors"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Annuler
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => {
+                  setShowTaskModal(false);
+                  setSelectedTask(null);
+                  setIsEditingTask(false);
+                  setEditedTask(null);
+                }}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
           </div>
 
           <div className="p-6 space-y-6">
@@ -153,17 +275,44 @@ const ClientDashboard = () => {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-gray-400">Statut</label>
-                  <div className="mt-1">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedTask.status)}`}>
-                      {getStatusText(selectedTask.status)}
-                    </span>
-                  </div>
+                  {isEditingTask ? (
+                    <select
+                      value={editedTask.status}
+                      onChange={(e) => setEditedTask({ ...editedTask, status: e.target.value })}
+                      className="mt-1 w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    >
+                      <option value="todo">À faire</option>
+                      <option value="in_progress">En cours</option>
+                      <option value="review">En révision</option>
+                      <option value="done">Terminé</option>
+                      <option value="blocked">Bloqué</option>
+                    </select>
+                  ) : (
+                    <div className="mt-1">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedTask.status)}`}>
+                        {getStatusText(selectedTask.status)}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-400">Priorité</label>
-                  <div className={`mt-1 font-medium ${getPriorityColor(selectedTask.priority)}`}>
-                    {getPriorityText(selectedTask.priority)}
-                  </div>
+                  {isEditingTask ? (
+                    <select
+                      value={editedTask.priority}
+                      onChange={(e) => setEditedTask({ ...editedTask, priority: e.target.value })}
+                      className="mt-1 w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    >
+                      <option value="low">Faible</option>
+                      <option value="medium">Moyenne</option>
+                      <option value="high">Haute</option>
+                      <option value="urgent">Urgente</option>
+                    </select>
+                  ) : (
+                    <div className={`mt-1 font-medium ${getPriorityColor(selectedTask.priority)}`}>
+                      {getPriorityText(selectedTask.priority)}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-400">Assigné à</label>
@@ -185,9 +334,18 @@ const ClientDashboard = () => {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-gray-400">Échéance</label>
-                  <div className="mt-1 text-white">
-                    {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString('fr-FR') : 'Non définie'}
-                  </div>
+                  {isEditingTask ? (
+                    <input
+                      type="date"
+                      value={editedTask.dueDate ? new Date(editedTask.dueDate).toISOString().split('T')[0] : ''}
+                      onChange={(e) => setEditedTask({ ...editedTask, dueDate: e.target.value ? new Date(e.target.value) : null })}
+                      className="mt-1 w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    />
+                  ) : (
+                    <div className="mt-1 text-white">
+                      {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString('fr-FR') : 'Non définie'}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-400">Temps</label>
@@ -226,15 +384,39 @@ const ClientDashboard = () => {
               </div>
             </div>
 
-            {/* Description */}
-            {selectedTask.description && (
+            {/* Title (editable) */}
+            {isEditingTask && (
               <div>
-                <label className="text-sm font-medium text-gray-400">Description</label>
+                <label className="text-sm font-medium text-gray-400">Titre</label>
+                <input
+                  type="text"
+                  value={editedTask.title}
+                  onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
+                  className="mt-1 w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                />
+              </div>
+            )}
+
+            {/* Description */}
+            <div>
+              <label className="text-sm font-medium text-gray-400">Description</label>
+              {isEditingTask ? (
+                <textarea
+                  value={editedTask.description || ''}
+                  onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
+                  rows={4}
+                  className="mt-2 w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                />
+              ) : selectedTask.description ? (
                 <div className="mt-2 p-4 bg-gray-800 rounded-lg">
                   <p className="text-gray-300 whitespace-pre-wrap">{selectedTask.description}</p>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="mt-2 p-4 bg-gray-800 rounded-lg">
+                  <p className="text-gray-500 italic">Aucune description</p>
+                </div>
+              )}
+            </div>
 
             {/* Checklist */}
             {selectedTask.checklist && selectedTask.checklist.length > 0 && (
