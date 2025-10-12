@@ -614,21 +614,40 @@ const ClientDashboard = () => {
                 <h2 className="text-2xl font-bold text-white">Gestion des Tâches</h2>
                 <div className="flex items-center space-x-4">
                   {/* Project Selector */}
-                  <select
-                    value={selectedProject?.id || ''}
-                    onChange={(e) => {
-                      const project = projects.find(p => p.id === e.target.value);
-                      setSelectedProject(project);
-                    }}
-                    className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
-                  >
-                    <option value="">Tous les projets</option>
-                    {projects.map((project) => (
-                      <option key={project.id} value={project.id}>
-                        {project.title}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={selectedProject?.id || ''}
+                      onChange={(e) => {
+                        const project = projects.find(p => p.id === e.target.value);
+                        setSelectedProject(project);
+                      }}
+                      className="px-4 py-2 pr-10 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                    >
+                      <option value="">Tous les projets</option>
+                      {projects.map((project) => {
+                        const projectTasks = tasks.filter(t => t.projectId === project.id);
+                        const hasUrgent = projectTasks.some(t =>
+                          t.priority === 'urgent' ||
+                          (t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done')
+                        );
+                        return (
+                          <option key={project.id} value={project.id}>
+                            {hasUrgent ? '🔴 ' : ''}{project.title}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    {selectedProject && (() => {
+                      const projectTasks = tasks.filter(t => t.projectId === selectedProject.id);
+                      const hasUrgent = projectTasks.some(t =>
+                        t.priority === 'urgent' ||
+                        (t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done')
+                      );
+                      return hasUrgent ? (
+                        <AlertTriangle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-red-500 pointer-events-none" />
+                      ) : null;
+                    })()}
+                  </div>
                   <button
                     onClick={refreshTasks}
                     className="btn btn-secondary"
