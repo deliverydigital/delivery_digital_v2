@@ -34,6 +34,16 @@ const ClientDashboard = () => {
     }
   }, [projects, selectedProject, user]);
 
+  // Keep selectedTask synchronized with tasks array
+  useEffect(() => {
+    if (selectedTask && tasks) {
+      const updatedTask = tasks.find(t => t.id === selectedTask.id);
+      if (updatedTask) {
+        setSelectedTask(updatedTask);
+      }
+    }
+  }, [tasks]);
+
   const handleLogout = () => {
     logout();
     window.location.href = '/';

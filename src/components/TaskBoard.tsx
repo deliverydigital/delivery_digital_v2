@@ -54,6 +54,16 @@ const TaskBoard = ({ projectId, isAdmin = false, clientView = false }: TaskBoard
     { id: 'done', name: 'Terminé', position: 3, color: '#10b981' }
   ];
 
+  // Keep selectedTask synchronized with tasks array
+  useEffect(() => {
+    if (selectedTask) {
+      const updatedTask = tasks.find(t => t.id === selectedTask.id);
+      if (updatedTask) {
+        setSelectedTask(updatedTask);
+      }
+    }
+  }, [tasks]);
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent': return 'bg-red-500';
