@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { RefreshCw, FolderOpen, ClipboardList, AlertTriangle, Link, ExternalLink, ChevronRight, Download, Calendar, Filter } from 'lucide-react';
+import { RefreshCw, FolderOpen, ClipboardList, AlertTriangle, Link, ExternalLink, ChevronRight, Download, Calendar, Filter, ListPlus } from 'lucide-react';
 import { useProjects } from '../../hooks/useApi';
 import { useTasks } from '../../hooks/useTasks';
 import TaskBoard from '../TaskBoard';
@@ -153,6 +153,76 @@ const TasksTab = () => {
     setEndDate('');
   };
 
+  const createDefaultTasksManually = async () => {
+    if (!selectedProject) {
+      alert('Veuillez sélectionner un projet');
+      return;
+    }
+
+    // Get project type from localStorage
+    const projectTypesStr = localStorage.getItem('projectTypes');
+    if (!projectTypesStr) {
+      alert('Aucun type de projet défini dans le système');
+      return;
+    }
+
+    const projectTypes = JSON.parse(projectTypesStr);
+    const projectTypeName = selectedProject.type;
+
+    // Find matching project type
+    const projectType = projectTypes.find((pt: any) =>
+      pt.name.toLowerCase().replace(/\s+/g, '-') === projectTypeName ||
+      pt.name === projectTypeName
+    );
+
+    if (!projectType) {
+      alert('Type de projet non trouvé: ' + projectTypeName);
+      return;
+    }
+
+    if (!projectType.defaultTasks || projectType.defaultTasks.length === 0) {
+      alert('Aucune tâche par défaut définie pour ce type de projet.\n\nAllez dans Types de Projets pour configurer les tâches par défaut.');
+      return;
+    }
+
+    const confirmCreate = confirm(
+      `Créer ${projectType.defaultTasks.length} tâche(s) par défaut pour "${selectedProject.title}"?\n\nType: ${projectType.name}`
+    );
+
+    if (!confirmCreate) return;
+
+    try {
+      const TasksApiService = (await import('../../services/tasksApi')).default;
+
+      for (const defaultTask of projectType.defaultTasks) {
+        await TasksApiService.createTask({
+          projectId: selectedProject.id,
+          title: defaultTask.title,
+          description: defaultTask.description,
+          priority: defaultTask.priority,
+          estimatedHours: defaultTask.estimatedHours,
+          status: 'todo',
+          tags: [],
+          completionPercentage: 0,
+          dependencies: [],
+          attachments: [],
+          comments: [],
+          watchers: [],
+          labels: [],
+          checklist: [],
+          timeTracking: [],
+          history: []
+        });
+      }
+
+      alert(`${projectType.defaultTasks.length} tâche(s) créée(s) avec succès!`);
+      refreshTasks();
+    } catch (error: any) {
+      console.error('Error creating default tasks:', error);
+      alert('Erreur lors de la création des tâches: ' + (error.message || 'Erreur inconnue'));
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -189,6 +259,15 @@ const TasksTab = () => {
 
             <ChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 rotate-90 h-4 w-4 text-gray-400 pointer-events-none" />
           </div>
+          <button
+            onClick={createDefaultTasksManually}
+            className="btn bg-green-600 hover:bg-green-700 text-white"
+            disabled={!selectedProject}
+            title="Créer les tâches par défaut du type de projet"
+          >
+            <ListPlus className="h-4 w-4 mr-2" />
+            Tâches par défaut
+          </button>
           <button
             onClick={() => setShowDateFilter(!showDateFilter)}
             className={`btn ${showDateFilter ? 'btn-primary' : 'btn-secondary'}`}
