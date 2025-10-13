@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Save, X, ListChecks } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, ListChecks, RefreshCw } from 'lucide-react';
+import ProjectTypesApiService, { ProjectType as ApiProjectType, DefaultTask as ApiDefaultTask } from '../../services/projectTypesApi';
 
 interface DefaultTask {
   id: string;
@@ -7,12 +8,13 @@ interface DefaultTask {
   description: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   estimatedHours?: number;
+  orderIndex?: number;
 }
 
 interface ProjectType {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   defaultTasks?: DefaultTask[];
   createdAt: Date;
 }
@@ -22,6 +24,7 @@ const ProjectTypesTab = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [managingTasksId, setManagingTasksId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     description: ''
@@ -31,7 +34,8 @@ const ProjectTypesTab = () => {
     title: '',
     description: '',
     priority: 'medium' as const,
-    estimatedHours: undefined
+    estimatedHours: undefined,
+    orderIndex: 0
   });
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -40,50 +44,60 @@ const ProjectTypesTab = () => {
     loadProjectTypes();
   }, []);
 
-  const loadProjectTypes = () => {
-    const stored = localStorage.getItem('projectTypes');
-    if (stored) {
-      const types = JSON.parse(stored);
-      setProjectTypes(types.map((t: any) => ({
-        ...t,
-        createdAt: new Date(t.createdAt)
-      })));
-    } else {
-      const defaultTypes: ProjectType[] = [
-        { id: '1', name: 'Site Web / Application Web', description: 'Développement de sites web et applications web', createdAt: new Date() },
-        { id: '2', name: 'Application Mobile', description: 'Développement d\'applications mobiles iOS et Android', createdAt: new Date() },
-        { id: '3', name: 'E-commerce', description: 'Boutiques en ligne et plateformes de vente', createdAt: new Date() },
-        { id: '4', name: 'Application Desktop', description: 'Applications de bureau multi-plateformes', createdAt: new Date() },
-        { id: '5', name: 'API / Backend', description: 'Services backend et APIs REST/GraphQL', createdAt: new Date() },
-        { id: '6', name: 'Formation', description: 'Programmes de formation et cours', createdAt: new Date() },
-        { id: '7', name: 'Consulting', description: 'Services de conseil et expertise technique', createdAt: new Date() }
-      ];
-      setProjectTypes(defaultTypes);
-      localStorage.setItem('projectTypes', JSON.stringify(defaultTypes));
+  const loadProjectTypes = async () => {
+    setLoading(true);
+    try {
+      const result = await ProjectTypesApiService.getAllProjectTypes();
+      if (result.success && result.data) {
+        const mappedTypes = result.data.map((type: ApiProjectType) => ({
+          id: type.id,
+          name: type.name,
+          description: type.description,
+          defaultTasks: type.default_tasks?.map((task: ApiDefaultTask) => ({
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            priority: task.priority,
+            estimatedHours: task.estimated_hours,
+            orderIndex: task.order_index
+          })),
+          createdAt: new Date(type.created_at)
+        }));
+        setProjectTypes(mappedTypes);
+      } else {
+        console.error('Failed to load project types:', result.error);
+        alert('Erreur lors du chargement des types de projets');
+      }
+    } catch (error) {
+      console.error('Error loading project types:', error);
+      alert('Erreur lors du chargement des types de projets');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const saveProjectTypes = (types: ProjectType[]) => {
-    localStorage.setItem('projectTypes', JSON.stringify(types));
-    setProjectTypes(types);
-  };
-
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!formData.name.trim()) {
       alert('Le nom du type de projet est requis');
       return;
     }
 
-    const newType: ProjectType = {
-      id: Date.now().toString(),
-      name: formData.name.trim(),
-      description: formData.description.trim(),
-      createdAt: new Date()
-    };
+    try {
+      const result = await ProjectTypesApiService.createProjectType({
+        name: formData.name.trim(),
+        description: formData.description.trim()
+      });
 
-    saveProjectTypes([...projectTypes, newType]);
-    setFormData({ name: '', description: '' });
-    setIsAdding(false);
+      if (result.success) {
+        await loadProjectTypes();
+        setFormData({ name: '', description: '' });
+        setIsAdding(false);
+      } else {
+        alert('Erreur: ' + result.error);
+      }
+    } catch (error: any) {
+      alert('Erreur lors de la création: ' + error.message);
+    }
   };
 
   const handleEdit = (type: ProjectType) => {
@@ -94,27 +108,46 @@ const ProjectTypesTab = () => {
     });
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!formData.name.trim()) {
       alert('Le nom du type de projet est requis');
       return;
     }
 
-    const updated = projectTypes.map(type =>
-      type.id === editingId
-        ? { ...type, name: formData.name.trim(), description: formData.description.trim() }
-        : type
-    );
+    if (!editingId) return;
 
-    saveProjectTypes(updated);
-    setEditingId(null);
-    setFormData({ name: '', description: '' });
+    try {
+      const result = await ProjectTypesApiService.updateProjectType(editingId, {
+        name: formData.name.trim(),
+        description: formData.description.trim()
+      });
+
+      if (result.success) {
+        await loadProjectTypes();
+        setEditingId(null);
+        setFormData({ name: '', description: '' });
+      } else {
+        alert('Erreur: ' + result.error);
+      }
+    } catch (error: any) {
+      alert('Erreur lors de la mise à jour: ' + error.message);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce type de projet ?')) {
-      const filtered = projectTypes.filter(type => type.id !== id);
-      saveProjectTypes(filtered);
+  const handleDelete = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce type de projet ?')) {
+      return;
+    }
+
+    try {
+      const result = await ProjectTypesApiService.deleteProjectType(id);
+      if (result.success) {
+        await loadProjectTypes();
+      } else {
+        alert('Erreur: ' + result.error);
+      }
+    } catch (error: any) {
+      alert('Erreur lors de la suppression: ' + error.message);
     }
   };
 
@@ -128,38 +161,40 @@ const ProjectTypesTab = () => {
     setManagingTasksId(type.id);
   };
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     if (!taskFormData.title.trim()) {
       alert('Le titre de la tâche est requis');
       return;
     }
 
-    const projectType = projectTypes.find(pt => pt.id === managingTasksId);
-    if (!projectType) return;
+    if (!managingTasksId) return;
 
-    const newTask: DefaultTask = {
-      id: Date.now().toString(),
-      title: taskFormData.title.trim(),
-      description: taskFormData.description.trim(),
-      priority: taskFormData.priority,
-      estimatedHours: taskFormData.estimatedHours
-    };
+    try {
+      const result = await ProjectTypesApiService.createDefaultTask(managingTasksId, {
+        title: taskFormData.title.trim(),
+        description: taskFormData.description.trim(),
+        priority: taskFormData.priority,
+        estimatedHours: taskFormData.estimatedHours || 0,
+        orderIndex: taskFormData.orderIndex || 0
+      });
 
-    const updatedTypes = projectTypes.map(pt =>
-      pt.id === managingTasksId
-        ? { ...pt, defaultTasks: [...(pt.defaultTasks || []), newTask] }
-        : pt
-    );
-
-    saveProjectTypes(updatedTypes);
-    setTaskFormData({
-      id: '',
-      title: '',
-      description: '',
-      priority: 'medium',
-      estimatedHours: undefined
-    });
-    setIsAddingTask(false);
+      if (result.success) {
+        await loadProjectTypes();
+        setTaskFormData({
+          id: '',
+          title: '',
+          description: '',
+          priority: 'medium',
+          estimatedHours: undefined,
+          orderIndex: 0
+        });
+        setIsAddingTask(false);
+      } else {
+        alert('Erreur: ' + result.error);
+      }
+    } catch (error: any) {
+      alert('Erreur lors de la création de la tâche: ' + error.message);
+    }
   };
 
   const handleEditTask = (task: DefaultTask) => {
@@ -167,54 +202,62 @@ const ProjectTypesTab = () => {
     setTaskFormData(task);
   };
 
-  const handleUpdateTask = () => {
+  const handleUpdateTask = async () => {
     if (!taskFormData.title.trim()) {
       alert('Le titre de la tâche est requis');
       return;
     }
 
-    const updatedTypes = projectTypes.map(pt =>
-      pt.id === managingTasksId
-        ? {
-            ...pt,
-            defaultTasks: (pt.defaultTasks || []).map(task =>
-              task.id === editingTaskId
-                ? {
-                    ...task,
-                    title: taskFormData.title.trim(),
-                    description: taskFormData.description.trim(),
-                    priority: taskFormData.priority,
-                    estimatedHours: taskFormData.estimatedHours
-                  }
-                : task
-            )
-          }
-        : pt
-    );
+    if (!managingTasksId || !editingTaskId) return;
 
-    saveProjectTypes(updatedTypes);
-    setTaskFormData({
-      id: '',
-      title: '',
-      description: '',
-      priority: 'medium',
-      estimatedHours: undefined
-    });
-    setEditingTaskId(null);
-  };
-
-  const handleDeleteTask = (taskId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette tâche par défaut ?')) {
-      const updatedTypes = projectTypes.map(pt =>
-        pt.id === managingTasksId
-          ? {
-              ...pt,
-              defaultTasks: (pt.defaultTasks || []).filter(task => task.id !== taskId)
-            }
-          : pt
+    try {
+      const result = await ProjectTypesApiService.updateDefaultTask(
+        managingTasksId,
+        editingTaskId,
+        {
+          title: taskFormData.title.trim(),
+          description: taskFormData.description.trim(),
+          priority: taskFormData.priority,
+          estimatedHours: taskFormData.estimatedHours || 0,
+          orderIndex: taskFormData.orderIndex || 0
+        }
       );
 
-      saveProjectTypes(updatedTypes);
+      if (result.success) {
+        await loadProjectTypes();
+        setTaskFormData({
+          id: '',
+          title: '',
+          description: '',
+          priority: 'medium',
+          estimatedHours: undefined,
+          orderIndex: 0
+        });
+        setEditingTaskId(null);
+      } else {
+        alert('Erreur: ' + result.error);
+      }
+    } catch (error: any) {
+      alert('Erreur lors de la mise à jour de la tâche: ' + error.message);
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette tâche par défaut ?')) {
+      return;
+    }
+
+    if (!managingTasksId) return;
+
+    try {
+      const result = await ProjectTypesApiService.deleteDefaultTask(managingTasksId, taskId);
+      if (result.success) {
+        await loadProjectTypes();
+      } else {
+        alert('Erreur: ' + result.error);
+      }
+    } catch (error: any) {
+      alert('Erreur lors de la suppression de la tâche: ' + error.message);
     }
   };
 
@@ -226,9 +269,21 @@ const ProjectTypesTab = () => {
       title: '',
       description: '',
       priority: 'medium',
-      estimatedHours: undefined
+      estimatedHours: undefined,
+      orderIndex: 0
     });
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-400 mx-auto mb-2"></div>
+          <p className="text-gray-400">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -237,15 +292,24 @@ const ProjectTypesTab = () => {
           <h2 className="text-2xl font-bold text-white mb-2">Types de Projets</h2>
           <p className="text-gray-400">Gérez les types de projets disponibles dans le système</p>
         </div>
-        {!isAdding && !editingId && (
+        <div className="flex gap-3">
           <button
-            onClick={() => setIsAdding(true)}
-            className="btn btn-primary flex items-center"
+            onClick={loadProjectTypes}
+            className="btn btn-secondary flex items-center"
           >
-            <Plus className="h-5 w-5 mr-2" />
-            Ajouter un type
+            <RefreshCw className="h-5 w-5 mr-2" />
+            Actualiser
           </button>
-        )}
+          {!isAdding && !editingId && (
+            <button
+              onClick={() => setIsAdding(true)}
+              className="btn btn-primary flex items-center"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Ajouter un type
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Add/Edit Form */}

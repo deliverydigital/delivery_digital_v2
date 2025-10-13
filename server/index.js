@@ -31,6 +31,7 @@ import trainingProgramsRoutes from './routes/trainingPrograms.js';
 import categoriesRoutes from './routes/categories.js';
 import reclamationRoutes from './routes/reclamation.js';
 import contactRoutes from './routes/contact.js';
+import projectTypesRoutes from './routes/projectTypes.js';
 import {createDummyUsers} from './scripts/createUsers.js';
 import {createDummyTrainingDocuments} from './scripts/createTrainingDocuments.js';
 import {seedTrainingPrograms} from './scripts/seedTrainingPrograms.js';
@@ -125,6 +126,7 @@ app.use('/api/training-programs', trainingProgramsRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/reclamation', reclamationRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/project-types', projectTypesRoutes);
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {

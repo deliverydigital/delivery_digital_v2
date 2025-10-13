@@ -35,34 +35,35 @@ const TasksTab = () => {
         return;
       }
 
-      // Get project type from localStorage
-      const projectTypesStr = localStorage.getItem('projectTypes');
-      if (!projectTypesStr) return;
-
-      const projectTypes = JSON.parse(projectTypesStr);
-      const projectTypeName = selectedProject.type;
-
-      // Find matching project type by converting both to comparable formats
-      const projectType = projectTypes.find((pt: any) =>
-        pt.name.toLowerCase().replace(/\s+/g, '-') === projectTypeName ||
-        pt.name === projectTypeName
-      );
-
-      if (!projectType || !projectType.defaultTasks || projectType.defaultTasks.length === 0) {
-        return;
-      }
-
-      // Create default tasks
+      // Get project types from API
       try {
+        const ProjectTypesApiService = (await import('../../services/projectTypesApi')).default;
+        const result = await ProjectTypesApiService.getAllProjectTypes();
+
+        if (!result.success || !result.data) return;
+
+        const projectTypeName = selectedProject.type;
+
+        // Find matching project type by converting both to comparable formats
+        const projectType = result.data.find((pt: any) =>
+          pt.name.toLowerCase().replace(/\s+/g, '-') === projectTypeName ||
+          pt.name === projectTypeName
+        );
+
+        if (!projectType || !projectType.default_tasks || projectType.default_tasks.length === 0) {
+          return;
+        }
+
+        // Create default tasks
         const TasksApiService = (await import('../../services/tasksApi')).default;
 
-        for (const defaultTask of projectType.defaultTasks) {
+        for (const defaultTask of projectType.default_tasks) {
           await TasksApiService.createTask({
             projectId: selectedProject.id,
             title: defaultTask.title,
             description: defaultTask.description,
             priority: defaultTask.priority,
-            estimatedHours: defaultTask.estimatedHours,
+            estimatedHours: defaultTask.estimated_hours,
             status: 'todo',
             tags: [],
             completionPercentage: 0,
@@ -159,48 +160,49 @@ const TasksTab = () => {
       return;
     }
 
-    // Get project type from localStorage
-    const projectTypesStr = localStorage.getItem('projectTypes');
-    if (!projectTypesStr) {
-      alert('Aucun type de projet défini dans le système');
-      return;
-    }
-
-    const projectTypes = JSON.parse(projectTypesStr);
-    const projectTypeName = selectedProject.type;
-
-    // Find matching project type
-    const projectType = projectTypes.find((pt: any) =>
-      pt.name.toLowerCase().replace(/\s+/g, '-') === projectTypeName ||
-      pt.name === projectTypeName
-    );
-
-    if (!projectType) {
-      alert('Type de projet non trouvé: ' + projectTypeName);
-      return;
-    }
-
-    if (!projectType.defaultTasks || projectType.defaultTasks.length === 0) {
-      alert('Aucune tâche par défaut définie pour ce type de projet.\n\nAllez dans Types de Projets pour configurer les tâches par défaut.');
-      return;
-    }
-
-    const confirmCreate = confirm(
-      `Créer ${projectType.defaultTasks.length} tâche(s) par défaut pour "${selectedProject.title}"?\n\nType: ${projectType.name}`
-    );
-
-    if (!confirmCreate) return;
-
     try {
+      // Get project types from API
+      const ProjectTypesApiService = (await import('../../services/projectTypesApi')).default;
+      const result = await ProjectTypesApiService.getAllProjectTypes();
+
+      if (!result.success || !result.data) {
+        alert('Aucun type de projet défini dans le système');
+        return;
+      }
+
+      const projectTypeName = selectedProject.type;
+
+      // Find matching project type
+      const projectType = result.data.find((pt: any) =>
+        pt.name.toLowerCase().replace(/\s+/g, '-') === projectTypeName ||
+        pt.name === projectTypeName
+      );
+
+      if (!projectType) {
+        alert('Type de projet non trouvé: ' + projectTypeName);
+        return;
+      }
+
+      if (!projectType.default_tasks || projectType.default_tasks.length === 0) {
+        alert('Aucune tâche par défaut définie pour ce type de projet.\n\nAllez dans Types de Projets pour configurer les tâches par défaut.');
+        return;
+      }
+
+      const confirmCreate = confirm(
+        `Créer ${projectType.default_tasks.length} tâche(s) par défaut pour "${selectedProject.title}"?\n\nType: ${projectType.name}`
+      );
+
+      if (!confirmCreate) return;
+
       const TasksApiService = (await import('../../services/tasksApi')).default;
 
-      for (const defaultTask of projectType.defaultTasks) {
+      for (const defaultTask of projectType.default_tasks) {
         await TasksApiService.createTask({
           projectId: selectedProject.id,
           title: defaultTask.title,
           description: defaultTask.description,
           priority: defaultTask.priority,
-          estimatedHours: defaultTask.estimatedHours,
+          estimatedHours: defaultTask.estimated_hours,
           status: 'todo',
           tags: [],
           completionPercentage: 0,
@@ -215,7 +217,7 @@ const TasksTab = () => {
         });
       }
 
-      alert(`${projectType.defaultTasks.length} tâche(s) créée(s) avec succès!`);
+      alert(`${projectType.default_tasks.length} tâche(s) créée(s) avec succès!`);
       refreshTasks();
     } catch (error: any) {
       console.error('Error creating default tasks:', error);

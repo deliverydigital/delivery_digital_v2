@@ -38,22 +38,46 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
   const [authKey, setAuthKey] = useState(0); // Force re-render after auth
 
   useEffect(() => {
-    const stored = localStorage.getItem('projectTypes');
-    if (stored) {
-      const types = JSON.parse(stored);
-      setProjectTypes(types);
-    } else {
-      const defaultTypes = [
-        { id: '1', name: 'Site Web / Application Web' },
-        { id: '2', name: 'Application Mobile' },
-        { id: '3', name: 'E-commerce' },
-        { id: '4', name: 'Application Desktop' },
-        { id: '5', name: 'API / Backend' },
-        { id: '6', name: 'Formation' },
-        { id: '7', name: 'Consulting' }
-      ];
-      setProjectTypes(defaultTypes);
-    }
+    const loadProjectTypes = async () => {
+      try {
+        const ProjectTypesApiService = (await import('../services/projectTypesApi')).default;
+        const result = await ProjectTypesApiService.getAllProjectTypes();
+
+        if (result.success && result.data) {
+          setProjectTypes(result.data.map((pt: any) => ({
+            id: pt.id,
+            name: pt.name
+          })));
+        } else {
+          // Fallback to default types
+          const defaultTypes = [
+            { id: '1', name: 'Site Web / Application Web' },
+            { id: '2', name: 'Application Mobile' },
+            { id: '3', name: 'E-commerce' },
+            { id: '4', name: 'Application Desktop' },
+            { id: '5', name: 'API / Backend' },
+            { id: '6', name: 'Formation' },
+            { id: '7', name: 'Consulting' }
+          ];
+          setProjectTypes(defaultTypes);
+        }
+      } catch (error) {
+        console.error('Error loading project types:', error);
+        // Fallback to default types on error
+        const defaultTypes = [
+          { id: '1', name: 'Site Web / Application Web' },
+          { id: '2', name: 'Application Mobile' },
+          { id: '3', name: 'E-commerce' },
+          { id: '4', name: 'Application Desktop' },
+          { id: '5', name: 'API / Backend' },
+          { id: '6', name: 'Formation' },
+          { id: '7', name: 'Consulting' }
+        ];
+        setProjectTypes(defaultTypes);
+      }
+    };
+
+    loadProjectTypes();
   }, []);
 
   useEffect(() => {
