@@ -393,8 +393,8 @@ router.put('/:id', validateMongoId, validateTaskUpdate, async (req, res) => {
       'estimated_hours', 'actual_hours', 'completion_percentage', 'tags', 'position'
     ];
 
-    // Clients can only update certain fields unless they have full update permission
-    const clientAllowedFields = ['completion_percentage'];
+    // Clients can update status and completion_percentage in addition to viewing
+    const clientAllowedFields = ['status', 'completion_percentage', 'title', 'description'];
     let fieldsToCheck = allowedFields;
     if (isClient && !hasUpdatePermission && !isProjectManager) {
       fieldsToCheck = clientAllowedFields;
