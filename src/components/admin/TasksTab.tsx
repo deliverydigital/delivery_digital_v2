@@ -161,9 +161,13 @@ const TasksTab = () => {
     }
 
     try {
+      console.log('Selected project:', selectedProject);
+
       // Get project types from API
       const ProjectTypesApiService = (await import('../../services/projectTypesApi')).default;
       const result = await ProjectTypesApiService.getAllProjectTypes();
+
+      console.log('Project types result:', result);
 
       if (!result.success || !result.data) {
         alert('Aucun type de projet défini dans le système');
@@ -171,12 +175,15 @@ const TasksTab = () => {
       }
 
       const projectTypeName = selectedProject.type;
+      console.log('Looking for project type:', projectTypeName);
 
       // Find matching project type
       const projectType = result.data.find((pt: any) =>
         pt.name.toLowerCase().replace(/\s+/g, '-') === projectTypeName ||
         pt.name === projectTypeName
       );
+
+      console.log('Found project type:', projectType);
 
       if (!projectType) {
         alert('Type de projet non trouvé: ' + projectTypeName);
@@ -196,8 +203,13 @@ const TasksTab = () => {
 
       const TasksApiService = (await import('../../services/tasksApi')).default;
 
+      console.log('Creating tasks...');
+      let created = 0;
+      let failed = 0;
+
       for (const defaultTask of projectType.defaultTasks) {
-        await TasksApiService.createTask({
+        console.log('Creating task:', defaultTask.title);
+        const taskResult = await TasksApiService.createTask({
           projectId: selectedProject.id,
           title: defaultTask.title,
           description: defaultTask.description,
@@ -215,9 +227,21 @@ const TasksTab = () => {
           timeTracking: [],
           history: []
         });
+
+        if (taskResult.success) {
+          created++;
+          console.log('Task created successfully:', defaultTask.title);
+        } else {
+          failed++;
+          console.error('Failed to create task:', defaultTask.title, taskResult.error);
+        }
       }
 
-      alert(`${projectType.defaultTasks.length} tâche(s) créée(s) avec succès!`);
+      if (failed > 0) {
+        alert(`${created} tâche(s) créée(s), ${failed} échec(s). Consultez la console pour plus de détails.`);
+      } else {
+        alert(`${created} tâche(s) créée(s) avec succès!`);
+      }
       refreshTasks();
     } catch (error: any) {
       console.error('Error creating default tasks:', error);
