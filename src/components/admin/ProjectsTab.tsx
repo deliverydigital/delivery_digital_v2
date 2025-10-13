@@ -19,6 +19,7 @@ const ProjectsTab = () => {
 
   const currentUser = ApiService.getCurrentUser();
   const isAdmin = currentUser?.role === 'admin';
+  const isProjectManager = currentUser?.role === 'project_manager';
 
   useEffect(() => {
     loadProjectManagers();
@@ -27,6 +28,12 @@ const ProjectsTab = () => {
   const loadProjectManagers = async () => {
     const managers = await ApiService.getProjectManagers();
     setProjectManagers(managers);
+  };
+
+  const canEditProject = (project: any) => {
+    if (isAdmin) return true;
+    if (isProjectManager && project.assignedTo?.id === currentUser?.id) return true;
+    return false;
   };
 
   const getDefaultPermission = (role: string, action: string) => {
@@ -289,13 +296,15 @@ const ProjectsTab = () => {
                         >
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button
-                          onClick={() => openEditModal(project)}
-                          className="text-green-400 hover:text-green-300"
-                          title="Modifier"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
+                        {canEditProject(project) && (
+                          <button
+                            onClick={() => openEditModal(project)}
+                            className="text-green-400 hover:text-green-300"
+                            title="Modifier"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                        )}
                         <button className="text-purple-400 hover:text-purple-300" title="Messages">
                           <MessageCircle className="h-4 w-4" />
                         </button>
@@ -323,7 +332,7 @@ const ProjectsTab = () => {
                 {modalMode === 'edit' ? 'Modifier le Projet' : 'Détails du Projet'}
               </h3>
               <div className="flex items-center space-x-2">
-                {modalMode === 'view' && (
+                {modalMode === 'view' && canEditProject(selectedProject) && (
                   <button
                     onClick={() => openEditModal(selectedProject)}
                     className="btn btn-secondary"
