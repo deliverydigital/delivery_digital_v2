@@ -3,24 +3,25 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3008';
 
 export interface DefaultTask {
-  id: string;
-  project_type_id: string;
+  _id?: string;
+  id?: string;
   title: string;
   description: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  estimated_hours: number;
-  order_index: number;
-  created_at: string;
-  updated_at: string;
+  estimatedHours: number;
+  orderIndex: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProjectType {
-  id: string;
+  _id?: string;
+  id?: string;
   name: string;
   description: string;
-  default_tasks?: DefaultTask[];
-  created_at: string;
-  updated_at: string;
+  defaultTasks?: DefaultTask[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 class ProjectTypesApiService {

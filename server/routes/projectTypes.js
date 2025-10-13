@@ -1,50 +1,20 @@
 import express from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { createClient } from '@supabase/supabase-js';
+import ProjectType from '../models/ProjectType.js';
 
 const router = express.Router();
-
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_ANON_KEY
-);
 
 // Get all project types with their default tasks (public - read-only)
 router.get('/', async (req, res) => {
   try {
-    const { data: projectTypes, error: typesError } = await supabase
-      .from('project_types')
-      .select(`
-        id,
-        name,
-        description,
-        created_at,
-        updated_at,
-        default_tasks (
-          id,
-          title,
-          description,
-          priority,
-          estimated_hours,
-          order_index,
-          created_at,
-          updated_at
-        )
-      `)
-      .order('created_at', { ascending: true });
+    const projectTypes = await ProjectType.find()
+      .sort({ createdAt: 1 })
+      .lean();
 
-    if (typesError) {
-      console.error('Error fetching project types:', typesError);
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to fetch project types'
-      });
-    }
-
-    // Sort default tasks by order_index
+    // Sort default tasks by orderIndex
     const sortedProjectTypes = projectTypes.map(type => ({
       ...type,
-      default_tasks: (type.default_tasks || []).sort((a, b) => a.order_index - b.order_index)
+      defaultTasks: (type.defaultTasks || []).sort((a, b) => a.orderIndex - b.orderIndex)
     }));
 
     res.json({
@@ -55,7 +25,7 @@ router.get('/', async (req, res) => {
     console.error('Error in GET /project-types:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message || 'Failed to fetch project types'
     });
   }
 });
@@ -65,35 +35,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data: projectType, error } = await supabase
-      .from('project_types')
-      .select(`
-        id,
-        name,
-        description,
-        created_at,
-        updated_at,
-        default_tasks (
-          id,
-          title,
-          description,
-          priority,
-          estimated_hours,
-          order_index,
-          created_at,
-          updated_at
-        )
-      `)
-      .eq('id', id)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error fetching project type:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to fetch project type'
-      });
-    }
+    const projectType = await ProjectType.findById(id).lean();
 
     if (!projectType) {
       return res.status(404).json({
@@ -102,8 +44,8 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    // Sort default tasks by order_index
-    projectType.default_tasks = (projectType.default_tasks || []).sort((a, b) => a.order_index - b.order_index);
+    // Sort default tasks by orderIndex
+    projectType.defaultTasks = (projectType.defaultTasks || []).sort((a, b) => a.orderIndex - b.orderIndex);
 
     res.json({
       success: true,
@@ -113,7 +55,7 @@ router.get('/:id', async (req, res) => {
     console.error('Error in GET /project-types/:id:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message || 'Failed to fetch project type'
     });
   }
 });
@@ -130,22 +72,21 @@ router.post('/', authenticate, async (req, res) => {
       });
     }
 
-    const { data: projectType, error } = await supabase
-      .from('project_types')
-      .insert([{
-        name: name.trim(),
-        description: description?.trim() || ''
-      }])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating project type:', error);
-      return res.status(500).json({
+    // Check if project type already exists
+    const existingType = await ProjectType.findOne({ name: name.trim() });
+    if (existingType) {
+      return res.status(400).json({
         success: false,
-        error: error.code === '23505' ? 'Project type name already exists' : 'Failed to create project type'
+        error: 'Project type name already exists'
       });
     }
+
+    const projectType = new ProjectType({
+      name: name.trim(),
+      description: description?.trim() || ''
+    });
+
+    await projectType.save();
 
     res.status(201).json({
       success: true,
@@ -155,7 +96,7 @@ router.post('/', authenticate, async (req, res) => {
     console.error('Error in POST /project-types:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message || 'Failed to create project type'
     });
   }
 });
@@ -173,24 +114,27 @@ router.put('/:id', authenticate, async (req, res) => {
       });
     }
 
-    const { data: projectType, error } = await supabase
-      .from('project_types')
-      .update({
-        name: name.trim(),
-        description: description?.trim() || '',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single();
+    // Check if another project type has this name
+    const existingType = await ProjectType.findOne({
+      name: name.trim(),
+      _id: { $ne: id }
+    });
 
-    if (error) {
-      console.error('Error updating project type:', error);
-      return res.status(500).json({
+    if (existingType) {
+      return res.status(400).json({
         success: false,
-        error: error.code === '23505' ? 'Project type name already exists' : 'Failed to update project type'
+        error: 'Project type name already exists'
       });
     }
+
+    const projectType = await ProjectType.findByIdAndUpdate(
+      id,
+      {
+        name: name.trim(),
+        description: description?.trim() || ''
+      },
+      { new: true, runValidators: true }
+    );
 
     if (!projectType) {
       return res.status(404).json({
@@ -207,7 +151,7 @@ router.put('/:id', authenticate, async (req, res) => {
     console.error('Error in PUT /project-types/:id:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message || 'Failed to update project type'
     });
   }
 });
@@ -217,16 +161,12 @@ router.delete('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { error } = await supabase
-      .from('project_types')
-      .delete()
-      .eq('id', id);
+    const projectType = await ProjectType.findByIdAndDelete(id);
 
-    if (error) {
-      console.error('Error deleting project type:', error);
-      return res.status(500).json({
+    if (!projectType) {
+      return res.status(404).json({
         success: false,
-        error: 'Failed to delete project type'
+        error: 'Project type not found'
       });
     }
 
@@ -238,7 +178,7 @@ router.delete('/:id', authenticate, async (req, res) => {
     console.error('Error in DELETE /project-types/:id:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message || 'Failed to delete project type'
     });
   }
 });
@@ -256,50 +196,38 @@ router.post('/:id/tasks', authenticate, async (req, res) => {
       });
     }
 
-    // Verify project type exists
-    const { data: projectType, error: typeError } = await supabase
-      .from('project_types')
-      .select('id')
-      .eq('id', id)
-      .maybeSingle();
+    const projectType = await ProjectType.findById(id);
 
-    if (typeError || !projectType) {
+    if (!projectType) {
       return res.status(404).json({
         success: false,
         error: 'Project type not found'
       });
     }
 
-    const { data: task, error } = await supabase
-      .from('default_tasks')
-      .insert([{
-        project_type_id: id,
-        title: title.trim(),
-        description: description?.trim() || '',
-        priority: priority || 'medium',
-        estimated_hours: estimatedHours || 0,
-        order_index: orderIndex || 0
-      }])
-      .select()
-      .single();
+    const newTask = {
+      title: title.trim(),
+      description: description?.trim() || '',
+      priority: priority || 'medium',
+      estimatedHours: estimatedHours || 0,
+      orderIndex: orderIndex !== undefined ? orderIndex : (projectType.defaultTasks?.length || 0)
+    };
 
-    if (error) {
-      console.error('Error creating default task:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to create default task'
-      });
-    }
+    projectType.defaultTasks.push(newTask);
+    await projectType.save();
+
+    // Get the newly created task
+    const createdTask = projectType.defaultTasks[projectType.defaultTasks.length - 1];
 
     res.status(201).json({
       success: true,
-      data: task
+      data: createdTask
     });
   } catch (error) {
     console.error('Error in POST /project-types/:id/tasks:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message || 'Failed to create default task'
     });
   }
 });
@@ -317,28 +245,16 @@ router.put('/:id/tasks/:taskId', authenticate, async (req, res) => {
       });
     }
 
-    const { data: task, error } = await supabase
-      .from('default_tasks')
-      .update({
-        title: title.trim(),
-        description: description?.trim() || '',
-        priority: priority || 'medium',
-        estimated_hours: estimatedHours || 0,
-        order_index: orderIndex !== undefined ? orderIndex : 0,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', taskId)
-      .eq('project_type_id', id)
-      .select()
-      .single();
+    const projectType = await ProjectType.findById(id);
 
-    if (error) {
-      console.error('Error updating default task:', error);
-      return res.status(500).json({
+    if (!projectType) {
+      return res.status(404).json({
         success: false,
-        error: 'Failed to update default task'
+        error: 'Project type not found'
       });
     }
+
+    const task = projectType.defaultTasks.id(taskId);
 
     if (!task) {
       return res.status(404).json({
@@ -346,6 +262,16 @@ router.put('/:id/tasks/:taskId', authenticate, async (req, res) => {
         error: 'Default task not found'
       });
     }
+
+    task.title = title.trim();
+    task.description = description?.trim() || '';
+    task.priority = priority || 'medium';
+    task.estimatedHours = estimatedHours || 0;
+    if (orderIndex !== undefined) {
+      task.orderIndex = orderIndex;
+    }
+
+    await projectType.save();
 
     res.json({
       success: true,
@@ -355,7 +281,7 @@ router.put('/:id/tasks/:taskId', authenticate, async (req, res) => {
     console.error('Error in PUT /project-types/:id/tasks/:taskId:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message || 'Failed to update default task'
     });
   }
 });
@@ -365,19 +291,26 @@ router.delete('/:id/tasks/:taskId', authenticate, async (req, res) => {
   try {
     const { id, taskId } = req.params;
 
-    const { error } = await supabase
-      .from('default_tasks')
-      .delete()
-      .eq('id', taskId)
-      .eq('project_type_id', id);
+    const projectType = await ProjectType.findById(id);
 
-    if (error) {
-      console.error('Error deleting default task:', error);
-      return res.status(500).json({
+    if (!projectType) {
+      return res.status(404).json({
         success: false,
-        error: 'Failed to delete default task'
+        error: 'Project type not found'
       });
     }
+
+    const task = projectType.defaultTasks.id(taskId);
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        error: 'Default task not found'
+      });
+    }
+
+    task.deleteOne();
+    await projectType.save();
 
     res.json({
       success: true,
@@ -387,7 +320,7 @@ router.delete('/:id/tasks/:taskId', authenticate, async (req, res) => {
     console.error('Error in DELETE /project-types/:id/tasks/:taskId:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message || 'Failed to delete default task'
     });
   }
 });

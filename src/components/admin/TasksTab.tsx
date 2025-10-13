@@ -50,20 +50,20 @@ const TasksTab = () => {
           pt.name === projectTypeName
         );
 
-        if (!projectType || !projectType.default_tasks || projectType.default_tasks.length === 0) {
+        if (!projectType || !projectType.defaultTasks || projectType.defaultTasks.length === 0) {
           return;
         }
 
         // Create default tasks
         const TasksApiService = (await import('../../services/tasksApi')).default;
 
-        for (const defaultTask of projectType.default_tasks) {
+        for (const defaultTask of projectType.defaultTasks) {
           await TasksApiService.createTask({
             projectId: selectedProject.id,
             title: defaultTask.title,
             description: defaultTask.description,
             priority: defaultTask.priority,
-            estimatedHours: defaultTask.estimated_hours,
+            estimatedHours: defaultTask.estimatedHours,
             status: 'todo',
             tags: [],
             completionPercentage: 0,
@@ -183,26 +183,26 @@ const TasksTab = () => {
         return;
       }
 
-      if (!projectType.default_tasks || projectType.default_tasks.length === 0) {
+      if (!projectType.defaultTasks || projectType.defaultTasks.length === 0) {
         alert('Aucune tâche par défaut définie pour ce type de projet.\n\nAllez dans Types de Projets pour configurer les tâches par défaut.');
         return;
       }
 
       const confirmCreate = confirm(
-        `Créer ${projectType.default_tasks.length} tâche(s) par défaut pour "${selectedProject.title}"?\n\nType: ${projectType.name}`
+        `Créer ${projectType.defaultTasks.length} tâche(s) par défaut pour "${selectedProject.title}"?\n\nType: ${projectType.name}`
       );
 
       if (!confirmCreate) return;
 
       const TasksApiService = (await import('../../services/tasksApi')).default;
 
-      for (const defaultTask of projectType.default_tasks) {
+      for (const defaultTask of projectType.defaultTasks) {
         await TasksApiService.createTask({
           projectId: selectedProject.id,
           title: defaultTask.title,
           description: defaultTask.description,
           priority: defaultTask.priority,
-          estimatedHours: defaultTask.estimated_hours,
+          estimatedHours: defaultTask.estimatedHours,
           status: 'todo',
           tags: [],
           completionPercentage: 0,
@@ -217,7 +217,7 @@ const TasksTab = () => {
         });
       }
 
-      alert(`${projectType.default_tasks.length} tâche(s) créée(s) avec succès!`);
+      alert(`${projectType.defaultTasks.length} tâche(s) créée(s) avec succès!`);
       refreshTasks();
     } catch (error: any) {
       console.error('Error creating default tasks:', error);

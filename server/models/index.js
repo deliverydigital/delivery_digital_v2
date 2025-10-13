@@ -8,6 +8,7 @@ import Invoice from './Invoice.js';
 import TrainingDocument from './TrainingDocument.js';
 import TrainingProgram from './TrainingProgram.js';
 import Category from './Category.js';
+import ProjectType from './ProjectType.js';
 
 export {
   User,
@@ -18,7 +19,8 @@ export {
   Invoice,
   TrainingDocument,
   TrainingProgram,
-  Category
+  Category,
+  ProjectType
 };
 
 // Export default object with all models
@@ -31,5 +33,6 @@ export default {
   Invoice,
   TrainingDocument,
   TrainingProgram,
-  Category
+  Category,
+  ProjectType
 };

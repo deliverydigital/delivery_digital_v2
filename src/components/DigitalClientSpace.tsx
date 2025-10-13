@@ -45,7 +45,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
 
         if (result.success && result.data) {
           setProjectTypes(result.data.map((pt: any) => ({
-            id: pt.id,
+            id: pt._id || pt.id,
             name: pt.name
           })));
         } else {

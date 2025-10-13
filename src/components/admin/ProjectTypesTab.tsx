@@ -50,18 +50,18 @@ const ProjectTypesTab = () => {
       const result = await ProjectTypesApiService.getAllProjectTypes();
       if (result.success && result.data) {
         const mappedTypes = result.data.map((type: ApiProjectType) => ({
-          id: type.id,
+          id: type._id || type.id || '',
           name: type.name,
           description: type.description,
-          defaultTasks: type.default_tasks?.map((task: ApiDefaultTask) => ({
-            id: task.id,
+          defaultTasks: type.defaultTasks?.map((task: ApiDefaultTask) => ({
+            id: task._id || task.id || '',
             title: task.title,
             description: task.description,
             priority: task.priority,
-            estimatedHours: task.estimated_hours,
-            orderIndex: task.order_index
+            estimatedHours: task.estimatedHours,
+            orderIndex: task.orderIndex
           })),
-          createdAt: new Date(type.created_at)
+          createdAt: new Date(type.createdAt || type.updatedAt || Date.now())
         }));
         setProjectTypes(mappedTypes);
       } else {
