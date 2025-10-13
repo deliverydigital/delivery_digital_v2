@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { RefreshCw, FolderOpen, ClipboardList, AlertTriangle, Link, ExternalLink, ChevronRight } from 'lucide-react';
+import { RefreshCw, FolderOpen, ClipboardList, AlertTriangle, Link, ExternalLink, ChevronRight, Download, Calendar, Filter } from 'lucide-react';
 import { useProjects } from '../../hooks/useApi';
 import { useTasks } from '../../hooks/useTasks';
 import TaskBoard from '../TaskBoard';
@@ -7,6 +7,9 @@ import TaskBoard from '../TaskBoard';
 const TasksTab = () => {
   const { projects, loading } = useProjects();
   const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [showDateFilter, setShowDateFilter] = useState(false);
 
   const { tasks, loading: tasksLoading, error: tasksError, refreshTasks } = useTasks(
     selectedProject?.id || ''
@@ -18,16 +21,114 @@ const TasksTab = () => {
     }
   }, [projects]);
 
+  // Filter tasks by date range
+  const filteredTasks = tasks.filter(task => {
+    if (!startDate && !endDate) return true;
+
+    const taskDate = task.createdAt ? new Date(task.createdAt) : null;
+    if (!taskDate) return true;
+
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+
+    if (start && end) {
+      return taskDate >= start && taskDate <= end;
+    } else if (start) {
+      return taskDate >= start;
+    } else if (end) {
+      return taskDate <= end;
+    }
+    return true;
+  });
+
   const taskStats = {
-    total: tasks.length,
-    todo: tasks.filter(t => t.status === 'todo').length,
-    in_progress: tasks.filter(t => t.status === 'in_progress').length,
-    review: tasks.filter(t => t.status === 'review').length,
-    done: tasks.filter(t => t.status === 'done').length,
-    blocked: tasks.filter(t => t.status === 'blocked').length,
-    overdue: tasks.filter(t =>
+    total: filteredTasks.length,
+    todo: filteredTasks.filter(t => t.status === 'todo').length,
+    in_progress: filteredTasks.filter(t => t.status === 'in_progress').length,
+    review: filteredTasks.filter(t => t.status === 'review').length,
+    done: filteredTasks.filter(t => t.status === 'done').length,
+    blocked: filteredTasks.filter(t => t.status === 'blocked').length,
+    overdue: filteredTasks.filter(t =>
       t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done'
     ).length
+  };
+
+  const generatePDF = () => {
+    const projectName = selectedProject?.title || 'All Projects';
+    const dateRange = startDate || endDate
+      ? `${startDate ? new Date(startDate).toLocaleDateString('fr-FR') : 'Début'} - ${endDate ? new Date(endDate).toLocaleDateString('fr-FR') : 'Fin'}`
+      : 'Toutes les dates';
+
+    let content = `RAPPORT DE PROGRESSION DES TÂCHES\n\n`;
+    content += `Projet: ${projectName}\n`;
+    content += `Période: ${dateRange}\n`;
+    content += `Date du rapport: ${new Date().toLocaleDateString('fr-FR')} ${new Date().toLocaleTimeString('fr-FR')}\n\n`;
+    content += `=${'='.repeat(70)}\n\n`;
+
+    content += `STATISTIQUES GLOBALES\n`;
+    content += `${'-'.repeat(70)}\n`;
+    content += `Total des tâches: ${taskStats.total}\n`;
+    content += `À faire: ${taskStats.todo}\n`;
+    content += `En cours: ${taskStats.in_progress}\n`;
+    content += `En révision: ${taskStats.review}\n`;
+    content += `Terminé: ${taskStats.done}\n`;
+    content += `Bloqué: ${taskStats.blocked}\n`;
+    content += `En retard: ${taskStats.overdue}\n\n`;
+
+    const completionRate = taskStats.total > 0
+      ? ((taskStats.done / taskStats.total) * 100).toFixed(1)
+      : '0';
+    content += `Taux de complétion: ${completionRate}%\n\n`;
+    content += `=${'='.repeat(70)}\n\n`;
+
+    const statusGroups = {
+      'À FAIRE': filteredTasks.filter(t => t.status === 'todo'),
+      'EN COURS': filteredTasks.filter(t => t.status === 'in_progress'),
+      'EN RÉVISION': filteredTasks.filter(t => t.status === 'review'),
+      'TERMINÉ': filteredTasks.filter(t => t.status === 'done'),
+      'BLOQUÉ': filteredTasks.filter(t => t.status === 'blocked')
+    };
+
+    Object.entries(statusGroups).forEach(([status, tasks]) => {
+      if (tasks.length > 0) {
+        content += `\n${status} (${tasks.length})\n`;
+        content += `${'-'.repeat(70)}\n`;
+        tasks.forEach((task, index) => {
+          content += `\n${index + 1}. ${task.title}\n`;
+          if (task.description) {
+            content += `   Description: ${task.description.substring(0, 100)}${task.description.length > 100 ? '...' : ''}\n`;
+          }
+          if (task.priority) {
+            content += `   Priorité: ${task.priority === 'urgent' ? 'Urgente' : task.priority === 'high' ? 'Haute' : task.priority === 'medium' ? 'Moyenne' : 'Faible'}\n`;
+          }
+          if (task.assignedTo) {
+            content += `   Assigné à: ${task.assignedTo}\n`;
+          }
+          if (task.dueDate) {
+            content += `   Date d'échéance: ${new Date(task.dueDate).toLocaleDateString('fr-FR')}\n`;
+          }
+          if (task.createdAt) {
+            content += `   Créé le: ${new Date(task.createdAt).toLocaleDateString('fr-FR')}\n`;
+          }
+        });
+        content += `\n`;
+      }
+    });
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `rapport-taches-${projectName.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const clearDateFilter = () => {
+    setStartDate('');
+    setEndDate('');
   };
 
   if (loading) {
@@ -63,9 +164,24 @@ const TasksTab = () => {
                 </option>
               ))}
             </select>
-           
+
             <ChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 rotate-90 h-4 w-4 text-gray-400 pointer-events-none" />
           </div>
+          <button
+            onClick={() => setShowDateFilter(!showDateFilter)}
+            className={`btn ${showDateFilter ? 'btn-primary' : 'btn-secondary'}`}
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Filtrer
+          </button>
+          <button
+            onClick={generatePDF}
+            className="btn btn-primary"
+            disabled={filteredTasks.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Télécharger
+          </button>
           <button
             onClick={refreshTasks}
             className="btn btn-secondary"
@@ -75,6 +191,55 @@ const TasksTab = () => {
           </button>
         </div>
       </div>
+
+      {/* Date Filter Panel */}
+      {showDateFilter && (
+        <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-gray-700">
+          <div className="flex items-center mb-4">
+            <Calendar className="h-5 w-5 text-blue-400 mr-2" />
+            <h3 className="text-lg font-semibold text-white">Filtrer par Date</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Date de début
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Date de fin
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={clearDateFilter}
+                className="w-full btn btn-secondary"
+              >
+                Effacer les filtres
+              </button>
+            </div>
+          </div>
+          {(startDate || endDate) && (
+            <div className="mt-4 text-sm text-gray-400">
+              Affichage des tâches créées {startDate && `du ${new Date(startDate).toLocaleDateString('fr-FR')}`}
+              {startDate && endDate && ' '}
+              {endDate && `au ${new Date(endDate).toLocaleDateString('fr-FR')}`}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Project Links */}
       {selectedProject && selectedProject.links && selectedProject.links.length > 0 && (
@@ -101,47 +266,57 @@ const TasksTab = () => {
       )}
 
       {/* Task Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">{taskStats.total}</div>
-            <div className="text-gray-400 text-sm">Total</div>
+      <div className="mb-8">
+        {(startDate || endDate) && (
+          <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3 mb-4">
+            <div className="flex items-center text-blue-400 text-sm">
+              <Filter className="h-4 w-4 mr-2" />
+              <span>Statistiques filtrées pour la période sélectionnée</span>
+            </div>
           </div>
-        </div>
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-400">{taskStats.todo}</div>
-            <div className="text-gray-400 text-sm">À faire</div>
+        )}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+          <div className="bg-gray-800 rounded-lg p-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-white">{taskStats.total}</div>
+              <div className="text-gray-400 text-sm">Total</div>
+            </div>
           </div>
-        </div>
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-400">{taskStats.in_progress}</div>
-            <div className="text-gray-400 text-sm">En cours</div>
+          <div className="bg-gray-800 rounded-lg p-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-400">{taskStats.todo}</div>
+              <div className="text-gray-400 text-sm">À faire</div>
+            </div>
           </div>
-        </div>
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-yellow-400">{taskStats.review}</div>
-            <div className="text-gray-400 text-sm">En révision</div>
+          <div className="bg-gray-800 rounded-lg p-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-400">{taskStats.in_progress}</div>
+              <div className="text-gray-400 text-sm">En cours</div>
+            </div>
           </div>
-        </div>
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-400">{taskStats.done}</div>
-            <div className="text-gray-400 text-sm">Terminé</div>
+          <div className="bg-gray-800 rounded-lg p-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-400">{taskStats.review}</div>
+              <div className="text-gray-400 text-sm">En révision</div>
+            </div>
           </div>
-        </div>
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-red-400">{taskStats.blocked}</div>
-            <div className="text-gray-400 text-sm">Bloqué</div>
+          <div className="bg-gray-800 rounded-lg p-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-400">{taskStats.done}</div>
+              <div className="text-gray-400 text-sm">Terminé</div>
+            </div>
           </div>
-        </div>
-        <div className="bg-gray-800 rounded-lg p-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-red-500">{taskStats.overdue}</div>
-            <div className="text-gray-400 text-sm">En retard</div>
+          <div className="bg-gray-800 rounded-lg p-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-400">{taskStats.blocked}</div>
+              <div className="text-gray-400 text-sm">Bloqué</div>
+            </div>
+          </div>
+          <div className="bg-gray-800 rounded-lg p-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-500">{taskStats.overdue}</div>
+              <div className="text-gray-400 text-sm">En retard</div>
+            </div>
           </div>
         </div>
       </div>
