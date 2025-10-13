@@ -133,7 +133,7 @@ const TasksTab = () => {
           <button
             onClick={generatePDF}
             className="btn btn-primary"
-            disabled={filteredTasks.length === 0 || isGeneratingReport}
+            disabled={!selectedProject || isGeneratingReport}
           >
             {isGeneratingReport ? (
               <>
