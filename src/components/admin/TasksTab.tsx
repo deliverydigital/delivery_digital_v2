@@ -15,12 +15,78 @@ const TasksTab = () => {
   const { tasks, loading: tasksLoading, error: tasksError, refreshTasks } = useTasks(
     selectedProject?.id || ''
   );
+  const [hasCreatedDefaultTasks, setHasCreatedDefaultTasks] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (projects.length > 0 && !selectedProject) {
       setSelectedProject(projects[0]);
     }
   }, [projects]);
+
+  useEffect(() => {
+    const createDefaultTasks = async () => {
+      if (!selectedProject || hasCreatedDefaultTasks.has(selectedProject.id)) {
+        return;
+      }
+
+      // Check if project already has tasks
+      if (tasks.length > 0) {
+        setHasCreatedDefaultTasks(prev => new Set([...prev, selectedProject.id]));
+        return;
+      }
+
+      // Get project type from localStorage
+      const projectTypesStr = localStorage.getItem('projectTypes');
+      if (!projectTypesStr) return;
+
+      const projectTypes = JSON.parse(projectTypesStr);
+      const projectTypeName = selectedProject.type;
+
+      // Find matching project type by converting both to comparable formats
+      const projectType = projectTypes.find((pt: any) =>
+        pt.name.toLowerCase().replace(/\s+/g, '-') === projectTypeName ||
+        pt.name === projectTypeName
+      );
+
+      if (!projectType || !projectType.defaultTasks || projectType.defaultTasks.length === 0) {
+        return;
+      }
+
+      // Create default tasks
+      try {
+        const TasksApiService = (await import('../../services/tasksApi')).default;
+
+        for (const defaultTask of projectType.defaultTasks) {
+          await TasksApiService.createTask({
+            projectId: selectedProject.id,
+            title: defaultTask.title,
+            description: defaultTask.description,
+            priority: defaultTask.priority,
+            estimatedHours: defaultTask.estimatedHours,
+            status: 'todo',
+            tags: [],
+            completionPercentage: 0,
+            dependencies: [],
+            attachments: [],
+            comments: [],
+            watchers: [],
+            labels: [],
+            checklist: [],
+            timeTracking: [],
+            history: []
+          });
+        }
+
+        // Mark as created and refresh tasks
+        setHasCreatedDefaultTasks(prev => new Set([...prev, selectedProject.id]));
+        refreshTasks();
+      } catch (error) {
+        console.error('Error creating default tasks:', error);
+      }
+    };
+
+    createDefaultTasks();
+  }, [selectedProject, tasks.length]);
 
   // Filter tasks by date range
   const filteredTasks = tasks.filter(task => {
