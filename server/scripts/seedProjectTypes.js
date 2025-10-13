@@ -126,8 +126,10 @@ const projectTypesData = [
 
 async function seedProjectTypes() {
   try {
+    const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/delivery_digital';
     console.log('Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('Using URI:', MONGO_URI.replace(/:[^:@]+@/, ':***@'));
+    await mongoose.connect(MONGO_URI);
     console.log('Connected to MongoDB');
 
     console.log('Clearing existing project types...');
