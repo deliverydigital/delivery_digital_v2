@@ -10,6 +10,7 @@ const TasksTab = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showDateFilter, setShowDateFilter] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
   const { tasks, loading: tasksLoading, error: tasksError, refreshTasks } = useTasks(
     selectedProject?.id || ''
@@ -54,18 +55,30 @@ const TasksTab = () => {
   };
 
   const generatePDF = async () => {
-    if (!selectedProject) return;
+    if (!selectedProject) {
+      alert('Veuillez sélectionner un projet');
+      return;
+    }
 
+    setIsGeneratingReport(true);
     try {
       const TasksApiService = (await import('../../services/tasksApi')).default;
-      await TasksApiService.generateTaskReport(selectedProject.id, {
+      const result = await TasksApiService.generateTaskReport(selectedProject.id, {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         format: 'text'
       });
-    } catch (error) {
+
+      if (result.success) {
+        console.log('Report generated successfully');
+      } else {
+        alert('Erreur: ' + (result.error || 'Échec de la génération du rapport'));
+      }
+    } catch (error: any) {
       console.error('Error generating report:', error);
-      alert('Erreur lors de la génération du rapport');
+      alert('Erreur lors de la génération du rapport: ' + (error.message || 'Erreur inconnue'));
+    } finally {
+      setIsGeneratingReport(false);
     }
   };
 
@@ -120,10 +133,19 @@ const TasksTab = () => {
           <button
             onClick={generatePDF}
             className="btn btn-primary"
-            disabled={filteredTasks.length === 0}
+            disabled={filteredTasks.length === 0 || isGeneratingReport}
           >
-            <Download className="h-4 w-4 mr-2" />
-            Télécharger
+            {isGeneratingReport ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                Génération...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4 mr-2" />
+                Télécharger
+              </>
+            )}
           </button>
           <button
             onClick={refreshTasks}
