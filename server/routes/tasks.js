@@ -1555,9 +1555,6 @@ router.get('/project/:projectId/report', validateMongoIdParam('projectId'), asyn
               if (task.dueDate) {
                 metadata.push(`Échéance: ${new Date(task.dueDate).toLocaleDateString('fr-FR')}`);
               }
-              if (task.createdAt) {
-                metadata.push(`Créé: ${new Date(task.createdAt).toLocaleDateString('fr-FR')}`);
-              }
 
               if (metadata.length > 0) {
                 doc.fillColor('#64748b')
