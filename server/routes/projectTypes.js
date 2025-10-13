@@ -9,8 +9,8 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY
 );
 
-// Get all project types with their default tasks
-router.get('/', authenticate, async (req, res) => {
+// Get all project types with their default tasks (public - read-only)
+router.get('/', async (req, res) => {
   try {
     const { data: projectTypes, error: typesError } = await supabase
       .from('project_types')
@@ -60,8 +60,8 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
-// Get a single project type by ID
-router.get('/:id', authenticate, async (req, res) => {
+// Get a single project type by ID (public - read-only)
+router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
