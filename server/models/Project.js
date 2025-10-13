@@ -154,25 +154,29 @@ const projectSchema = new Schema({
       view: { type: Boolean, default: true },
       add: { type: Boolean, default: false },
       update: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false }
+      delete: { type: Boolean, default: false },
+      draggable: { type: Boolean, default: false }
     },
     project_manager: {
       view: { type: Boolean, default: true },
       add: { type: Boolean, default: true },
       update: { type: Boolean, default: true },
-      delete: { type: Boolean, default: true }
+      delete: { type: Boolean, default: true },
+      draggable: { type: Boolean, default: true }
     },
     developer: {
       view: { type: Boolean, default: true },
       add: { type: Boolean, default: false },
       update: { type: Boolean, default: true },
-      delete: { type: Boolean, default: false }
+      delete: { type: Boolean, default: false },
+      draggable: { type: Boolean, default: true }
     },
     trainer: {
       view: { type: Boolean, default: true },
       add: { type: Boolean, default: false },
       update: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false }
+      delete: { type: Boolean, default: false },
+      draggable: { type: Boolean, default: false }
     }
   }
 }, {
@@ -222,10 +226,10 @@ projectSchema.methods.hasTaskPermission = function(role, action) {
 
   if (!this.task_permissions || !this.task_permissions[role]) {
     const defaults = {
-      client: { view: true, add: false, update: false, delete: false },
-      project_manager: { view: true, add: true, update: true, delete: true },
-      developer: { view: true, add: false, update: true, delete: false },
-      trainer: { view: true, add: false, update: false, delete: false }
+      client: { view: true, add: false, update: false, delete: false, draggable: false },
+      project_manager: { view: true, add: true, update: true, delete: true, draggable: true },
+      developer: { view: true, add: false, update: true, delete: false, draggable: true },
+      trainer: { view: true, add: false, update: false, delete: false, draggable: false }
     };
     return defaults[role]?.[action] || false;
   }

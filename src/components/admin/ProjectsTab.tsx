@@ -31,10 +31,10 @@ const ProjectsTab = () => {
 
   const getDefaultPermission = (role: string, action: string) => {
     const defaults: any = {
-      client: { view: true, add: false, update: false, delete: false },
-      project_manager: { view: true, add: true, update: true, delete: true },
-      developer: { view: true, add: false, update: true, delete: false },
-      trainer: { view: true, add: false, update: false, delete: false }
+      client: { view: true, add: false, update: false, delete: false, draggable: false },
+      project_manager: { view: true, add: true, update: true, delete: true, draggable: true },
+      developer: { view: true, add: false, update: true, delete: false, draggable: true },
+      trainer: { view: true, add: false, update: false, delete: false, draggable: false }
     };
     return defaults[role]?.[action] || false;
   };
@@ -665,8 +665,8 @@ const ProjectsTab = () => {
                               {role === 'trainer' && <Users className="h-4 w-4 mr-2" />}
                               {role === 'client' ? 'Client' : role === 'project_manager' ? 'Chef de Projet' : role === 'developer' ? 'Développeur' : 'Formateur'}
                             </h4>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                              {['view', 'add', 'update', 'delete'].map((action) => (
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                              {['view', 'add', 'update', 'delete', 'draggable'].map((action) => (
                                 <label key={action} className="flex items-center cursor-pointer">
                                   <input
                                     type="checkbox"
@@ -684,7 +684,7 @@ const ProjectsTab = () => {
                                     className="mr-2 h-4 w-4 text-blue-600 border-gray-600 rounded focus:ring-blue-500"
                                   />
                                   <span className="text-sm text-gray-300 capitalize">
-                                    {action === 'view' ? 'Voir' : action === 'add' ? 'Ajouter' : action === 'update' ? 'Modifier' : 'Supprimer'}
+                                    {action === 'view' ? 'Voir' : action === 'add' ? 'Ajouter' : action === 'update' ? 'Modifier' : action === 'delete' ? 'Supprimer' : 'Déplacer'}
                                   </span>
                                 </label>
                               ))}
