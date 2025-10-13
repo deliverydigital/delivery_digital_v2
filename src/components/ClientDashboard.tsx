@@ -14,22 +14,22 @@ const ClientDashboard = () => {
 
   const getTaskPermissions = () => {
     if (!selectedProject || !user) {
-      return { view: true, add: false, update: false, delete: false };
+      return { view: true, add: false, update: false, delete: false, draggable: false };
     }
 
     if (user.role === 'admin') {
-      return { view: true, add: true, update: true, delete: true };
+      return { view: true, add: true, update: true, delete: true, draggable: true };
     }
 
     const permissions = selectedProject.taskPermissions?.[user.role];
     if (!permissions) {
       const defaults: any = {
-        client: { view: true, add: false, update: false, delete: false },
-        project_manager: { view: true, add: true, update: true, delete: true },
-        developer: { view: true, add: false, update: true, delete: false },
-        trainer: { view: true, add: false, update: false, delete: false }
+        client: { view: true, add: false, update: false, delete: false, draggable: false },
+        project_manager: { view: true, add: true, update: true, delete: true, draggable: true },
+        developer: { view: true, add: false, update: true, delete: false, draggable: true },
+        trainer: { view: true, add: false, update: false, delete: false, draggable: false }
       };
-      return defaults[user.role] || { view: true, add: false, update: false, delete: false };
+      return defaults[user.role] || { view: true, add: false, update: false, delete: false, draggable: false };
     }
 
     return permissions;
@@ -597,13 +597,64 @@ const ClientDashboard = () => {
       { id: 'done', name: 'Terminé', color: 'border-green-600' }
     ];
 
+    const handleDragStart = (e: React.DragEvent, task: any) => {
+      if (!taskPermissions.draggable) {
+        e.preventDefault();
+        return;
+      }
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('taskId', task.id);
+      e.dataTransfer.setData('currentStatus', task.status);
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+      if (!taskPermissions.draggable) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDrop = async (e: React.DragEvent, newStatus: string) => {
+      if (!taskPermissions.draggable) return;
+      e.preventDefault();
+
+      const taskId = e.dataTransfer.getData('taskId');
+      const currentStatus = e.dataTransfer.getData('currentStatus');
+
+      if (currentStatus === newStatus) return;
+
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      try {
+        const TasksApi = (await import('../services/tasksApi')).default;
+        const result = await TasksApi.updateTask(taskId, {
+          ...task,
+          status: newStatus
+        });
+
+        if (result.success) {
+          await refreshTasks();
+        } else {
+          alert('Erreur lors du déplacement de la tâche: ' + result.error);
+        }
+      } catch (error) {
+        console.error('Error moving task:', error);
+        alert('Erreur lors du déplacement de la tâche');
+      }
+    };
+
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {columns.map((column) => {
           const columnTasks = filteredTasks.filter(task => task.status === column.id);
-          
+
           return (
-            <div key={column.id} className={`bg-gray-800 rounded-lg border-t-4 ${column.color}`}>
+            <div
+              key={column.id}
+              className={`bg-gray-800 rounded-lg border-t-4 ${column.color}`}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, column.id)}
+            >
               <div className="p-4 border-b border-gray-700">
                 <div className="flex items-center justify-between">
                   <h3 className="text-white font-medium">{column.name}</h3>
@@ -614,7 +665,14 @@ const ClientDashboard = () => {
               </div>
               <div className="p-4 space-y-3 min-h-[400px]">
                 {columnTasks.map((task) => (
-                  <TaskCard key={task.id} task={task} />
+                  <div
+                    key={task.id}
+                    draggable={taskPermissions.draggable}
+                    onDragStart={(e) => handleDragStart(e, task)}
+                    className={taskPermissions.draggable ? 'cursor-move' : ''}
+                  >
+                    <TaskCard task={task} />
+                  </div>
                 ))}
                 {columnTasks.length === 0 && (
                   <div className="text-center text-gray-500 py-8">
