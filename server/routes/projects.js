@@ -159,7 +159,13 @@ router.get('/:id', validateMongoId, async (req, res) => {
     }
 
     // Check authorization for non-admin users
-    if (req.user.role !== 'admin' && project.client_id._id.toString() !== req.user.id) {
+    const isAdmin = req.user.role === 'admin';
+    const isClient = project.client_id._id.toString() === req.user.id;
+    const isAssignedManager = req.user.role === 'project_manager' &&
+                              project.assigned_to &&
+                              project.assigned_to._id.toString() === req.user.id;
+
+    if (!isAdmin && !isClient && !isAssignedManager) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -339,7 +345,13 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
     }
 
     // Check authorization
-    if (req.user.role !== 'admin' && project.client_id.toString() !== req.user.id) {
+    const isAdmin = req.user.role === 'admin';
+    const isClient = project.client_id.toString() === req.user.id;
+    const isAssignedManager = req.user.role === 'project_manager' &&
+                              project.assigned_to &&
+                              project.assigned_to.toString() === req.user.id;
+
+    if (!isAdmin && !isClient && !isAssignedManager) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -367,9 +379,22 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
       'figma_url', 'gitlab_url', 'notes', 'requirements', 'technical_specs', 'links', 'task_permissions'
     ];
 
-    // Clients can only update certain fields
+    // Role-based field permissions
     const clientAllowedFields = ['description', 'figma_url', 'gitlab_url', 'notes', 'links'];
-    const fieldsToCheck = req.user.role === 'admin' ? allowedFields : clientAllowedFields;
+    const managerAllowedFields = [
+      'title', 'description', 'status', 'priority', 'budget_range', 'estimated_budget',
+      'timeline', 'start_date', 'end_date', 'completion_percentage',
+      'figma_url', 'gitlab_url', 'notes', 'links', 'requirements', 'technical_specs'
+    ];
+
+    let fieldsToCheck;
+    if (req.user.role === 'admin') {
+      fieldsToCheck = allowedFields;
+    } else if (req.user.role === 'project_manager') {
+      fieldsToCheck = managerAllowedFields;
+    } else {
+      fieldsToCheck = clientAllowedFields;
+    }
 
     for (const [key, value] of Object.entries(updates)) {
       // Convert camelCase to snake_case if mapping exists
