@@ -1130,4 +1130,332 @@ router.get('/:id/time-tracking/active', validateMongoId, async (req, res) => {
   }
 });
 
+// Get tasks filtered by date range
+router.get('/project/:projectId/date-filter', validateMongoIdParam('projectId'), async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { startDate, endDate } = req.query;
+
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    // Check if project exists and user has access
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project not found'
+      });
+    }
+
+    // Check authorization
+    const userRole = req.user.role;
+    const hasViewPermission = project.hasTaskPermission(userRole, 'view');
+    const isProjectManager = userRole === 'project_manager' && project.assigned_to?.toString() === req.user.id;
+    const isClient = project.client_id.toString() === req.user.id;
+
+    if (!hasViewPermission && !isProjectManager && !isClient && userRole !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'You do not have permission to view tasks for this project'
+      });
+    }
+
+    // Build date filter query
+    const dateFilter = {};
+    if (startDate || endDate) {
+      dateFilter.createdAt = {};
+      if (startDate) {
+        dateFilter.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        dateFilter.createdAt.$lte = end;
+      }
+    }
+
+    // Get tasks with date filter
+    const tasks = await Task.find({ project_id: projectId, ...dateFilter })
+      .populate('assigned_to', 'name email')
+      .sort({ createdAt: -1 });
+
+    // Calculate statistics
+    const stats = {
+      total: tasks.length,
+      todo: tasks.filter(t => t.status === 'todo').length,
+      in_progress: tasks.filter(t => t.status === 'in_progress').length,
+      review: tasks.filter(t => t.status === 'review').length,
+      done: tasks.filter(t => t.status === 'done').length,
+      blocked: tasks.filter(t => t.status === 'blocked').length,
+      overdue: tasks.filter(t =>
+        t.due_date && new Date(t.due_date) < new Date() && t.status !== 'done'
+      ).length,
+      completionRate: tasks.length > 0
+        ? ((tasks.filter(t => t.status === 'done').length / tasks.length) * 100).toFixed(1)
+        : '0'
+    };
+
+    res.json({
+      success: true,
+      data: {
+        tasks: tasks.map(task => ({
+          id: task._id,
+          projectId: task.project_id,
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+          assignedTo: task.assigned_to ? task.assigned_to.name : null,
+          dueDate: task.due_date,
+          createdAt: task.createdAt,
+          updatedAt: task.updatedAt
+        })),
+        statistics: stats,
+        dateRange: {
+          start: startDate || null,
+          end: endDate || null
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Date filter tasks error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to filter tasks by date'
+    });
+  }
+});
+
+// Generate task progress report
+router.get('/project/:projectId/report', validateMongoIdParam('projectId'), async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { startDate, endDate, format = 'json' } = req.query;
+
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    // Check if project exists and user has access
+    const project = await Project.findById(projectId)
+      .populate('client_id', 'name email company')
+      .populate('assigned_to', 'name email');
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        error: 'Project not found'
+      });
+    }
+
+    // Check authorization
+    const userRole = req.user.role;
+    const isProjectManager = userRole === 'project_manager' && project.assigned_to?.toString() === req.user.id;
+    const isClient = project.client_id._id.toString() === req.user.id;
+
+    if (userRole !== 'admin' && !isProjectManager && !isClient) {
+      return res.status(403).json({
+        success: false,
+        error: 'You do not have permission to generate reports for this project'
+      });
+    }
+
+    // Build date filter query
+    const dateFilter = {};
+    if (startDate || endDate) {
+      dateFilter.createdAt = {};
+      if (startDate) {
+        dateFilter.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        dateFilter.createdAt.$lte = end;
+      }
+    }
+
+    // Get tasks with date filter
+    const tasks = await Task.find({ project_id: projectId, ...dateFilter })
+      .populate('assigned_to', 'name email')
+      .sort({ createdAt: -1 });
+
+    // Calculate statistics
+    const stats = {
+      total: tasks.length,
+      todo: tasks.filter(t => t.status === 'todo').length,
+      in_progress: tasks.filter(t => t.status === 'in_progress').length,
+      review: tasks.filter(t => t.status === 'review').length,
+      done: tasks.filter(t => t.status === 'done').length,
+      blocked: tasks.filter(t => t.status === 'blocked').length,
+      overdue: tasks.filter(t =>
+        t.due_date && new Date(t.due_date) < new Date() && t.status !== 'done'
+      ).length,
+      completionRate: tasks.length > 0
+        ? ((tasks.filter(t => t.status === 'done').length / tasks.length) * 100).toFixed(1)
+        : '0'
+    };
+
+    // Group tasks by status
+    const tasksByStatus = {
+      todo: tasks.filter(t => t.status === 'todo'),
+      in_progress: tasks.filter(t => t.status === 'in_progress'),
+      review: tasks.filter(t => t.status === 'review'),
+      done: tasks.filter(t => t.status === 'done'),
+      blocked: tasks.filter(t => t.status === 'blocked')
+    };
+
+    const report = {
+      project: {
+        id: project._id,
+        title: project.title,
+        clientName: project.client_id.name,
+        managerName: project.assigned_to ? project.assigned_to.name : 'Non assigné'
+      },
+      dateRange: {
+        start: startDate || null,
+        end: endDate || null
+      },
+      generatedAt: new Date().toISOString(),
+      statistics: stats,
+      tasksByStatus: {
+        todo: tasksByStatus.todo.map(t => ({
+          id: t._id,
+          title: t.title,
+          description: t.description,
+          priority: t.priority,
+          assignedTo: t.assigned_to ? t.assigned_to.name : null,
+          dueDate: t.due_date,
+          createdAt: t.createdAt
+        })),
+        in_progress: tasksByStatus.in_progress.map(t => ({
+          id: t._id,
+          title: t.title,
+          description: t.description,
+          priority: t.priority,
+          assignedTo: t.assigned_to ? t.assigned_to.name : null,
+          dueDate: t.due_date,
+          createdAt: t.createdAt
+        })),
+        review: tasksByStatus.review.map(t => ({
+          id: t._id,
+          title: t.title,
+          description: t.description,
+          priority: t.priority,
+          assignedTo: t.assigned_to ? t.assigned_to.name : null,
+          dueDate: t.due_date,
+          createdAt: t.createdAt
+        })),
+        done: tasksByStatus.done.map(t => ({
+          id: t._id,
+          title: t.title,
+          description: t.description,
+          priority: t.priority,
+          assignedTo: t.assigned_to ? t.assigned_to.name : null,
+          dueDate: t.due_date,
+          createdAt: t.createdAt
+        })),
+        blocked: tasksByStatus.blocked.map(t => ({
+          id: t._id,
+          title: t.title,
+          description: t.description,
+          priority: t.priority,
+          assignedTo: t.assigned_to ? t.assigned_to.name : null,
+          dueDate: t.due_date,
+          createdAt: t.createdAt
+        }))
+      }
+    };
+
+    // Return as text format if requested
+    if (format === 'text') {
+      const dateRangeStr = startDate || endDate
+        ? `${startDate ? new Date(startDate).toLocaleDateString('fr-FR') : 'Début'} - ${endDate ? new Date(endDate).toLocaleDateString('fr-FR') : 'Fin'}`
+        : 'Toutes les dates';
+
+      let content = `RAPPORT DE PROGRESSION DES TÂCHES\n\n`;
+      content += `Projet: ${project.title}\n`;
+      content += `Client: ${project.client_id.name}\n`;
+      content += `Chef de projet: ${report.project.managerName}\n`;
+      content += `Période: ${dateRangeStr}\n`;
+      content += `Date du rapport: ${new Date().toLocaleDateString('fr-FR')} ${new Date().toLocaleTimeString('fr-FR')}\n\n`;
+      content += `=${'='.repeat(70)}\n\n`;
+
+      content += `STATISTIQUES GLOBALES\n`;
+      content += `${'-'.repeat(70)}\n`;
+      content += `Total des tâches: ${stats.total}\n`;
+      content += `À faire: ${stats.todo}\n`;
+      content += `En cours: ${stats.in_progress}\n`;
+      content += `En révision: ${stats.review}\n`;
+      content += `Terminé: ${stats.done}\n`;
+      content += `Bloqué: ${stats.blocked}\n`;
+      content += `En retard: ${stats.overdue}\n`;
+      content += `Taux de complétion: ${stats.completionRate}%\n\n`;
+      content += `=${'='.repeat(70)}\n\n`;
+
+      const statusLabels = {
+        todo: 'À FAIRE',
+        in_progress: 'EN COURS',
+        review: 'EN RÉVISION',
+        done: 'TERMINÉ',
+        blocked: 'BLOQUÉ'
+      };
+
+      Object.entries(report.tasksByStatus).forEach(([status, taskList]) => {
+        if (taskList.length > 0) {
+          content += `\n${statusLabels[status]} (${taskList.length})\n`;
+          content += `${'-'.repeat(70)}\n`;
+          taskList.forEach((task, index) => {
+            content += `\n${index + 1}. ${task.title}\n`;
+            if (task.description) {
+              content += `   Description: ${task.description.substring(0, 100)}${task.description.length > 100 ? '...' : ''}\n`;
+            }
+            if (task.priority) {
+              const priorityLabel = task.priority === 'urgent' ? 'Urgente' :
+                                   task.priority === 'high' ? 'Haute' :
+                                   task.priority === 'medium' ? 'Moyenne' : 'Faible';
+              content += `   Priorité: ${priorityLabel}\n`;
+            }
+            if (task.assignedTo) {
+              content += `   Assigné à: ${task.assignedTo}\n`;
+            }
+            if (task.dueDate) {
+              content += `   Date d'échéance: ${new Date(task.dueDate).toLocaleDateString('fr-FR')}\n`;
+            }
+            if (task.createdAt) {
+              content += `   Créé le: ${new Date(task.createdAt).toLocaleDateString('fr-FR')}\n`;
+            }
+          });
+          content += `\n`;
+        }
+      });
+
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="rapport-taches-${project.title.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.txt"`);
+      return res.send(content);
+    }
+
+    // Return JSON format
+    res.json({
+      success: true,
+      data: report
+    });
+
+  } catch (error) {
+    console.error('Generate report error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate task report'
+    });
+  }
+});
+
 export default router;

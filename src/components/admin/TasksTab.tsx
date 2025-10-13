@@ -53,77 +53,20 @@ const TasksTab = () => {
     ).length
   };
 
-  const generatePDF = () => {
-    const projectName = selectedProject?.title || 'All Projects';
-    const dateRange = startDate || endDate
-      ? `${startDate ? new Date(startDate).toLocaleDateString('fr-FR') : 'Début'} - ${endDate ? new Date(endDate).toLocaleDateString('fr-FR') : 'Fin'}`
-      : 'Toutes les dates';
+  const generatePDF = async () => {
+    if (!selectedProject) return;
 
-    let content = `RAPPORT DE PROGRESSION DES TÂCHES\n\n`;
-    content += `Projet: ${projectName}\n`;
-    content += `Période: ${dateRange}\n`;
-    content += `Date du rapport: ${new Date().toLocaleDateString('fr-FR')} ${new Date().toLocaleTimeString('fr-FR')}\n\n`;
-    content += `=${'='.repeat(70)}\n\n`;
-
-    content += `STATISTIQUES GLOBALES\n`;
-    content += `${'-'.repeat(70)}\n`;
-    content += `Total des tâches: ${taskStats.total}\n`;
-    content += `À faire: ${taskStats.todo}\n`;
-    content += `En cours: ${taskStats.in_progress}\n`;
-    content += `En révision: ${taskStats.review}\n`;
-    content += `Terminé: ${taskStats.done}\n`;
-    content += `Bloqué: ${taskStats.blocked}\n`;
-    content += `En retard: ${taskStats.overdue}\n\n`;
-
-    const completionRate = taskStats.total > 0
-      ? ((taskStats.done / taskStats.total) * 100).toFixed(1)
-      : '0';
-    content += `Taux de complétion: ${completionRate}%\n\n`;
-    content += `=${'='.repeat(70)}\n\n`;
-
-    const statusGroups = {
-      'À FAIRE': filteredTasks.filter(t => t.status === 'todo'),
-      'EN COURS': filteredTasks.filter(t => t.status === 'in_progress'),
-      'EN RÉVISION': filteredTasks.filter(t => t.status === 'review'),
-      'TERMINÉ': filteredTasks.filter(t => t.status === 'done'),
-      'BLOQUÉ': filteredTasks.filter(t => t.status === 'blocked')
-    };
-
-    Object.entries(statusGroups).forEach(([status, tasks]) => {
-      if (tasks.length > 0) {
-        content += `\n${status} (${tasks.length})\n`;
-        content += `${'-'.repeat(70)}\n`;
-        tasks.forEach((task, index) => {
-          content += `\n${index + 1}. ${task.title}\n`;
-          if (task.description) {
-            content += `   Description: ${task.description.substring(0, 100)}${task.description.length > 100 ? '...' : ''}\n`;
-          }
-          if (task.priority) {
-            content += `   Priorité: ${task.priority === 'urgent' ? 'Urgente' : task.priority === 'high' ? 'Haute' : task.priority === 'medium' ? 'Moyenne' : 'Faible'}\n`;
-          }
-          if (task.assignedTo) {
-            content += `   Assigné à: ${task.assignedTo}\n`;
-          }
-          if (task.dueDate) {
-            content += `   Date d'échéance: ${new Date(task.dueDate).toLocaleDateString('fr-FR')}\n`;
-          }
-          if (task.createdAt) {
-            content += `   Créé le: ${new Date(task.createdAt).toLocaleDateString('fr-FR')}\n`;
-          }
-        });
-        content += `\n`;
-      }
-    });
-
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `rapport-taches-${projectName.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    try {
+      const TasksApiService = (await import('../../services/tasksApi')).default;
+      await TasksApiService.generateTaskReport(selectedProject.id, {
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        format: 'text'
+      });
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('Erreur lors de la génération du rapport');
+    }
   };
 
   const clearDateFilter = () => {

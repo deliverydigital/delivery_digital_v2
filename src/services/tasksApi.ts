@@ -1052,11 +1052,114 @@ export class TasksApiService {
     });
   }
 
+  // Date Filter API
+  static async getTasksByDateRange(
+    projectId: string,
+    startDate?: string,
+    endDate?: string
+  ): Promise<{
+    success: boolean;
+    tasks?: Task[];
+    statistics?: any;
+    error?: string
+  }> {
+    try {
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const queryString = params.toString();
+      const url = `/tasks/project/${projectId}/date-filter${queryString ? `?${queryString}` : ''}`;
+
+      const response = await makeRequest(url);
+
+      if (response.success && response.data) {
+        return {
+          success: true,
+          tasks: response.data.tasks.map((task: any) => this.transformTaskFromAPI(task)),
+          statistics: response.data.statistics
+        };
+      }
+
+      return { success: false, error: 'Failed to fetch filtered tasks' };
+    } catch (error) {
+      console.error('Error fetching tasks by date range:', error);
+      return { success: false, error: error.message || 'Error fetching tasks by date range' };
+    }
+  }
+
+  // Generate Task Report API
+  static async generateTaskReport(
+    projectId: string,
+    options?: {
+      startDate?: string;
+      endDate?: string;
+      format?: 'json' | 'text';
+    }
+  ): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const params = new URLSearchParams();
+      if (options?.startDate) params.append('startDate', options.startDate);
+      if (options?.endDate) params.append('endDate', options.endDate);
+      if (options?.format) params.append('format', options.format);
+
+      const queryString = params.toString();
+      const url = `/tasks/project/${projectId}/report${queryString ? `?${queryString}` : ''}`;
+
+      const token = localStorage.getItem('authToken');
+      const baseUrl = getApiBaseUrl();
+      const headers: HeadersInit = {
+        'Authorization': `Bearer ${token}`,
+        'bypass-tunnel-reminder': 'true'
+      };
+
+      // If format is text, handle as file download
+      if (options?.format === 'text') {
+        const response = await fetch(`${baseUrl}/api${url}`, { headers });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+
+        // Extract filename from Content-Disposition header or use default
+        const contentDisposition = response.headers.get('Content-Disposition');
+        const filename = contentDisposition
+          ? contentDisposition.split('filename="')[1]?.split('"')[0]
+          : `rapport-taches-${new Date().toISOString().split('T')[0]}.txt`;
+
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+
+        return { success: true };
+      }
+
+      // JSON format
+      const response = await makeRequest(url);
+
+      if (response.success && response.data) {
+        return { success: true, data: response.data };
+      }
+
+      return { success: false, error: 'Failed to generate report' };
+    } catch (error) {
+      console.error('Error generating task report:', error);
+      return { success: false, error: error.message || 'Error generating task report' };
+    }
+  }
+
   // Export/Import
   static async exportTasks(projectId: string, format: 'json' | 'csv'): Promise<{ success: boolean; data?: string; error?: string }> {
     try {
       const tasks = await this.getProjectTasks(projectId);
-      
+
       if (format === 'json') {
         return { success: true, data: JSON.stringify(tasks, null, 2) };
       } else if (format === 'csv') {
@@ -1072,14 +1175,14 @@ export class TasksApiService {
           task.estimatedHours?.toString() || '',
           task.actualHours?.toString() || ''
         ]);
-        
-        const csvContent = [headers, ...rows].map(row => 
+
+        const csvContent = [headers, ...rows].map(row =>
           row.map(field => `"${field}"`).join(',')
         ).join('\n');
-        
+
         return { success: true, data: csvContent };
       }
-      
+
       return { success: false, error: 'Format non supporté' };
     } catch (error) {
       console.error('Erreur lors de l\'export:', error);
