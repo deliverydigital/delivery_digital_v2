@@ -1,4 +1,5 @@
 import express from 'express';
+import PDFDocument from 'pdfkit';
 import { Task, Project, User } from '../models/index.js';
 import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize, authorizeOwnerOrAdmin } from '../middleware/auth.js';
@@ -1375,72 +1376,239 @@ router.get('/project/:projectId/report', validateMongoIdParam('projectId'), asyn
       }
     };
 
-    // Return as text format if requested
-    if (format === 'text') {
+    // Return as PDF format if requested
+    if (format === 'text' || format === 'pdf') {
       const dateRangeStr = startDate || endDate
         ? `${startDate ? new Date(startDate).toLocaleDateString('fr-FR') : 'Début'} - ${endDate ? new Date(endDate).toLocaleDateString('fr-FR') : 'Fin'}`
         : 'Toutes les dates';
 
-      let content = `RAPPORT DE PROGRESSION DES TÂCHES\n\n`;
-      content += `Projet: ${project.title}\n`;
-      content += `Client: ${project.client_id.name}\n`;
-      content += `Chef de projet: ${report.project.managerName}\n`;
-      content += `Période: ${dateRangeStr}\n`;
-      content += `Date du rapport: ${new Date().toLocaleDateString('fr-FR')} ${new Date().toLocaleTimeString('fr-FR')}\n\n`;
-      content += `=${'='.repeat(70)}\n\n`;
+      const doc = new PDFDocument({
+        size: 'A4',
+        margin: 50,
+        bufferPages: true
+      });
 
-      content += `STATISTIQUES GLOBALES\n`;
-      content += `${'-'.repeat(70)}\n`;
-      content += `Total des tâches: ${stats.total}\n`;
-      content += `À faire: ${stats.todo}\n`;
-      content += `En cours: ${stats.in_progress}\n`;
-      content += `En révision: ${stats.review}\n`;
-      content += `Terminé: ${stats.done}\n`;
-      content += `Bloqué: ${stats.blocked}\n`;
-      content += `En retard: ${stats.overdue}\n`;
-      content += `Taux de complétion: ${stats.completionRate}%\n\n`;
-      content += `=${'='.repeat(70)}\n\n`;
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="rapport-taches-${project.title.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf"`);
+      doc.pipe(res);
 
+      // Colors
+      const primaryColor = '#2563eb';
+      const secondaryColor = '#64748b';
+      const lightGray = '#f1f5f9';
+      const darkGray = '#1e293b';
+
+      // Helper function to add colored box
+      const addColoredBox = (x, y, width, height, color) => {
+        doc.rect(x, y, width, height).fill(color);
+      };
+
+      // Header with background
+      addColoredBox(0, 0, 600, 120, primaryColor);
+      doc.fillColor('white')
+         .fontSize(24)
+         .font('Helvetica-Bold')
+         .text('RAPPORT DE PROGRESSION', 50, 40, { align: 'center' });
+      doc.fontSize(18)
+         .text('DES TÂCHES', 50, 70, { align: 'center' });
+
+      // Reset position
+      doc.y = 140;
+
+      // Project Info Box
+      addColoredBox(50, doc.y, 495, 120, lightGray);
+      doc.fillColor(darkGray)
+         .fontSize(12)
+         .font('Helvetica-Bold')
+         .text('INFORMATIONS DU PROJET', 70, doc.y + 15);
+
+      doc.font('Helvetica')
+         .fontSize(10)
+         .fillColor(secondaryColor);
+
+      const infoY = doc.y + 40;
+      doc.text(`Projet:`, 70, infoY);
+      doc.fillColor(darkGray).text(project.title, 180, infoY);
+
+      doc.fillColor(secondaryColor).text(`Client:`, 70, infoY + 20);
+      doc.fillColor(darkGray).text(project.client_id.name, 180, infoY + 20);
+
+      doc.fillColor(secondaryColor).text(`Chef de projet:`, 70, infoY + 40);
+      doc.fillColor(darkGray).text(report.project.managerName, 180, infoY + 40);
+
+      doc.fillColor(secondaryColor).text(`Période:`, 70, infoY + 60);
+      doc.fillColor(darkGray).text(dateRangeStr, 180, infoY + 60);
+
+      doc.y += 140;
+
+      // Statistics Section
+      doc.moveDown(2);
+      doc.fillColor(primaryColor)
+         .fontSize(16)
+         .font('Helvetica-Bold')
+         .text('STATISTIQUES GLOBALES', 50);
+
+      doc.moveDown(0.5);
+      addColoredBox(50, doc.y, 495, 2, primaryColor);
+      doc.moveDown(1);
+
+      // Stats Grid
+      const statsY = doc.y;
+      const statBoxWidth = 240;
+      const statBoxHeight = 35;
+      const statsData = [
+        { label: 'Total des tâches', value: stats.total, color: darkGray },
+        { label: 'Taux de complétion', value: `${stats.completionRate}%`, color: primaryColor },
+        { label: 'À faire', value: stats.todo, color: '#94a3b8' },
+        { label: 'En cours', value: stats.in_progress, color: '#3b82f6' },
+        { label: 'En révision', value: stats.review, color: '#f59e0b' },
+        { label: 'Terminé', value: stats.done, color: '#10b981' },
+        { label: 'Bloqué', value: stats.blocked, color: '#ef4444' },
+        { label: 'En retard', value: stats.overdue, color: '#dc2626' }
+      ];
+
+      let currentY = statsY;
+      statsData.forEach((stat, index) => {
+        const x = index % 2 === 0 ? 50 : 305;
+        if (index % 2 === 0 && index > 0) currentY += statBoxHeight + 10;
+
+        addColoredBox(x, currentY, statBoxWidth, statBoxHeight, lightGray);
+        doc.fillColor(secondaryColor)
+           .fontSize(9)
+           .font('Helvetica')
+           .text(stat.label, x + 15, currentY + 8);
+        doc.fillColor(stat.color)
+           .fontSize(16)
+           .font('Helvetica-Bold')
+           .text(stat.value.toString(), x + 15, currentY + 20);
+      });
+
+      doc.y = currentY + statBoxHeight + 30;
+
+      // Tasks by Status
       const statusLabels = {
-        todo: 'À FAIRE',
-        in_progress: 'EN COURS',
-        review: 'EN RÉVISION',
-        done: 'TERMINÉ',
-        blocked: 'BLOQUÉ'
+        todo: { label: 'À FAIRE', color: '#94a3b8' },
+        in_progress: { label: 'EN COURS', color: '#3b82f6' },
+        review: { label: 'EN RÉVISION', color: '#f59e0b' },
+        done: { label: 'TERMINÉ', color: '#10b981' },
+        blocked: { label: 'BLOQUÉ', color: '#ef4444' }
       };
 
       Object.entries(report.tasksByStatus).forEach(([status, taskList]) => {
         if (taskList.length > 0) {
-          content += `\n${statusLabels[status]} (${taskList.length})\n`;
-          content += `${'-'.repeat(70)}\n`;
+          // Check if we need a new page
+          if (doc.y > 700) {
+            doc.addPage();
+          }
+
+          doc.moveDown(1);
+
+          // Status header
+          const statusInfo = statusLabels[status];
+          addColoredBox(50, doc.y, 495, 30, statusInfo.color);
+          doc.fillColor('white')
+             .fontSize(14)
+             .font('Helvetica-Bold')
+             .text(`${statusInfo.label} (${taskList.length})`, 70, doc.y + 8);
+
+          doc.y += 40;
+
+          // Tasks
           taskList.forEach((task, index) => {
-            content += `\n${index + 1}. ${task.title}\n`;
-            if (task.description) {
-              content += `   Description: ${task.description.substring(0, 100)}${task.description.length > 100 ? '...' : ''}\n`;
+            // Check if we need a new page
+            if (doc.y > 680) {
+              doc.addPage();
             }
+
+            // Task box
+            const taskBoxY = doc.y;
+            addColoredBox(50, taskBoxY, 495, 'auto', lightGray);
+
+            doc.fillColor(darkGray)
+               .fontSize(11)
+               .font('Helvetica-Bold')
+               .text(`${index + 1}. ${task.title}`, 70, taskBoxY + 10, { width: 455 });
+
+            let detailY = doc.y + 5;
+
+            if (task.description) {
+              doc.fillColor(secondaryColor)
+                 .fontSize(9)
+                 .font('Helvetica')
+                 .text(task.description.substring(0, 150) + (task.description.length > 150 ? '...' : ''), 70, detailY, { width: 455 });
+              detailY = doc.y + 5;
+            }
+
+            // Task metadata in compact format
+            const metadata = [];
             if (task.priority) {
               const priorityLabel = task.priority === 'urgent' ? 'Urgente' :
                                    task.priority === 'high' ? 'Haute' :
                                    task.priority === 'medium' ? 'Moyenne' : 'Faible';
-              content += `   Priorité: ${priorityLabel}\n`;
+              metadata.push(`Priorité: ${priorityLabel}`);
             }
             if (task.assignedTo) {
-              content += `   Assigné à: ${task.assignedTo}\n`;
+              metadata.push(`Assigné: ${task.assignedTo}`);
             }
             if (task.dueDate) {
-              content += `   Date d'échéance: ${new Date(task.dueDate).toLocaleDateString('fr-FR')}\n`;
+              metadata.push(`Échéance: ${new Date(task.dueDate).toLocaleDateString('fr-FR')}`);
             }
             if (task.createdAt) {
-              content += `   Créé le: ${new Date(task.createdAt).toLocaleDateString('fr-FR')}\n`;
+              metadata.push(`Créé: ${new Date(task.createdAt).toLocaleDateString('fr-FR')}`);
             }
+
+            if (metadata.length > 0) {
+              doc.fillColor('#64748b')
+                 .fontSize(8)
+                 .text(metadata.join('  •  '), 70, detailY, { width: 455 });
+            }
+
+            const taskBoxHeight = doc.y - taskBoxY + 15;
+            addColoredBox(50, taskBoxY, 495, taskBoxHeight, 'white');
+            addColoredBox(50, taskBoxY, 495, taskBoxHeight, lightGray);
+
+            // Re-draw content on top
+            doc.fillColor(darkGray)
+               .fontSize(11)
+               .font('Helvetica-Bold')
+               .text(`${index + 1}. ${task.title}`, 70, taskBoxY + 10, { width: 455 });
+
+            let redrawY = doc.y + 5;
+            if (task.description) {
+              doc.fillColor(secondaryColor)
+                 .fontSize(9)
+                 .font('Helvetica')
+                 .text(task.description.substring(0, 150) + (task.description.length > 150 ? '...' : ''), 70, redrawY, { width: 455 });
+              redrawY = doc.y + 5;
+            }
+
+            if (metadata.length > 0) {
+              doc.fillColor('#64748b')
+                 .fontSize(8)
+                 .text(metadata.join('  •  '), 70, redrawY, { width: 455 });
+            }
+
+            doc.y += 20;
           });
-          content += `\n`;
         }
       });
 
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="rapport-taches-${project.title.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.txt"`);
-      return res.send(content);
+      // Footer
+      const pageCount = doc.bufferedPageRange().count;
+      for (let i = 0; i < pageCount; i++) {
+        doc.switchToPage(i);
+        doc.fillColor(secondaryColor)
+           .fontSize(8)
+           .text(
+             `Page ${i + 1} sur ${pageCount} • Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`,
+             50,
+             doc.page.height - 50,
+             { align: 'center', width: 495 }
+           );
+      }
+
+      doc.end();
+      return;
     }
 
     // Return JSON format
