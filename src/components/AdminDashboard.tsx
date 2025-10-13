@@ -34,7 +34,8 @@ import {
     Upload,
     GraduationCap,
     BarChart3,
-    Tag
+    Tag,
+    Boxes
 } from 'lucide-react';
 
 import {useAuth, useClients, useMessages, useProjects, useStatistics} from '../hooks/useApi';
@@ -53,6 +54,7 @@ import SettingsTab from './admin/SettingsTab';
 import TrainingProgramsManagement from './TrainingProgramsManagement';
 import CategoriesTab from './admin/CategoriesTab';
 import TasksTab from './admin/TasksTab';
+import ProjectTypesTab from './admin/ProjectTypesTab';
 
 // Define the upload form data type
 interface UploadDocumentFormDataType {
@@ -338,6 +340,8 @@ const AdminDashboard = () => {
                 return <TrainingProgramsManagement />;
             case 'categories':
                 return <CategoriesTab />;
+            case 'projectTypes':
+                return <ProjectTypesTab />;
             case 'tasks':
                 return <TasksTab />;
             case 'settings':
@@ -438,6 +442,20 @@ const AdminDashboard = () => {
                             >
                                 <Tag className="h-5 w-5 mr-3"/>
                                 Catégories
+                            </button>
+                        )}
+
+                        {!isProjectManager && (
+                            <button
+                                onClick={() => setActiveTab('projectTypes')}
+                                className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
+                                    activeTab === 'projectTypes'
+                                        ? 'bg-primary-600 text-white'
+                                        : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+                                }`}
+                            >
+                                <Boxes className="h-5 w-5 mr-3"/>
+                                Types de Projets
                             </button>
                         )}
 

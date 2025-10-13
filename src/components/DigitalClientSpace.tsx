@@ -21,6 +21,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const { projects, loading, submitProject } = useProjects(isAuthenticated ? user?.id : undefined);
+  const [projectTypes, setProjectTypes] = useState<{id: string, name: string}[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -35,6 +36,25 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [fileInputRef] = useState<HTMLInputElement | null>(null);
   const [authKey, setAuthKey] = useState(0); // Force re-render after auth
+
+  useEffect(() => {
+    const stored = localStorage.getItem('projectTypes');
+    if (stored) {
+      const types = JSON.parse(stored);
+      setProjectTypes(types);
+    } else {
+      const defaultTypes = [
+        { id: '1', name: 'Site Web / Application Web' },
+        { id: '2', name: 'Application Mobile' },
+        { id: '3', name: 'E-commerce' },
+        { id: '4', name: 'Application Desktop' },
+        { id: '5', name: 'API / Backend' },
+        { id: '6', name: 'Formation' },
+        { id: '7', name: 'Consulting' }
+      ];
+      setProjectTypes(defaultTypes);
+    }
+  }, []);
 
   useEffect(() => {
     if (isOpen && isAuthenticated && user && activeTab === 'projects') {
@@ -372,11 +392,23 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                       className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     >
-                      <option value="web">Site Web / Application Web</option>
-                      <option value="mobile">Application Mobile</option>
-                      <option value="enterprise">Solution Entreprise</option>
-                      <option value="cloud">Services Cloud</option>
-                      <option value="other">Autre</option>
+                      {projectTypes.length > 0 ? (
+                        projectTypes.map((type) => (
+                          <option key={type.id} value={type.name.toLowerCase().replace(/\s+/g, '-')}>
+                            {type.name}
+                          </option>
+                        ))
+                      ) : (
+                        <>
+                          <option value="web">Site Web / Application Web</option>
+                          <option value="mobile">Application Mobile</option>
+                          <option value="e-commerce">E-commerce</option>
+                          <option value="desktop">Application Desktop</option>
+                          <option value="api">API / Backend</option>
+                          <option value="formation">Formation</option>
+                          <option value="consulting">Consulting</option>
+                        </>
+                      )}
                     </select>
                   </div>
                 </div>
