@@ -1378,237 +1378,222 @@ router.get('/project/:projectId/report', validateMongoIdParam('projectId'), asyn
 
     // Return as PDF format if requested
     if (format === 'text' || format === 'pdf') {
-      const dateRangeStr = startDate || endDate
-        ? `${startDate ? new Date(startDate).toLocaleDateString('fr-FR') : 'Début'} - ${endDate ? new Date(endDate).toLocaleDateString('fr-FR') : 'Fin'}`
-        : 'Toutes les dates';
+      try {
+        const dateRangeStr = startDate || endDate
+          ? `${startDate ? new Date(startDate).toLocaleDateString('fr-FR') : 'Début'} - ${endDate ? new Date(endDate).toLocaleDateString('fr-FR') : 'Fin'}`
+          : 'Toutes les dates';
 
-      const doc = new PDFDocument({
-        size: 'A4',
-        margin: 50,
-        bufferPages: true
-      });
+        const doc = new PDFDocument({
+          size: 'A4',
+          margin: 50,
+          bufferPages: true
+        });
 
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="rapport-taches-${project.title.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf"`);
-      doc.pipe(res);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="rapport-taches-${project.title.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf"`);
+        doc.pipe(res);
 
-      // Colors
-      const primaryColor = '#2563eb';
-      const secondaryColor = '#64748b';
-      const lightGray = '#f1f5f9';
-      const darkGray = '#1e293b';
+        // Colors
+        const primaryColor = '#2563eb';
+        const secondaryColor = '#64748b';
+        const lightGray = '#f1f5f9';
+        const darkGray = '#1e293b';
 
-      // Helper function to add colored box
-      const addColoredBox = (x, y, width, height, color) => {
-        doc.rect(x, y, width, height).fill(color);
-      };
+        // Header with background
+        doc.rect(0, 0, 600, 120).fill(primaryColor);
+        doc.fillColor('white')
+           .fontSize(24)
+           .font('Helvetica-Bold')
+           .text('RAPPORT DE PROGRESSION', 50, 40, { align: 'center', width: 495 });
+        doc.fontSize(18)
+           .text('DES TÂCHES', 50, 70, { align: 'center', width: 495 });
 
-      // Header with background
-      addColoredBox(0, 0, 600, 120, primaryColor);
-      doc.fillColor('white')
-         .fontSize(24)
-         .font('Helvetica-Bold')
-         .text('RAPPORT DE PROGRESSION', 50, 40, { align: 'center' });
-      doc.fontSize(18)
-         .text('DES TÂCHES', 50, 70, { align: 'center' });
+        // Project Info Box
+        doc.y = 140;
+        doc.rect(50, doc.y, 495, 120).fill(lightGray);
+        doc.fillColor(darkGray)
+           .fontSize(12)
+           .font('Helvetica-Bold')
+           .text('INFORMATIONS DU PROJET', 70, doc.y + 15);
 
-      // Reset position
-      doc.y = 140;
+        doc.font('Helvetica')
+           .fontSize(10)
+           .fillColor(secondaryColor);
 
-      // Project Info Box
-      addColoredBox(50, doc.y, 495, 120, lightGray);
-      doc.fillColor(darkGray)
-         .fontSize(12)
-         .font('Helvetica-Bold')
-         .text('INFORMATIONS DU PROJET', 70, doc.y + 15);
+        const infoY = doc.y + 40;
+        doc.text(`Projet:`, 70, infoY);
+        doc.fillColor(darkGray).text(project.title, 180, infoY);
 
-      doc.font('Helvetica')
-         .fontSize(10)
-         .fillColor(secondaryColor);
+        doc.fillColor(secondaryColor).text(`Client:`, 70, infoY + 20);
+        doc.fillColor(darkGray).text(project.client_id.name, 180, infoY + 20);
 
-      const infoY = doc.y + 40;
-      doc.text(`Projet:`, 70, infoY);
-      doc.fillColor(darkGray).text(project.title, 180, infoY);
+        doc.fillColor(secondaryColor).text(`Chef de projet:`, 70, infoY + 40);
+        doc.fillColor(darkGray).text(report.project.managerName, 180, infoY + 40);
 
-      doc.fillColor(secondaryColor).text(`Client:`, 70, infoY + 20);
-      doc.fillColor(darkGray).text(project.client_id.name, 180, infoY + 20);
+        doc.fillColor(secondaryColor).text(`Période:`, 70, infoY + 60);
+        doc.fillColor(darkGray).text(dateRangeStr, 180, infoY + 60);
 
-      doc.fillColor(secondaryColor).text(`Chef de projet:`, 70, infoY + 40);
-      doc.fillColor(darkGray).text(report.project.managerName, 180, infoY + 40);
+        doc.y += 140;
 
-      doc.fillColor(secondaryColor).text(`Période:`, 70, infoY + 60);
-      doc.fillColor(darkGray).text(dateRangeStr, 180, infoY + 60);
-
-      doc.y += 140;
-
-      // Statistics Section
-      doc.moveDown(2);
-      doc.fillColor(primaryColor)
-         .fontSize(16)
-         .font('Helvetica-Bold')
-         .text('STATISTIQUES GLOBALES', 50);
-
-      doc.moveDown(0.5);
-      addColoredBox(50, doc.y, 495, 2, primaryColor);
-      doc.moveDown(1);
-
-      // Stats Grid
-      const statsY = doc.y;
-      const statBoxWidth = 240;
-      const statBoxHeight = 35;
-      const statsData = [
-        { label: 'Total des tâches', value: stats.total, color: darkGray },
-        { label: 'Taux de complétion', value: `${stats.completionRate}%`, color: primaryColor },
-        { label: 'À faire', value: stats.todo, color: '#94a3b8' },
-        { label: 'En cours', value: stats.in_progress, color: '#3b82f6' },
-        { label: 'En révision', value: stats.review, color: '#f59e0b' },
-        { label: 'Terminé', value: stats.done, color: '#10b981' },
-        { label: 'Bloqué', value: stats.blocked, color: '#ef4444' },
-        { label: 'En retard', value: stats.overdue, color: '#dc2626' }
-      ];
-
-      let currentY = statsY;
-      statsData.forEach((stat, index) => {
-        const x = index % 2 === 0 ? 50 : 305;
-        if (index % 2 === 0 && index > 0) currentY += statBoxHeight + 10;
-
-        addColoredBox(x, currentY, statBoxWidth, statBoxHeight, lightGray);
-        doc.fillColor(secondaryColor)
-           .fontSize(9)
-           .font('Helvetica')
-           .text(stat.label, x + 15, currentY + 8);
-        doc.fillColor(stat.color)
+        // Statistics Section
+        doc.moveDown(2);
+        doc.fillColor(primaryColor)
            .fontSize(16)
            .font('Helvetica-Bold')
-           .text(stat.value.toString(), x + 15, currentY + 20);
-      });
+           .text('STATISTIQUES GLOBALES', 50);
 
-      doc.y = currentY + statBoxHeight + 30;
+        doc.moveDown(0.5);
+        doc.rect(50, doc.y, 495, 2).fill(primaryColor);
+        doc.moveDown(1);
 
-      // Tasks by Status
-      const statusLabels = {
-        todo: { label: 'À FAIRE', color: '#94a3b8' },
-        in_progress: { label: 'EN COURS', color: '#3b82f6' },
-        review: { label: 'EN RÉVISION', color: '#f59e0b' },
-        done: { label: 'TERMINÉ', color: '#10b981' },
-        blocked: { label: 'BLOQUÉ', color: '#ef4444' }
-      };
+        // Stats Grid
+        const statsY = doc.y;
+        const statBoxWidth = 240;
+        const statBoxHeight = 35;
+        const statsData = [
+          { label: 'Total des tâches', value: stats.total, color: darkGray },
+          { label: 'Taux de complétion', value: `${stats.completionRate}%`, color: primaryColor },
+          { label: 'À faire', value: stats.todo, color: '#94a3b8' },
+          { label: 'En cours', value: stats.in_progress, color: '#3b82f6' },
+          { label: 'En révision', value: stats.review, color: '#f59e0b' },
+          { label: 'Terminé', value: stats.done, color: '#10b981' },
+          { label: 'Bloqué', value: stats.blocked, color: '#ef4444' },
+          { label: 'En retard', value: stats.overdue, color: '#dc2626' }
+        ];
 
-      Object.entries(report.tasksByStatus).forEach(([status, taskList]) => {
-        if (taskList.length > 0) {
-          // Check if we need a new page
-          if (doc.y > 700) {
-            doc.addPage();
-          }
+        let currentY = statsY;
+        statsData.forEach((stat, index) => {
+          const x = index % 2 === 0 ? 50 : 305;
+          if (index % 2 === 0 && index > 0) currentY += statBoxHeight + 10;
 
-          doc.moveDown(1);
-
-          // Status header
-          const statusInfo = statusLabels[status];
-          addColoredBox(50, doc.y, 495, 30, statusInfo.color);
-          doc.fillColor('white')
-             .fontSize(14)
+          doc.rect(x, currentY, statBoxWidth, statBoxHeight).fill(lightGray);
+          doc.fillColor(secondaryColor)
+             .fontSize(9)
+             .font('Helvetica')
+             .text(stat.label, x + 15, currentY + 8);
+          doc.fillColor(stat.color)
+             .fontSize(16)
              .font('Helvetica-Bold')
-             .text(`${statusInfo.label} (${taskList.length})`, 70, doc.y + 8);
+             .text(stat.value.toString(), x + 15, currentY + 20);
+        });
 
-          doc.y += 40;
+        doc.y = currentY + statBoxHeight + 30;
 
-          // Tasks
-          taskList.forEach((task, index) => {
-            // Check if we need a new page
-            if (doc.y > 680) {
+        // Tasks by Status
+        const statusLabels = {
+          todo: { label: 'À FAIRE', color: '#94a3b8' },
+          in_progress: { label: 'EN COURS', color: '#3b82f6' },
+          review: { label: 'EN RÉVISION', color: '#f59e0b' },
+          done: { label: 'TERMINÉ', color: '#10b981' },
+          blocked: { label: 'BLOQUÉ', color: '#ef4444' }
+        };
+
+        Object.entries(report.tasksByStatus).forEach(([status, taskList]) => {
+          if (taskList.length > 0) {
+            if (doc.y > 700) {
               doc.addPage();
             }
 
-            // Task box
-            const taskBoxY = doc.y;
-            addColoredBox(50, taskBoxY, 495, 'auto', lightGray);
+            doc.moveDown(1);
 
-            doc.fillColor(darkGray)
-               .fontSize(11)
+            // Status header
+            const statusInfo = statusLabels[status];
+            const headerY = doc.y;
+            doc.rect(50, headerY, 495, 30).fill(statusInfo.color);
+            doc.fillColor('white')
+               .fontSize(14)
                .font('Helvetica-Bold')
-               .text(`${index + 1}. ${task.title}`, 70, taskBoxY + 10, { width: 455 });
+               .text(`${statusInfo.label} (${taskList.length})`, 70, headerY + 8);
 
-            let detailY = doc.y + 5;
+            doc.y = headerY + 40;
 
-            if (task.description) {
-              doc.fillColor(secondaryColor)
-                 .fontSize(9)
-                 .font('Helvetica')
-                 .text(task.description.substring(0, 150) + (task.description.length > 150 ? '...' : ''), 70, detailY, { width: 455 });
-              detailY = doc.y + 5;
-            }
+            // Tasks
+            taskList.forEach((task, index) => {
+              if (doc.y > 680) {
+                doc.addPage();
+              }
 
-            // Task metadata in compact format
-            const metadata = [];
-            if (task.priority) {
-              const priorityLabel = task.priority === 'urgent' ? 'Urgente' :
-                                   task.priority === 'high' ? 'Haute' :
-                                   task.priority === 'medium' ? 'Moyenne' : 'Faible';
-              metadata.push(`Priorité: ${priorityLabel}`);
-            }
-            if (task.assignedTo) {
-              metadata.push(`Assigné: ${task.assignedTo}`);
-            }
-            if (task.dueDate) {
-              metadata.push(`Échéance: ${new Date(task.dueDate).toLocaleDateString('fr-FR')}`);
-            }
-            if (task.createdAt) {
-              metadata.push(`Créé: ${new Date(task.createdAt).toLocaleDateString('fr-FR')}`);
-            }
+              const taskBoxY = doc.y;
 
-            if (metadata.length > 0) {
-              doc.fillColor('#64748b')
-                 .fontSize(8)
-                 .text(metadata.join('  •  '), 70, detailY, { width: 455 });
-            }
+              // Calculate task box height first
+              let estimatedHeight = 30;
+              if (task.description) estimatedHeight += 25;
+              estimatedHeight += 15;
 
-            const taskBoxHeight = doc.y - taskBoxY + 15;
-            addColoredBox(50, taskBoxY, 495, taskBoxHeight, 'white');
-            addColoredBox(50, taskBoxY, 495, taskBoxHeight, lightGray);
+              // Draw task background
+              doc.rect(50, taskBoxY, 495, estimatedHeight).fill(lightGray);
 
-            // Re-draw content on top
-            doc.fillColor(darkGray)
-               .fontSize(11)
-               .font('Helvetica-Bold')
-               .text(`${index + 1}. ${task.title}`, 70, taskBoxY + 10, { width: 455 });
+              // Task title
+              doc.fillColor(darkGray)
+                 .fontSize(11)
+                 .font('Helvetica-Bold')
+                 .text(`${index + 1}. ${task.title}`, 70, taskBoxY + 10, { width: 455 });
 
-            let redrawY = doc.y + 5;
-            if (task.description) {
-              doc.fillColor(secondaryColor)
-                 .fontSize(9)
-                 .font('Helvetica')
-                 .text(task.description.substring(0, 150) + (task.description.length > 150 ? '...' : ''), 70, redrawY, { width: 455 });
-              redrawY = doc.y + 5;
-            }
+              let currentYPos = doc.y + 5;
 
-            if (metadata.length > 0) {
-              doc.fillColor('#64748b')
-                 .fontSize(8)
-                 .text(metadata.join('  •  '), 70, redrawY, { width: 455 });
-            }
+              // Description
+              if (task.description) {
+                const desc = task.description.substring(0, 150);
+                doc.fillColor(secondaryColor)
+                   .fontSize(9)
+                   .font('Helvetica')
+                   .text(desc + (task.description.length > 150 ? '...' : ''), 70, currentYPos, { width: 455 });
+                currentYPos = doc.y + 5;
+              }
 
-            doc.y += 20;
-          });
+              // Metadata
+              const metadata = [];
+              if (task.priority) {
+                const priorityLabel = task.priority === 'urgent' ? 'Urgente' :
+                                     task.priority === 'high' ? 'Haute' :
+                                     task.priority === 'medium' ? 'Moyenne' : 'Faible';
+                metadata.push(`Priorité: ${priorityLabel}`);
+              }
+              if (task.assignedTo) {
+                metadata.push(`Assigné: ${task.assignedTo}`);
+              }
+              if (task.dueDate) {
+                metadata.push(`Échéance: ${new Date(task.dueDate).toLocaleDateString('fr-FR')}`);
+              }
+              if (task.createdAt) {
+                metadata.push(`Créé: ${new Date(task.createdAt).toLocaleDateString('fr-FR')}`);
+              }
+
+              if (metadata.length > 0) {
+                doc.fillColor('#64748b')
+                   .fontSize(8)
+                   .text(metadata.join('  •  '), 70, currentYPos, { width: 455 });
+              }
+
+              doc.y += 20;
+            });
+          }
+        });
+
+        // Footer
+        const pageCount = doc.bufferedPageRange().count;
+        for (let i = 0; i < pageCount; i++) {
+          doc.switchToPage(i);
+          doc.fillColor(secondaryColor)
+             .fontSize(8)
+             .text(
+               `Page ${i + 1} sur ${pageCount} • Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`,
+               50,
+               doc.page.height - 50,
+               { align: 'center', width: 495 }
+             );
         }
-      });
 
-      // Footer
-      const pageCount = doc.bufferedPageRange().count;
-      for (let i = 0; i < pageCount; i++) {
-        doc.switchToPage(i);
-        doc.fillColor(secondaryColor)
-           .fontSize(8)
-           .text(
-             `Page ${i + 1} sur ${pageCount} • Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`,
-             50,
-             doc.page.height - 50,
-             { align: 'center', width: 495 }
-           );
+        doc.end();
+        return;
+      } catch (pdfError) {
+        console.error('PDF generation error:', pdfError);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to generate PDF report',
+          details: pdfError.message
+        });
       }
-
-      doc.end();
-      return;
     }
 
     // Return JSON format
