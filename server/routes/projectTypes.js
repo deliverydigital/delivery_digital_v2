@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import { authenticate } from '../middleware/auth.js';
+import { createClient } from '@supabase/supabase-js';
+
 const router = express.Router();
-const { authenticate } = require('../middleware/auth');
-const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -391,4 +392,4 @@ router.delete('/:id/tasks/:taskId', authenticate, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
