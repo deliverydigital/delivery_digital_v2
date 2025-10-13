@@ -174,6 +174,12 @@ export class TasksApiService {
   // CRUD Operations for Tasks
   static async createTask(taskData: Partial<Task>): Promise<{ success: boolean; task?: Task; error?: string }> {
     try {
+      console.log('TasksApiService.createTask - sending request:', {
+        project_id: taskData.projectId,
+        title: taskData.title,
+        priority: taskData.priority || 'medium'
+      });
+
       const response = await makeRequest('/tasks', {
         method: 'POST',
         body: JSON.stringify({
@@ -188,13 +194,15 @@ export class TasksApiService {
         }),
       });
 
+      console.log('TasksApiService.createTask - response:', response);
+
       if (response.success) {
         return { success: true, task: this.transformTaskFromAPI(response.data.task) };
       }
-      
-      return { success: false, error: 'Failed to create task' };
-    } catch (error) {
-      console.error('Erreur lors de la création de la tâche:', error);
+
+      return { success: false, error: response.error || 'Failed to create task' };
+    } catch (error: any) {
+      console.error('TasksApiService.createTask - error:', error);
       return { success: false, error: error.message || 'Erreur lors de la création de la tâche' };
     }
   }
