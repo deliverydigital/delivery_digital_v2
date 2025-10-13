@@ -1094,7 +1094,7 @@ export class TasksApiService {
     options?: {
       startDate?: string;
       endDate?: string;
-      format?: 'json' | 'text';
+      format?: 'json' | 'text' | 'pdf';
     }
   ): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
@@ -1113,8 +1113,8 @@ export class TasksApiService {
         'bypass-tunnel-reminder': 'true'
       };
 
-      // If format is text, handle as file download
-      if (options?.format === 'text') {
+      // If format is text or pdf, handle as file download
+      if (options?.format === 'text' || options?.format === 'pdf') {
         const response = await fetch(`${baseUrl}/api${url}`, { headers });
 
         if (!response.ok) {
@@ -1130,7 +1130,7 @@ export class TasksApiService {
         const contentDisposition = response.headers.get('Content-Disposition');
         const filename = contentDisposition
           ? contentDisposition.split('filename="')[1]?.split('"')[0]
-          : `rapport-taches-${new Date().toISOString().split('T')[0]}.txt`;
+          : `rapport-taches-${new Date().toISOString().split('T')[0]}.pdf`;
 
         link.download = filename;
         document.body.appendChild(link);

@@ -66,7 +66,7 @@ const TasksTab = () => {
       const result = await TasksApiService.generateTaskReport(selectedProject.id, {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
-        format: 'text'
+        format: 'pdf'
       });
 
       if (result.success) {
