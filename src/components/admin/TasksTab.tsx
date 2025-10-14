@@ -177,11 +177,28 @@ const TasksTab = () => {
       const projectTypeName = selectedProject.type;
       console.log('Looking for project type:', projectTypeName);
 
-      // Find matching project type
-      const projectType = result.data.find((pt: any) =>
-        pt.name.toLowerCase().replace(/\s+/g, '-') === projectTypeName ||
-        pt.name === projectTypeName
-      );
+      // Find matching project type with flexible matching
+      const projectType = result.data.find((pt: any) => {
+        const normalizedPtName = pt.name.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-');
+        const normalizedProjectType = projectTypeName.toLowerCase().trim();
+
+        // Direct match
+        if (pt.name === projectTypeName || normalizedPtName === normalizedProjectType) {
+          return true;
+        }
+
+        // Partial match - check if project type contains the search term
+        if (pt.name.toLowerCase().includes(normalizedProjectType)) {
+          return true;
+        }
+
+        // Check if normalized name starts with the project type
+        if (normalizedPtName.startsWith(normalizedProjectType)) {
+          return true;
+        }
+
+        return false;
+      });
 
       console.log('Found project type:', projectType);
 
