@@ -135,8 +135,9 @@ const validateProjectCreation = [
     .isLength({ min: 10, max: 5000 })
     .withMessage('Description must be between 10 and 5000 characters'),
   body('type')
-    .isIn(['web', 'mobile', 'enterprise', 'cloud', 'other'])
-    .withMessage('Invalid project type'),
+    .trim()
+    .notEmpty()
+    .withMessage('Project type is required'),
   body('budget_range')
     .optional()
     .isIn(['small', 'medium', 'large', 'enterprise'])
