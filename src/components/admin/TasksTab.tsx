@@ -293,7 +293,7 @@ const TasksTab = () => {
               className="px-4 py-2 pr-10 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm appearance-none"
             >
               <option value="">Tous les projets</option>
-              {projects.slice(0, 10).map((project) => (
+              {projects.map((project) => (
                 <option key={project.id} value={project.id}>
                   {project.hasUrgentTasks ? '🔴 ' : ''}{project.title}
                 </option>
