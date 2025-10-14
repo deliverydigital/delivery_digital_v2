@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, FolderOpen, Calendar, User, Building2, Clock, CheckCircle, AlertTriangle, Star, ChevronDown, ChevronUp, X, Save, FileText, ExternalLink, MessageCircle, Settings, UserCog, Link as LinkIcon, Shield, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProjects, useClients } from '../../hooks/useApi';
 import { ApiService } from '../../services/api';
+import projectTypesApi from '../../services/projectTypesApi';
 
 const ProjectsTab = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -18,6 +19,7 @@ const ProjectsTab = () => {
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
   const [editData, setEditData] = useState<any>({});
   const [projectManagers, setProjectManagers] = useState<any[]>([]);
+  const [projectTypes, setProjectTypes] = useState<any[]>([]);
 
   const currentUser = ApiService.getCurrentUser();
   const isAdmin = currentUser?.role === 'admin';
@@ -25,11 +27,19 @@ const ProjectsTab = () => {
 
   useEffect(() => {
     loadProjectManagers();
+    loadProjectTypes();
   }, []);
 
   const loadProjectManagers = async () => {
     const managers = await ApiService.getProjectManagers();
     setProjectManagers(managers);
+  };
+
+  const loadProjectTypes = async () => {
+    const response = await projectTypesApi.getAllProjectTypes();
+    if (response.success && response.data) {
+      setProjectTypes(response.data);
+    }
   };
 
   const canEditProject = (project: any) => {
@@ -498,6 +508,10 @@ const ProjectsTab = () => {
                     </div>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Type:</span>
+                        <span className="text-white font-medium">{selectedProject.type}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
                         <span className="text-gray-400">Statut:</span>
                         <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(selectedProject.status)}`}>
                           {selectedProject.status}
@@ -587,6 +601,24 @@ const ProjectsTab = () => {
                       />
                     </div>
                     <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Type de Projet</label>
+                      <select
+                        value={editData.type || ''}
+                        onChange={(e) => setEditData({ ...editData, type: e.target.value })}
+                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="">Sélectionner un type</option>
+                        {projectTypes.map((type) => (
+                          <option key={type._id || type.id} value={type.name}>
+                            {type.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">Statut</label>
                       <select
                         value={editData.status || ''}
@@ -598,6 +630,19 @@ const ProjectsTab = () => {
                         <option value="in_progress">En cours</option>
                         <option value="completed">Terminé</option>
                         <option value="on_hold">En pause</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Priorité</label>
+                      <select
+                        value={editData.priority || ''}
+                        onChange={(e) => setEditData({ ...editData, priority: e.target.value })}
+                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                      >
+                        <option value="low">Faible</option>
+                        <option value="medium">Moyenne</option>
+                        <option value="high">Haute</option>
+                        <option value="urgent">Urgente</option>
                       </select>
                     </div>
                   </div>
@@ -613,19 +658,6 @@ const ProjectsTab = () => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Priorité</label>
-                      <select
-                        value={editData.priority || ''}
-                        onChange={(e) => setEditData({ ...editData, priority: e.target.value })}
-                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                      >
-                        <option value="low">Faible</option>
-                        <option value="medium">Moyenne</option>
-                        <option value="high">Haute</option>
-                        <option value="urgent">Urgente</option>
-                      </select>
-                    </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">Progression (%)</label>
                       <input
