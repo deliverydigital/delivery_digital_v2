@@ -22,7 +22,7 @@ const projectSchema = new Schema({
   type: {
     type: String,
     required: true,
-    enum: ['web', 'mobile', 'enterprise', 'cloud', 'other']
+    trim: true
   },
   status: {
     type: String,
