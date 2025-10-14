@@ -374,7 +374,7 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
 
     // Update allowed fields (snake_case)
     const allowedFields = [
-      'title', 'description', 'status', 'priority', 'budget_range', 'estimated_budget',
+      'title', 'description', 'type', 'status', 'priority', 'budget_range', 'estimated_budget',
       'timeline', 'start_date', 'end_date', 'completion_percentage', 'assigned_to',
       'figma_url', 'gitlab_url', 'notes', 'requirements', 'technical_specs', 'links', 'task_permissions'
     ];
@@ -382,7 +382,7 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
     // Role-based field permissions
     const clientAllowedFields = ['description', 'figma_url', 'gitlab_url', 'notes', 'links'];
     const managerAllowedFields = [
-      'title', 'description', 'status', 'priority', 'budget_range', 'estimated_budget',
+      'title', 'description', 'type', 'status', 'priority', 'budget_range', 'estimated_budget',
       'timeline', 'start_date', 'end_date', 'completion_percentage',
       'figma_url', 'gitlab_url', 'notes', 'links', 'requirements', 'technical_specs'
     ];
