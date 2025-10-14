@@ -38,7 +38,10 @@ const ProjectsTab = () => {
   const loadProjectTypes = async () => {
     const response = await projectTypesApi.getAllProjectTypes();
     if (response.success && response.data) {
+      console.log('Loaded project types:', response.data);
       setProjectTypes(response.data);
+    } else {
+      console.error('Failed to load project types:', response.error);
     }
   };
 
@@ -103,13 +106,18 @@ const ProjectsTab = () => {
   };
 
   const openEditModal = (project: any) => {
+    console.log('Opening edit modal for project:', project);
+    console.log('Project type:', project.type);
     setSelectedProject(project);
-    setEditData({
+    const editableData = {
       ...project,
+      type: project.type || '',
       assignedTo: project.assignedTo?.id || '',
       links: project.links || [],
       taskPermissions: project.taskPermissions || {}
-    });
+    };
+    console.log('Edit data:', editableData);
+    setEditData(editableData);
     setModalMode('edit');
     setShowModal(true);
   };
@@ -604,10 +612,13 @@ const ProjectsTab = () => {
                       <label className="block text-sm font-medium text-gray-300 mb-2">Type de Projet</label>
                       <select
                         value={editData.type || ''}
-                        onChange={(e) => setEditData({ ...editData, type: e.target.value })}
+                        onChange={(e) => {
+                          console.log('Selected type:', e.target.value);
+                          setEditData({ ...editData, type: e.target.value });
+                        }}
                         className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
                       >
-                        <option value="">Sélectionner un type</option>
+                        <option value="" disabled>Sélectionner un type</option>
                         {projectTypes.map((type) => (
                           <option key={type._id || type.id} value={type.name}>
                             {type.name}
