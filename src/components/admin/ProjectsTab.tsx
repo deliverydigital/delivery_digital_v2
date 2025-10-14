@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, FolderOpen, Calendar, User, Building2, Clock, CheckCircle, AlertTriangle, Star, ChevronDown, ChevronUp, X, Save, FileText, ExternalLink, MessageCircle, Settings, UserCog, Link as LinkIcon, Shield, Users } from 'lucide-react';
+import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, FolderOpen, Calendar, User, Building2, Clock, CheckCircle, AlertTriangle, Star, ChevronDown, ChevronUp, X, Save, FileText, ExternalLink, MessageCircle, Settings, UserCog, Link as LinkIcon, Shield, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProjects, useClients } from '../../hooks/useApi';
 import { ApiService } from '../../services/api';
 
 const ProjectsTab = () => {
-  const { projects, loading, updateProject, refreshProjects } = useProjects();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const { projects, loading, updateProject, refreshProjects, pagination } = useProjects(undefined, currentPage, itemsPerPage);
   const { clients } = useClients();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -315,6 +317,120 @@ const ProjectsTab = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {pagination && pagination.total > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-700">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-400">
+                  Affichage {Math.min(((currentPage - 1) * itemsPerPage) + 1, pagination.total)} à {Math.min(currentPage * itemsPerPage, pagination.total)} sur {pagination.total} projets
+                </span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="px-3 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+                >
+                  <option value={10}>10 par page</option>
+                  <option value={25}>25 par page</option>
+                  <option value={50}>50 par page</option>
+                  <option value={100}>100 par page</option>
+                </select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 transition-colors"
+                  title="Page précédente"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+
+                <div className="flex items-center space-x-1">
+                  {pagination.pages <= 7 ? (
+                    // Show all pages if 7 or fewer
+                    Array.from({ length: pagination.pages }, (_, i) => i + 1).map((pageNum) => (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                          currentPage === pageNum
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    ))
+                  ) : (
+                    // Smart pagination for many pages
+                    <>
+                      {/* First page */}
+                      <button
+                        onClick={() => setCurrentPage(1)}
+                        className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                          currentPage === 1
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        1
+                      </button>
+
+                      {/* Ellipsis after first page */}
+                      {currentPage > 3 && <span className="text-gray-500 px-2">...</span>}
+
+                      {/* Pages around current */}
+                      {Array.from({ length: pagination.pages }, (_, i) => i + 1)
+                        .filter(pageNum => pageNum > 1 && pageNum < pagination.pages && Math.abs(pageNum - currentPage) <= 1)
+                        .map((pageNum) => (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                              currentPage === pageNum
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        ))
+                      }
+
+                      {/* Ellipsis before last page */}
+                      {currentPage < pagination.pages - 2 && <span className="text-gray-500 px-2">...</span>}
+
+                      {/* Last page */}
+                      <button
+                        onClick={() => setCurrentPage(pagination.pages)}
+                        className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                          currentPage === pagination.pages
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        {pagination.pages}
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(Math.min(pagination.pages, currentPage + 1))}
+                  disabled={currentPage === pagination.pages}
+                  className="px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 transition-colors"
+                  title="Page suivante"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
