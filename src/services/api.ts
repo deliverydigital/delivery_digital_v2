@@ -370,7 +370,7 @@ export class ApiService {
     }
   }
 
-  static async getAllProjects(page: number = 1, limit: number = 10): Promise<{ projects: Project[]; pagination?: any }> {
+  static async getAllProjects(page: number = 1, limit: number = 100): Promise<{ projects: Project[]; pagination?: any }> {
     try {
       // Check authentication before making API call
       const token = this.getAuthToken();
@@ -379,9 +379,12 @@ export class ApiService {
         return { projects: [] };
       }
 
+      // Ensure limit is within valid range (1-100)
+      const validLimit = Math.min(Math.max(limit, 1), 100);
+
       // Try to fetch from API first
       try {
-        const response = await this.makeRequest(`/projects?page=${page}&limit=${limit}`);
+        const response = await this.makeRequest(`/projects?page=${page}&limit=${validLimit}`);
         if (response.success && response.data && response.data.projects) {
           return {
             projects: response.data.projects,

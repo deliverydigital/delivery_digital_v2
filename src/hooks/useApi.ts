@@ -170,12 +170,12 @@ export const useAuth = () => {
 };
 
 // Hook pour les projets
-export const useProjects = (clientId?: string, page: number = 1, limit: number = 10) => {
+export const useProjects = (clientId?: string, page: number = 1, limit: number = 100) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 10,
+    limit: 100,
     total: 0,
     pages: 0
   });
@@ -184,7 +184,7 @@ export const useProjects = (clientId?: string, page: number = 1, limit: number =
     // Check if user is authenticated before making API calls
     const token = ApiService.getAuthToken();
     const currentUser = ApiService.getCurrentUser();
-    
+
     if (!token || !currentUser) {
       console.log('🔒 User not authenticated, skipping API call');
       setProjects([]);
@@ -197,10 +197,10 @@ export const useProjects = (clientId?: string, page: number = 1, limit: number =
       let data;
       let paginationData;
       if (clientId) {
-        data = await ApiService.getClientProjects(clientId, page, limit);
+        data = await ApiService.getClientProjects(clientId, page, Math.min(limit, 100));
       } else {
-        // For admin view, load all projects
-        const response = await ApiService.getAllProjects(page, limit);
+        // For admin view, load all projects (max 100 per page)
+        const response = await ApiService.getAllProjects(page, Math.min(limit, 100));
         data = response.projects || response;
         paginationData = response.pagination;
       }
