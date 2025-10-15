@@ -20,6 +20,8 @@ const ProjectsTab = () => {
   const [editData, setEditData] = useState<any>({});
   const [projectManagers, setProjectManagers] = useState<any[]>([]);
   const [projectTypes, setProjectTypes] = useState<any[]>([]);
+  const [showProjectSearch, setShowProjectSearch] = useState(false);
+  const [projectSearchQuery, setProjectSearchQuery] = useState('');
 
   const currentUser = ApiService.getCurrentUser();
   const isAdmin = currentUser?.role === 'admin';
@@ -77,6 +79,19 @@ const ProjectsTab = () => {
     const matchesPriority = selectedPriority === 'all' || project.priority === selectedPriority;
     return matchesSearch && matchesStatus && matchesPriority;
   });
+
+  const searchFilteredProjects = projects.filter(project =>
+    project.title.toLowerCase().includes(projectSearchQuery.toLowerCase()) ||
+    project.clientName.toLowerCase().includes(projectSearchQuery.toLowerCase()) ||
+    project.type?.toLowerCase().includes(projectSearchQuery.toLowerCase())
+  );
+
+  const handleProjectSelect = (project: any) => {
+    setSelectedProject(project);
+    setShowProjectSearch(false);
+    setProjectSearchQuery('');
+    openViewModal(project);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -182,6 +197,70 @@ const ProjectsTab = () => {
           <p className="text-gray-400">Gérez tous les projets clients</p>
         </div>
         <div className="flex items-center space-x-4">
+          <div className="relative">
+            <button
+              onClick={() => setShowProjectSearch(!showProjectSearch)}
+              className="btn btn-primary"
+            >
+              <Search className="h-4 w-4 mr-2" />
+              Rechercher un projet
+            </button>
+
+            {showProjectSearch && (
+              <div className="absolute right-0 mt-2 w-96 bg-gray-800 rounded-lg shadow-xl border border-gray-700 z-50">
+                <div className="p-4">
+                  <div className="relative mb-3">
+                    <input
+                      type="text"
+                      value={projectSearchQuery}
+                      onChange={(e) => setProjectSearchQuery(e.target.value)}
+                      placeholder="Rechercher par titre, client ou type..."
+                      className="w-full px-4 py-2 pl-10 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      autoFocus
+                    />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  </div>
+
+                  <div className="max-h-96 overflow-y-auto space-y-2">
+                    {searchFilteredProjects.length === 0 ? (
+                      <div className="text-center py-8 text-gray-400">
+                        <FolderOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p>Aucun projet trouvé</p>
+                      </div>
+                    ) : (
+                      searchFilteredProjects.map((project) => (
+                        <button
+                          key={project.id}
+                          onClick={() => handleProjectSelect(project)}
+                          className="w-full text-left p-3 rounded-lg bg-gray-900 hover:bg-gray-700 transition-colors border border-gray-700 hover:border-blue-500"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="font-medium text-white mb-1">{project.title}</div>
+                              <div className="text-sm text-gray-400">{project.clientName}</div>
+                              <div className="flex items-center gap-2 mt-2">
+                                <span className="text-xs text-gray-500">{project.type}</span>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  project.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                  project.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                                  project.status === 'on_hold' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {project.status}
+                                </span>
+                              </div>
+                            </div>
+                            <Eye className="h-4 w-4 text-blue-400 flex-shrink-0 mt-1" />
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={refreshProjects}
             className="btn btn-secondary"
