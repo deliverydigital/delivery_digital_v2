@@ -99,6 +99,8 @@ const ClientDashboard = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [isEditingTask, setIsEditingTask] = useState(false);
   const [editedTask, setEditedTask] = useState<any>(null);
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
+  const [projectSearchQuery, setProjectSearchQuery] = useState('');
   const [filters, setFilters] = useState({
     status: 'all',
     priority: 'all',
@@ -173,11 +175,21 @@ const ClientDashboard = () => {
     }
   };
 
+  const filteredProjects = projects.filter(project => {
+    if (!projectSearchQuery.trim()) return true;
+    const searchLower = projectSearchQuery.toLowerCase();
+    return (
+      project.title.toLowerCase().includes(searchLower) ||
+      (project.clientName && project.clientName.toLowerCase().includes(searchLower)) ||
+      (project.type && project.type.toLowerCase().includes(searchLower))
+    );
+  });
+
   const filteredTasks = tasks.filter(task => {
-    const matchesSearch = !searchQuery || 
+    const matchesSearch = !searchQuery ||
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = filters.status === 'all' || task.status === filters.status;
     const matchesPriority = filters.priority === 'all' || task.priority === filters.priority;
     const matchesAssignee = filters.assignee === 'all' || task.assignedTo === filters.assignee;
@@ -879,25 +891,98 @@ const ClientDashboard = () => {
                 <div className="flex items-center space-x-4">
                   {/* Project Selector */}
                   <div className="relative">
-                    <select
-                      value={selectedProject?.id || ''}
-                      onChange={(e) => {
-                        const project = projects.find(p => p.id === e.target.value);
-                        setSelectedProject(project);
-                      }}
-                      className="px-4 py-2 pr-10 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm appearance-none"
+                    <button
+                      onClick={() => setShowProjectDropdown(!showProjectDropdown)}
+                      className="px-4 py-2 pr-10 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm hover:bg-gray-700 transition-colors min-w-[250px] text-left"
                     >
-                      <option value="">Tous les projets</option>
-                      {projects.map((project) => (
-                        <option key={project.id} value={project.id}>
-                          {project.hasUrgentTasks ? '🔴 ' : ''}{project.title}
-                        </option>
-                      ))}
-                    </select>
-                    {selectedProject?.hasUrgentTasks && (
-                      <AlertTriangle className="absolute right-8 top-1/2 transform -translate-y-1/2 h-4 w-4 text-red-500 pointer-events-none animate-pulse" />
-                    )}
+                      {selectedProject ? (
+                        <span>
+                          {selectedProject.hasUrgentTasks && <span className="text-red-400 mr-2">🔴</span>}
+                          {selectedProject.title}
+                        </span>
+                      ) : (
+                        'Tous les projets'
+                      )}
+                    </button>
                     <ChevronRight className="absolute right-3 top-1/2 transform -translate-y-1/2 rotate-90 h-4 w-4 text-gray-400 pointer-events-none" />
+
+                    {showProjectDropdown && (
+                      <div className="absolute right-0 mt-2 w-96 bg-gray-800 rounded-lg shadow-xl border border-gray-700 z-50 max-h-[500px] flex flex-col">
+                        <div className="p-3 border-b border-gray-700">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={projectSearchQuery}
+                              onChange={(e) => setProjectSearchQuery(e.target.value)}
+                              placeholder="Rechercher un projet..."
+                              className="w-full px-4 py-2 pl-10 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              autoFocus
+                            />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            {projectSearchQuery && (
+                              <button
+                                onClick={() => setProjectSearchQuery('')}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="overflow-y-auto flex-1">
+                          <button
+                            onClick={() => {
+                              setSelectedProject(null);
+                              setShowProjectDropdown(false);
+                              setProjectSearchQuery('');
+                            }}
+                            className="w-full text-left px-4 py-3 hover:bg-gray-700 transition-colors border-b border-gray-700 text-gray-300"
+                          >
+                            Tous les projets
+                          </button>
+
+                          {filteredProjects.length === 0 ? (
+                            <div className="text-center py-8 text-gray-400">
+                              <FolderOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                              <p className="text-sm">
+                                {projectSearchQuery.trim() ? 'Aucun projet trouvé' : 'Aucun projet disponible'}
+                              </p>
+                            </div>
+                          ) : (
+                            filteredProjects.map((project) => (
+                              <button
+                                key={project.id}
+                                onClick={() => {
+                                  setSelectedProject(project);
+                                  setShowProjectDropdown(false);
+                                  setProjectSearchQuery('');
+                                }}
+                                className={`w-full text-left px-4 py-3 hover:bg-gray-700 transition-colors border-b border-gray-700 ${
+                                  selectedProject?.id === project.id ? 'bg-gray-700' : ''
+                                }`}
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-medium text-white mb-1 flex items-center">
+                                      {project.hasUrgentTasks && (
+                                        <span className="text-red-400 mr-2">🔴</span>
+                                      )}
+                                      <span className="truncate">{project.title}</span>
+                                    </div>
+                                    {project.type && (
+                                      <div className="text-xs text-gray-500 truncate">
+                                        {project.type}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={refreshTasks}
