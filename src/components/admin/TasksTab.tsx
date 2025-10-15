@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { RefreshCw, FolderOpen, ClipboardList, AlertTriangle, Link, ExternalLink, ChevronRight, Download, Calendar, Filter, ListPlus } from 'lucide-react';
+import { RefreshCw, FolderOpen, ClipboardList, AlertTriangle, Link, ExternalLink, ChevronRight, Download, Calendar, Filter, ListPlus, Search } from 'lucide-react';
 import { useProjects } from '../../hooks/useApi';
 import { useTasks } from '../../hooks/useTasks';
 import TaskBoard from '../TaskBoard';
+import { ApiService } from '../../services/api';
 
 const TasksTab = () => {
   const { projects, loading } = useProjects();
@@ -13,17 +14,38 @@ const TasksTab = () => {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
   const [projectSearchQuery, setProjectSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const { tasks, loading: tasksLoading, error: tasksError, refreshTasks } = useTasks(
     selectedProject?.id || ''
   );
   const [hasCreatedDefaultTasks, setHasCreatedDefaultTasks] = useState<Set<string>>(new Set());
 
-  const filteredProjects = projects.filter(project =>
-    project.title.toLowerCase().includes(projectSearchQuery.toLowerCase()) ||
-    project.clientName?.toLowerCase().includes(projectSearchQuery.toLowerCase()) ||
-    project.type?.toLowerCase().includes(projectSearchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const searchProjects = async () => {
+      if (!projectSearchQuery.trim()) {
+        setSearchResults([]);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const result = await ApiService.searchProjects(projectSearchQuery, 1, 50);
+        setSearchResults(result.projects);
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(searchProjects, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [projectSearchQuery]);
+
+  const displayProjects = projectSearchQuery.trim() ? searchResults : projects;
 
   useEffect(() => {
     if (projects.length > 0 && !selectedProject) {
@@ -319,7 +341,12 @@ const TasksTab = () => {
                       className="w-full px-4 py-2 pl-10 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                       autoFocus
                     />
-                    <FolderOpen className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    {isSearching && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -335,13 +362,15 @@ const TasksTab = () => {
                     Tous les projets
                   </button>
 
-                  {filteredProjects.length === 0 ? (
+                  {displayProjects.length === 0 ? (
                     <div className="text-center py-8 text-gray-400">
                       <FolderOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">Aucun projet trouvé</p>
+                      <p className="text-sm">
+                        {projectSearchQuery.trim() ? 'Aucun projet trouvé' : 'Aucun projet disponible'}
+                      </p>
                     </div>
                   ) : (
-                    filteredProjects.map((project) => (
+                    displayProjects.map((project) => (
                       <button
                         key={project.id}
                         onClick={() => {

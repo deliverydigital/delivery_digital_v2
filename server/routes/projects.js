@@ -22,6 +22,105 @@ function filterLinksByRole(links, userRole) {
   });
 }
 
+// Search projects
+router.get('/search', async (req, res) => {
+  try {
+    const { q, page = 1, limit = 20 } = req.query;
+    const skip = (page - 1) * limit;
+
+    if (!q || q.trim() === '') {
+      return res.json({
+        success: true,
+        data: {
+          projects: [],
+          pagination: { page: 1, limit, total: 0, pages: 0 }
+        }
+      });
+    }
+
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    let query = {};
+
+    // Role-based filtering
+    if (req.user.role === 'admin') {
+      // Admins search all projects
+    } else if (req.user.role === 'project_manager') {
+      query.assigned_to = req.user.id;
+    } else {
+      query.client_id = req.user.id;
+    }
+
+    // Add search criteria
+    const searchRegex = new RegExp(q.trim(), 'i');
+    query.$or = [
+      { title: searchRegex },
+      { description: searchRegex },
+      { type: searchRegex },
+      { client_name: searchRegex }
+    ];
+
+    const totalProjects = await Project.countDocuments(query);
+    const projects = await Project.find(query)
+      .sort({ created_at: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate('client_id', 'name email company')
+      .populate('assigned_to', 'name email')
+      .lean();
+
+    const formattedProjects = projects.map(project => ({
+      id: project._id.toString(),
+      clientId: project.client_id?._id?.toString() || project.client_id,
+      clientName: project.client_id?.name || project.client_name || 'Unknown',
+      title: project.title,
+      description: project.description,
+      type: project.type,
+      budget: project.budget,
+      timeline: project.timeline,
+      status: project.status,
+      priority: project.priority,
+      submittedAt: project.created_at,
+      lastUpdate: project.updated_at,
+      attachments: project.attachments || [],
+      figmaUrl: project.figma_url,
+      gitlabUrl: project.gitlab_url,
+      notes: project.notes || '',
+      estimatedHours: project.estimated_hours,
+      assignedTo: project.assigned_to ? {
+        id: project.assigned_to._id.toString(),
+        name: project.assigned_to.name,
+        email: project.assigned_to.email
+      } : undefined,
+      links: filterLinksByRole(project.links || [], req.user.role)
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        projects: formattedProjects,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: totalProjects,
+          pages: Math.ceil(totalProjects / limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error searching projects:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to search projects'
+    });
+  }
+});
+
 // Get all projects (admin only) or user's projects
 router.get('/', validatePagination, async (req, res) => {
   try {

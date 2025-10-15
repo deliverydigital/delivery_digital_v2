@@ -391,7 +391,7 @@ export class ApiService {
       } catch (apiError) {
         console.log('API call failed, falling back to demo data:', apiError.message);
       }
-      
+
       // Fallback to demo projects from localStorage
       const demoProjects = localStorage.getItem('demoProjects');
       if (demoProjects) {
@@ -399,7 +399,7 @@ export class ApiService {
         const startIndex = (page - 1) * limit;
         const endIndex = startIndex + limit;
         const paginatedProjects = projects.slice(startIndex, endIndex);
-        
+
         return {
           projects: paginatedProjects,
           pagination: {
@@ -410,10 +410,65 @@ export class ApiService {
           }
         };
       }
-      
+
       return { projects: [] };
     } catch (error) {
       console.error('Error fetching all projects:', error);
+      return { projects: [] };
+    }
+  }
+
+  static async searchProjects(query: string, page: number = 1, limit: number = 20): Promise<{ projects: Project[]; pagination?: any }> {
+    try {
+      const token = this.getAuthToken();
+      if (!token) {
+        console.log('🔒 No auth token, not making API call for search');
+        return { projects: [] };
+      }
+
+      // Try to search from API first
+      try {
+        const response = await this.makeRequest(`/projects/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
+        if (response.success && response.data && response.data.projects) {
+          return {
+            projects: response.data.projects,
+            pagination: response.data.pagination
+          };
+        }
+      } catch (apiError) {
+        console.log('API search failed, falling back to local search:', apiError.message);
+      }
+
+      // Fallback to local search in demo projects
+      const demoProjects = localStorage.getItem('demoProjects');
+      if (demoProjects) {
+        const allProjects = JSON.parse(demoProjects);
+        const lowerQuery = query.toLowerCase();
+        const filtered = allProjects.filter((project: Project) =>
+          project.title.toLowerCase().includes(lowerQuery) ||
+          project.clientName?.toLowerCase().includes(lowerQuery) ||
+          project.type?.toLowerCase().includes(lowerQuery) ||
+          project.description?.toLowerCase().includes(lowerQuery)
+        );
+
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedProjects = filtered.slice(startIndex, endIndex);
+
+        return {
+          projects: paginatedProjects,
+          pagination: {
+            page,
+            limit,
+            total: filtered.length,
+            pages: Math.ceil(filtered.length / limit)
+          }
+        };
+      }
+
+      return { projects: [] };
+    } catch (error) {
+      console.error('Error searching projects:', error);
       return { projects: [] };
     }
   }
