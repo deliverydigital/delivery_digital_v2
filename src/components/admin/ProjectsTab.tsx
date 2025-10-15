@@ -7,7 +7,7 @@ import projectTypesApi from '../../services/projectTypesApi';
 
 const ProjectsTab = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(1000);
   const { projects, loading, updateProject, refreshProjects, pagination } = useProjects(undefined, currentPage, itemsPerPage);
   const { clients } = useClients();
 

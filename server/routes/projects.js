@@ -25,7 +25,7 @@ function filterLinksByRole(links, userRole) {
 // Get all projects (admin only) or user's projects
 router.get('/', validatePagination, async (req, res) => {
   try {
-    const { page = 1, limit = 10, status, priority } = req.query;
+    const { page = 1, limit = 1000, status, priority } = req.query;
     const skip = (page - 1) * limit;
 
     // Check if MongoDB is available
