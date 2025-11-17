@@ -45,25 +45,43 @@ router.get('/search', async (req, res) => {
       });
     }
 
-    let query = {};
+    // Build base query for role-based filtering
+    let baseQuery = {};
 
-    // Role-based filtering
     if (req.user.role === 'admin') {
       // Admins search all projects
     } else if (req.user.role === 'project_manager') {
-      query.assigned_to = req.user.id;
+      baseQuery.$or = [
+        { assigned_to: req.user.id },
+        { 'assigned_users.user_id': req.user.id }
+      ];
+    } else if (req.user.role === 'developer' || req.user.role === 'trainer') {
+      baseQuery['assigned_users.user_id'] = req.user.id;
+    } else if (req.user.role === 'client') {
+      baseQuery.client_id = req.user.id;
     } else {
-      query.client_id = req.user.id;
+      baseQuery._id = null;
     }
 
     // Add search criteria
     const searchRegex = new RegExp(q.trim(), 'i');
-    query.$or = [
+    const searchConditions = [
       { title: searchRegex },
       { description: searchRegex },
       { type: searchRegex },
       { client_name: searchRegex }
     ];
+
+    // Combine role filtering with search criteria
+    let query = {};
+    if (Object.keys(baseQuery).length > 0) {
+      query.$and = [
+        baseQuery,
+        { $or: searchConditions }
+      ];
+    } else {
+      query.$or = searchConditions;
+    }
 
     const totalProjects = await Project.countDocuments(query);
     const projects = await Project.find(query)
@@ -142,11 +160,20 @@ router.get('/', validatePagination, async (req, res) => {
     if (req.user.role === 'admin') {
       // Admins see all projects
     } else if (req.user.role === 'project_manager') {
-      // Project managers see only assigned projects
-      query.assigned_to = req.user.id;
-    } else {
+      // Project managers see projects assigned to them OR where they're in assigned_users
+      query.$or = [
+        { assigned_to: req.user.id },
+        { 'assigned_users.user_id': req.user.id }
+      ];
+    } else if (req.user.role === 'developer' || req.user.role === 'trainer') {
+      // Developers and trainers see only projects where they're in assigned_users
+      query['assigned_users.user_id'] = req.user.id;
+    } else if (req.user.role === 'client') {
       // Clients see only their own projects
       query.client_id = req.user.id;
+    } else {
+      // Default: no projects visible
+      query._id = null;
     }
 
     // Add filters
@@ -157,7 +184,7 @@ router.get('/', validatePagination, async (req, res) => {
       query.priority = priority;
     }
 
-    console.log('Query',req.user.role ,query);
+    console.log('Query for role', req.user.role, ':', JSON.stringify(query));
 
     const projects = await Project.find(query)
       .populate('client_id', 'name email company')
@@ -274,8 +301,11 @@ router.get('/:id', validateMongoId, async (req, res) => {
     const isAssignedManager = req.user.role === 'project_manager' &&
                               project.assigned_to &&
                               project.assigned_to._id.toString() === req.user.id;
+    const isAssignedUser = project.assigned_users?.some(
+      au => au.user_id._id.toString() === req.user.id
+    );
 
-    if (!isAdmin && !isClient && !isAssignedManager) {
+    if (!isAdmin && !isClient && !isAssignedManager && !isAssignedUser) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -472,7 +502,12 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
     const isAssignedManager = req.user.role === 'project_manager' &&
                               project.assigned_to &&
                               project.assigned_to.toString() === req.user.id;
+    const isAssignedUser = project.assigned_users?.some(
+      au => au.user_id.toString() === req.user.id
+    );
 
+    // Only admin, assigned manager, and clients can update
+    // Assigned users (developers/trainers) cannot update project details
     if (!isAdmin && !isClient && !isAssignedManager) {
       return res.status(403).json({
         success: false,
