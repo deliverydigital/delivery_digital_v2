@@ -856,22 +856,6 @@ const ProjectsTab = () => {
                                     </div>
                                   )}
                                 </div>
-                                <div className="w-40">
-                                  <select
-                                    value={assignment.role || ''}
-                                    onChange={(e) => {
-                                      const updatedUsers = [...editData.assignedUsers];
-                                      updatedUsers[index] = { ...updatedUsers[index], role: e.target.value };
-                                      setEditData({ ...editData, assignedUsers: updatedUsers });
-                                    }}
-                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
-                                  >
-                                    <option value="developer">Développeur</option>
-                                    <option value="project_manager">Chef de Projet</option>
-                                    <option value="trainer">Formateur</option>
-                                    <option value="admin">Admin</option>
-                                  </select>
-                                </div>
                                 <button
                                   type="button"
                                   onClick={() => {
