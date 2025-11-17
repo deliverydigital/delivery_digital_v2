@@ -59,6 +59,44 @@ router.get('/profile', async (req, res) => {
   }
 });
 
+// Get all users (admin only)
+router.get('/', authorize('admin'), async (req, res) => {
+  try {
+    // Check if MongoDB is available
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    // Get all users
+    const users = await User.find({ status: 'active' })
+      .select('-password_hash -password_reset_token -email_verification_token')
+      .sort({ name: 1 });
+
+    res.json({
+      success: true,
+      users: users.map(user => ({
+        id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+        company: user.company,
+        phone: user.phone,
+        role: user.role,
+        status: user.status
+      }))
+    });
+
+  } catch (error) {
+    console.error('Get all users error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch users'
+    });
+  }
+});
+
 // Get all users (admin only) - renamed from clients to get all users
 router.get('/clients', authorize('admin'), async (req, res) => {
   try {
