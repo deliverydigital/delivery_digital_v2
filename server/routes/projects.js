@@ -445,6 +445,10 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
 
+    console.log('Updating project with ID:', id);
+    console.log('Updates received:', JSON.stringify(updates, null, 2));
+    console.log('Assigned users:', updates.assignedUsers);
+
     // Check if MongoDB is available
     if (!isMongoAvailable()) {
       return res.status(503).json({
@@ -529,11 +533,14 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
         } else if (fieldName === 'assigned_users') {
           // Handle assigned users array
           if (Array.isArray(value)) {
-            project[fieldName] = value.map(user => ({
+            console.log('Processing assigned_users array:', value);
+            const mappedUsers = value.map(user => ({
               user_id: user.userId || user.user_id,
-              role: user.role,
+              role: user.role || 'developer',
               assigned_at: user.assigned_at || new Date()
             })).filter(user => user.user_id);
+            console.log('Mapped users:', mappedUsers);
+            project[fieldName] = mappedUsers;
           }
         } else {
           project[fieldName] = value;
@@ -567,6 +574,14 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
           name: project.assigned_to.name,
           email: project.assigned_to.email
         } : null,
+        assignedUsers: project.assigned_users?.map(au => ({
+          userId: au.user_id?._id?.toString() || au.user_id,
+          userName: au.user_id?.name,
+          userEmail: au.user_id?.email,
+          userRole: au.user_id?.role,
+          role: au.role,
+          assignedAt: au.assigned_at
+        })) || [],
         figmaUrl: project.figma_url,
         gitlabUrl: project.gitlab_url,
         notes: project.notes,

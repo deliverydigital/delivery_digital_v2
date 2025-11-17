@@ -169,6 +169,8 @@ const ProjectsTab = () => {
     if (!selectedProject) return;
 
     try {
+      console.log('Saving project with data:', editData);
+      console.log('Assigned users:', editData.assignedUsers);
       await updateProject(selectedProject.id, editData);
       closeModal();
       refreshProjects();
