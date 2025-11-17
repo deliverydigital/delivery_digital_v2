@@ -23,6 +23,8 @@ const ProjectsTab = () => {
   const [projectTypes, setProjectTypes] = useState<any[]>([]);
   const [showProjectSearch, setShowProjectSearch] = useState(false);
   const [projectSearchQuery, setProjectSearchQuery] = useState('');
+  const [userSearchQueries, setUserSearchQueries] = useState<{[key: number]: string}>({});
+  const [showUserDropdowns, setShowUserDropdowns] = useState<{[key: number]: boolean}>({});
 
   const currentUser = ApiService.getCurrentUser();
   const isAdmin = currentUser?.role === 'admin';
@@ -32,6 +34,18 @@ const ProjectsTab = () => {
     loadProjectManagers();
     loadAllUsers();
     loadProjectTypes();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.user-search-dropdown')) {
+        setShowUserDropdowns({});
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const loadProjectManagers = async () => {
@@ -794,25 +808,53 @@ const ProjectsTab = () => {
 
                         {editData.assignedUsers && editData.assignedUsers.length > 0 ? (
                           <div className="space-y-2">
-                            {editData.assignedUsers.map((assignment: any, index: number) => (
+                            {editData.assignedUsers.map((assignment: any, index: number) => {
+                              const selectedUser = allUsers.find(u => u.id === (assignment.userId || assignment.user_id?._id || assignment.user_id));
+                              const searchQuery = userSearchQueries[index] || '';
+                              const filteredUsers = allUsers.filter(user =>
+                                user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                user.role.toLowerCase().includes(searchQuery.toLowerCase())
+                              );
+
+                              return (
                               <div key={index} className="flex gap-2 items-start p-3 bg-gray-700/50 rounded-lg">
-                                <div className="flex-1">
-                                  <select
-                                    value={assignment.userId || assignment.user_id?._id || assignment.user_id || ''}
-                                    onChange={(e) => {
-                                      const updatedUsers = [...editData.assignedUsers];
-                                      updatedUsers[index] = { ...updatedUsers[index], userId: e.target.value };
-                                      setEditData({ ...editData, assignedUsers: updatedUsers });
-                                    }}
-                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
-                                  >
-                                    <option value="">Sélectionner un utilisateur</option>
-                                    {allUsers.map(user => (
-                                      <option key={user.id} value={user.id}>
-                                        {user.name} - {user.role} ({user.email})
-                                      </option>
-                                    ))}
-                                  </select>
+                                <div className="flex-1 relative user-search-dropdown">
+                                  <div className="relative">
+                                    <input
+                                      type="text"
+                                      value={selectedUser ? `${selectedUser.name} - ${selectedUser.role}` : (userSearchQueries[index] || '')}
+                                      onChange={(e) => {
+                                        setUserSearchQueries({...userSearchQueries, [index]: e.target.value});
+                                        setShowUserDropdowns({...showUserDropdowns, [index]: true});
+                                      }}
+                                      onFocus={() => setShowUserDropdowns({...showUserDropdowns, [index]: true})}
+                                      placeholder="Rechercher un utilisateur..."
+                                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm pr-8"
+                                    />
+                                    <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                  </div>
+                                  {showUserDropdowns[index] && filteredUsers.length > 0 && (
+                                    <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                      {filteredUsers.map(user => (
+                                        <button
+                                          key={user.id}
+                                          type="button"
+                                          onClick={() => {
+                                            const updatedUsers = [...editData.assignedUsers];
+                                            updatedUsers[index] = { ...updatedUsers[index], userId: user.id };
+                                            setEditData({ ...editData, assignedUsers: updatedUsers });
+                                            setUserSearchQueries({...userSearchQueries, [index]: ''});
+                                            setShowUserDropdowns({...showUserDropdowns, [index]: false});
+                                          }}
+                                          className="w-full text-left px-3 py-2 hover:bg-gray-700 text-white text-sm transition-colors"
+                                        >
+                                          <div className="font-medium">{user.name}</div>
+                                          <div className="text-xs text-gray-400">{user.role} • {user.email}</div>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="w-40">
                                   <select
@@ -841,7 +883,8 @@ const ProjectsTab = () => {
                                   <Trash2 className="h-4 w-4" />
                                 </button>
                               </div>
-                            ))}
+                            );
+                            })}
                           </div>
                         ) : (
                           <p className="text-sm text-gray-500 italic py-2">Aucun membre assigné</p>
