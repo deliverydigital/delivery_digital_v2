@@ -72,6 +72,7 @@ router.get('/search', async (req, res) => {
       .limit(parseInt(limit))
       .populate('client_id', 'name email company')
       .populate('assigned_to', 'name email')
+      .populate('assigned_users.user_id', 'name email role')
       .lean();
 
     const formattedProjects = projects.map(project => ({
@@ -161,6 +162,7 @@ router.get('/', validatePagination, async (req, res) => {
     const projects = await Project.find(query)
       .populate('client_id', 'name email company')
       .populate('assigned_to', 'name email')
+      .populate('assigned_users.user_id', 'name email role')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -196,6 +198,14 @@ router.get('/', validatePagination, async (req, res) => {
             name: project.assigned_to.name,
             email: project.assigned_to.email
           } : null,
+          assignedUsers: project.assigned_users?.map(au => ({
+            userId: au.user_id?._id?.toString() || au.user_id,
+            userName: au.user_id?.name,
+            userEmail: au.user_id?.email,
+            userRole: au.user_id?.role,
+            role: au.role,
+            assignedAt: au.assigned_at
+          })) || [],
           figmaUrl: project.figma_url,
           gitlabUrl: project.gitlab_url,
           notes: project.notes,
@@ -248,7 +258,8 @@ router.get('/:id', validateMongoId, async (req, res) => {
 
     const project = await Project.findById(id)
       .populate('client_id', 'name email company')
-      .populate('assigned_to', 'name email');
+      .populate('assigned_to', 'name email')
+      .populate('assigned_users.user_id', 'name email role');
 
     if (!project) {
       return res.status(404).json({
@@ -294,6 +305,14 @@ router.get('/:id', validateMongoId, async (req, res) => {
             name: project.assigned_to.name,
             email: project.assigned_to.email
           } : null,
+          assignedUsers: project.assigned_users?.map(au => ({
+            userId: au.user_id?._id?.toString() || au.user_id,
+            userName: au.user_id?.name,
+            userEmail: au.user_id?.email,
+            userRole: au.user_id?.role,
+            role: au.role,
+            assignedAt: au.assigned_at
+          })) || [],
           figmaUrl: project.figma_url,
           gitlabUrl: project.gitlab_url,
           notes: project.notes,
@@ -474,7 +493,7 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
     // Update allowed fields (snake_case)
     const allowedFields = [
       'title', 'description', 'type', 'status', 'priority', 'budget_range', 'estimated_budget',
-      'timeline', 'start_date', 'end_date', 'completion_percentage', 'assigned_to',
+      'timeline', 'start_date', 'end_date', 'completion_percentage', 'assigned_to', 'assigned_users',
       'figma_url', 'gitlab_url', 'notes', 'requirements', 'technical_specs', 'links', 'task_permissions'
     ];
 
@@ -507,6 +526,15 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
         } else if (fieldName === 'assigned_to') {
           // Handle empty string or null for assigned_to - should unassign
           project[fieldName] = (value === '' || value === null) ? null : value;
+        } else if (fieldName === 'assigned_users') {
+          // Handle assigned users array
+          if (Array.isArray(value)) {
+            project[fieldName] = value.map(user => ({
+              user_id: user.userId || user.user_id,
+              role: user.role,
+              assigned_at: user.assigned_at || new Date()
+            })).filter(user => user.user_id);
+          }
         } else {
           project[fieldName] = value;
         }
@@ -516,6 +544,7 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
     await project.save();
     await project.populate('client_id', 'name email company');
     await project.populate('assigned_to', 'name email');
+    await project.populate('assigned_users.user_id', 'name email role');
 
     res.json({
       success: true,

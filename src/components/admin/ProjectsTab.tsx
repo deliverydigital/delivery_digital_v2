@@ -19,6 +19,7 @@ const ProjectsTab = () => {
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
   const [editData, setEditData] = useState<any>({});
   const [projectManagers, setProjectManagers] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
   const [projectTypes, setProjectTypes] = useState<any[]>([]);
   const [showProjectSearch, setShowProjectSearch] = useState(false);
   const [projectSearchQuery, setProjectSearchQuery] = useState('');
@@ -29,12 +30,18 @@ const ProjectsTab = () => {
 
   useEffect(() => {
     loadProjectManagers();
+    loadAllUsers();
     loadProjectTypes();
   }, []);
 
   const loadProjectManagers = async () => {
     const managers = await ApiService.getProjectManagers();
     setProjectManagers(managers);
+  };
+
+  const loadAllUsers = async () => {
+    const users = await ApiService.getAllUsers();
+    setAllUsers(users);
   };
 
   const loadProjectTypes = async () => {
@@ -128,6 +135,7 @@ const ProjectsTab = () => {
       ...project,
       type: project.type || '',
       assignedTo: project.assignedTo?.id || '',
+      assignedUsers: project.assignedUsers || [],
       links: project.links || [],
       taskPermissions: project.taskPermissions || {}
     };
@@ -762,28 +770,109 @@ const ProjectsTab = () => {
                   </div>
 
                   {isAdmin && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        <UserCog className="h-4 w-4 inline mr-2" />
-                        Chef de Projet
-                      </label>
-                      <select
-                        value={editData.assignedTo || ''}
-                        onChange={(e) => {
-                          const managerId = e.target.value;
-                          setEditData({ ...editData, assignedTo: managerId || null });
-                        }}
-                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                      >
-                        <option value="">Non assigné</option>
-                        {projectManagers.map(manager => (
-                          <option key={manager.id} value={manager.id}>
-                            {manager.name} ({manager.email})
-                          </option>
-                        ))}
-                      </select>
-                      <p className="text-sm text-gray-400 mt-1">Assignez un chef de projet pour gérer ce projet</p>
-                    </div>
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          <UserCog className="h-4 w-4 inline mr-2" />
+                          Chef de Projet (Principal)
+                        </label>
+                        <select
+                          value={editData.assignedTo || ''}
+                          onChange={(e) => {
+                            const managerId = e.target.value;
+                            setEditData({ ...editData, assignedTo: managerId || null });
+                          }}
+                          className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                        >
+                          <option value="">Non assigné</option>
+                          {projectManagers.map(manager => (
+                            <option key={manager.id} value={manager.id}>
+                              {manager.name} ({manager.email})
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-sm text-gray-400 mt-1">Assignez un chef de projet principal</p>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-gray-300">
+                            <Users className="h-4 w-4 inline mr-2" />
+                            Membres de l'équipe
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newUser = { userId: '', role: 'developer' };
+                              setEditData({
+                                ...editData,
+                                assignedUsers: [...(editData.assignedUsers || []), newUser]
+                              });
+                            }}
+                            className="btn btn-secondary btn-sm"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Ajouter
+                          </button>
+                        </div>
+
+                        {editData.assignedUsers && editData.assignedUsers.length > 0 ? (
+                          <div className="space-y-2">
+                            {editData.assignedUsers.map((assignment: any, index: number) => (
+                              <div key={index} className="flex gap-2 items-start p-3 bg-gray-700/50 rounded-lg">
+                                <div className="flex-1">
+                                  <select
+                                    value={assignment.userId || assignment.user_id?._id || assignment.user_id || ''}
+                                    onChange={(e) => {
+                                      const updatedUsers = [...editData.assignedUsers];
+                                      updatedUsers[index] = { ...updatedUsers[index], userId: e.target.value };
+                                      setEditData({ ...editData, assignedUsers: updatedUsers });
+                                    }}
+                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                                  >
+                                    <option value="">Sélectionner un utilisateur</option>
+                                    {allUsers.map(user => (
+                                      <option key={user.id} value={user.id}>
+                                        {user.name} - {user.role} ({user.email})
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="w-40">
+                                  <select
+                                    value={assignment.role || ''}
+                                    onChange={(e) => {
+                                      const updatedUsers = [...editData.assignedUsers];
+                                      updatedUsers[index] = { ...updatedUsers[index], role: e.target.value };
+                                      setEditData({ ...editData, assignedUsers: updatedUsers });
+                                    }}
+                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                                  >
+                                    <option value="developer">Développeur</option>
+                                    <option value="project_manager">Chef de Projet</option>
+                                    <option value="trainer">Formateur</option>
+                                    <option value="admin">Admin</option>
+                                  </select>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updatedUsers = editData.assignedUsers.filter((_: any, i: number) => i !== index);
+                                    setEditData({ ...editData, assignedUsers: updatedUsers });
+                                  }}
+                                  className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500 italic py-2">Aucun membre assigné</p>
+                        )}
+                        <p className="text-sm text-gray-400 mt-2">Assignez plusieurs utilisateurs avec différents rôles</p>
+                      </div>
+                    </>
                   )}
 
                   <div>

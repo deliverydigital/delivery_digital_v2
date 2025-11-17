@@ -594,6 +594,16 @@ export class ApiService {
     }
   }
 
+  static async getAllUsers(): Promise<any[]> {
+    try {
+      const response = await this.makeRequest('/users');
+      return response.users || [];
+    } catch (error) {
+      console.error('Error fetching all users:', error);
+      return [];
+    }
+  }
+
   // Assign project to manager
   static async assignProjectToManager(projectId: string, managerId: string): Promise<any> {
     try {

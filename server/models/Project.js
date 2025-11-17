@@ -71,6 +71,22 @@ const projectSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User'
   },
+  assigned_users: [{
+    user_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    role: {
+      type: String,
+      enum: ['admin', 'project_manager', 'developer', 'trainer', 'client'],
+      required: true
+    },
+    assigned_at: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   figma_url: {
     type: String,
     validate: {
