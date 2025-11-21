@@ -1,16 +1,42 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Users, FolderOpen, MessageCircle, ClipboardList, TrendingUp, 
+import {
+  Users, FolderOpen, MessageCircle, ClipboardList, TrendingUp,
   Calendar, CheckCircle, AlertTriangle, Clock, Star, Euro,
-  BarChart3, PieChart, Activity, Zap, Target, Award
+  BarChart3, PieChart, Activity, Zap, Target, Award, FileText, Building
 } from 'lucide-react';
 import { useStatistics, useProjects, useClients } from '../../hooks/useApi';
+import { ApiService } from '../../services/api';
 
 const OverviewTab = () => {
   const { stats, loading: statsLoading } = useStatistics();
   const { projects } = useProjects();
   const { clients } = useClients();
+  const [legalTasks, setLegalTasks] = useState<any[]>([]);
+  const [loadingLegal, setLoadingLegal] = useState(true);
+
+  useEffect(() => {
+    const fetchLegalTasks = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/projects/legal/dashboard`, {
+          headers: {
+            'Authorization': `Bearer ${ApiService.getAuthToken()}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+        if (data.success) {
+          setLegalTasks(data.data.legalTasks || []);
+        }
+      } catch (error) {
+        console.error('Error fetching legal tasks:', error);
+      } finally {
+        setLoadingLegal(false);
+      }
+    };
+
+    fetchLegalTasks();
+  }, []);
 
   const quickStats = [
     {
@@ -58,6 +84,66 @@ const OverviewTab = () => {
           Dernière mise à jour : {new Date().toLocaleString('fr-FR')}
         </div>
       </div>
+
+      {/* Legal Tasks Priority Section */}
+      {!loadingLegal && legalTasks.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-yellow-900/20 to-orange-900/20 border border-yellow-700/50 rounded-lg p-6"
+        >
+          <div className="flex items-center mb-4">
+            <FileText className="h-6 w-6 text-yellow-400 mr-3" />
+            <h3 className="text-xl font-bold text-white">Tâches Légales Prioritaires</h3>
+            <span className="ml-auto bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-semibold">
+              {legalTasks.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {legalTasks.map((task: any) => (
+              <motion.div
+                key={task.id}
+                whileHover={{ scale: 1.02 }}
+                className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:border-yellow-500/50 transition-all"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center">
+                    <Building className="h-4 w-4 text-yellow-400 mr-2" />
+                    <h4 className="font-semibold text-white text-sm">{task.projectTitle}</h4>
+                  </div>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    task.priority === 'urgent' ? 'bg-red-500/20 text-red-400' :
+                    task.priority === 'high' ? 'bg-orange-500/20 text-orange-400' :
+                    task.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                    'bg-gray-500/20 text-gray-400'
+                  }`}>
+                    {task.priority}
+                  </span>
+                </div>
+                <p className="text-gray-400 text-xs mb-2">{task.clientName}</p>
+                <div className="space-y-1 text-xs">
+                  {task.legalInfo?.company_name && (
+                    <p className="text-gray-300">
+                      <span className="text-gray-500">Entreprise:</span> {task.legalInfo.company_name}
+                    </p>
+                  )}
+                  {task.legalInfo?.contract_number && (
+                    <p className="text-gray-300">
+                      <span className="text-gray-500">Contrat:</span> {task.legalInfo.contract_number}
+                    </p>
+                  )}
+                  {task.legalInfo?.contract_date && (
+                    <p className="text-gray-300">
+                      <span className="text-gray-500">Date:</span>{' '}
+                      {new Date(task.legalInfo.contract_date).toLocaleDateString('fr-FR')}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

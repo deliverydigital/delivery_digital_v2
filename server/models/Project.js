@@ -147,6 +147,23 @@ const projectSchema = new Schema({
     }
   }],
 
+  // Legal information
+  legal_info: {
+    company_name: String,
+    siret: String,
+    address: String,
+    contact_name: String,
+    contact_email: String,
+    contact_phone: String,
+    contract_date: Date,
+    contract_number: String,
+    notes: String,
+    show_in_dashboard: {
+      type: Boolean,
+      default: false
+    }
+  },
+
   // Attachments as embedded documents
   attachments: [{
     filename: String,

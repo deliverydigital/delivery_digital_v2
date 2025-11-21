@@ -239,6 +239,7 @@ router.get('/', validatePagination, async (req, res) => {
           links: filterLinksByRole(project.links, req.user.role),
           attachments: project.attachments,
           taskPermissions: project.task_permissions,
+          legalInfo: project.legal_info,
           hasUrgentTasks: urgentTaskCount > 0,
           urgentTaskCount: urgentTaskCount,
           createdAt: project.createdAt,
@@ -527,8 +528,8 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
       'gitlabUrl': 'gitlab_url',
       'technicalSpecs': 'technical_specs',
       'taskPermissions': 'task_permissions',
-      'assignedUsers' : 'assigned_users'
-
+      'assignedUsers': 'assigned_users',
+      'legalInfo': 'legal_info'
     };
 
     // Update allowed fields (snake_case)
@@ -536,7 +537,7 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
       'title', 'description', 'type', 'status', 'priority', 'budget_range', 'estimated_budget',
       'timeline', 'start_date', 'end_date', 'completion_percentage', 'assigned_to', 'assigned_users',
       'figma_url', 'gitlab_url', 'notes', 'requirements', 'technical_specs', 'links', 'task_permissions',
-        'assigned_users'
+      'legal_info'
     ];
 
     // Role-based field permissions
@@ -873,6 +874,46 @@ router.patch('/:id/task-permissions', validateMongoId, authorize('admin', 'proje
     res.status(500).json({
       success: false,
       error: 'Failed to update task permissions'
+    });
+  }
+});
+
+// Get projects with legal info for dashboard (admin only)
+router.get('/legal/dashboard', authorize('admin'), async (req, res) => {
+  try {
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    const projects = await Project.find({
+      'legal_info.show_in_dashboard': true
+    })
+      .populate('client_id', 'name email company')
+      .sort({ 'legal_info.contract_date': -1 })
+      .limit(10);
+
+    const legalTasks = projects.map(project => ({
+      id: project._id,
+      projectTitle: project.title,
+      clientName: project.client_id.name,
+      legalInfo: project.legal_info,
+      status: project.status,
+      priority: project.priority
+    }));
+
+    res.json({
+      success: true,
+      data: { legalTasks }
+    });
+
+  } catch (error) {
+    console.error('Get legal dashboard error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch legal dashboard data'
     });
   }
 });

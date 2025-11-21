@@ -151,7 +151,8 @@ const ProjectsTab = () => {
       assignedTo: project.assignedTo?.id || '',
       assignedUsers: project.assignedUsers || [],
       links: project.links || [],
-      taskPermissions: project.taskPermissions || {}
+      taskPermissions: project.taskPermissions || {},
+      legalInfo: project.legalInfo || {}
     };
     console.log('Edit data:', editableData);
     setEditData(editableData);
@@ -986,13 +987,171 @@ const ProjectsTab = () => {
                   </div>
 
                   {isAdmin && (
-                    <div className="border-t border-gray-700 pt-6">
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                          <Shield className="h-4 w-4 inline mr-2" />
-                          Permissions des Tâches
-                        </label>
-                        <p className="text-sm text-gray-400">Définir les permissions pour gérer les tâches de ce projet par rôle d'utilisateur</p>
+                    <>
+                      <div className="border-t border-gray-700 pt-6">
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <FileText className="h-4 w-4 inline mr-2" />
+                            Informations Légales
+                          </label>
+                          <p className="text-sm text-gray-400">Informations contractuelles et légales du projet</p>
+                        </div>
+
+                        <div className="space-y-4 bg-gray-800 p-4 rounded-lg">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-1">Nom de l'entreprise</label>
+                              <input
+                                type="text"
+                                value={editData.legalInfo?.company_name || ''}
+                                onChange={(e) => setEditData({
+                                  ...editData,
+                                  legalInfo: { ...editData.legalInfo, company_name: e.target.value }
+                                })}
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
+                                placeholder="SARL Example"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-1">SIRET</label>
+                              <input
+                                type="text"
+                                value={editData.legalInfo?.siret || ''}
+                                onChange={(e) => setEditData({
+                                  ...editData,
+                                  legalInfo: { ...editData.legalInfo, siret: e.target.value }
+                                })}
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
+                                placeholder="123 456 789 00012"
+                              />
+                            </div>
+
+                            <div className="md:col-span-2">
+                              <label className="block text-sm text-gray-400 mb-1">Adresse</label>
+                              <input
+                                type="text"
+                                value={editData.legalInfo?.address || ''}
+                                onChange={(e) => setEditData({
+                                  ...editData,
+                                  legalInfo: { ...editData.legalInfo, address: e.target.value }
+                                })}
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
+                                placeholder="123 Rue Example, 75001 Paris"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-1">Contact (Nom)</label>
+                              <input
+                                type="text"
+                                value={editData.legalInfo?.contact_name || ''}
+                                onChange={(e) => setEditData({
+                                  ...editData,
+                                  legalInfo: { ...editData.legalInfo, contact_name: e.target.value }
+                                })}
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
+                                placeholder="Jean Dupont"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-1">Email de contact</label>
+                              <input
+                                type="email"
+                                value={editData.legalInfo?.contact_email || ''}
+                                onChange={(e) => setEditData({
+                                  ...editData,
+                                  legalInfo: { ...editData.legalInfo, contact_email: e.target.value }
+                                })}
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
+                                placeholder="contact@example.com"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-1">Téléphone</label>
+                              <input
+                                type="tel"
+                                value={editData.legalInfo?.contact_phone || ''}
+                                onChange={(e) => setEditData({
+                                  ...editData,
+                                  legalInfo: { ...editData.legalInfo, contact_phone: e.target.value }
+                                })}
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
+                                placeholder="+33 1 23 45 67 89"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-1">Date du contrat</label>
+                              <input
+                                type="date"
+                                value={editData.legalInfo?.contract_date ? new Date(editData.legalInfo.contract_date).toISOString().split('T')[0] : ''}
+                                onChange={(e) => setEditData({
+                                  ...editData,
+                                  legalInfo: { ...editData.legalInfo, contract_date: e.target.value }
+                                })}
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-1">Numéro de contrat</label>
+                              <input
+                                type="text"
+                                value={editData.legalInfo?.contract_number || ''}
+                                onChange={(e) => setEditData({
+                                  ...editData,
+                                  legalInfo: { ...editData.legalInfo, contract_number: e.target.value }
+                                })}
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
+                                placeholder="CONT-2024-001"
+                              />
+                            </div>
+
+                            <div className="md:col-span-2">
+                              <label className="block text-sm text-gray-400 mb-1">Notes légales</label>
+                              <textarea
+                                value={editData.legalInfo?.notes || ''}
+                                onChange={(e) => setEditData({
+                                  ...editData,
+                                  legalInfo: { ...editData.legalInfo, notes: e.target.value }
+                                })}
+                                rows={2}
+                                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-white text-sm"
+                                placeholder="Notes importantes..."
+                              />
+                            </div>
+
+                            <div className="md:col-span-2">
+                              <label className="flex items-center space-x-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={editData.legalInfo?.show_in_dashboard || false}
+                                  onChange={(e) => setEditData({
+                                    ...editData,
+                                    legalInfo: { ...editData.legalInfo, show_in_dashboard: e.target.checked }
+                                  })}
+                                  className="h-4 w-4 text-blue-600 border-gray-600 rounded focus:ring-blue-500"
+                                />
+                                <span className="text-sm text-gray-300">
+                                  Afficher dans le tableau de bord (tâches prioritaires)
+                                </span>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-gray-700 pt-6">
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <Shield className="h-4 w-4 inline mr-2" />
+                            Permissions des Tâches
+                          </label>
+                          <p className="text-sm text-gray-400">Définir les permissions pour gérer les tâches de ce projet par rôle d'utilisateur</p>
+                        </div>
                       </div>
 
                       <div className="space-y-4">
@@ -1032,7 +1191,7 @@ const ProjectsTab = () => {
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </>
                   )}
                 </div>
               )}
