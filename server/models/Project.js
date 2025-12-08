@@ -46,6 +46,60 @@ const projectSchema = new Schema({
     type: Number,
     min: 0
   },
+
+  // Financial tracking
+  financial_data: {
+    revenue: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    expenses: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    profit_margin: {
+      type: Number,
+      default: 0
+    },
+    expense_details: [{
+      description: String,
+      amount: Number,
+      date: Date,
+      category: {
+        type: String,
+        enum: ['personnel', 'infrastructure', 'licenses', 'marketing', 'other']
+      },
+      added_by: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      created_at: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    payment_details: [{
+      description: String,
+      amount: Number,
+      date: Date,
+      status: {
+        type: String,
+        enum: ['pending', 'received', 'cancelled'],
+        default: 'pending'
+      },
+      added_by: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      created_at: {
+        type: Date,
+        default: Date.now
+      }
+    }]
+  },
+
   timeline: {
     type: String,
     enum: ['urgent', 'normal', 'flexible', 'longterm']
@@ -268,6 +322,68 @@ projectSchema.methods.hasTaskPermission = function(role, action) {
   }
 
   return this.task_permissions[role][action] || false;
+};
+
+// Financial methods
+projectSchema.methods.calculateFinancials = function() {
+  if (!this.financial_data) {
+    this.financial_data = {
+      revenue: 0,
+      expenses: 0,
+      profit_margin: 0,
+      expense_details: [],
+      payment_details: []
+    };
+  }
+
+  // Calculate total revenue from received payments
+  const totalRevenue = this.financial_data.payment_details
+    ?.filter(p => p.status === 'received')
+    .reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+
+  // Calculate total expenses
+  const totalExpenses = this.financial_data.expense_details
+    ?.reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
+
+  this.financial_data.revenue = totalRevenue;
+  this.financial_data.expenses = totalExpenses;
+  this.financial_data.profit_margin = totalRevenue - totalExpenses;
+
+  return {
+    revenue: this.financial_data.revenue,
+    expenses: this.financial_data.expenses,
+    profit_margin: this.financial_data.profit_margin
+  };
+};
+
+projectSchema.methods.addExpense = function(expense) {
+  if (!this.financial_data) {
+    this.financial_data = {
+      revenue: 0,
+      expenses: 0,
+      profit_margin: 0,
+      expense_details: [],
+      payment_details: []
+    };
+  }
+  this.financial_data.expense_details.push(expense);
+  this.calculateFinancials();
+  return this.save();
+};
+
+projectSchema.methods.addPayment = function(payment) {
+  if (!this.financial_data) {
+    this.financial_data = {
+      revenue: 0,
+      expenses: 0,
+      profit_margin: 0,
+      expense_details: [],
+      payment_details: []
+    };
+  }
+  this.financial_data.payment_details.push(payment);
+  this.calculateFinancials();
+  return this.save();
 };
 
 // Static methods

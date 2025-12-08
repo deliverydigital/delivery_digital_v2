@@ -14,6 +14,8 @@ const OverviewTab = () => {
   const { clients } = useClients();
   const [legalTasks, setLegalTasks] = useState<any[]>([]);
   const [loadingLegal, setLoadingLegal] = useState(true);
+  const [financialSummary, setFinancialSummary] = useState<any>(null);
+  const [loadingFinancial, setLoadingFinancial] = useState(true);
 
   useEffect(() => {
     const fetchLegalTasks = async () => {
@@ -35,7 +37,27 @@ const OverviewTab = () => {
       }
     };
 
+    const fetchFinancialSummary = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/projects/financial/summary`, {
+          headers: {
+            'Authorization': `Bearer ${ApiService.getAuthToken()}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+        if (data.success) {
+          setFinancialSummary(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching financial summary:', error);
+      } finally {
+        setLoadingFinancial(false);
+      }
+    };
+
     fetchLegalTasks();
+    fetchFinancialSummary();
   }, []);
 
   const quickStats = [
@@ -142,6 +164,86 @@ const OverviewTab = () => {
               </motion.div>
             ))}
           </div>
+        </motion.div>
+      )}
+
+      {/* Financial Summary Section */}
+      {!loadingFinancial && financialSummary && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-blue-900/20 to-green-900/20 border border-blue-700/50 rounded-lg p-6"
+        >
+          <div className="flex items-center mb-4">
+            <Euro className="h-6 w-6 text-blue-400 mr-3" />
+            <h3 className="text-xl font-bold text-white">Résumé Financier</h3>
+          </div>
+
+          {/* Financial Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-green-900/30 border border-green-700 rounded-lg p-4">
+              <p className="text-sm text-gray-400 mb-1">Revenus Totaux</p>
+              <p className="text-2xl font-bold text-green-400">
+                {financialSummary.summary.totalRevenue.toLocaleString('fr-FR')} €
+              </p>
+            </div>
+
+            <div className="bg-red-900/30 border border-red-700 rounded-lg p-4">
+              <p className="text-sm text-gray-400 mb-1">Dépenses Totales</p>
+              <p className="text-2xl font-bold text-red-400">
+                {financialSummary.summary.totalExpenses.toLocaleString('fr-FR')} €
+              </p>
+            </div>
+
+            <div className={`${
+              financialSummary.summary.totalProfit >= 0
+                ? 'bg-blue-900/30 border-blue-700'
+                : 'bg-orange-900/30 border-orange-700'
+            } border rounded-lg p-4`}>
+              <p className="text-sm text-gray-400 mb-1">Balance Totale</p>
+              <p className={`text-2xl font-bold ${
+                financialSummary.summary.totalProfit >= 0 ? 'text-blue-400' : 'text-orange-400'
+              }`}>
+                {financialSummary.summary.totalProfit.toLocaleString('fr-FR')} €
+              </p>
+            </div>
+
+            <div className="bg-purple-900/30 border border-purple-700 rounded-lg p-4">
+              <p className="text-sm text-gray-400 mb-1">Projets Rentables</p>
+              <p className="text-2xl font-bold text-purple-400">
+                {financialSummary.summary.profitableProjects} / {financialSummary.summary.projectCount}
+              </p>
+            </div>
+          </div>
+
+          {/* Top Projects by Profit */}
+          {financialSummary.projects && financialSummary.projects.length > 0 && (
+            <div>
+              <h4 className="text-lg font-semibold text-white mb-3">Top Projets par Rentabilité</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {financialSummary.projects.slice(0, 6).map((project: any) => (
+                  <div
+                    key={project.id}
+                    className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 hover:border-blue-500/50 transition-all"
+                  >
+                    <h5 className="font-semibold text-white text-sm mb-1">{project.title}</h5>
+                    <p className="text-xs text-gray-400 mb-2">{project.clientName}</p>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-green-400">+{project.revenue.toLocaleString('fr-FR')} €</span>
+                      <span className="text-red-400">-{project.expenses.toLocaleString('fr-FR')} €</span>
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-gray-700">
+                      <span className={`text-sm font-semibold ${
+                        project.profit >= 0 ? 'text-blue-400' : 'text-orange-400'
+                      }`}>
+                        {project.profit >= 0 ? '+' : ''}{project.profit.toLocaleString('fr-FR')} €
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </motion.div>
       )}
 

@@ -240,6 +240,7 @@ router.get('/', validatePagination, async (req, res) => {
           attachments: project.attachments,
           taskPermissions: project.task_permissions,
           legalInfo: project.legal_info,
+          financialData: project.financial_data,
           hasUrgentTasks: urgentTaskCount > 0,
           urgentTaskCount: urgentTaskCount,
           createdAt: project.createdAt,
@@ -529,7 +530,8 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
       'technicalSpecs': 'technical_specs',
       'taskPermissions': 'task_permissions',
       'assignedUsers': 'assigned_users',
-      'legalInfo': 'legal_info'
+      'legalInfo': 'legal_info',
+      'financialData': 'financial_data'
     };
 
     // Update allowed fields (snake_case)
@@ -537,7 +539,7 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
       'title', 'description', 'type', 'status', 'priority', 'budget_range', 'estimated_budget',
       'timeline', 'start_date', 'end_date', 'completion_percentage', 'assigned_to', 'assigned_users',
       'figma_url', 'gitlab_url', 'notes', 'requirements', 'technical_specs', 'links', 'task_permissions',
-      'legal_info'
+      'legal_info', 'financial_data'
     ];
 
     // Role-based field permissions
@@ -580,6 +582,16 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
             })).filter(user => user.user_id);
             console.log('Mapped users:', mappedUsers);
             project[fieldName] = mappedUsers;
+          }
+        } else if (fieldName === 'financial_data') {
+          // Handle financial data
+          if (value) {
+            project[fieldName] = {
+              ...project[fieldName],
+              ...value
+            };
+            // Recalculate financials
+            project.calculateFinancials();
           }
         } else {
           project[fieldName] = value;
@@ -627,6 +639,7 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
         links: filterLinksByRole(project.links, req.user.role),
         attachments: project.attachments,
         taskPermissions: project.task_permissions,
+        financialData: project.financial_data,
         updatedAt: project.updatedAt
       }
     });
@@ -914,6 +927,94 @@ router.get('/legal/dashboard', authorize('admin'), async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch legal dashboard data'
+    });
+  }
+});
+
+// Get financial summary for user's projects
+router.get('/financial/summary', authenticate, async (req, res) => {
+  try {
+    if (!isMongoAvailable()) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database service unavailable'
+      });
+    }
+
+    let query = {};
+
+    // Role-based filtering
+    if (req.user.role === 'admin') {
+      // Admins see all projects
+    } else if (req.user.role === 'project_manager') {
+      // Project managers see their assigned projects
+      query.$or = [
+        { assigned_to: req.user.id },
+        { 'assigned_users.user_id': req.user.id }
+      ];
+    } else if (req.user.role === 'developer' || req.user.role === 'trainer') {
+      query['assigned_users.user_id'] = req.user.id;
+    } else if (req.user.role === 'client') {
+      query.client_id = req.user.id;
+    } else {
+      query._id = null;
+    }
+
+    const projects = await Project.find(query)
+      .populate('client_id', 'name email company')
+      .select('title status financial_data client_id');
+
+    // Calculate totals
+    let totalRevenue = 0;
+    let totalExpenses = 0;
+    let totalProfit = 0;
+    let projectCount = projects.length;
+    let profitableProjects = 0;
+
+    const projectsSummary = projects.map(project => {
+      const revenue = project.financial_data?.revenue || 0;
+      const expenses = project.financial_data?.expenses || 0;
+      const profit = project.financial_data?.profit_margin || 0;
+
+      totalRevenue += revenue;
+      totalExpenses += expenses;
+      totalProfit += profit;
+
+      if (profit > 0) {
+        profitableProjects++;
+      }
+
+      return {
+        id: project._id,
+        title: project.title,
+        clientName: project.client_id?.name || 'N/A',
+        status: project.status,
+        revenue,
+        expenses,
+        profit
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        summary: {
+          totalRevenue,
+          totalExpenses,
+          totalProfit,
+          projectCount,
+          profitableProjects,
+          averageProfit: projectCount > 0 ? totalProfit / projectCount : 0
+        },
+        projects: projectsSummary.sort((a, b) => b.profit - a.profit)
+      }
+    });
+
+  } catch (error) {
+    console.error('Get financial summary error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch financial summary'
     });
   }
 });

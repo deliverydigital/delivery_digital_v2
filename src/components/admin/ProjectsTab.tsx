@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, FolderOpen, Calendar, User, Building2, Clock, CheckCircle, AlertTriangle, Star, ChevronDown, ChevronUp, X, Save, FileText, ExternalLink, MessageCircle, Settings, UserCog, Link as LinkIcon, Shield, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, Plus, Eye, CreditCard as Edit, Trash2, RefreshCw, FolderOpen, Calendar, User, Building2, Clock, CheckCircle, AlertTriangle, Star, ChevronDown, ChevronUp, X, Save, FileText, ExternalLink, MessageCircle, Settings, UserCog, Link as LinkIcon, Shield, Users, ChevronLeft, ChevronRight, Euro, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import { useProjects, useClients } from '../../hooks/useApi';
 import { ApiService } from '../../services/api';
 import projectTypesApi from '../../services/projectTypesApi';
@@ -152,7 +152,14 @@ const ProjectsTab = () => {
       assignedUsers: project.assignedUsers || [],
       links: project.links || [],
       taskPermissions: project.taskPermissions || {},
-      legalInfo: project.legalInfo || {}
+      legalInfo: project.legalInfo || {},
+      financialData: project.financialData || {
+        revenue: 0,
+        expenses: 0,
+        profit_margin: 0,
+        expense_details: [],
+        payment_details: []
+      }
     };
     console.log('Edit data:', editableData);
     setEditData(editableData);
@@ -1141,6 +1148,122 @@ const ProjectsTab = () => {
                               </label>
                             </div>
                           </div>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-gray-700 pt-6">
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <Euro className="h-4 w-4 inline mr-2" />
+                            Gestion Financière
+                          </label>
+                          <p className="text-sm text-gray-400">Suivi des revenus, dépenses et marge bénéficiaire</p>
+                        </div>
+
+                        <div className="space-y-4 bg-gray-800 p-4 rounded-lg">
+                          {/* Summary Cards */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div className="bg-green-900/20 border border-green-700/50 rounded-lg p-4">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-sm text-gray-400">Revenus</p>
+                                  <p className="text-2xl font-bold text-green-400">
+                                    {(editData.financialData?.revenue || 0).toLocaleString('fr-FR')} €
+                                  </p>
+                                </div>
+                                <TrendingUp className="h-8 w-8 text-green-400" />
+                              </div>
+                            </div>
+
+                            <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-4">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-sm text-gray-400">Dépenses</p>
+                                  <p className="text-2xl font-bold text-red-400">
+                                    {(editData.financialData?.expenses || 0).toLocaleString('fr-FR')} €
+                                  </p>
+                                </div>
+                                <TrendingDown className="h-8 w-8 text-red-400" />
+                              </div>
+                            </div>
+
+                            <div className={`${
+                              (editData.financialData?.profit_margin || 0) >= 0
+                                ? 'bg-blue-900/20 border-blue-700/50'
+                                : 'bg-orange-900/20 border-orange-700/50'
+                            } border rounded-lg p-4`}>
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-sm text-gray-400">Balance</p>
+                                  <p className={`text-2xl font-bold ${
+                                    (editData.financialData?.profit_margin || 0) >= 0
+                                      ? 'text-blue-400'
+                                      : 'text-orange-400'
+                                  }`}>
+                                    {(editData.financialData?.profit_margin || 0).toLocaleString('fr-FR')} €
+                                  </p>
+                                </div>
+                                <DollarSign className={`h-8 w-8 ${
+                                  (editData.financialData?.profit_margin || 0) >= 0
+                                    ? 'text-blue-400'
+                                    : 'text-orange-400'
+                                }`} />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Quick Entry */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-900 rounded-lg">
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-2">Revenu Total (€)</label>
+                              <input
+                                type="number"
+                                value={editData.financialData?.revenue || 0}
+                                onChange={(e) => {
+                                  const revenue = parseFloat(e.target.value) || 0;
+                                  const expenses = editData.financialData?.expenses || 0;
+                                  setEditData({
+                                    ...editData,
+                                    financialData: {
+                                      ...editData.financialData,
+                                      revenue: revenue,
+                                      profit_margin: revenue - expenses
+                                    }
+                                  });
+                                }}
+                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                min="0"
+                                step="0.01"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-2">Dépenses Totales (€)</label>
+                              <input
+                                type="number"
+                                value={editData.financialData?.expenses || 0}
+                                onChange={(e) => {
+                                  const expenses = parseFloat(e.target.value) || 0;
+                                  const revenue = editData.financialData?.revenue || 0;
+                                  setEditData({
+                                    ...editData,
+                                    financialData: {
+                                      ...editData.financialData,
+                                      expenses: expenses,
+                                      profit_margin: revenue - expenses
+                                    }
+                                  });
+                                }}
+                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                min="0"
+                                step="0.01"
+                              />
+                            </div>
+                          </div>
+
+                          <p className="text-xs text-gray-500 italic">
+                            La balance est calculée automatiquement : Revenus - Dépenses
+                          </p>
                         </div>
                       </div>
 
