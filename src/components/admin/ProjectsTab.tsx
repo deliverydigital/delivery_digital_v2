@@ -1264,6 +1264,268 @@ const ProjectsTab = () => {
                           <p className="text-xs text-gray-500 italic">
                             La balance est calculée automatiquement : Revenus - Dépenses
                           </p>
+
+                          {/* Payment Details */}
+                          <div className="mt-6 border-t border-gray-700 pt-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="text-sm font-medium text-gray-300">
+                                <TrendingUp className="h-4 w-4 inline mr-2" />
+                                Détails des Paiements
+                              </h4>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newPayment = {
+                                    description: '',
+                                    amount: 0,
+                                    date: new Date().toISOString().split('T')[0],
+                                    status: 'pending'
+                                  };
+                                  setEditData({
+                                    ...editData,
+                                    financialData: {
+                                      ...editData.financialData,
+                                      payment_details: [...(editData.financialData?.payment_details || []), newPayment]
+                                    }
+                                  });
+                                }}
+                                className="btn btn-secondary btn-sm"
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Ajouter un paiement
+                              </button>
+                            </div>
+
+                            {editData.financialData?.payment_details && editData.financialData.payment_details.length > 0 ? (
+                              <div className="space-y-2">
+                                {editData.financialData.payment_details.map((payment: any, index: number) => (
+                                  <div key={index} className="bg-gray-900 p-3 rounded-lg border border-gray-700">
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                      <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Description</label>
+                                        <input
+                                          type="text"
+                                          value={payment.description || ''}
+                                          onChange={(e) => {
+                                            const updatedPayments = [...editData.financialData.payment_details];
+                                            updatedPayments[index] = { ...updatedPayments[index], description: e.target.value };
+                                            setEditData({
+                                              ...editData,
+                                              financialData: { ...editData.financialData, payment_details: updatedPayments }
+                                            });
+                                          }}
+                                          placeholder="Description du paiement"
+                                          className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Montant (€)</label>
+                                        <input
+                                          type="number"
+                                          value={payment.amount || 0}
+                                          onChange={(e) => {
+                                            const updatedPayments = [...editData.financialData.payment_details];
+                                            updatedPayments[index] = { ...updatedPayments[index], amount: parseFloat(e.target.value) || 0 };
+                                            setEditData({
+                                              ...editData,
+                                              financialData: { ...editData.financialData, payment_details: updatedPayments }
+                                            });
+                                          }}
+                                          min="0"
+                                          step="0.01"
+                                          className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Date</label>
+                                        <input
+                                          type="date"
+                                          value={payment.date ? new Date(payment.date).toISOString().split('T')[0] : ''}
+                                          onChange={(e) => {
+                                            const updatedPayments = [...editData.financialData.payment_details];
+                                            updatedPayments[index] = { ...updatedPayments[index], date: e.target.value };
+                                            setEditData({
+                                              ...editData,
+                                              financialData: { ...editData.financialData, payment_details: updatedPayments }
+                                            });
+                                          }}
+                                          className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                        />
+                                      </div>
+                                      <div className="flex items-end gap-2">
+                                        <div className="flex-1">
+                                          <label className="block text-xs text-gray-400 mb-1">Statut</label>
+                                          <select
+                                            value={payment.status || 'pending'}
+                                            onChange={(e) => {
+                                              const updatedPayments = [...editData.financialData.payment_details];
+                                              updatedPayments[index] = { ...updatedPayments[index], status: e.target.value };
+                                              setEditData({
+                                                ...editData,
+                                                financialData: { ...editData.financialData, payment_details: updatedPayments }
+                                              });
+                                            }}
+                                            className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                          >
+                                            <option value="pending">En attente</option>
+                                            <option value="received">Reçu</option>
+                                            <option value="cancelled">Annulé</option>
+                                          </select>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const updatedPayments = editData.financialData.payment_details.filter((_: any, i: number) => i !== index);
+                                            setEditData({
+                                              ...editData,
+                                              financialData: { ...editData.financialData, payment_details: updatedPayments }
+                                            });
+                                          }}
+                                          className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500 italic py-2">Aucun paiement enregistré</p>
+                            )}
+                          </div>
+
+                          {/* Expense Details */}
+                          <div className="mt-6 border-t border-gray-700 pt-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="text-sm font-medium text-gray-300">
+                                <TrendingDown className="h-4 w-4 inline mr-2" />
+                                Détails des Dépenses
+                              </h4>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newExpense = {
+                                    description: '',
+                                    amount: 0,
+                                    date: new Date().toISOString().split('T')[0],
+                                    category: 'other'
+                                  };
+                                  setEditData({
+                                    ...editData,
+                                    financialData: {
+                                      ...editData.financialData,
+                                      expense_details: [...(editData.financialData?.expense_details || []), newExpense]
+                                    }
+                                  });
+                                }}
+                                className="btn btn-secondary btn-sm"
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Ajouter une dépense
+                              </button>
+                            </div>
+
+                            {editData.financialData?.expense_details && editData.financialData.expense_details.length > 0 ? (
+                              <div className="space-y-2">
+                                {editData.financialData.expense_details.map((expense: any, index: number) => (
+                                  <div key={index} className="bg-gray-900 p-3 rounded-lg border border-gray-700">
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                      <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Description</label>
+                                        <input
+                                          type="text"
+                                          value={expense.description || ''}
+                                          onChange={(e) => {
+                                            const updatedExpenses = [...editData.financialData.expense_details];
+                                            updatedExpenses[index] = { ...updatedExpenses[index], description: e.target.value };
+                                            setEditData({
+                                              ...editData,
+                                              financialData: { ...editData.financialData, expense_details: updatedExpenses }
+                                            });
+                                          }}
+                                          placeholder="Description de la dépense"
+                                          className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Montant (€)</label>
+                                        <input
+                                          type="number"
+                                          value={expense.amount || 0}
+                                          onChange={(e) => {
+                                            const updatedExpenses = [...editData.financialData.expense_details];
+                                            updatedExpenses[index] = { ...updatedExpenses[index], amount: parseFloat(e.target.value) || 0 };
+                                            setEditData({
+                                              ...editData,
+                                              financialData: { ...editData.financialData, expense_details: updatedExpenses }
+                                            });
+                                          }}
+                                          min="0"
+                                          step="0.01"
+                                          className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Date</label>
+                                        <input
+                                          type="date"
+                                          value={expense.date ? new Date(expense.date).toISOString().split('T')[0] : ''}
+                                          onChange={(e) => {
+                                            const updatedExpenses = [...editData.financialData.expense_details];
+                                            updatedExpenses[index] = { ...updatedExpenses[index], date: e.target.value };
+                                            setEditData({
+                                              ...editData,
+                                              financialData: { ...editData.financialData, expense_details: updatedExpenses }
+                                            });
+                                          }}
+                                          className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                        />
+                                      </div>
+                                      <div className="flex items-end gap-2">
+                                        <div className="flex-1">
+                                          <label className="block text-xs text-gray-400 mb-1">Catégorie</label>
+                                          <select
+                                            value={expense.category || 'other'}
+                                            onChange={(e) => {
+                                              const updatedExpenses = [...editData.financialData.expense_details];
+                                              updatedExpenses[index] = { ...updatedExpenses[index], category: e.target.value };
+                                              setEditData({
+                                                ...editData,
+                                                financialData: { ...editData.financialData, expense_details: updatedExpenses }
+                                              });
+                                            }}
+                                            className="w-full px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                                          >
+                                            <option value="personnel">Personnel</option>
+                                            <option value="infrastructure">Infrastructure</option>
+                                            <option value="licenses">Licences</option>
+                                            <option value="marketing">Marketing</option>
+                                            <option value="other">Autre</option>
+                                          </select>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const updatedExpenses = editData.financialData.expense_details.filter((_: any, i: number) => i !== index);
+                                            setEditData({
+                                              ...editData,
+                                              financialData: { ...editData.financialData, expense_details: updatedExpenses }
+                                            });
+                                          }}
+                                          className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500 italic py-2">Aucune dépense enregistrée</p>
+                            )}
+                          </div>
                         </div>
                       </div>
 
