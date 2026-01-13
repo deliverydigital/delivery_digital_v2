@@ -547,7 +547,7 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
     const managerAllowedFields = [
       'title', 'description', 'type', 'status', 'priority', 'budget_range', 'estimated_budget',
       'timeline', 'start_date', 'end_date', 'completion_percentage',
-      'figma_url', 'gitlab_url', 'notes', 'links', 'requirements', 'technical_specs'
+      'figma_url', 'gitlab_url', 'notes', 'links', 'requirements', 'technical_specs', 'financial_data'
     ];
 
     let fieldsToCheck;
@@ -586,12 +586,33 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
         } else if (fieldName === 'financial_data') {
           // Handle financial data
           if (value) {
-            project[fieldName] = {
-              ...project[fieldName],
+            // Initialize if not exists
+            if (!project.financial_data) {
+              project.financial_data = {
+                revenue: 0,
+                expenses: 0,
+                profit_margin: 0,
+                expense_details: [],
+                payment_details: []
+              };
+            }
+
+            // Merge the data
+            project.financial_data = {
+              ...project.financial_data,
               ...value
             };
-            // Recalculate financials
-            project.calculateFinancials();
+
+            // Only recalculate if details arrays are being updated
+            // If direct revenue/expenses are provided, calculate profit_margin
+            if (value.expense_details || value.payment_details) {
+              project.calculateFinancials();
+            } else if (value.revenue !== undefined || value.expenses !== undefined) {
+              // Calculate profit margin from direct values
+              const revenue = value.revenue !== undefined ? value.revenue : project.financial_data.revenue;
+              const expenses = value.expenses !== undefined ? value.expenses : project.financial_data.expenses;
+              project.financial_data.profit_margin = revenue - expenses;
+            }
           }
         } else {
           project[fieldName] = value;
