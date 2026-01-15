@@ -603,11 +603,25 @@ router.put('/:id', validateMongoId, validateProjectUpdate, async (req, res) => {
               ...value
             };
 
+
+            const hasExpenseDetails =
+                Object.prototype.hasOwnProperty.call(value, 'expense_details') &&
+                Array.isArray(value.expense_details) &&
+                value.expense_details.length > 0;
+
+            const hasPaymentDetails =
+                Object.prototype.hasOwnProperty.call(value, 'payment_details') &&
+                Array.isArray(value.payment_details) &&
+                value.payment_details.length > 0;
+
+            if (hasExpenseDetails || hasPaymentDetails) {
+              project.calculateFinancials();
+            }
             // Only recalculate if details arrays are being updated
             // If direct revenue/expenses are provided, calculate profit_margin
-            if (value.expense_details || value.payment_details) {
+            /*if (value.expense_details || value.payment_details) {
               project.calculateFinancials();
-            } else if (value.revenue !== undefined || value.expenses !== undefined) {
+            }*/ else if (value.revenue !== undefined || value.expenses !== undefined) {
               // Calculate profit margin from direct values
               const revenue = value.revenue !== undefined ? value.revenue : project.financial_data.revenue;
               const expenses = value.expenses !== undefined ? value.expenses : project.financial_data.expenses;
