@@ -171,33 +171,93 @@ const OverviewTab = () => {
                         </div>
                     </div>
 
-                    {/* Top Projects by Profit */}
+                    {/* All Projects Financial Details */}
                     {financialSummary.projects && financialSummary.projects.length > 0 && (
                         <div className="mb-6">
-                            <h4 className="text-lg font-semibold text-white mb-3">Top Projets par Rentabilité</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {financialSummary.projects.slice(0, 6).map((project: any) => (
-                                    <div
-                                        key={project.id}
-                                        className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 hover:border-blue-500/50 transition-all"
-                                    >
-                                        <h5 className="font-semibold text-white text-sm mb-1">{project.title}</h5>
-                                        <p className="text-xs text-gray-400 mb-2">{project.clientName}</p>
-                                        <div className="flex justify-between text-xs">
-                                            <span
-                                                className="text-green-400">+{project.revenue.toLocaleString('fr-FR')} €</span>
-                                            <span
-                                                className="text-red-400">-{project.expenses.toLocaleString('fr-FR')} €</span>
+                            <h4 className="text-lg font-semibold text-white mb-3 flex items-center justify-between">
+                                <span>Détails Financiers par Projet</span>
+                                <span className="text-sm text-gray-400 font-normal">
+                                    {financialSummary.projects.length} projet{financialSummary.projects.length > 1 ? 's' : ''}
+                                </span>
+                            </h4>
+                            <div className="grid grid-cols-1 gap-3">
+                                {financialSummary.projects.map((project: any) => {
+                                    const profitMargin = project.revenue > 0
+                                        ? ((project.profit / project.revenue) * 100).toFixed(1)
+                                        : 0;
+
+                                    return (
+                                        <div
+                                            key={project.id}
+                                            className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:border-blue-500/50 transition-all"
+                                        >
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="flex-1">
+                                                    <h5 className="font-semibold text-white text-base mb-1">{project.title}</h5>
+                                                    <p className="text-xs text-gray-400">{project.clientName}</p>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`px-2 py-1 rounded text-xs ${
+                                                        project.status === 'completed' ? 'bg-green-900/50 text-green-400' :
+                                                        project.status === 'in_progress' ? 'bg-blue-900/50 text-blue-400' :
+                                                        project.status === 'reviewing' ? 'bg-yellow-900/50 text-yellow-400' :
+                                                        'bg-gray-900/50 text-gray-400'
+                                                    }`}>
+                                                        {project.status === 'completed' ? 'Terminé' :
+                                                         project.status === 'in_progress' ? 'En cours' :
+                                                         project.status === 'reviewing' ? 'Révision' :
+                                                         project.status === 'submitted' ? 'Soumis' :
+                                                         project.status}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-3 gap-4 mb-3">
+                                                <div className="bg-green-900/20 border border-green-700/50 rounded p-2">
+                                                    <p className="text-xs text-gray-400 mb-1">Revenus</p>
+                                                    <p className="text-sm font-bold text-green-400">
+                                                        {project.revenue.toLocaleString('fr-FR')} €
+                                                    </p>
+                                                </div>
+                                                <div className="bg-red-900/20 border border-red-700/50 rounded p-2">
+                                                    <p className="text-xs text-gray-400 mb-1">Dépenses</p>
+                                                    <p className="text-sm font-bold text-red-400">
+                                                        {project.expenses.toLocaleString('fr-FR')} €
+                                                    </p>
+                                                </div>
+                                                <div className={`${
+                                                    project.profit >= 0 ? 'bg-blue-900/20 border-blue-700/50' : 'bg-orange-900/20 border-orange-700/50'
+                                                } border rounded p-2`}>
+                                                    <p className="text-xs text-gray-400 mb-1">Bénéfice</p>
+                                                    <p className={`text-sm font-bold ${
+                                                        project.profit >= 0 ? 'text-blue-400' : 'text-orange-400'
+                                                    }`}>
+                                                        {project.profit >= 0 ? '+' : ''}{project.profit.toLocaleString('fr-FR')} €
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between pt-2 border-t border-gray-700">
+                                                <span className="text-xs text-gray-400">Marge Bénéficiaire</span>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-32 bg-gray-700 rounded-full h-2 overflow-hidden">
+                                                        <div
+                                                            className={`h-full ${
+                                                                Number(profitMargin) >= 0 ? 'bg-gradient-to-r from-green-500 to-blue-500' : 'bg-red-500'
+                                                            }`}
+                                                            style={{ width: `${Math.min(Math.abs(Number(profitMargin)), 100)}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className={`text-sm font-semibold ${
+                                                        Number(profitMargin) >= 0 ? 'text-blue-400' : 'text-orange-400'
+                                                    }`}>
+                                                        {profitMargin}%
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="mt-2 pt-2 border-t border-gray-700">
-                      <span className={`text-sm font-semibold ${
-                          project.profit >= 0 ? 'text-blue-400' : 'text-orange-400'
-                      }`}>
-                        {project.profit >= 0 ? '+' : ''}{project.profit.toLocaleString('fr-FR')} €
-                      </span>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
