@@ -1,64 +1,17 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Users, FolderOpen, MessageCircle, ClipboardList, TrendingUp,
   Calendar, CheckCircle, AlertTriangle, Clock, Star, Euro,
   BarChart3, PieChart, Activity, Zap, Target, Award, FileText, Building
 } from 'lucide-react';
-import { useStatistics, useProjects, useClients } from '../../hooks/useApi';
-import { ApiService } from '../../services/api';
+import { useStatistics, useProjects, useClients, useLegalTasks, useFinancialSummary } from '../../hooks/useApi';
 
 const OverviewTab = () => {
   const { stats, loading: statsLoading } = useStatistics();
   const { projects } = useProjects();
   const { clients } = useClients();
-  const [legalTasks, setLegalTasks] = useState<any[]>([]);
-  const [loadingLegal, setLoadingLegal] = useState(true);
-  const [financialSummary, setFinancialSummary] = useState<any>(null);
-  const [loadingFinancial, setLoadingFinancial] = useState(true);
-
-  useEffect(() => {
-    const fetchLegalTasks = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/projects/legal/dashboard`, {
-          headers: {
-            'Authorization': `Bearer ${ApiService.getAuthToken()}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        const data = await response.json();
-        if (data.success) {
-          setLegalTasks(data.data.legalTasks || []);
-        }
-      } catch (error) {
-        console.error('Error fetching legal tasks:', error);
-      } finally {
-        setLoadingLegal(false);
-      }
-    };
-
-    const fetchFinancialSummary = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/projects/financial/summary`, {
-          headers: {
-            'Authorization': `Bearer ${ApiService.getAuthToken()}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        const data = await response.json();
-        if (data.success) {
-          setFinancialSummary(data.data);
-        }
-      } catch (error) {
-        console.error('Error fetching financial summary:', error);
-      } finally {
-        setLoadingFinancial(false);
-      }
-    };
-
-    fetchLegalTasks();
-    fetchFinancialSummary();
-  }, []);
+  const { legalTasks, loading: loadingLegal } = useLegalTasks();
+  const { financialSummary, loading: loadingFinancial } = useFinancialSummary();
 
   const quickStats = [
     {

@@ -407,3 +407,59 @@ export const useStatistics = () => {
     refreshStats: loadStats
   };
 };
+
+// Hook pour les tâches légales (admin)
+export const useLegalTasks = () => {
+  const [legalTasks, setLegalTasks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadLegalTasks = async () => {
+    setLoading(true);
+    try {
+      const data = await ApiService.getLegalTasks();
+      setLegalTasks(data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des tâches légales:', error);
+      setLegalTasks([]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadLegalTasks();
+  }, []);
+
+  return {
+    legalTasks,
+    loading,
+    refreshLegalTasks: loadLegalTasks
+  };
+};
+
+// Hook pour le résumé financier (admin)
+export const useFinancialSummary = () => {
+  const [financialSummary, setFinancialSummary] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadFinancialSummary = async () => {
+    setLoading(true);
+    try {
+      const data = await ApiService.getFinancialSummary();
+      setFinancialSummary(data);
+    } catch (error) {
+      console.error('Erreur lors du chargement du résumé financier:', error);
+      setFinancialSummary(null);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadFinancialSummary();
+  }, []);
+
+  return {
+    financialSummary,
+    loading,
+    refreshFinancialSummary: loadFinancialSummary
+  };
+};

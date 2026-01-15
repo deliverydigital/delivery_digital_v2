@@ -650,4 +650,32 @@ export class ApiService {
       };
     }
   }
+
+  // Legal Tasks
+  static async getLegalTasks(): Promise<any[]> {
+    try {
+      const response = await this.makeRequest('/projects/legal/dashboard');
+      if (response.success && response.data) {
+        return response.data.legalTasks || [];
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching legal tasks:', error);
+      return [];
+    }
+  }
+
+  // Financial Summary
+  static async getFinancialSummary(): Promise<any> {
+    try {
+      const response = await this.makeRequest('/projects/financial/summary');
+      if (response.success && response.data) {
+        return response.data;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching financial summary:', error);
+      return null;
+    }
+  }
 }
