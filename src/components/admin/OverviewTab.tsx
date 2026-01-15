@@ -216,7 +216,7 @@ const OverviewTab = () => {
                           <p className="text-xs text-gray-400">{expense.projectTitle}</p>
                         </div>
                         <span className="text-sm font-bold text-red-400">
-                          -{expense.amount.toLocaleString('fr-FR')} €
+                          -{expense?.amount?.toLocaleString('fr-FR')} €
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-xs text-gray-500">
@@ -245,7 +245,7 @@ const OverviewTab = () => {
                           <p className="text-xs text-gray-400">{payment.projectTitle}</p>
                         </div>
                         <span className="text-sm font-bold text-green-400">
-                          +{payment.amount.toLocaleString('fr-FR')} €
+                          +{payment.amount?.toLocaleString('fr-FR')} €
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-xs text-gray-500">
