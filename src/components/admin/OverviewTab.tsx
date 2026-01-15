@@ -6,6 +6,13 @@ import {
 } from 'lucide-react';
 import { useStatistics, useProjects, useClients, useLegalTasks, useFinancialSummary } from '../../hooks/useApi';
 
+const formatDate = (date: any): string => {
+  if (!date) return 'N/A';
+  const dateObj = new Date(date);
+  if (isNaN(dateObj.getTime())) return 'N/A';
+  return dateObj.toLocaleDateString('fr-FR');
+};
+
 const OverviewTab = () => {
   const { stats, loading: statsLoading } = useStatistics();
   const { projects } = useProjects();
@@ -110,7 +117,7 @@ const OverviewTab = () => {
                   {task.legalInfo?.contract_date && (
                     <p className="text-gray-300">
                       <span className="text-gray-500">Date:</span>{' '}
-                      {new Date(task.legalInfo.contract_date).toLocaleDateString('fr-FR')}
+                      {formatDate(task.legalInfo.contract_date)}
                     </p>
                   )}
                 </div>
@@ -220,7 +227,7 @@ const OverviewTab = () => {
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-xs text-gray-500">
-                        <span>{new Date(expense.date).toLocaleDateString('fr-FR')}</span>
+                        <span>{formatDate(expense.date)}</span>
                         <span>{expense.category}</span>
                       </div>
                     </div>
@@ -249,7 +256,7 @@ const OverviewTab = () => {
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-xs text-gray-500">
-                        <span>{new Date(payment.date).toLocaleDateString('fr-FR')}</span>
+                        <span>{formatDate(payment.date)}</span>
                         <span className={`px-2 py-0.5 rounded ${
                           payment.status === 'paid' ? 'bg-green-900/50 text-green-400' :
                           payment.status === 'pending' ? 'bg-yellow-900/50 text-yellow-400' :
@@ -339,7 +346,7 @@ const OverviewTab = () => {
                 <div className="flex-1">
                   <p className="text-white text-sm font-medium">{project.title}</p>
                   <p className="text-gray-400 text-xs">
-                    {project.clientName} • {new Date(project.lastUpdate).toLocaleDateString('fr-FR')}
+                    {project.clientName} • {formatDate(project.lastUpdate)}
                   </p>
                 </div>
                 <span className={`px-2 py-1 rounded text-xs ${
@@ -372,7 +379,7 @@ const OverviewTab = () => {
                 <div className="flex-1">
                   <p className="text-white text-sm font-medium">{client.name}</p>
                   <p className="text-gray-400 text-xs">
-                    {client.company} • {new Date(client.joinDate).toLocaleDateString('fr-FR')}
+                    {client.company} • {formatDate(client.joinDate)}
                   </p>
                 </div>
                 <span className={`px-2 py-1 rounded text-xs ${
