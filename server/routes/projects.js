@@ -992,6 +992,10 @@ router.get('/financial/summary', authenticate, async (req, res) => {
     let projectCount = projects.length;
     let profitableProjects = 0;
 
+    // Collect all expenses and payments
+    let allExpenses = [];
+    let allPayments = [];
+
     const projectsSummary = projects.map(project => {
       const revenue = project.financial_data?.revenue || 0;
       const expenses = project.financial_data?.expenses || 0;
@@ -1005,6 +1009,30 @@ router.get('/financial/summary', authenticate, async (req, res) => {
         profitableProjects++;
       }
 
+      // Collect expenses with project info
+      if (project.financial_data?.expense_details && Array.isArray(project.financial_data.expense_details)) {
+        project.financial_data.expense_details.forEach(expense => {
+          allExpenses.push({
+            ...expense,
+            projectId: project._id,
+            projectTitle: project.title,
+            clientName: project.client_id?.name || 'N/A'
+          });
+        });
+      }
+
+      // Collect payments with project info
+      if (project.financial_data?.payment_details && Array.isArray(project.financial_data.payment_details)) {
+        project.financial_data.payment_details.forEach(payment => {
+          allPayments.push({
+            ...payment,
+            projectId: project._id,
+            projectTitle: project.title,
+            clientName: project.client_id?.name || 'N/A'
+          });
+        });
+      }
+
       return {
         id: project._id,
         title: project.title,
@@ -1015,6 +1043,10 @@ router.get('/financial/summary', authenticate, async (req, res) => {
         profit
       };
     });
+
+    // Sort expenses and payments by date (most recent first) and limit to 10
+    allExpenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+    allPayments.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     res.json({
       success: true,
@@ -1027,7 +1059,9 @@ router.get('/financial/summary', authenticate, async (req, res) => {
           profitableProjects,
           averageProfit: projectCount > 0 ? totalProfit / projectCount : 0
         },
-        projects: projectsSummary.sort((a, b) => b.profit - a.profit)
+        projects: projectsSummary.sort((a, b) => b.profit - a.profit),
+        recentExpenses: allExpenses.slice(0, 10),
+        recentPayments: allPayments.slice(0, 10)
       }
     });
 

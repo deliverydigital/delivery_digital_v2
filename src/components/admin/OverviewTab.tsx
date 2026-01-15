@@ -218,7 +218,7 @@ const OverviewTab = () => {
 
           {/* Top Projects by Profit */}
           {financialSummary.projects && financialSummary.projects.length > 0 && (
-            <div>
+            <div className="mb-6">
               <h4 className="text-lg font-semibold text-white mb-3">Top Projets par Rentabilité</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {financialSummary.projects.slice(0, 6).map((project: any) => (
@@ -244,6 +244,74 @@ const OverviewTab = () => {
               </div>
             </div>
           )}
+
+          {/* Recent Financial Transactions */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Expenses */}
+            {financialSummary.recentExpenses && financialSummary.recentExpenses.length > 0 && (
+              <div>
+                <h4 className="text-lg font-semibold text-white mb-3">Dépenses Récentes</h4>
+                <div className="space-y-2">
+                  {financialSummary.recentExpenses.map((expense: any, index: number) => (
+                    <div
+                      key={index}
+                      className="bg-red-900/20 border border-red-700/50 rounded-lg p-3 hover:border-red-500/50 transition-all"
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white">{expense.description}</p>
+                          <p className="text-xs text-gray-400">{expense.projectTitle}</p>
+                        </div>
+                        <span className="text-sm font-bold text-red-400">
+                          -{expense.amount.toLocaleString('fr-FR')} €
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs text-gray-500">
+                        <span>{new Date(expense.date).toLocaleDateString('fr-FR')}</span>
+                        <span>{expense.category}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Payments */}
+            {financialSummary.recentPayments && financialSummary.recentPayments.length > 0 && (
+              <div>
+                <h4 className="text-lg font-semibold text-white mb-3">Paiements Récents</h4>
+                <div className="space-y-2">
+                  {financialSummary.recentPayments.map((payment: any, index: number) => (
+                    <div
+                      key={index}
+                      className="bg-green-900/20 border border-green-700/50 rounded-lg p-3 hover:border-green-500/50 transition-all"
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white">{payment.description}</p>
+                          <p className="text-xs text-gray-400">{payment.projectTitle}</p>
+                        </div>
+                        <span className="text-sm font-bold text-green-400">
+                          +{payment.amount.toLocaleString('fr-FR')} €
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs text-gray-500">
+                        <span>{new Date(payment.date).toLocaleDateString('fr-FR')}</span>
+                        <span className={`px-2 py-0.5 rounded ${
+                          payment.status === 'paid' ? 'bg-green-900/50 text-green-400' :
+                          payment.status === 'pending' ? 'bg-yellow-900/50 text-yellow-400' :
+                          'bg-red-900/50 text-red-400'
+                        }`}>
+                          {payment.status === 'paid' ? 'Payé' :
+                           payment.status === 'pending' ? 'En attente' : 'En retard'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </motion.div>
       )}
 
