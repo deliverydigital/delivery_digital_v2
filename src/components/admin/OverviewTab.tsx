@@ -310,23 +310,26 @@ const OverviewTab = () => {
                                                             </h5>
                                                             {projectExpenses.length > 0 ? (
                                                                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                                                                    {projectExpenses.map((expense: any, idx: number) => (
-                                                                        <div
-                                                                            key={idx}
-                                                                            className="bg-red-900/10 border border-red-700/30 rounded p-2"
-                                                                        >
-                                                                            <div className="flex justify-between items-start mb-1">
-                                                                                <p className="text-xs font-medium text-white">{expense.description}</p>
-                                                                                <span className="text-xs font-bold text-red-400">
-                                                                                    -{expense.amount?.toLocaleString('fr-FR')} €
+                                                                    {projectExpenses.map((expense: any, idx: number) => {
+                                                                        const exp = expense.__parentArray[0] || {};
+                                                                        return (
+                                                                            <div
+                                                                                key={idx}
+                                                                                className="bg-red-900/10 border border-red-700/30 rounded p-2"
+                                                                            >
+                                                                                <div className="flex justify-between items-start mb-1">
+                                                                                    <p className="text-xs font-medium text-white">{exp.description}</p>
+                                                                                    <span className="text-xs font-bold text-red-400">
+                                                                                    -{exp.amount?.toLocaleString('fr-FR')} €
                                                                                 </span>
+                                                                                </div>
+                                                                                <div className="flex justify-between items-center text-xs text-gray-500">
+                                                                                    <span>{formatDate(exp.date)}</span>
+                                                                                    <span>{exp.category}</span>
+                                                                                </div>
                                                                             </div>
-                                                                            <div className="flex justify-between items-center text-xs text-gray-500">
-                                                                                <span>{formatDate(expense.date)}</span>
-                                                                                <span>{expense.category}</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
+                                                                        )
+                                                                    })}
                                                                 </div>
                                                             ) : (
                                                                 <p className="text-xs text-gray-500 italic">Aucune dépense enregistrée</p>
@@ -340,30 +343,33 @@ const OverviewTab = () => {
                                                             </h5>
                                                             {projectPayments.length > 0 ? (
                                                                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                                                                    {projectPayments.map((payment: any, idx: number) => (
-                                                                        <div
-                                                                            key={idx}
-                                                                            className="bg-green-900/10 border border-green-700/30 rounded p-2"
-                                                                        >
-                                                                            <div className="flex justify-between items-start mb-1">
-                                                                                <p className="text-xs font-medium text-white">{payment.description}</p>
-                                                                                <span className="text-xs font-bold text-green-400">
-                                                                                    +{payment.amount?.toLocaleString('fr-FR')} €
+                                                                    {projectPayments.map((payment: any, idx: number) => {
+                                                                        const exp = payment.__parentArray[0] || {};
+                                                                        return (
+                                                                            <div
+                                                                                key={idx}
+                                                                                className="bg-green-900/10 border border-green-700/30 rounded p-2"
+                                                                            >
+                                                                                <div className="flex justify-between items-start mb-1">
+                                                                                    <p className="text-xs font-medium text-white">{exp.description}</p>
+                                                                                    <span className="text-xs font-bold text-green-400">
+                                                                                    +{exp.amount?.toLocaleString('fr-FR')} €
                                                                                 </span>
-                                                                            </div>
-                                                                            <div className="flex justify-between items-center text-xs text-gray-500">
-                                                                                <span>{formatDate(payment.date)}</span>
-                                                                                <span className={`px-1 py-0.5 rounded ${
-                                                                                    payment.status === 'paid' ? 'bg-green-900/50 text-green-400' :
-                                                                                    payment.status === 'pending' ? 'bg-yellow-900/50 text-yellow-400' :
-                                                                                    'bg-red-900/50 text-red-400'
-                                                                                }`}>
-                                                                                    {payment.status === 'paid' ? 'Payé' :
-                                                                                     payment.status === 'pending' ? 'En attente' : 'En retard'}
+                                                                                </div>
+                                                                                <div className="flex justify-between items-center text-xs text-gray-500">
+                                                                                    <span>{formatDate(exp.date)}</span>
+                                                                                    <span className={`px-1 py-0.5 rounded ${
+                                                                                        exp.status === 'paid' ? 'bg-green-900/50 text-green-400' :
+                                                                                            exp.status === 'pending' ? 'bg-yellow-900/50 text-yellow-400' :
+                                                                                                'bg-red-900/50 text-red-400'
+                                                                                    }`}>
+                                                                                    {exp.status === 'paid' ? 'Payé' :
+                                                                                        exp.status === 'pending' ? 'En attente' : 'En retard'}
                                                                                 </span>
+                                                                                </div>
                                                                             </div>
-                                                                        </div>
-                                                                    ))}
+                                                                        )
+                                                                    })}
                                                                 </div>
                                                             ) : (
                                                                 <p className="text-xs text-gray-500 italic">Aucun paiement enregistré</p>
