@@ -1608,17 +1608,7 @@ const Services = () => {
         }
       />
 
-      <ServiceTile
-        id="service-training"
-        tone="peach"
-        eyebrow="Autre service proposé"
-        title="Formation"
-        accent="pro."
-        subhead="Organisme certifié Qualiopi. Profitez du financement OPCO."
-        illustration={<TrainingMock />}
-        primary={{ label: 'Voir toutes les formations', onClick: () => (window.location.href = '/formation') }}
-        secondary={{ label: 'Espace apprenant', onClick: () => (window.location.href = 'https://app.deliverydigital.fr') }}
-      />
+      {/* Section Formation cachee temporairement - focus 100% vente informatique */}
     </>
   );
 };
