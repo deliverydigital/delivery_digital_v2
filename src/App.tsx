@@ -5,6 +5,8 @@ import Hero from './components/Hero';
 import Services from './components/Services';
 import Simulator from './components/Simulator';
 import ProjectChat from './components/ProjectChat';
+import SeoAdmin from './components/SeoAdmin';
+import PublicSeoPage from './components/PublicSeoPage';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
@@ -24,6 +26,7 @@ function App() {
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [authKey, setAuthKey] = useState(0);
   const [currentPage, setCurrentPage] = useState('home');
+  const [seoSlug, setSeoSlug] = useState<{ type: 'services' | 'blog'; slug: string } | null>(null);
 
   useEffect(() => {
     document.title = i18n.language === 'fr'
@@ -51,6 +54,14 @@ function App() {
       setCurrentPage('home');
     } else if (pathname === '/discutons' || pathname === '/projet') {
       setCurrentPage('chat');
+    } else if (pathname === '/admin/seo') {
+      setCurrentPage('seo-admin');
+    } else if (pathname.startsWith('/services/')) {
+      setSeoSlug({ type: 'services', slug: pathname.slice('/services/'.length) });
+      setCurrentPage('seo-public');
+    } else if (pathname.startsWith('/blog/')) {
+      setSeoSlug({ type: 'blog', slug: pathname.slice('/blog/'.length) });
+      setCurrentPage('seo-public');
     } else {
       setCurrentPage('home');
     }
@@ -137,6 +148,26 @@ function App() {
         <Footer />
         <ScrollToTop />
         <ProjectSubmission />
+        <LegalModals />
+      </div>
+    );
+  }
+
+  // SEO admin dedicated page (no header/footer, full-bleed Apple-style)
+  if (currentPage === 'seo-admin') {
+    return <SeoAdmin />;
+  }
+
+  // SEO public page (city-service or article)
+  if (currentPage === 'seo-public' && seoSlug) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow">
+          <PublicSeoPage slug={seoSlug.slug} />
+        </main>
+        <Footer />
+        <ScrollToTop />
         <LegalModals />
       </div>
     );
