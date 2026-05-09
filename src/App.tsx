@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Services from './components/Services';
+import Simulator from './components/Simulator';
+import ProjectChat from './components/ProjectChat';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
@@ -41,6 +43,14 @@ function App() {
       setCurrentPage('reclamation');
     } else if (pathname === '/reset-password') {
       setCurrentPage('reset-password');
+    } else if (pathname === '/formation') {
+      setCurrentPage('formation');
+    } else if (pathname === '/devis' || pathname === '/simulator') {
+      // Simulator hidden temporarily - redirect to home
+      window.history.replaceState({}, '', '/');
+      setCurrentPage('home');
+    } else if (pathname === '/discutons' || pathname === '/projet') {
+      setCurrentPage('chat');
     } else {
       setCurrentPage('home');
     }
@@ -100,6 +110,50 @@ function App() {
     );
   }
 
+  // Formation dedicated page
+  if (currentPage === 'formation') {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow">
+          <FormationHero />
+          <Training />
+        </main>
+        <Footer />
+        <ScrollToTop />
+        <LegalModals />
+      </div>
+    );
+  }
+
+  // Quote simulator dedicated page
+  if (currentPage === 'simulator') {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow">
+          <Simulator />
+        </main>
+        <Footer />
+        <ScrollToTop />
+        <ProjectSubmission />
+        <LegalModals />
+      </div>
+    );
+  }
+
+  // AI project chat dedicated page
+  if (currentPage === 'chat') {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow">
+          <ProjectChat />
+        </main>
+      </div>
+    );
+  }
+
   // Regular website
   return (
     <div className="flex flex-col min-h-screen">
@@ -107,15 +161,31 @@ function App() {
       <main className="flex-grow">
         <Hero />
         <Services />
-        <Training />
-        <TechnologyGuide />
-        <Contact />
       </main>
       <Footer />
       <ScrollToTop />
       <ProjectSubmission />
       <LegalModals />
     </div>
+  );
+}
+
+/* Formation page hero - small intro tile above Training section */
+function FormationHero() {
+  return (
+    <section className="tile tile-peach pt-[100px] pb-12 sm:pt-[120px] sm:pb-16">
+      <div className="container text-center">
+        <span className="inline-block text-[12px] font-semibold tracking-[0.06em] uppercase text-[var(--ink-500)] mb-4">
+          Centre certifié Qualiopi
+        </span>
+        <h1 className="display-1 text-[34px] sm:text-[64px] lg:text-[80px] text-[var(--ink-900)] mb-4">
+          Formation <span className="accent-italic">pro.</span>
+        </h1>
+        <p className="subhead text-[17px] sm:text-[26px] text-[var(--ink-700)] max-w-[720px] mx-auto">
+          Organisme certifié Qualiopi. Profitez du financement OPCO.
+        </p>
+      </div>
+    </section>
   );
 }
 

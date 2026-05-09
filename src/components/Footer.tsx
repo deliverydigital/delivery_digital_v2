@@ -1,178 +1,146 @@
 import { useTranslation } from 'react-i18next';
-import { 
-  Facebook, 
-  Twitter, 
-  Linkedin, 
-  Instagram, 
-  Github,
-  Mail,
-  Phone,
-  MapPin,
-  Clock,
-  Shield,
-  Book,
-  FileText,
-  HelpCircle,
-  Users,
-  Building,
-  Briefcase,
-  GraduationCap,
-  Code,
-  Server,
-  Cloud,
-  Smartphone,
-  LogIn,
-  Settings
+import {
+  Facebook, Twitter, Linkedin, Instagram, Github,
+  Mail, Phone, MapPin, Download, Map as MapIcon,
 } from 'lucide-react';
-import Logo from './Logo';
 
+const downloadAccessPlan = () => {
+  const link = document.createElement('a');
+  link.href = '/plan-acces-delivery-digital.png';
+  link.download = 'Plan_acces_DELIVERY_Digital_Nice.png';
+  link.click();
+};
+
+/**
+ * Apple-style footer:
+ * - Light gray bg #F5F5F7
+ * - Compact text (12px)
+ * - 5 columns of plain text links (no row icons)
+ * - Disclaimer paragraph + horizontal legal links at bottom
+ */
 const Footer = () => {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   const footerSections = [
     {
-      title: "Services Numériques",
+      title: 'Services Numériques',
       items: [
-        { label: "Développement Web", icon: Code, link: "#" },
-        { label: "Applications Mobiles", icon: Smartphone, link: "#" },
-        { label: "Solutions Entreprise", icon: Building, link: "#" },
-        { label: "Services Cloud", icon: Cloud, link: "#" },
-        { label: "DevOps & Infrastructure", icon: Server, link: "#" },
-        { label: "Conseil IT", icon: Users, link: "#" }
-      ]
+        { label: 'Développement Web', link: '#' },
+        { label: 'Applications Mobiles', link: '#' },
+        { label: 'Solutions Entreprise', link: '#' },
+        { label: 'Services Cloud', link: '#' },
+        { label: 'DevOps & Infrastructure', link: '#' },
+        { label: 'Conseil IT', link: '#' },
+      ],
     },
     {
-      title: "Formation",
+      title: 'Formation',
       items: [
-        { label: "Développement Web", icon: Code, link: "#" },
-        { label: "DevOps", icon: Server, link: "#" },
-        { label: "Cloud Computing", icon: Cloud, link: "#" },
-        { label: "Cybersécurité", icon: Shield, link: "#" },
-        { label: "Certifications", icon: GraduationCap, link: "#" },
-        { label: "Formation sur mesure", icon: Book, link: "#" }
-      ]
+        { label: 'Développement Web', link: '#' },
+        { label: 'DevOps', link: '#' },
+        { label: 'Cloud Computing', link: '#' },
+        { label: 'Cybersécurité', link: '#' },
+        { label: 'Certifications', link: '#' },
+        { label: 'Formation sur mesure', link: '#' },
+      ],
     },
     {
-      title: "Entreprise",
+      title: 'Entreprise',
       items: [
-        { label: "À propos", icon: Building, link: "#" },
-        { label: "Carrières", icon: Briefcase, link: "#" },
-        { label: "Blog", icon: FileText, link: "#" },
-        { label: "Études de cas", icon: Book, link: "#" },
-        { label: "FAQ", icon: HelpCircle, link: "#" },
-        { label: "Support", icon: Users, link: "#" }
-      ]
+        { label: 'À propos', link: '#' },
+        { label: 'Carrières', link: '#' },
+        { label: 'Blog', link: '#' },
+        { label: 'Études de cas', link: '#' },
+        { label: 'FAQ', link: '#' },
+        { label: 'Support', link: '#' },
+      ],
     },
     {
-      title: "Contact",
+      title: 'Contact',
       items: [
-        { 
-          label: "470 promenade des anglais, 06200 Nice", 
-          icon: MapPin,
-          isInfo: true 
-        },
-        { 
-          label: "07 49 70 77 73",
-          icon: Phone,
-          link: "tel:0749707773" 
-        },
-        { 
-          label: "contact@deliverydigital.fr",
-          icon: Mail,
-          link: "mailto:contact@deliverydigital.fr" 
-        },
-        { 
-          label: "Lun - Ven: 9h00 - 18h00",
-          icon: Clock,
-          isInfo: true 
-        },
-        /*{
-          label: "Espace Client",
-          icon: LogIn,
-          link: "https://app.deliverydigital.fr/login",
-          isHighlighted: true
-        },
-        {
-          label: "Administration",
-          icon: Settings,
-          link: "/?admin=true",
-          isAdmin: true
-        }*/
-      ]
-    }
+        { label: '470 promenade des Anglais, 06200 Nice', icon: MapPin, isInfo: true },
+        { label: 'contact@deliverydigital.fr', icon: Mail, link: 'mailto:contact@deliverydigital.fr' },
+        { label: 'Lun - Ven · 9h - 18h', isInfo: true },
+        { label: "Télécharger le plan d'accès", icon: Download, action: 'download-plan' as const },
+      ],
+    },
   ];
 
   const legalLinks = [
-    { label: t('footer.links.privacy'), link: "#" },
-    { label: t('footer.links.terms'), link: "#" },
-    { label: t('footer.links.sitemap'), link: "#" },
-    { label: "Mentions légales", link: "#" },
-    { label: "RGPD", link: "#" },
-    { label: "Réclamation", link: "/reclamation" }
+    { label: t('footer.links.privacy'), modal: 'privacy' },
+    { label: t('footer.links.terms'), modal: 'terms' },
+    { label: t('footer.links.sitemap'), modal: 'sitemap' },
+    { label: 'Mentions légales', modal: 'legal' },
+    { label: 'RGPD', modal: 'privacy' },
+    { label: 'Réclamation', href: '/reclamation' },
   ];
 
   const socialLinks = [
-    { icon: Facebook, label: "Facebook", link: "#" },
-    { icon: Twitter, label: "Twitter", link: "#" },
-    { icon: Linkedin, label: "LinkedIn", link: "#" },
-    { icon: Instagram, label: "Instagram", link: "#" },
-    { icon: Github, label: "GitHub", link: "#" }
+    { icon: Facebook, label: 'Facebook', link: '#' },
+    { icon: Twitter, label: 'Twitter', link: '#' },
+    { icon: Linkedin, label: 'LinkedIn', link: '#' },
+    { icon: Instagram, label: 'Instagram', link: '#' },
+    { icon: Github, label: 'GitHub', link: '#' },
   ];
 
   return (
-    <footer className="bg-gray-900 text-white pt-16 pb-6">
-      <div className="container">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-          <div>
-            <Logo className="text-white mb-6" />
-            <p className="text-gray-400 mb-6">
-              Solutions informatiques innovantes pour votre entreprise, de la conception à la mise en œuvre. 
-              Certifié Qualiopi pour la formation professionnelle.
-            </p>
-            <div className="flex space-x-4">
-              {socialLinks.map(({ icon: Icon, label, link }) => (
-                <a
-                  key={label}
-                  href={link}
-                  aria-label={label}
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  <Icon size={20} />
-                </a>
-              ))}
-            </div>
-          </div>
+    <footer
+      className="relative text-white/70 overflow-hidden"
+      style={{
+        background:
+          'radial-gradient(ellipse 60% 100% at 50% -10%, rgba(255,255,255,0.08), transparent 60%), linear-gradient(180deg, #161618 0%, #0A0A0C 40%, #000 100%)',
+      }}
+    >
+      {/* Top reflection line */}
+      <div
+        aria-hidden
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%)' }}
+      />
+      {/* Soft top glow */}
+      <div
+        aria-hidden
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-32 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at top, rgba(255,255,255,0.05), transparent 70%)' }}
+      />
 
+      <div className="container-wide py-10 sm:py-12 relative">
+        {/* Disclaimer paragraph */}
+        <p className="text-[12px] leading-relaxed text-white/45 max-w-3xl mb-8 pb-8 border-b border-white/10">
+          DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Nice · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195.
+          Déclaration d'activité enregistrée sous le numéro 93061064306 auprès du Préfet de la Région de Provence-Alpes-Côte d'Azur. Cet enregistrement ne vaut pas agrément de l'État.
+        </p>
+
+        {/* Columns */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-8 mb-10">
           {footerSections.map((section) => (
             <div key={section.title}>
-              <h3 className="text-lg font-bold mb-4">{section.title}</h3>
-              <ul className="space-y-3">
-                {section.items.map((item) => (
+              <h3 className="text-[12px] font-semibold tracking-tight text-white mb-3">
+                {section.title}
+              </h3>
+              <ul className="space-y-2">
+                {section.items.map((item: any) => (
                   <li key={item.label}>
-                    {item.link ? (
+                    {item.action === 'download-plan' ? (
+                      <button
+                        onClick={downloadAccessPlan}
+                        className="text-[12px] text-white/55 hover:text-white hover:underline transition-colors inline-flex items-center gap-1"
+                      >
+                        <Download className="h-3 w-3" strokeWidth={1.6} />
+                        {item.label}
+                      </button>
+                    ) : item.link ? (
                       <a
                         href={item.link}
-                        target={item.link.startsWith('http') ? "_blank" : "_self"}
-                        rel={item.link.startsWith('http') ? "noopener noreferrer" : ""}
-                        className={`text-gray-400 hover:text-white transition-colors flex items-center group ${
-                          item.isHighlighted ? 'bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700' : ''
-                        } ${
-                          item.isAdmin ? 'bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700' : ''
-                        }`}
+                        target={item.link.startsWith('http') ? '_blank' : '_self'}
+                        rel={item.link.startsWith('http') ? 'noopener noreferrer' : ''}
+                        className="text-[12px] text-white/55 hover:text-white hover:underline transition-colors"
                       >
-                        <item.icon className={`h-4 w-4 mr-2 ${
-                          item.isHighlighted ? 'text-white' : 
-                          item.isAdmin ? 'text-white' : 
-                          'group-hover:text-primary-400'
-                        }`} />
                         {item.label}
                       </a>
                     ) : (
-                      <div className="text-gray-400 flex items-center">
-                        <item.icon className="h-4 w-4 mr-2 text-primary-400" />
-                        {item.label}
-                      </div>
+                      <span className="text-[12px] text-white/55">{item.label}</span>
                     )}
                   </li>
                 ))}
@@ -181,51 +149,53 @@ const Footer = () => {
           ))}
         </div>
 
-        <div className="pt-8 mt-8 border-t border-gray-800">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div className="text-gray-500">
-              © {currentYear} DELIVERY Digital Nice. Tous droits réservés.
-            </div>
-            <div className="flex flex-wrap gap-4 md:justify-end">
-              {legalLinks.map((link) => (
-                link.link && link.link.startsWith('/') ? (
-                  <a
-                    key={link.label}
-                    href={link.link}
-                    className="text-gray-400 hover:text-white text-sm transition-colors cursor-pointer"
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <button
-                    key={link.label}
-                    onClick={() => {
-                      const modalType = link.label === 'Politique de confidentialité' ? 'privacy' :
-                                      link.label === 'Conditions d\'utilisation' ? 'terms' :
-                                      link.label === 'Plan du site' ? 'sitemap' :
-                                      link.label === 'Mentions légales' ? 'legal' : 'privacy';
-                      window.dispatchEvent(new CustomEvent('openLegalModal', { detail: modalType }));
-                    }}
-                    className="text-gray-400 hover:text-white text-sm transition-colors cursor-pointer"
-                  >
-                    {link.label}
-                  </button>
-                )
-              ))}
-            </div>
+        {/* Bottom: copyright + legal + socials */}
+        <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
+            <span className="text-white/45">© {currentYear} DELIVERY Digital Nice. Tous droits réservés.</span>
           </div>
-          
-          <div className="text-sm text-gray-500 border-t border-gray-800 pt-4 mt-4">
-            <p>
-              DELIVERY Digital Nice - 470 promenade des anglais 06200 Nice
-              <br />
-              Siret 90294519500029 - NAF 6201Z - RCS 902 945 195
-              <br />
-              Déclaration d'activité enregistrée sous le numéro 93061064306 auprès du Préfet de la Région de Provence-Alpes-Côte d'Azur
-            </p>
+
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
+            {legalLinks.map((link) =>
+              link.href ? (
+                <a key={link.label} href={link.href} className="text-white/55 hover:text-white hover:underline">
+                  {link.label}
+                </a>
+              ) : (
+                <button
+                  key={link.label}
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('openLegalModal', { detail: link.modal }));
+                  }}
+                  className="text-white/55 hover:text-white hover:underline"
+                >
+                  {link.label}
+                </button>
+              )
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            {socialLinks.map(({ icon: Icon, label, link }) => (
+              <a
+                key={label}
+                href={link}
+                aria-label={label}
+                className="text-white/55 hover:text-white transition-colors"
+              >
+                <Icon size={16} strokeWidth={1.5} />
+              </a>
+            ))}
           </div>
         </div>
       </div>
+
+      {/* Bottom reflection: subtle horizontal sheen toward bottom */}
+      <div
+        aria-hidden
+        className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)' }}
+      />
     </footer>
   );
 };

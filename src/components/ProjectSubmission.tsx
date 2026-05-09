@@ -26,13 +26,13 @@ const ProjectSubmission = () => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.2 }}
         >
-          <button
-            onClick={() => setIsDigitalSpaceOpen(true)}
-            className="btn btn-primary shadow-lg"
+          <a
+            href="/discutons"
+            className="btn btn-primary shadow-lg inline-flex items-center"
           >
             <Plus className="h-5 w-5 mr-2" />
             Démarrer un projet
-          </button>
+          </a>
         </motion.div>
       </section>
 

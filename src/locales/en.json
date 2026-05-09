@@ -5,7 +5,56 @@
     "portfolio": "Projects",
     "about": "About",
     "contact": "Contact",
-    "training": "Training"
+    "training": "Training",
+    "quote": "Quote",
+    "formationBtn": "Training",
+    "solutionsBtn": "Solutions"
+  },
+  "tiles": {
+    "eyebrow": "Our expertise",
+    "ciiBadge": "CII certified · up to 20% reimbursed",
+    "stack": "Stack",
+    "cta": {
+      "start": "Start a project",
+      "learn": "Learn more",
+      "trainings": "See all trainings",
+      "learner": "Learner area"
+    },
+    "web": {
+      "title": "Web",
+      "accent": "solutions",
+      "subhead": "SaaS, dashboards and tailor-made web applications, powered by the best technologies."
+    },
+    "mobile": {
+      "title": "Native",
+      "accent": "apps",
+      "subhead": "iOS and Android. Native performance, polished design, App Store and Play Store deployment turnkey."
+    },
+    "enterprise": {
+      "title": "Business",
+      "accent": "software",
+      "subhead": "CRM, ERP, B2B platforms. Your processes automated, your productivity boosted."
+    },
+    "cloud": {
+      "title": "Cloud",
+      "accent": "& DevOps",
+      "subhead": "Hosting, monitoring, automatic scaling. Infrastructure that handles the load, day and night."
+    },
+    "training": {
+      "title": "Pro",
+      "accent": "training.",
+      "subhead": "Qualiopi-certified organization. Take advantage of OPCO funding."
+    }
+  },
+  "formationPage": {
+    "eyebrow": "Qualiopi-certified center",
+    "title": "Pro",
+    "accent": "training.",
+    "subhead": "Qualiopi-certified organization. Take advantage of OPCO funding."
+  },
+  "heroDark": {
+    "viewServices": "See our services",
+    "trainingPro": "Pro training"
   },
   "hero": {
     "title": "Digital Solutions & Professional Training",

@@ -19,6 +19,7 @@
     "start": "npm run server"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.1",
     "@supabase/supabase-js": "^2.58.0",
     "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",

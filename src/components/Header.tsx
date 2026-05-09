@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Globe, LogIn, GraduationCap, Code } from 'lucide-react';
+import { Menu, X, Globe, ChevronDown, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import Logo from './Logo';
@@ -7,17 +7,23 @@ import TrainingClientSpace from './TrainingClientSpace';
 import Auth from './Auth';
 import { useAuth } from '../hooks/useApi';
 
+/**
+ * Apple.fr-style top nav:
+ * - Thin 44px bar
+ * - Translucent black background with backdrop-blur
+ * - Light gray nav items, hover to white
+ * - Item spacing follows Apple's 13px font, ~36-44px gap
+ */
 const Header = () => {
   const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const [showClientMenu, setShowClientMenu] = useState(false);
   const [showTrainingClientSpace, setShowTrainingClientSpace] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
 
   const toggleMenu = () => setIsOpen(!isOpen);
-  
+
   const changeLanguage = () => {
     i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr');
   };
@@ -31,246 +37,102 @@ const Header = () => {
     logout();
     setShowClientMenu(false);
   };
-  useEffect(() => {
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 10;
-      if (isScrolled !== scrolled) {
-        setScrolled(isScrolled);
-      }
-    };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [scrolled]);
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
 
   const navItems = [
-    { name: t('header.home'), href: '#home' },
-    { name: t('header.services'), href: '#services' },
-    { name: t('header.training'), href: '#training' },
-    { name: t('header.contact'), href: '#contact' },
+    { name: t('header.home'), href: '/' },
+    { name: t('header.services'), href: '/#services' },
+    { name: 'Discutons', href: '/discutons' },
+    { name: t('header.training'), href: '/formation' },
   ];
 
   return (
     <>
-      <header className={`fixed w-full top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-md py-2' : 'bg-transparent py-4'}`}>
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center">
-            <Logo className={scrolled ? 'h-16' : 'h-20'} />
-            
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
+      <header className="fixed top-0 left-0 right-0 z-50">
+        {/* Apple-style translucent dark bar */}
+        <div className="bg-[rgba(0,0,0,0.72)] backdrop-blur-[20px] supports-[backdrop-filter]:bg-[rgba(0,0,0,0.62)]">
+          <div className="container-wide h-[44px] flex items-center justify-between text-[12px] text-[#F5F5F7]/85">
+            {/* Logo (left) - small, white */}
+            <a href="#home" className="flex items-center hover:opacity-100 opacity-90 transition-opacity" aria-label="DELIVERY Digital">
+              <Logo className="h-7" white />
+            </a>
+
+            {/* Center nav (desktop) */}
+            <nav className="hidden md:flex items-center gap-9">
               {navItems.map((item) => (
-                <a 
-                  key={item.name} 
+                <a
+                  key={item.name}
                   href={item.href}
-                  className={`font-medium text-sm ${scrolled ? 'text-gray-800' : 'text-white'} hover:text-primary-600 transition-colors`}
+                  className="text-[12px] font-normal tracking-tight text-[#F5F5F7]/80 hover:text-white transition-colors"
                 >
                   {item.name}
                 </a>
               ))}
-              <button
-                onClick={changeLanguage}
-                className={`flex items-center text-sm ${scrolled ? 'text-gray-800' : 'text-white'} hover:text-primary-600 transition-colors`}
-              >
-                <Globe size={18} className="mr-1" />
-                {i18n.language === 'fr' ? 'EN' : 'FR'}
-              </button>
-              
-              {/* Client Space Dropdown */}
-              <div className="relative">
-                <button
-                  onMouseEnter={() => setShowClientMenu(true)}
-                  className={`btn ${isAuthenticated ? 'btn-secondary' : 'btn-primary'} flex items-center`}
-                >
-                  <LogIn className="h-5 w-5 mr-2" />
-                  {isAuthenticated ? user?.name || 'Mon Compte' : 'Espace Client'}
-                </button>
-                
-                {showClientMenu && (
-                  <div 
-                    className="absolute top-full right-0 mt-1 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50"
-                    onMouseEnter={() => setShowClientMenu(true)}
-                    onMouseLeave={() => setShowClientMenu(false)}
-                  >
-                    {/* Invisible bridge to prevent hover gap */}
-                    <div className="absolute -top-1 left-0 right-0 h-1 bg-transparent"></div>
-                    {isAuthenticated ? (
-                      <>
-                        <div className="px-4 py-3 border-b border-gray-200">
-                          <div className="font-medium text-gray-900">{user?.name}</div>
-                          <div className="text-sm text-gray-500">{user?.email}</div>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setShowClientMenu(false);
-                            setShowTrainingClientSpace(true);
-                          }}
-                          className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <GraduationCap className="h-5 w-5 mr-3 text-green-600" />
-                          <div>
-                            <div className="font-medium">Formation Professionnelle</div>
-                            <div className="text-sm text-gray-400">Accès aux formations</div>
-                          </div>
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowClientMenu(false);
-                            const event = new CustomEvent('openDigitalClientSpace');
-                            window.dispatchEvent(event);
-                          }}
-                          className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          <Code className="h-5 w-5 mr-3 text-blue-600" />
-                          <div>
-                            <div className="font-medium">Solutions Digitales</div>
-                            <div className="text-sm text-gray-400">Gérer vos projets</div>
-                          </div>
-                        </button>
-                        <div className="border-t border-gray-200 mt-2 pt-2">
-                          <button
-                            onClick={handleLogout}
-                            className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 transition-colors"
-                          >
-                            <LogIn className="h-5 w-5 mr-3" />
-                            <div className="font-medium">Se déconnecter</div>
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                    <button
-                      onClick={() => {
-                        setShowClientMenu(false);
-                        setShowTrainingClientSpace(true);
-                      }}
-                      className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <GraduationCap className="h-5 w-5 mr-3 text-green-600" />
-                      <div>
-                        <div className="font-medium">Formation Professionnelle</div>
-                        <div className="text-sm text-gray-500">Accès aux formations</div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowClientMenu(false);
-                        // Trigger project submission modal
-                        const event = new CustomEvent('openDigitalClientSpace');
-                        window.dispatchEvent(event);
-                      }}
-                      className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <Code className="h-5 w-5 mr-3 text-blue-600" />
-                      <div>
-                        <div className="font-medium">Solutions Digitales</div>
-                        <div className="text-sm text-gray-500">Gérer vos projets</div>
-                      </div>
-                    </button>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
             </nav>
 
-            {/* Mobile Navigation Toggle */}
-            <div className="md:hidden">
-              <button 
-                onClick={toggleMenu} 
-                className={`${scrolled ? 'text-gray-800' : 'text-white'} hover:text-primary-600 transition-colors`}
-                aria-label="Toggle menu"
+            {/* Right tools - one primary CTA */}
+            <div className="hidden md:flex items-center gap-2.5">
+              <a
+                href="/discutons"
+                className="px-3.5 py-1 rounded-full text-[12px] font-medium text-white bg-[#0066CC] hover:bg-[#0077ED] transition-colors inline-flex items-center"
               >
-                {isOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
+                Discutons
+              </a>
             </div>
-          </div>
 
-          {/* Mobile Navigation Menu */}
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="md:hidden"
+            {/* Mobile menu toggle */}
+            <button
+              onClick={toggleMenu}
+              className="md:hidden text-[#F5F5F7]/85 hover:text-white"
+              aria-label="Toggle menu"
             >
-              <div className="py-4 space-y-4">
-                {navItems.map((item) => (
-                  <a
-                    key={item.name}
-                    href={item.href}
-                    onClick={toggleMenu}
-                    className={`block py-2 ${scrolled ? 'text-gray-800' : 'text-white'} hover:text-primary-600 transition-colors`}
-                  >
-                    {item.name}
-                  </a>
-                ))}
-                <button
-                  onClick={() => {
-                    changeLanguage();
-                    toggleMenu();
-                  }}
-                  className={`flex items-center py-2 ${scrolled ? 'text-gray-800' : 'text-white'} hover:text-primary-600 transition-colors`}
-                >
-                  <Globe size={18} className="mr-1" />
-                  {i18n.language === 'fr' ? 'English' : 'Français'}
-                </button>
-                
-                {/* Mobile Client Spaces */}
-                <div className="border-t border-gray-200 pt-4 space-y-2">
-                  <button
-                    onClick={() => {
-                      toggleMenu();
-                      setShowAuthModal(true);
-                    }}
-                    className="flex items-center py-2 text-blue-600 hover:text-blue-700 transition-colors"
-                  >
-                    <LogIn className="h-5 w-5 mr-2" />
-                    Se connecter / S'inscrire
-                  </button>
-                  <button
-                    onClick={() => {
-                      toggleMenu();
-                      setShowTrainingClientSpace(true);
-                    }}
-                    className="flex items-center py-2 text-green-600 hover:text-green-700 transition-colors"
-                  >
-                    <GraduationCap className="h-5 w-5 mr-2" />
-                    Formation Professionnelle
-                  </button>
-                  <button
-                    onClick={() => {
-                      toggleMenu();
-                      const event = new CustomEvent('openDigitalClientSpace');
-                      window.dispatchEvent(event);
-                    }}
-                    className="flex items-center py-2 text-blue-600 hover:text-blue-700 transition-colors"
-                  >
-                    <Code className="h-5 w-5 mr-2" />
-                    Solutions Digitales
-                  </button>
-                </div>
-              </div>
-              
-              {/* Add mouse leave handler to the parent div */}
-              <div 
-                className="absolute inset-0 pointer-events-none"
-                onMouseLeave={() => setShowClientMenu(false)}
-              ></div>
-            </motion.div>
-          )}
+              {isOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile drawer (Apple opens a full overlay) */}
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="md:hidden bg-black text-white absolute top-[44px] left-0 right-0 px-6 py-6 border-t border-white/10"
+          >
+            <div className="flex flex-col gap-1 max-w-[640px] mx-auto">
+              {navItems.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  onClick={toggleMenu}
+                  className="block py-3 text-[20px] font-normal tracking-tight text-white/90 hover:text-white border-b border-white/10"
+                >
+                  {item.name}
+                </a>
+              ))}
+              <div className="pt-4">
+                <a
+                  href="/discutons"
+                  onClick={toggleMenu}
+                  className="block w-full text-center px-5 py-3 rounded-full text-[16px] font-semibold text-white bg-[#0066CC] hover:bg-[#0077ED] transition-colors"
+                >
+                  Discutons de votre projet ›
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </header>
 
-      {/* Training Client Space */}
       <TrainingClientSpace
         isOpen={showTrainingClientSpace}
         onClose={() => setShowTrainingClientSpace(false)}
       />
-
-      {/* Auth Modal */}
       <Auth
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
@@ -279,5 +141,15 @@ const Header = () => {
     </>
   );
 };
+
+const ClientMenuItem = ({ title, subtitle, onClick, danger = false }: { title: string; subtitle?: string; onClick: () => void; danger?: boolean }) => (
+  <button
+    onClick={onClick}
+    className="w-full flex flex-col items-start px-4 py-2.5 hover:bg-[var(--ink-50)] transition-colors text-left"
+  >
+    <span className={`font-semibold text-[14px] ${danger ? 'text-[#D70015]' : 'text-[var(--ink-900)]'}`}>{title}</span>
+    {subtitle && <span className="text-[12px] text-[var(--ink-500)] mt-0.5">{subtitle}</span>}
+  </button>
+);
 
 export default Header;

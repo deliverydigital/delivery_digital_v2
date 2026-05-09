@@ -1,5 +1,1 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="32" height="32" rx="8" fill="#0f172a"/>
-  <path d="M8 12L16 6L24 12V20L16 26L8 20V12Z" stroke="#3b82f6" stroke-width="2" fill="none"/>
-  <path d="M16 6V16M16 16V26M16 16H24M16 16H8" stroke="#3b82f6" stroke-width="2"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A0612A"/><stop offset="1" stop-color="#6E3F1A"/></linearGradient><linearGradient id="l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5BA8E5"/><stop offset="1" stop-color="#2E7BB8"/></linearGradient><linearGradient id="r" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5DBA52"/><stop offset="1" stop-color="#2D7A2A"/></linearGradient><linearGradient id="y" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5C13E"/><stop offset="1" stop-color="#E8841F"/></linearGradient></defs><polygon points="3,3 97,3 50,47" fill="url(#b)"/><polygon points="3,3 3,97 47,50" fill="url(#l)"/><polygon points="97,3 97,97 53,50" fill="url(#r)"/><polygon points="3,97 97,97 50,53" fill="url(#y)"/></svg>

@@ -5,7 +5,56 @@
     "portfolio": "Projets",
     "about": "À propos",
     "contact": "Contact",
-    "training": "Formation"
+    "training": "Formation",
+    "quote": "Devis",
+    "formationBtn": "Formation",
+    "solutionsBtn": "Solutions"
+  },
+  "tiles": {
+    "eyebrow": "Nos expertises",
+    "ciiBadge": "Certifié CII · jusqu'à 20% remboursé",
+    "stack": "Stack",
+    "cta": {
+      "start": "Démarrer un projet",
+      "learn": "En savoir plus",
+      "trainings": "Voir toutes les formations",
+      "learner": "Espace apprenant"
+    },
+    "web": {
+      "title": "Solutions",
+      "accent": "web",
+      "subhead": "SaaS, dashboards et applications web sur mesure, propulsées par les meilleures technos."
+    },
+    "mobile": {
+      "title": "Apps",
+      "accent": "natives",
+      "subhead": "iOS et Android. Performance native, design soigné, déploiement App Store et Play Store clé en main."
+    },
+    "enterprise": {
+      "title": "Logiciels",
+      "accent": "métier",
+      "subhead": "CRM, ERP, plateformes B2B. Vos process automatisés, votre productivité boostée."
+    },
+    "cloud": {
+      "title": "Cloud",
+      "accent": "& DevOps",
+      "subhead": "Hébergement, monitoring, scale automatique. Une infrastructure qui tient la charge, jour et nuit."
+    },
+    "training": {
+      "title": "Formation",
+      "accent": "pro.",
+      "subhead": "Organisme certifié Qualiopi. Profitez du financement OPCO."
+    }
+  },
+  "formationPage": {
+    "eyebrow": "Centre certifié Qualiopi",
+    "title": "Formation",
+    "accent": "pro.",
+    "subhead": "Organisme certifié Qualiopi. Profitez du financement OPCO."
+  },
+  "heroDark": {
+    "viewServices": "Voir nos services",
+    "trainingPro": "Formation pro"
   },
   "hero": {
     "title": "Solutions Digitales & Formation Professionnelle",
@@ -40,7 +89,7 @@
     },
     "training": {
       "title": "Formation Professionnelle",
-      "description": "Formation certifiante Qualiopi en développement web, mobile et DevOps. Programmes sur mesure pour entreprises et particuliers."
+      "description": "Organisme certifié Qualiopi. Programmes en développement web, mobile et DevOps, finançables via votre OPCO."
     }
   },
   "portfolio": {

@@ -212,65 +212,52 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/55 backdrop-blur-md flex items-center justify-center p-4 z-50">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
-        className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 20, scale: 0.98 }}
+        transition={{ duration: 0.25 }}
+        className="bg-white rounded-[22px] shadow-2xl ring-1 ring-black/5 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
       >
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <div className="flex items-center">
-            <Code className="h-6 w-6 text-blue-600 mr-2" />
-            <h3 className="text-xl font-bold text-gray-900">
-              Solutions Digitales DELIVERY Digital
+        <div className="px-7 py-5 border-b border-[var(--ink-100)] flex justify-between items-center">
+          <div className="flex items-center gap-2.5">
+            <Code className="h-5 w-5 text-[var(--ink-900)]" strokeWidth={1.5} />
+            <h3 className="display-3 text-[20px] text-[var(--ink-900)]">
+              Solutions Digitales
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-[var(--ink-500)] hover:text-[var(--ink-900)] -mr-1"
+            aria-label="Fermer"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Navigation */}
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6">
-            <button
-              onClick={() => setActiveTab('projects')}
-              className={`flex items-center py-4 px-2 border-b-2 font-medium text-sm ${
-                activeTab === 'projects'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Briefcase className="h-4 w-4 mr-2" />
-              <span>Mes Projets</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('submit')}
-              className={`flex items-center py-4 px-2 border-b-2 font-medium text-sm ${
-                activeTab === 'submit'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Send className="h-4 w-4 mr-2" />
-              <span>Soumettre un Projet</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('account')}
-              className={`flex items-center py-4 px-2 border-b-2 font-medium text-sm ${
-                activeTab === 'account'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <User className="h-4 w-4 mr-2" />
-              <span>Mon Compte</span>
-            </button>
-          </nav>
+        {/* Apple-style segmented pill tabs */}
+        <div className="px-7 pt-5 pb-3">
+          <div className="inline-flex p-1 rounded-full bg-[var(--ink-50)] ring-1 ring-[var(--ink-100)]">
+            {[
+              { id: 'projects', label: 'Mes Projets', Icon: Briefcase },
+              { id: 'submit', label: 'Soumettre un Projet', Icon: Send },
+              { id: 'account', label: 'Mon Compte', Icon: User },
+            ].map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id as any)}
+                className={`flex items-center px-4 py-1.5 rounded-full text-[13px] font-semibold transition-all ${
+                  activeTab === id
+                    ? 'bg-white text-[var(--ink-900)] shadow-sm'
+                    : 'text-[var(--ink-500)] hover:text-[var(--ink-900)]'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5 mr-1.5" strokeWidth={1.6} />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div key={authKey} className="p-6">
@@ -279,10 +266,10 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
             isAuthenticated ? (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">Mes Projets</h2>
+                <h2 className="display-3 text-[20px] text-[var(--ink-900)]">Mes Projets</h2>
                 <button
                   onClick={() => setActiveTab('submit')}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
+                  className="btn-pill inline-flex items-center"
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Nouveau Projet
@@ -295,13 +282,13 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                   <p className="mt-4 text-gray-600">Chargement de vos projets...</p>
                 </div>
               ) : projects.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <div className="text-center py-12 bg-[var(--ink-50)] rounded-[22px] ring-1 ring-[var(--ink-100)]">
+                  <Briefcase className="h-12 w-12 text-[var(--ink-300)] mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun projet</h3>
-                  <p className="text-gray-600 mb-6">Vous n'avez pas encore soumis de projet.</p>
+                  <p className="text-[15px] text-[var(--ink-700)] mb-6">Vous n'avez pas encore soumis de projet.</p>
                   <button
                     onClick={() => setActiveTab('submit')}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
+                    className="btn-pill inline-flex items-center"
                   >
                     <Send className="h-4 w-4 mr-2" />
                     Soumettre un projet
@@ -310,10 +297,10 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
               ) : (
                 <div className="space-y-4">
                   {projects.map((project) => (
-                    <div key={project.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                    <div key={project.id} className="rounded-[18px] ring-1 ring-[var(--ink-100)] hover:ring-[var(--ink-300)] p-5 transition-all bg-white">
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <h3 className="text-lg font-bold text-gray-900">{project.title}</h3>
+                          <h3 className="display-3 text-[16px] text-[var(--ink-900)]">{project.title}</h3>
                           <p className="text-gray-600 mt-1">{project.description}</p>
                         </div>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
@@ -323,19 +310,19 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                         <div>
-                          <span className="text-gray-500 text-sm">Type:</span>
+                          <span className="text-[13px] text-[var(--ink-500)]">Type:</span>
                           <span className="text-gray-900 ml-2 text-sm capitalize">{project.type}</span>
                         </div>
                         <div>
-                          <span className="text-gray-500 text-sm">Budget:</span>
+                          <span className="text-[13px] text-[var(--ink-500)]">Budget:</span>
                           <span className="text-gray-900 ml-2 text-sm capitalize">{project.budget}</span>
                         </div>
                         <div>
-                          <span className="text-gray-500 text-sm">Délai:</span>
+                          <span className="text-[13px] text-[var(--ink-500)]">Délai:</span>
                           <span className="text-gray-900 ml-2 text-sm">{project.timeline}</span>
                         </div>
                         <div>
-                          <span className="text-gray-500 text-sm">Soumis le:</span>
+                          <span className="text-[13px] text-[var(--ink-500)]">Soumis le:</span>
                           <span className="text-gray-900 ml-2 text-sm">
                             {project.submittedAt ? new Date(project.submittedAt).toLocaleDateString('fr-FR') : 'Date non disponible'}
                           </span>
@@ -362,14 +349,14 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
             </div>
             ) : (
               <div className="text-center py-12">
-                <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <Briefcase className="h-12 w-12 text-[var(--ink-300)] mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Mes Projets</h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-[15px] text-[var(--ink-700)] mb-6">
                   Connectez-vous pour voir et gérer vos projets en cours.
                 </p>
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
+                  className="btn-pill inline-flex items-center"
                 >
                   <User className="h-4 w-4 mr-2" />
                   Se connecter
@@ -382,10 +369,10 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
           {activeTab === 'submit' && (
             <div className="space-y-6">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                <h2 className="display-3 text-[24px] text-[var(--ink-900)] mb-2">
                   Soumettre un Nouveau Projet
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-[15px] text-[var(--ink-700)]">
                   Décrivez votre projet et nous vous contacterons rapidement pour en discuter
                 </p>
               </div>
@@ -393,7 +380,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="title" className="block mb-1.5 text-[13px] font-semibold text-[var(--ink-900)]">
                       Titre du projet *
                     </label>
                     <input
@@ -401,19 +388,19 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                       id="title"
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 text-[15px] rounded-2xl bg-white border border-[var(--ink-100)] focus:outline-none focus:border-[var(--link)] focus:ring-2 focus:ring-[var(--link)]/20 transition placeholder:text-[var(--ink-300)] text-[var(--ink-900)]"
                       required
                     />
                   </div>
                   <div>
-                    <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="type" className="block mb-1.5 text-[13px] font-semibold text-[var(--ink-900)]">
                       Type de projet *
                     </label>
                     <select
                       id="type"
                       value={formData.type}
                       onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 text-[15px] rounded-2xl bg-white border border-[var(--ink-100)] focus:outline-none focus:border-[var(--link)] focus:ring-2 focus:ring-[var(--link)]/20 transition placeholder:text-[var(--ink-300)] text-[var(--ink-900)]"
                       required
                     >
                       {projectTypes.length > 0 ? (
@@ -438,7 +425,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                 </div>
 
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="description" className="block mb-1.5 text-[13px] font-semibold text-[var(--ink-900)]">
                     Description du projet *
                   </label>
                   <textarea
@@ -446,7 +433,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={5}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-[15px] rounded-2xl bg-white border border-[var(--ink-100)] focus:outline-none focus:border-[var(--link)] focus:ring-2 focus:ring-[var(--link)]/20 transition placeholder:text-[var(--ink-300)] text-[var(--ink-900)]"
                     minLength={10}
                     maxLength={5000}
                     required
@@ -475,14 +462,14 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="budget" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="budget" className="block mb-1.5 text-[13px] font-semibold text-[var(--ink-900)]">
                       Budget estimé
                     </label>
                     <select
                       id="budget"
                       value={formData.budget}
                       onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 text-[15px] rounded-2xl bg-white border border-[var(--ink-100)] focus:outline-none focus:border-[var(--link)] focus:ring-2 focus:ring-[var(--link)]/20 transition placeholder:text-[var(--ink-300)] text-[var(--ink-900)]"
                     >
                       <option value="small">Petit ({"< 10k €"})</option>
                       <option value="medium">Moyen (10k € - 50k €)</option>
@@ -491,14 +478,14 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="timeline" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="timeline" className="block mb-1.5 text-[13px] font-semibold text-[var(--ink-900)]">
                       Délai souhaité
                     </label>
                     <select
                       id="timeline"
                       value={formData.timeline}
                       onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 text-[15px] rounded-2xl bg-white border border-[var(--ink-100)] focus:outline-none focus:border-[var(--link)] focus:ring-2 focus:ring-[var(--link)]/20 transition placeholder:text-[var(--ink-300)] text-[var(--ink-900)]"
                     >
                       <option value="urgent">Urgent ({"< 1 mois"})</option>
                       <option value="normal">Normal (1-3 mois)</option>
@@ -510,7 +497,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="figmaUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="figmaUrl" className="block mb-1.5 text-[13px] font-semibold text-[var(--ink-900)]">
                       URL Figma (optionnel)
                     </label>
                     <input
@@ -518,12 +505,12 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                       id="figmaUrl"
                       value={formData.figmaUrl}
                       onChange={(e) => setFormData({ ...formData, figmaUrl: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 text-[15px] rounded-2xl bg-white border border-[var(--ink-100)] focus:outline-none focus:border-[var(--link)] focus:ring-2 focus:ring-[var(--link)]/20 transition placeholder:text-[var(--ink-300)] text-[var(--ink-900)]"
                       placeholder="https://figma.com/..."
                     />
                   </div>
                   <div>
-                    <label htmlFor="gitlabUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="gitlabUrl" className="block mb-1.5 text-[13px] font-semibold text-[var(--ink-900)]">
                       URL GitLab (optionnel)
                     </label>
                     <input
@@ -531,19 +518,19 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                       id="gitlabUrl"
                       value={formData.gitlabUrl}
                       onChange={(e) => setFormData({ ...formData, gitlabUrl: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 text-[15px] rounded-2xl bg-white border border-[var(--ink-100)] focus:outline-none focus:border-[var(--link)] focus:ring-2 focus:ring-[var(--link)]/20 transition placeholder:text-[var(--ink-300)] text-[var(--ink-900)]"
                       placeholder="https://gitlab.com/..."
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block mb-1.5 text-[13px] font-semibold text-[var(--ink-900)]">
                     Pièces jointes (optionnel)
                   </label>
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-[var(--ink-100)] border-dashed rounded-2xl bg-[var(--bg-soft)]">
                     <div className="space-y-1 text-center">
-                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                      <Upload className="mx-auto h-12 w-12 text-[var(--ink-300)]" />
                       <div className="flex text-sm text-gray-600">
                         <label
                           htmlFor="file-upload"
@@ -572,7 +559,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                       <ul className="mt-2 divide-y divide-gray-200">
                         {formData.files.map((file, index) => (
                           <li key={index} className="py-2 flex items-center">
-                            <FileText className="h-5 w-5 text-gray-400 mr-2" />
+                            <FileText className="h-5 w-5 text-[var(--ink-300)] mr-2" />
                             <span className="text-sm text-gray-900">{file.name}</span>
                             <span className="text-xs text-gray-500 ml-2">({(file.size / 1024).toFixed(1)} KB)</span>
                           </li>
@@ -600,7 +587,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                   <button
                     type="submit"
                     disabled={formStatus === 'submitting' || formData.description.length < 10 || formData.description.length > 5000}
-                    className={`bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center ${
+                    className={`btn-pill inline-flex items-center ${
                       (formStatus === 'submitting' || formData.description.length < 10 || formData.description.length > 5000) ? 'opacity-70 cursor-not-allowed' : ''
                     }`}
                   >
@@ -626,10 +613,10 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
             isAuthenticated ? (
             <div className="space-y-6">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                <h2 className="display-3 text-[24px] text-[var(--ink-900)] mb-2">
                   Mon Compte
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-[15px] text-[var(--ink-700)]">
                   Gérez vos informations personnelles et vos préférences
                 </p>
               </div>
@@ -647,7 +634,7 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
                   </div>
                   <a
                     href="/?admin=true"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center text-sm font-medium"
+                    className="btn-pill inline-flex items-center text-sm font-medium"
                   >
                     <User className="h-5 w-5 mr-2" />
                     Accéder au Dashboard
@@ -662,11 +649,11 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
 
                 <div className="border-t border-gray-200 pt-6">
                   <h4 className="text-lg font-medium text-gray-900 mb-4">Informations personnelles</h4>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-[var(--ink-700)] mb-4">
                     Vous pouvez mettre à jour vos informations personnelles et préférences dans votre profil.
                   </p>
                   <button
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
+                    className="btn-pill inline-flex items-center"
                   >
                     <User className="h-4 w-4 mr-2" />
                     Modifier mon profil
@@ -676,15 +663,15 @@ const DigitalClientSpace = ({ isOpen, onClose }: DigitalClientSpaceProps) => {
             </div>
             ) : (
               <div className="text-center py-12">
-                <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <User className="h-12 w-12 text-[var(--ink-300)] mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Mon Compte</h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-[15px] text-[var(--ink-700)] mb-6">
                   Connectez-vous pour accéder à votre espace personnel et gérer vos informations.
                 </p>
                 <div className="space-y-4">
                   <button
                     onClick={() => setShowAuthModal(true)}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center text-lg font-medium"
+                    className="btn-pill inline-flex items-center text-lg font-medium"
                   >
                     <User className="h-4 w-4 mr-2" />
                     Se connecter / S'inscrire

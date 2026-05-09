@@ -2,7 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Brand font: NeoSans Bold - used for "DELIVERY Digital" wordmark only */
+@font-face {
+  font-family: 'NeoSansStd';
+  src: url('/NeoSansStd-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-brand {
+  font-family: 'NeoSansStd', -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Apple uses SF Pro Display via system stack (rendered natively on macOS/iOS).
+   Fallback to Inter when not on Apple platforms. */
 :root {
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro", "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-text: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* Apple light palette */
+  --bg-soft: #FBFBFD;
+  --bg-pure: #FFFFFF;
+  --bg-dark: #000000;
+  --bg-night: #1D1D1F;
+  --ink-900: #1D1D1F;
+  --ink-700: #424245;
+  --ink-500: #6E6E73;
+  --ink-300: #86868B;
+  --ink-100: #D2D2D7;
+  --ink-50: #F5F5F7;
+  --link: #0066CC;
+  --link-hover: #0077ED;
+
+  /* Legacy (kept so old components don't break) */
+  --paper: #FFFFFF;
+  --paper-2: #F5F5F7;
+  --beige-warm: #F5F1E8;
+  --beige-cream: #FAF7F0;
   --primary-50: #eff6ff;
   --primary-100: #dbeafe;
   --primary-200: #bfdbfe;
@@ -14,154 +53,222 @@
   --primary-800: #1e40af;
   --primary-900: #1e3a8a;
   --primary-950: #172554;
-  
   --secondary-50: #f0f9ff;
   --secondary-500: #0ea5e9;
   --secondary-900: #0c4a6e;
-  
   --accent-500: #8b5cf6;
-  
   --success-500: #10b981;
   --warning-500: #f59e0b;
   --error-500: #ef4444;
 }
 
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  font-family: 'Inter', sans-serif;
-  @apply text-gray-800 bg-[#020617];
+  font-family: var(--font-text);
+  color: var(--ink-900);
+  background: var(--bg-soft);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv01";
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Responsive guards: prevent any media from breaking layout on mobile */
+img, svg, video, iframe { max-width: 100%; height: auto; }
+* { min-width: 0; }
+
+/* Smaller mobile padding for stacked tiles */
+@media (max-width: 640px) {
+  .tile { padding-left: 0; padding-right: 0; }
+}
+
+/* Mockup preview scaling: shrink desktop-designed mockups on mobile so their
+   internal grids/cards remain readable as previews without cramping. */
+.mockup-scale {
+  position: absolute;
+  inset: 0;
+}
+@media (max-width: 639px) {
+  .mockup-scale {
+    transform-origin: top left;
+    transform: scale(0.55);
+    width: 181.82%;
+    height: 181.82%;
+  }
 }
 
 .container {
-  @apply mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl;
+  @apply mx-auto px-4 sm:px-6 lg:px-8 max-w-[1024px];
 }
 
-.section {
-  @apply py-16 sm:py-20 lg:py-24 relative overflow-hidden;
+.container-wide {
+  @apply mx-auto px-4 sm:px-6 lg:px-8 max-w-[1440px];
 }
 
-.section::before {
+/* Apple SF Pro Display calibration. Semibold (not bold). Tight tracking. */
+.display-1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+.display-2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  line-height: 1.07;
+}
+.display-3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.12;
+}
+.subhead {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.16;
+}
+
+/* Apple eyebrow: small uppercase or product label - actually Apple prefers a
+   regular small label, NOT uppercase. We use a subtle small caption. */
+.eyebrow {
+  @apply inline-flex items-center text-[14px] font-semibold tracking-tight;
+  color: var(--ink-900);
+}
+
+/* Apple link with chevron */
+.applink {
+  display: inline-flex;
+  align-items: center;
+  color: var(--link);
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  transition: color 0.2s;
+}
+.applink:hover { color: var(--link-hover); }
+.applink::after {
+  content: '›';
+  margin-left: 4px;
+  font-size: 18px;
+  font-weight: 400;
+  transition: transform 0.2s;
+}
+.applink:hover::after { transform: translateX(2px); }
+
+/* Apple pill button (rare, used for "Buy"/"Acheter") */
+.btn-pill {
+  @apply inline-flex items-center justify-center text-[15px] font-normal rounded-full px-5 py-2 transition-colors duration-200;
+  background: var(--link);
+  color: white;
+  letter-spacing: -0.01em;
+}
+.btn-pill:hover { background: var(--link-hover); }
+
+.btn-pill-ghost {
+  @apply inline-flex items-center justify-center text-[15px] font-normal rounded-full px-5 py-2 transition-colors duration-200;
+  background: transparent;
+  color: var(--link);
+  border: 1px solid var(--link);
+  letter-spacing: -0.01em;
+}
+.btn-pill-ghost:hover { background: var(--link); color: white; }
+
+/* Tile system: alternating light / dark sections, full-bleed */
+.tile { @apply relative overflow-hidden; }
+.tile-light { background: var(--bg-soft); color: var(--ink-900); }
+.tile-pure  { background: var(--bg-pure); color: var(--ink-900); }
+.tile-dark  { background: var(--bg-dark); color: white; }
+.tile-night { background: var(--bg-night); color: white; }
+
+/* Apple-style colored product tiles (cf. iPad Air sky / iPhone Pro plum / Mac mint) */
+.tile-sky {
+  background: linear-gradient(180deg, #DDECF5 0%, #EAF3FA 60%, #F5F9FB 100%);
+  color: var(--ink-900);
+}
+.tile-mint {
+  background: linear-gradient(180deg, #D4ECDD 0%, #E6F4EA 55%, #F2F8F4 100%);
+  color: var(--ink-900);
+}
+.tile-peach {
+  background: linear-gradient(180deg, #FFE4D6 0%, #FFF0E5 60%, #FFF6EE 100%);
+  color: var(--ink-900);
+}
+.tile-plum {
+  background: linear-gradient(180deg, #1D1838 0%, #15102A 60%, #0A0820 100%);
+  color: white;
+}
+
+/* Italic accent in display headlines (Apple uses italic for product variant names) */
+.accent-italic {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--link);
+}
+.accent-italic-light {
+  font-style: italic;
+  font-weight: 600;
+  color: #5AC8FA;
+}
+
+/* Subtle dotted overlay on light tiles (Pyemes signature, very faint).
+   Pseudo-element so children stay on top. Kept off dark tiles. */
+.tile-light::before,
+.tile-pure::before {
   content: '';
-  @apply absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-cyan-500/5;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(29, 29, 31, 0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-position: 0 0;
+  z-index: 0;
+}
+.tile-light > *,
+.tile-pure > * {
+  position: relative;
+  z-index: 1;
 }
 
-.section::after {
-  content: '';
-  @apply absolute inset-0;
-  background: radial-gradient(circle at 50% 50%, rgba(59,130,246,0.1), transparent 50%);
-}
-
+/* Compatibility shims for old components */
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center rounded-md px-5 py-2.5 text-center font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 relative overflow-hidden;
+    @apply inline-flex items-center justify-center rounded-full px-5 py-2.5 text-[14.5px] font-medium transition-all duration-200;
   }
-  
   .btn-primary {
-    @apply bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 text-white hover:scale-105 focus:ring-primary-500;
+    background: var(--link);
+    color: white;
   }
-  
+  .btn-primary:hover { background: var(--link-hover); }
+
   .btn-secondary {
-    @apply bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 focus:ring-primary-500 border border-white/20;
+    background: white;
+    color: var(--ink-900);
+    border: 1px solid var(--ink-100);
   }
-  
+  .btn-secondary:hover { border-color: var(--ink-900); }
+
   .card {
-    @apply bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 transition-all duration-300 hover:shadow-lg hover:shadow-[var(--primary-500)/0.2] hover:border-[var(--primary-500)/0.5];
-  }
-
-  .gradient-text {
-    @apply bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 text-transparent bg-clip-text;
-  }
-
-  .tech-grid {
-    @apply absolute inset-0;
-    background-image: linear-gradient(to right, rgba(59,130,246,0.1) 1px, transparent 1px),
-                     linear-gradient(to bottom, rgba(59,130,246,0.1) 1px, transparent 1px);
-    background-size: 50px 50px;
-    mask-image: radial-gradient(circle at center, black 40%, transparent 70%);
-  }
-
-  .glow {
-    @apply relative;
-  }
-
-  .glow::before {
-    content: '';
-    @apply absolute inset-0 rounded-xl -z-10 opacity-50 blur-xl transition-opacity duration-500;
-    background: linear-gradient(45deg, var(--primary-400), var(--accent-500));
-  }
-
-  .glow:hover::before {
-    @apply opacity-75;
+    @apply rounded-[20px] transition-all duration-200;
+    background: white;
+    border: 1px solid var(--ink-100);
   }
 }
 
-/* Animation classes */
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-.animate-pulse-slow {
-  animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-20px) rotate(2deg);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: .5;
-  }
-}
-
-/* Glass effect */
-.glass {
-  @apply bg-white/5 backdrop-blur-lg border border-white/10 shadow-xl;
-}
-
-/* Animated background */
-.animated-bg {
-  @apply absolute inset-0 -z-10;
-  background: linear-gradient(45deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1), rgba(6,182,212,0.1));
-  background-size: 400% 400%;
-  animation: gradientBG 15s ease infinite;
-}
-
-@keyframes gradientBG {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-/* WhatsApp Widget Position Fix */
+/* WhatsApp Widget */
 .whatsapp_widget_wrapper {
   z-index: 40 !important;
   bottom: 120px !important;
   right: 20px !important;
 }
-
-.whatsapp_widget_wrapper .whatsapp_widget_icon {
-  z-index: 40 !important;
-}
-
-.whatsapp_widget_wrapper .whatsapp_widget_chat_wrapper {
-  z-index: 40 !important;
-}
-
-/* Ensure project submission buttons have higher z-index */
-.fixed.bottom-6.right-6.z-50 {
-  z-index: 45 !important;
-}
+.whatsapp_widget_wrapper .whatsapp_widget_icon { z-index: 40 !important; }
+.whatsapp_widget_wrapper .whatsapp_widget_chat_wrapper { z-index: 40 !important; }
+.fixed.bottom-6.right-6.z-50 { z-index: 45 !important; }
