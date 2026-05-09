@@ -221,11 +221,11 @@ function MobileMock() {
   const inView = useFmInView(ref, { once: false, amount: 0.3 });
 
   return (
-    <div ref={ref} className="relative w-full max-w-[680px] aspect-[3/4] sm:aspect-[16/10] mx-auto flex items-center justify-center overflow-hidden">
-      <div className="relative w-full h-full flex items-center justify-center scale-[0.62] sm:scale-100">
+    <div ref={ref} className="relative w-full max-w-[680px] aspect-[10/9] sm:aspect-[16/10] mx-auto flex items-center justify-center overflow-hidden">
+      <div className="relative w-full h-full flex items-center justify-center scale-[0.72] sm:scale-100">
         {/* Left phone (back-left, gently floating) */}
         <motion.div
-          className="hidden sm:block absolute"
+          className="absolute"
           style={{ filter: 'drop-shadow(0 30px 40px rgba(0,0,0,0.18))' }}
           initial={{ x: -120, y: 0, rotate: -8, opacity: 0 }}
           animate={inView ? {
@@ -246,7 +246,7 @@ function MobileMock() {
 
         {/* Right phone (back-right) */}
         <motion.div
-          className="hidden sm:block absolute"
+          className="absolute"
           style={{ filter: 'drop-shadow(0 30px 40px rgba(0,0,0,0.18))' }}
           initial={{ x: 120, y: 0, rotate: 8, opacity: 0 }}
           animate={inView ? {
@@ -937,7 +937,7 @@ function EnterpriseMock() {
   return (
     <div
       ref={ref}
-      className="relative w-full max-w-[680px] aspect-[16/10] rounded-[22px] mx-auto overflow-hidden"
+      className="relative w-full max-w-[680px] aspect-[16/10] rounded-[22px] mx-auto overflow-x-auto overflow-y-hidden sm:overflow-hidden"
       style={{
         background: '#F1F2F4',
         boxShadow: '0 40px 80px -25px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.05)',
@@ -970,7 +970,7 @@ function EnterpriseMock() {
       </div>
 
       {/* Board */}
-      <div className="grid grid-cols-4 gap-2.5 px-3 pt-3 pb-3 relative" style={{ height: 'calc(100% - 45px)' }}>
+      <div className="grid grid-cols-4 gap-2.5 px-3 pt-3 pb-3 relative min-w-[520px] sm:min-w-0" style={{ height: 'calc(100% - 45px)' }}>
         {columns.map((col, i) => {
           const showMover = i === movingCardCol;
           return (
@@ -1254,7 +1254,7 @@ function TrainingMock() {
   return (
     <div
       ref={ref}
-      className="relative w-full max-w-[680px] aspect-[16/10] rounded-[22px] mx-auto overflow-hidden p-5 pt-3"
+      className="relative w-full max-w-[680px] aspect-[5/4] sm:aspect-[16/10] rounded-[22px] mx-auto overflow-hidden p-5 pt-3"
       style={{
         background: '#F5F5F7',
         boxShadow: '0 30px 60px -20px rgba(0,0,0,0.15)',
@@ -1283,7 +1283,7 @@ function TrainingMock() {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-[1fr_240px] gap-4 h-[calc(100%_-_44px)]">
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr_240px] gap-3 sm:gap-4 h-[calc(100%_-_44px)]">
         {/* Player */}
         <div className="rounded-[14px] overflow-hidden p-5 flex flex-col justify-end bg-gradient-to-br from-[#1D1D1F] to-[#3C3C43] relative">
           {/* Gradient accent overlay */}
@@ -1296,7 +1296,7 @@ function TrainingMock() {
           />
           <div className="relative">
             <div className="text-[10px] text-white/65 font-semibold uppercase tracking-wider">Initiation · 21h · Niveau débutant</div>
-            <div className="text-[19px] font-bold text-white tracking-tight leading-[1.1] mt-1">Hygiène, Sécurité et<br />Développement Durable</div>
+            <div className="text-[15px] sm:text-[19px] font-bold text-white tracking-tight leading-[1.1] mt-1">Hygiène, Sécurité et<br />Développement Durable</div>
             <div className="mt-3 flex items-center gap-2">
               <div className="flex-1 h-[3px] rounded-full bg-white/15 overflow-hidden">
                 <motion.div
@@ -1460,7 +1460,9 @@ function ServiceTile({
           {badge && <div className="mt-5">{badge}</div>}
         </div>
 
-        {illustration}
+        <div className="mockup-responsive">
+          {illustration}
+        </div>
 
         {chips && (
           <motion.div
@@ -1529,7 +1531,7 @@ const Services = () => {
         accent="web"
         subhead="SaaS, dashboards et applications web sur mesure, propulsées par les meilleures technos."
         illustration={<WebMock />}
-        primary={{ label: 'Démarrer un projet', onClick: triggerOpenDigital }}
+        primary={{ label: "Discuter d'un projet", onClick: triggerOpenDigital }}
         secondary={{ label: 'En savoir plus', onClick: triggerOpenDigital }}
         badge={
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[12.5px] font-semibold text-[var(--ink-900)] ring-1 ring-[var(--ink-100)]">
@@ -1556,7 +1558,7 @@ const Services = () => {
         accent="natives"
         subhead="iOS et Android. Performance native, design soigné, déploiement App Store et Play Store clé en main."
         illustration={<MobileMock />}
-        primary={{ label: 'Démarrer un projet', onClick: triggerOpenDigital }}
+        primary={{ label: "Discuter d'un projet", onClick: triggerOpenDigital }}
         secondary={{ label: 'En savoir plus', onClick: triggerOpenDigital }}
         chips={
           <>
@@ -1575,7 +1577,7 @@ const Services = () => {
         accent="métier"
         subhead="CRM, ERP, plateformes B2B. Vos process automatisés, votre productivité boostée."
         illustration={<EnterpriseMock />}
-        primary={{ label: 'Démarrer un projet', onClick: triggerOpenDigital }}
+        primary={{ label: "Discuter d'un projet", onClick: triggerOpenDigital }}
         secondary={{ label: 'En savoir plus', onClick: triggerOpenDigital }}
         chips={
           <>
@@ -1594,7 +1596,7 @@ const Services = () => {
         accent="& DevOps"
         subhead="Hébergement, monitoring, scale automatique. Une infrastructure qui tient la charge, jour et nuit."
         illustration={<CloudMock />}
-        primary={{ label: 'Démarrer un projet', onClick: triggerOpenDigital }}
+        primary={{ label: "Discuter d'un projet", onClick: triggerOpenDigital }}
         secondary={{ label: 'En savoir plus', onClick: triggerOpenDigital }}
         chips={
           <>

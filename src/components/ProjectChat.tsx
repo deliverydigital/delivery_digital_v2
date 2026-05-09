@@ -82,7 +82,7 @@ function ChatAuth({ onAuth }: { onAuth: (token: string, user: ChatUser) => void 
             Parlons de votre projet.
           </h1>
           <p className="mt-2 text-[15px] text-[#86868B] text-center max-w-[360px]">
-            Laissez votre email pour démarrer. Vous retrouverez vos discussions à tout moment.
+            Entrez votre email pour démarrer. Vous retrouverez vos discussions à tout moment.
           </p>
         </div>
 
@@ -115,9 +115,6 @@ function ChatAuth({ onAuth }: { onAuth: (token: string, user: ChatUser) => void 
             Démarrer la conversation
           </button>
 
-          <p className="text-center text-[11px] text-[#86868B]">
-            En continuant, vous acceptez d'être recontacté par un expert sous 24h.
-          </p>
         </form>
       </div>
     </div>

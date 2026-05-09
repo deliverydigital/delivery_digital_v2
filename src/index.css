@@ -272,3 +272,5 @@ img, svg, video, iframe { max-width: 100%; height: auto; }
 .whatsapp_widget_wrapper .whatsapp_widget_icon { z-index: 40 !important; }
 .whatsapp_widget_wrapper .whatsapp_widget_chat_wrapper { z-index: 40 !important; }
 .fixed.bottom-6.right-6.z-50 { z-index: 45 !important; }
+
+.mockup-responsive { width: 100%; }
