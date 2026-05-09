@@ -147,13 +147,7 @@ const Hero = () => {
               Voir nos services
               <span className="ml-1 text-[18px]">›</span>
             </a>
-            <a
-              href="/formation"
-              className="text-[17px] text-[#2997FF] hover:underline inline-flex items-center"
-            >
-              Formation pro
-              <span className="ml-1 text-[18px]">›</span>
-            </a>
+            {/* Lien Formation pro cache temporairement - on bascule la formation sur un site dedie */}
           </motion.div>
         </div>
       </section>

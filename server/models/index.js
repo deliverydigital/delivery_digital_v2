@@ -10,6 +10,7 @@ import TrainingProgram from './TrainingProgram.js';
 import Category from './Category.js';
 import ProjectType from './ProjectType.js';
 import SeoContent from './SeoContent.js';
+import Prospect from './Prospect.js';
 
 export {
   User,
@@ -22,7 +23,8 @@ export {
   TrainingProgram,
   Category,
   ProjectType,
-  SeoContent
+  SeoContent,
+  Prospect
 };
 
 // Export default object with all models
@@ -37,5 +39,6 @@ export default {
   TrainingProgram,
   Category,
   ProjectType,
-  SeoContent
+  SeoContent,
+  Prospect
 };

@@ -57,15 +57,13 @@
     "trainingPro": "Formation pro"
   },
   "hero": {
-    "title": "Solutions Digitales & Formation Professionnelle",
-    "subtitle": "Expertise technique et transmission des compétences",
+    "title": "Le code qui propulse vos ambitions",
+    "subtitle": "Sites web, applications mobiles, SaaS, CRM, ERP. Sur mesure, livrés en quelques semaines.",
     "cta": {
-      "project": "Discuter d'un projet",
-      "training": "Rechercher une formation"
+      "project": "Discuter d'un projet"
     },
     "badges": {
-      "digital": "Services Numériques",
-      "training": "Formation"
+      "digital": "Services Numériques"
     }
   },
   "services": {

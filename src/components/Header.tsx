@@ -48,7 +48,8 @@ const Header = () => {
     { name: t('header.home'), href: '/' },
     { name: t('header.services'), href: '/#services' },
     { name: 'Discutons', href: '/discutons' },
-    { name: t('header.training'), href: '/formation' },
+    // Formation cachee temporairement - on bascule sur un site dedie. Ne pas supprimer.
+    // { name: t('header.training'), href: '/formation' },
   ];
 
   return (

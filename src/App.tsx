@@ -47,7 +47,9 @@ function App() {
     } else if (pathname === '/reset-password') {
       setCurrentPage('reset-password');
     } else if (pathname === '/formation') {
-      setCurrentPage('formation');
+      // Formation cachee temporairement - le code reste, on bascule vers un site dedie. Redirige home.
+      window.history.replaceState({}, '', '/');
+      setCurrentPage('home');
     } else if (pathname === '/devis' || pathname === '/simulator') {
       // Simulator hidden temporarily - redirect to home
       window.history.replaceState({}, '', '/');

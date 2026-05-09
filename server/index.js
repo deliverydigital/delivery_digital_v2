@@ -34,6 +34,7 @@ import contactRoutes from './routes/contact.js';
 import projectTypesRoutes from './routes/projectTypes.js';
 import projectChatRoutes from './routes/projectChat.js';
 import seoAdminRoutes, { publicSeoRouter } from './routes/seoAdmin.js';
+import prospectsAdminRoutes from './routes/prospectsAdmin.js';
 import {createDummyUsers} from './scripts/createUsers.js';
 import {createDummyTrainingDocuments} from './scripts/createTrainingDocuments.js';
 import {seedTrainingPrograms} from './scripts/seedTrainingPrograms.js';
@@ -132,6 +133,7 @@ app.use('/api/project-types', projectTypesRoutes);
 app.use('/api/project-chat', projectChatRoutes);
 app.use('/api/admin/seo', seoAdminRoutes);
 app.use('/api/seo', publicSeoRouter);
+app.use('/api/admin/prospects', prospectsAdminRoutes);
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {

@@ -57,15 +57,13 @@
     "trainingPro": "Pro training"
   },
   "hero": {
-    "title": "Digital Solutions & Professional Training",
-    "subtitle": "Technical expertise and skills transmission",
+    "title": "The code that powers your ambitions",
+    "subtitle": "Web, mobile apps, SaaS, CRM, ERP. Tailor-made, delivered in weeks.",
     "cta": {
-      "project": "Discuss a project",
-      "training": "Find training"
+      "project": "Discuss a project"
     },
     "badges": {
-      "digital": "Digital Services",
-      "training": "Qualiopi Certified Training"
+      "digital": "Digital Services"
     }
   },
   "services": {
