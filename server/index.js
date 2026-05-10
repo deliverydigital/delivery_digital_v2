@@ -137,6 +137,47 @@ app.use('/api/seo', publicSeoRouter);
 app.use('/api/admin/prospects', prospectsAdminRoutes);
 app.use('/api/admin/conversations', conversationsAdminRoutes);
 
+// Dynamic sitemap.xml (toutes les pages SEO publiees + statiques)
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const { SeoContent } = await import('./models/index.js');
+    const items = await SeoContent.find({ status: 'published' })
+      .select('slug type updatedAt')
+      .lean();
+
+    const today = new Date().toISOString().slice(0, 10);
+    const urls = [
+      { loc: 'https://deliverydigital.fr/', priority: '1.0', changefreq: 'weekly', lastmod: today },
+      { loc: 'https://deliverydigital.fr/discutons', priority: '0.9', changefreq: 'weekly', lastmod: today },
+    ];
+
+    for (const it of items) {
+      const path = it.type === 'article' ? `/blog/${it.slug}` : `/services/${it.slug}`;
+      urls.push({
+        loc: `https://deliverydigital.fr${path}`,
+        priority: '0.8',
+        changefreq: 'monthly',
+        lastmod: (it.updatedAt || new Date()).toISOString().slice(0, 10),
+      });
+    }
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map((u) => `  <url>
+    <loc>${u.loc}</loc>
+    <lastmod>${u.lastmod}</lastmod>
+    <changefreq>${u.changefreq}</changefreq>
+    <priority>${u.priority}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=600');
+    res.send(xml);
+  } catch (e) {
+    res.status(500).send('sitemap error: ' + e.message);
+  }
+});
+
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
     const buildPath = path.join(__dirname, '../dist');
