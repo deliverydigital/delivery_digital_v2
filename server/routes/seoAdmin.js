@@ -86,7 +86,7 @@ Le champ "body" doit contenir 800-1200 mots en markdown :
 - # H1 contenant la cible "${service} ${city}"
 - Intro 2-3 phrases (problème business + promesse de la solution)
 - ## ${service} sur mesure : ce que nous livrons (décrit le service en détail, pas le local)
-- ## Notre approche : qualifier votre projet en 5 minutes via notre assistant IA (mettre en avant /discutons)
+- ## Notre approche : qualifier votre projet en 5 minutes par notre agent IA (titre EXACT, mettre en avant /discutons)
 - ## Stack technique et méthodologie (technos concrètes : React, Next.js, TypeScript, Node.js, AWS, etc.)
 - ## Comment nous travaillons avec des clients de ${city} et au-delà (remote-first : visios, slack, github, démos hebdo)
 - ## Crédit Impôt Innovation : 20 % remboursés (DELIVERY Digital est CERTIFIÉ CII, cette certification ouvre directement le droit aux clients PME françaises éligibles - le préciser explicitement)

@@ -39,9 +39,16 @@ const SERVICES = [
 ];
 
 const VILLES = [
-  'Nice', 'Cannes', 'Antibes', 'Monaco', 'Marseille',
-  'Lyon', 'Paris', 'Toulouse', 'Bordeaux', 'Nantes',
-  'Montpellier', 'Sophia Antipolis', 'Aix-en-Provence',
+  // Cote d'Azur
+  'Nice', 'Cannes', 'Antibes', 'Monaco', 'Sophia Antipolis', 'Menton', 'Grasse',
+  // Sud
+  'Marseille', 'Aix-en-Provence', 'Toulon', 'Avignon', 'Montpellier', 'Perpignan', 'Nimes',
+  // Grandes metropoles
+  'Paris', 'Lyon', 'Toulouse', 'Bordeaux', 'Nantes', 'Strasbourg', 'Lille', 'Rennes',
+  // Autres
+  'Grenoble', 'Saint-Etienne', 'Tours', 'Angers', 'Le Mans', 'Reims', 'Le Havre',
+  'Brest', 'Rouen', 'Dijon', 'Clermont-Ferrand', 'Metz', 'Nancy', 'Limoges',
+  'Caen', 'Orleans', 'Mulhouse', 'Besancon', 'Annecy', 'Chambery',
 ];
 
 const ARTICLE_KEYWORDS = [
@@ -659,23 +666,23 @@ function GenerateView({
         {type === 'city-service' && (
           <>
             <Section title="Services">
-              <ChipGroup options={SERVICES} selected={selectedServices} onToggle={(v) => toggle(selectedServices, setSelectedServices, v)} />
+              <ChipGroup options={SERVICES} selected={selectedServices} onToggle={(v) => toggle(selectedServices, setSelectedServices, v)} onSelectAll={setSelectedServices} />
             </Section>
             <Section title="Villes">
-              <ChipGroup options={VILLES} selected={selectedVilles} onToggle={(v) => toggle(selectedVilles, setSelectedVilles, v)} />
+              <ChipGroup options={VILLES} selected={selectedVilles} onToggle={(v) => toggle(selectedVilles, setSelectedVilles, v)} onSelectAll={setSelectedVilles} />
             </Section>
           </>
         )}
 
         {type === 'article' && (
           <Section title="Mots-cles">
-            <ChipGroup options={ARTICLE_KEYWORDS} selected={articleKeywords} onToggle={(v) => toggle(articleKeywords, setArticleKeywords, v)} />
+            <ChipGroup options={ARTICLE_KEYWORDS} selected={articleKeywords} onToggle={(v) => toggle(articleKeywords, setArticleKeywords, v)} onSelectAll={setArticleKeywords} />
           </Section>
         )}
 
         {type === 'faq' && (
           <Section title="Thematiques">
-            <ChipGroup options={FAQ_THEMES} selected={faqThemes} onToggle={(v) => toggle(faqThemes, setFaqThemes, v)} />
+            <ChipGroup options={FAQ_THEMES} selected={faqThemes} onToggle={(v) => toggle(faqThemes, setFaqThemes, v)} onSelectAll={setFaqThemes} />
           </Section>
         )}
 
@@ -736,26 +743,37 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function ChipGroup({ options, selected, onToggle }: { options: string[]; selected: string[]; onToggle: (v: string) => void }) {
+function ChipGroup({ options, selected, onToggle, onSelectAll }: { options: string[]; selected: string[]; onToggle: (v: string) => void; onSelectAll?: (vals: string[]) => void }) {
+  const allSelected = options.every((o) => selected.includes(o));
   return (
-    <div className="flex flex-wrap gap-2">
-      {options.map((o) => {
-        const on = selected.includes(o);
-        return (
-          <button
-            key={o}
-            onClick={() => onToggle(o)}
-            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors ${
-              on
-                ? 'bg-[#1D1D1F] text-white'
-                : 'bg-white ring-1 ring-black/8 text-[#1D1D1F] hover:ring-black/20'
-            }`}
-          >
-            {on && <Check className="h-3 w-3" />}
-            {o}
-          </button>
-        );
-      })}
+    <div>
+      {onSelectAll && (
+        <button
+          onClick={() => onSelectAll(allSelected ? [] : options)}
+          className="text-[11.5px] text-[#0066CC] font-semibold mb-2 hover:underline"
+        >
+          {allSelected ? 'Tout decocher' : `Tout selectionner (${options.length})`}
+        </button>
+      )}
+      <div className="flex flex-wrap gap-2">
+        {options.map((o) => {
+          const on = selected.includes(o);
+          return (
+            <button
+              key={o}
+              onClick={() => onToggle(o)}
+              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors ${
+                on
+                  ? 'bg-[#1D1D1F] text-white'
+                  : 'bg-white ring-1 ring-black/8 text-[#1D1D1F] hover:ring-black/20'
+              }`}
+            >
+              {on && <Check className="h-3 w-3" />}
+              {o}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -771,6 +789,7 @@ function EditModal({
   onSave: () => void;
   onSubmit: () => void;
 }) {
+  const [tab, setTab] = useState<'edit' | 'preview'>('edit');
   return (
     <>
       <motion.div
@@ -782,9 +801,19 @@ function EditModal({
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
         className="fixed inset-x-4 top-8 bottom-8 sm:inset-x-auto sm:right-8 sm:left-auto sm:w-[640px] z-50 bg-white rounded-[22px] shadow-2xl flex flex-col overflow-hidden"
       >
-        <div className="px-5 py-4 border-b border-black/5 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-black/5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setTab('edit')}
+              className={`px-3 py-1.5 rounded-full text-[12px] font-medium ${tab === 'edit' ? 'bg-[#1D1D1F] text-white' : 'bg-[#F5F5F7] text-[#1D1D1F]'}`}
+            >Editer</button>
+            <button
+              onClick={() => setTab('preview')}
+              className={`px-3 py-1.5 rounded-full text-[12px] font-medium ${tab === 'preview' ? 'bg-[#1D1D1F] text-white' : 'bg-[#F5F5F7] text-[#1D1D1F]'}`}
+            >Previsualisation client</button>
+          </div>
           <h3
-            className="text-[18px] text-[#1D1D1F]"
+            className="text-[16px] text-[#1D1D1F] truncate hidden md:block"
             style={{ fontFamily: '"Charter", "Iowan Old Style", Georgia, serif', fontWeight: 700 }}
           >
             Editer
@@ -794,45 +823,62 @@ function EditModal({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          <Field label="Titre">
-            <input
-              value={item.title}
-              onChange={(e) => onChange({ ...item, title: e.target.value })}
-              className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px]"
-            />
-          </Field>
-          <Field label="Meta title (max 60)">
-            <input
-              value={item.metaTitle || ''}
-              onChange={(e) => onChange({ ...item, metaTitle: e.target.value })}
-              className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px]"
-            />
-          </Field>
-          <Field label="Meta description (max 155)">
-            <textarea
-              value={item.metaDescription || ''}
-              onChange={(e) => onChange({ ...item, metaDescription: e.target.value })}
-              rows={3}
-              className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px] resize-none"
-            />
-          </Field>
-          <Field label="Mot-cle cible">
-            <input
-              value={item.targetKeyword || ''}
-              onChange={(e) => onChange({ ...item, targetKeyword: e.target.value })}
-              className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px]"
-            />
-          </Field>
-          <Field label="Body (markdown)">
-            <textarea
-              value={item.body}
-              onChange={(e) => onChange({ ...item, body: e.target.value })}
-              rows={20}
-              className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[12.5px] font-mono resize-none"
-            />
-          </Field>
-        </div>
+        {tab === 'edit' ? (
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <Field label="Titre">
+              <input
+                value={item.title}
+                onChange={(e) => onChange({ ...item, title: e.target.value })}
+                className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px]"
+              />
+            </Field>
+            <Field label="Meta title (max 60)">
+              <input
+                value={item.metaTitle || ''}
+                onChange={(e) => onChange({ ...item, metaTitle: e.target.value })}
+                className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px]"
+              />
+            </Field>
+            <Field label="Meta description (max 155)">
+              <textarea
+                value={item.metaDescription || ''}
+                onChange={(e) => onChange({ ...item, metaDescription: e.target.value })}
+                rows={3}
+                className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px] resize-none"
+              />
+            </Field>
+            <Field label="Mot-cle cible">
+              <input
+                value={item.targetKeyword || ''}
+                onChange={(e) => onChange({ ...item, targetKeyword: e.target.value })}
+                className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px]"
+              />
+            </Field>
+            <Field label="Body (markdown)">
+              <textarea
+                value={item.body}
+                onChange={(e) => onChange({ ...item, body: e.target.value })}
+                rows={20}
+                className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[12.5px] font-mono resize-none"
+              />
+            </Field>
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto bg-white">
+            <article className="max-w-[680px] mx-auto px-5 sm:px-8 pt-8 pb-12">
+              {item.metaDescription && (
+                <p className="text-[12px] text-[#86868B] italic mb-3">SERP : {item.metaDescription}</p>
+              )}
+              <PreviewMarkdown body={item.body} />
+              <div className="mt-10 pt-8 border-t border-black/8 text-center">
+                <p className="text-[14px] text-[#86868B] mb-4">Discutons de votre projet en 5 minutes</p>
+                <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1D1D1F] text-white text-[13px] font-semibold">
+                  Demarrer la conversation
+                </span>
+              </div>
+            </article>
+          </div>
+        )}
 
         <div className="px-5 py-4 border-t border-black/5 flex items-center justify-end gap-2">
           <button
@@ -869,4 +915,91 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       {children}
     </div>
   );
+}
+
+/* ============== Markdown preview (rendu client) ============== */
+
+function PreviewMarkdown({ body }: { body: string }) {
+  const lines = body.split('\n');
+  const out: React.ReactNode[] = [];
+  let listBuf: string[] = [];
+  let key = 0;
+
+  const flushList = () => {
+    if (!listBuf.length) return;
+    out.push(
+      <ul key={key++} className="list-disc pl-6 my-3 space-y-1.5 text-[16px] text-[#1D1D1F]/85">
+        {listBuf.map((li, i) => <li key={i}>{renderInlineMd(li)}</li>)}
+      </ul>
+    );
+    listBuf = [];
+  };
+
+  for (const raw of lines) {
+    const line = raw.replace(/\s+$/, '');
+    if (!line.trim()) { flushList(); continue; }
+    if (line.startsWith('# ')) {
+      flushList();
+      out.push(
+        <h1 key={key++} className="text-[34px] sm:text-[44px] text-[#1D1D1F] leading-[1.1] mt-2 mb-5"
+          style={{ fontFamily: '"Charter", "Iowan Old Style", Georgia, serif', fontWeight: 700 }}>
+          {renderInlineMd(line.slice(2))}
+        </h1>
+      );
+    } else if (line.startsWith('## ')) {
+      flushList();
+      out.push(
+        <h2 key={key++} className="text-[22px] sm:text-[28px] text-[#1D1D1F] leading-tight mt-8 mb-3"
+          style={{ fontFamily: '"Charter", "Iowan Old Style", Georgia, serif', fontWeight: 700 }}>
+          {renderInlineMd(line.slice(3))}
+        </h2>
+      );
+    } else if (line.startsWith('### ')) {
+      flushList();
+      out.push(<h3 key={key++} className="text-[18px] font-semibold text-[#1D1D1F] mt-5 mb-2">{renderInlineMd(line.slice(4))}</h3>);
+    } else if (/^[-*]\s+/.test(line)) {
+      listBuf.push(line.replace(/^[-*]\s+/, ''));
+    } else if (/^\d+\.\s+/.test(line)) {
+      listBuf.push(line.replace(/^\d+\.\s+/, ''));
+    } else {
+      flushList();
+      out.push(<p key={key++} className="text-[16px] text-[#1D1D1F]/85 leading-relaxed my-3">{renderInlineMd(line)}</p>);
+    }
+  }
+  flushList();
+  return <>{out}</>;
+}
+
+function renderInlineMd(text: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  let i = 0, buf = '', key = 0;
+  const flushBuf = () => { if (buf) { parts.push(buf); buf = ''; } };
+
+  while (i < text.length) {
+    if (text.slice(i, i + 2) === '**') {
+      const end = text.indexOf('**', i + 2);
+      if (end !== -1) {
+        flushBuf();
+        parts.push(<strong key={key++} className="font-semibold text-[#1D1D1F]">{text.slice(i + 2, end)}</strong>);
+        i = end + 2;
+        continue;
+      }
+    }
+    const m = text.slice(i).match(/^\[([^\]]+)\]\(([^)]+)\)/);
+    if (m) {
+      flushBuf();
+      parts.push(
+        <a key={key++} href={m[2]} className="text-[#0066CC] hover:underline"
+          target={m[2].startsWith('http') ? '_blank' : undefined}
+          rel={m[2].startsWith('http') ? 'noopener noreferrer' : undefined}>
+          {m[1]}
+        </a>
+      );
+      i += m[0].length;
+      continue;
+    }
+    buf += text[i++];
+  }
+  flushBuf();
+  return <>{parts}</>;
 }
