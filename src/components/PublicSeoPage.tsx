@@ -100,7 +100,7 @@ export default function PublicSeoPage({ slug }: { slug: string }) {
           Discutons de votre projet
         </h3>
         <p className="text-[15px] text-[#86868B] mb-6 max-w-[480px] mx-auto">
-          Notre assistant IA qualifie votre besoin en quelques minutes. Un expert revient vers vous sous 24h.
+          Notre agent IA comprend votre besoin. Un expert revient vers vous sous 24 h.
         </p>
         <a
           href="/discutons"

@@ -35,7 +35,7 @@ const SYSTEM_BASE = `Tu rédiges du contenu SEO pour DELIVERY Digital, agence de
 
 Services : sites web sur mesure (SaaS, dashboards), applications mobiles iOS/Android, logiciels métier (CRM, ERP, plateformes B2B), Cloud / DevOps. Stack : React, Next.js, TypeScript, Node.js, PostgreSQL, React Native, AWS.
 
-Différenciateur clé : un assistant IA conversationnel sur https://deliverydigital.fr/discutons qui qualifie le projet du prospect en 5 minutes (à la place d'un formulaire de devis classique).
+Différenciateur clé : un agent IA conversationnel sur https://deliverydigital.fr/discutons qui comprend le besoin du prospect (à la place d'un formulaire de devis classique). Slogan associé : "Notre agent IA comprend votre besoin".
 
 Repères :
 - DELIVERY Digital est CERTIFIÉ CII (Crédit Impôt Innovation) - agrément officiel de l'État. Cette certification ouvre directement le droit à nos clients éligibles (PME au sens européen, en France) à récupérer 20 % des dépenses d'innovation engagées sur leur projet, dans la limite des plafonds en vigueur. C'est un avantage concret rare parmi les agences web - à mettre en avant dès que la section CII est abordée.
@@ -88,7 +88,7 @@ Le champ "body" doit contenir 800-1200 mots en markdown :
 - # H1 contenant la cible "${service} ${city}"
 - Intro 2-3 phrases (problème business + promesse de la solution)
 - ## ${service} sur mesure : ce que nous livrons (décrit le service en détail, pas le local)
-- ## Notre approche : qualifier votre projet en 5 minutes par notre agent IA (titre EXACT, mettre en avant /discutons)
+- ## Notre agent IA comprend votre besoin (titre H2 EXACT, mettre en avant /discutons et expliquer le fonctionnement)
 - ## Stack technique et méthodologie (technos concrètes : React, Next.js, TypeScript, Node.js, AWS, etc.)
 - ## Comment nous travaillons avec des clients de ${city} et au-delà (remote-first : visios, slack, github, démos hebdo)
 - ## Crédit Impôt Innovation : 20 % remboursés (DELIVERY Digital est CERTIFIÉ CII, cette certification ouvre directement le droit aux clients PME françaises éligibles - le préciser explicitement)

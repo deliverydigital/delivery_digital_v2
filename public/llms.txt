@@ -1,10 +1,10 @@
 # DELIVERY Digital Technology
 
-> Agence de developpement informatique a Nice (Cote d'Azur). Sites web, applications mobiles iOS et Android, SaaS, dashboards, CRM, ERP, plateformes B2B et infrastructure Cloud / DevOps. Singularite : un assistant IA conversationnel qualifie le projet du prospect en quelques minutes a la place d'un formulaire de devis classique.
+> Agence de developpement informatique a Nice (Cote d'Azur). Sites web, applications mobiles iOS et Android, SaaS, dashboards, CRM, ERP, plateformes B2B et infrastructure Cloud / DevOps. Singularite : un agent IA conversationnel qui comprend le besoin du prospect a la place d'un formulaire de devis classique. Slogan : "Notre agent IA comprend votre besoin".
 
 ## Contact rapide
 
-- **Discuter d'un projet (assistant IA)** : https://deliverydigital.fr/discutons
+- **Discuter d'un projet (agent IA)** : https://deliverydigital.fr/discutons
 - **Email** : contact@deliverydigital.fr
 - **Telephone** : +33 7 49 70 77 73
 - **Adresse** : 470 promenade des Anglais, 06200 Nice, France
@@ -21,7 +21,7 @@ DELIVERY Digital concoit et livre des produits numeriques sur mesure pour TPE, P
 
 ## Pourquoi nous (angle qui nous distingue)
 
-Au lieu d'un formulaire de devis statique avec sliders et cases a cocher, nous proposons sur https://deliverydigital.fr/discutons un **assistant IA conversationnel** qui :
+Au lieu d'un formulaire de devis statique avec sliders et cases a cocher, nous proposons sur https://deliverydigital.fr/discutons un **agent IA conversationnel** qui :
 
 1. Pose des questions ciblees pour comprendre le besoin
 2. Qualifie le projet (typologie, perimetre, contraintes)
