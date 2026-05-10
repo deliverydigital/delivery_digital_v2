@@ -31,7 +31,7 @@ router.get('/catalog', requireAdmin, (req, res) => {
       { id: 'refonte', category: 'Web', label: 'Refonte de site existant', defaultPrice: 8500, unit: 'forfait', description: 'Reprise, migration, modernisation d\'un site existant.' },
 
       // Mobile
-      { id: 'app-mobile', category: 'Mobile', label: 'Application mobile iOS + Android', defaultPrice: 24000, unit: 'forfait', description: 'App mobile native (React Native), 2 stores, notifications, base de donnees.' },
+      { id: 'app-mobile', category: 'Mobile', label: 'Application mobile iOS + Android', defaultPrice: 15000, unit: 'forfait', description: 'App mobile native (React Native), 2 stores, notifications, base de donnees. Design non inclus (a chiffrer en sus si besoin).' },
       { id: 'app-mobile-mvp', category: 'Mobile', label: 'MVP application mobile (1 plateforme)', defaultPrice: 12000, unit: 'forfait', description: 'Version minimale viable iOS OU Android, 5-7 ecrans cles, deploiement TestFlight ou interne.' },
       { id: 'pwa', category: 'Mobile', label: 'Progressive Web App (PWA)', defaultPrice: 6500, unit: 'forfait', description: 'Application web installable, offline, notifications push - alternative legere aux apps natives.' },
 
