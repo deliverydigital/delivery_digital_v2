@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2, Plus, Send, Eye, X as XIcon, Trash2, FileText,
-  CheckCircle2, Clock, AlertCircle, Search, Download, Copy, ExternalLink,
+  CheckCircle2, Clock, AlertCircle, Search, Download, Copy, ExternalLink, RefreshCw,
 } from 'lucide-react';
 
 interface Line { _id?: string; description: string; details?: string; quantity: number; unit: string; unitPrice: number }
@@ -310,6 +310,18 @@ function QuoteEditor({
   const [previewHtml, setPreviewHtml] = useState<string>('');
 
   const isNew = q._id === 'new';
+
+  // Auto-fetch du taux quand on change de devise secondaire
+  useEffect(() => {
+    if (!q.secondaryCurrency || q.secondaryCurrency === q.currency) return;
+    if (q.secondaryRate && q.secondaryRate !== 1) return; // l'user a deja un taux
+    let cancelled = false;
+    api(`/api/admin/quotes-quick/exchange-rate?from=${q.currency}&to=${q.secondaryCurrency}`)
+      .then((r) => { if (!cancelled && r.rate) setQ((prev) => ({ ...prev, secondaryRate: r.rate })); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q.secondaryCurrency, q.currency]);
 
   // Autocomplete client depuis prospects
   const [prospectQuery, setProspectQuery] = useState('');
@@ -723,15 +735,32 @@ function QuoteEditor({
               {q.secondaryCurrency && (
                 <div>
                   <label className="block text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-1">Taux de change : 1 {q.currency} = ? {q.secondaryCurrency}</label>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    value={q.secondaryRate || 1}
-                    onChange={(e) => setQ({ ...q, secondaryRate: parseFloat(e.target.value) || 1 })}
-                    className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px]"
-                    placeholder="Ex : 1.08 (1 EUR = 1.08 USD)"
-                  />
-                  <p className="text-[11px] text-[#86868B] mt-1">Le devis affiche le montant en {q.currency} et la conversion en {q.secondaryCurrency} entre parentheses.</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={q.secondaryRate || 1}
+                      onChange={(e) => setQ({ ...q, secondaryRate: parseFloat(e.target.value) || 1 })}
+                      className="flex-1 px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px]"
+                      placeholder="Ex : 1.08"
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const r = await api(`/api/admin/quotes-quick/exchange-rate?from=${q.currency}&to=${q.secondaryCurrency}`);
+                          if (r.rate) setQ({ ...q, secondaryRate: r.rate });
+                        } catch (e: any) {
+                          alert('Impossible de recuperer le taux : ' + e.message);
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-[10px] bg-[#1D1D1F] text-white text-[12.5px] font-semibold hover:bg-[#3C3C43] whitespace-nowrap"
+                      title="Recuperer le taux actuel via la BCE"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" /> Auto
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-[#86868B] mt-1">Cliquer "Auto" pour recuperer le taux actuel (BCE / open.er-api). Modifiable a la main si tu veux figer un taux.</p>
                 </div>
               )}
             </Section>

@@ -21,6 +21,52 @@ const LOGO_URL = `${PUBLIC_BASE}/Logo-DELIVERY-Digital-Neo-sans-Bold%20noir_%202
 /* ===========================================================
    Catalogue de services pre-builts (templates)
    =========================================================== */
+/* Taux de change live via Frankfurter (BCE, gratuit, pas de cle) */
+const rateCache = new Map();
+const RATE_TTL_MS = 60 * 60 * 1000; // 1h
+
+router.get('/exchange-rate', requireAdmin, async (req, res) => {
+  try {
+    const from = String(req.query.from || 'EUR').toUpperCase();
+    const to = String(req.query.to || 'USD').toUpperCase();
+    if (from === to) return res.json({ rate: 1, from, to, cached: false });
+
+    const cacheKey = `${from}-${to}`;
+    const hit = rateCache.get(cacheKey);
+    if (hit && Date.now() - hit.at < RATE_TTL_MS) {
+      return res.json({ rate: hit.rate, from, to, cached: true, asOf: new Date(hit.at).toISOString() });
+    }
+
+    // Frankfurter (BCE) - gratuit. Limitation : pas toutes les devises (manque AED, MAD, TND, etc.).
+    // Fallback : open.er-api.com (gratuit aussi).
+    let rate = null;
+    try {
+      const r = await fetch(`https://api.frankfurter.app/latest?from=${from}&to=${to}`);
+      if (r.ok) {
+        const d = await r.json();
+        rate = d?.rates?.[to];
+      }
+    } catch {}
+
+    if (!rate) {
+      try {
+        const r = await fetch(`https://open.er-api.com/v6/latest/${from}`);
+        if (r.ok) {
+          const d = await r.json();
+          rate = d?.rates?.[to];
+        }
+      } catch {}
+    }
+
+    if (!rate) return res.status(502).json({ error: 'unable to fetch rate' });
+
+    rateCache.set(cacheKey, { rate, at: Date.now() });
+    res.json({ rate, from, to, cached: false });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.get('/catalog', requireAdmin, (req, res) => {
   res.json({
     catalog: [
