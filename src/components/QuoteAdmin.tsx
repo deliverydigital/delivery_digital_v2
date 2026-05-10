@@ -18,6 +18,9 @@ interface Quote {
   taxRate: number;
   taxAmount: number;
   totalTTC: number;
+  currency: string;
+  secondaryCurrency?: string;
+  secondaryRate?: number;
   ciiEligible: boolean;
   ciiAmount: number;
   status: 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected' | 'expired';
@@ -28,6 +31,21 @@ interface Quote {
   sentAt?: string;
   viewedAt?: string;
 }
+
+const CURRENCIES = [
+  { code: 'EUR', label: 'EUR (€)' },
+  { code: 'USD', label: 'USD ($)' },
+  { code: 'GBP', label: 'GBP (£)' },
+  { code: 'CHF', label: 'CHF' },
+  { code: 'CAD', label: 'CAD' },
+  { code: 'AED', label: 'AED (د.إ - Dubai)' },
+  { code: 'MAD', label: 'MAD (Maroc)' },
+  { code: 'TND', label: 'TND (Tunisie)' },
+  { code: 'AUD', label: 'AUD' },
+  { code: 'JPY', label: 'JPY (¥)' },
+  { code: 'CNY', label: 'CNY (¥)' },
+  { code: 'SGD', label: 'SGD' },
+];
 
 interface CatalogItem {
   id: string;
@@ -104,6 +122,9 @@ export default function QuoteAdmin({ secret }: { secret: string }) {
       taxRate: 20,
       taxAmount: 0,
       totalTTC: 0,
+      currency: 'EUR',
+      secondaryCurrency: '',
+      secondaryRate: 1,
       ciiEligible: false,
       ciiAmount: 0,
       status: 'draft',
@@ -195,7 +216,7 @@ export default function QuoteAdmin({ secret }: { secret: string }) {
                   </td>
                   <td className="px-3 py-3 text-[#1D1D1F] truncate max-w-[200px]">{q.title}</td>
                   <td className="px-3 py-3"><StatusPill status={q.status} /></td>
-                  <td className="px-3 py-3 text-right font-semibold tabular-nums">{fmtEur(q.totalTTC)}</td>
+                  <td className="px-3 py-3 text-right font-semibold tabular-nums">{fmtCurrency(q.totalTTC, q.currency)}</td>
                   <td className="px-3 py-3 text-right text-[11.5px] text-[#86868B]">{new Date(q.createdAt).toLocaleDateString('fr-FR')}</td>
                   <td className="px-3 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => onDelete(q._id)} className="p-1.5 text-[#86868B] hover:text-[#FF3B30]">
@@ -240,9 +261,14 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-function fmtEur(n: number) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(n);
+function fmtCurrency(n: number, currency = 'EUR') {
+  try {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, minimumFractionDigits: 2 }).format(n);
+  } catch {
+    return `${n.toFixed(2)} ${currency}`;
+  }
 }
+const fmtEur = (n: number) => fmtCurrency(n, 'EUR');
 
 /* ============== Editor / Drawer ============== */
 
@@ -273,12 +299,17 @@ function QuoteEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q.lines, q.taxRate, q.ciiEligible]);
 
+  const cur = q.currency || 'EUR';
+  const sec = q.secondaryCurrency || '';
+  const fmtMain = (n: number) => fmtCurrency(n, cur);
+
   const save = async (): Promise<Quote | null> => {
     setBusy(true);
     try {
       const body = {
         client: q.client, title: q.title, intro: q.intro, lines: q.lines,
         taxRate: q.taxRate, ciiEligible: q.ciiEligible, validUntil: q.validUntil, notes: q.notes,
+        currency: q.currency, secondaryCurrency: q.secondaryCurrency, secondaryRate: q.secondaryRate,
       };
       const res = isNew
         ? await api('/api/admin/quotes-quick', { method: 'POST', body: JSON.stringify(body) })
@@ -496,6 +527,47 @@ function QuoteEditor({
               </Section>
             )}
 
+            {/* Devises */}
+            <Section title="Devise(s)">
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-1">Devise principale</label>
+                  <select
+                    value={q.currency}
+                    onChange={(e) => setQ({ ...q, currency: e.target.value })}
+                    className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px] cursor-pointer"
+                  >
+                    {CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-1">Aussi afficher en (optionnel)</label>
+                  <select
+                    value={q.secondaryCurrency || ''}
+                    onChange={(e) => setQ({ ...q, secondaryCurrency: e.target.value })}
+                    className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px] cursor-pointer"
+                  >
+                    <option value="">— Aucune —</option>
+                    {CURRENCIES.filter((c) => c.code !== q.currency).map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              {q.secondaryCurrency && (
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-1">Taux de change : 1 {q.currency} = ? {q.secondaryCurrency}</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    value={q.secondaryRate || 1}
+                    onChange={(e) => setQ({ ...q, secondaryRate: parseFloat(e.target.value) || 1 })}
+                    className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px]"
+                    placeholder="Ex : 1.08 (1 EUR = 1.08 USD)"
+                  />
+                  <p className="text-[11px] text-[#86868B] mt-1">Le devis affiche le montant en {q.currency} et la conversion en {q.secondaryCurrency} entre parentheses.</p>
+                </div>
+              )}
+            </Section>
+
             {/* CII + TVA + total */}
             <Section title="Total et options">
               <label className="flex items-center gap-2 mb-3 text-[13px] cursor-pointer">
@@ -507,13 +579,16 @@ function QuoteEditor({
                 <span><strong>Eligible Crédit Impôt Innovation (CII)</strong> - PME française, projet innovant</span>
               </label>
               <div className="bg-[#F2EFE9] rounded-[12px] p-4 space-y-1.5 text-[14px]">
-                <div className="flex justify-between"><span>Sous-total HT</span><strong>{fmtEur(q.subtotal)}</strong></div>
-                <div className="flex justify-between text-[#86868B]"><span>TVA ({q.taxRate}%)</span><span>{fmtEur(q.taxAmount)}</span></div>
-                <div className="flex justify-between text-[16px] pt-2 border-t border-black/10"><strong>Total TTC</strong><strong>{fmtEur(q.totalTTC)}</strong></div>
+                <div className="flex justify-between"><span>Sous-total HT</span><strong>{fmtMain(q.subtotal)}</strong></div>
+                <div className="flex justify-between text-[#86868B]"><span>TVA ({q.taxRate}%)</span><span>{fmtMain(q.taxAmount)}</span></div>
+                <div className="flex justify-between text-[16px] pt-2 border-t border-black/10"><strong>Total TTC</strong><strong>{fmtMain(q.totalTTC)}</strong></div>
+                {sec && q.secondaryRate && (
+                  <div className="text-[11px] text-[#86868B] text-right">≈ {fmtCurrency(q.totalTTC * q.secondaryRate, sec)}</div>
+                )}
                 {q.ciiEligible && q.ciiAmount > 0 && (
                   <>
-                    <div className="flex justify-between text-[#34C759]"><span>↓ CII (-20%)</span><span>-{fmtEur(q.ciiAmount)}</span></div>
-                    <div className="flex justify-between text-[15px]"><strong>Coût net après CII</strong><strong>{fmtEur(q.totalTTC - q.ciiAmount)}</strong></div>
+                    <div className="flex justify-between text-[#34C759]"><span>↓ CII (-20%)</span><span>-{fmtMain(q.ciiAmount)}</span></div>
+                    <div className="flex justify-between text-[15px]"><strong>Coût net après CII</strong><strong>{fmtMain(q.totalTTC - q.ciiAmount)}</strong></div>
                   </>
                 )}
               </div>
