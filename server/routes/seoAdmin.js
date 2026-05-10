@@ -31,13 +31,13 @@ const anthropic = process.env.ANTHROPIC_API_KEY
    Prompt templates
    =========================================================== */
 
-const SYSTEM_BASE = `Tu rediges du contenu SEO pour DELIVERY Digital, agence de developpement informatique a Nice (France).
+const SYSTEM_BASE = `Tu rediges du contenu SEO pour DELIVERY Digital, agence de developpement informatique basee a Nice (France) qui intervient en remote pour des clients en France et a l'international.
 
 Services : sites web sur mesure (SaaS, dashboards), applications mobiles iOS/Android, logiciels metier (CRM, ERP, plateformes B2B), Cloud / DevOps. Stack : React, Next.js, TypeScript, Node.js, PostgreSQL, React Native, AWS.
 
 Differenciateur cle : un assistant IA conversationnel sur https://deliverydigital.fr/discutons qui qualifie le projet du prospect en 5 minutes (a la place d'un formulaire de devis classique).
 
-Reperes : Credit Impot Innovation (CII) - jusqu'a 20% des depenses d'innovation remboursees. SIRET 902 945 195 00029. RCS Nice.
+Reperes : Credit Impot Innovation (CII) - jusqu'a 20% des depenses d'innovation remboursees pour les clients eligibles en France. SIRET 902 945 195 00029. RCS Nice.
 
 Regles de redaction :
 - Francais naturel, sans jargon excessif
@@ -47,9 +47,13 @@ Regles de redaction :
 - Mentionne /discutons comme point d'entree quand c'est pertinent (CTA implicite)
 - Pas de mention de la formation Qualiopi (focus 100% vente informatique)
 - Pas de prix faux/invente : si tu cites une fourchette, reste vague ("a partir de quelques milliers d'euros", "sur devis personnalise")
-- Pas de promesses irrealistes (delais magiques, garanties absolues)`;
+- Pas de promesses irrealistes (delais magiques, garanties absolues)
+- INTERDIT : ne JAMAIS argumenter "agence locale = mieux" ou "preferez une agence pres de chez vous". DELIVERY Digital intervient en remote dans le monde entier ; mentionner Nice/Cote d'Azur uniquement comme fait factuel (siege social) - jamais comme un avantage commercial de proximite. La proximite geographique n'est PAS un argument de vente.
+- Pour les pages ciblant une ville : on intervient pour des clients de cette zone, point. Pas "vous etes a [ville], donc..." mais "nous accompagnons des entreprises de [ville] et au-dela, en remote".`;
 
 const PROMPT_CITY_SERVICE = (city, service) => `Genere une page SEO programmatique ciblant le mot-cle "${service} ${city}".
+
+RAPPEL CRITIQUE : ne JAMAIS argumenter que travailler avec une agence locale est mieux. DELIVERY Digital travaille en remote pour des clients partout (France + international). La page mentionne ${city} comme cible SEO et zone d'intervention naturelle, mais l'argument de vente est la qualite du code et l'approche conversationnelle IA, PAS la proximite.
 
 Format de reponse JSON STRICT (rien d'autre, pas de markdown wrappers) :
 {
@@ -62,18 +66,20 @@ Format de reponse JSON STRICT (rien d'autre, pas de markdown wrappers) :
 
 Le champ "body" doit contenir 800-1200 mots en markdown :
 - # H1 contenant la cible "${service} ${city}"
-- Intro 2-3 phrases (probleme + promesse)
-- ## Pourquoi choisir une agence ${service} a ${city}
-- ## Notre approche pour vos projets ${service}
-- ## Stack technique et methodologie
-- ## ${service} a ${city} : zones d'intervention (${city}, communes alentour)
-- ## Eligibilite Credit Impot Innovation
-- ## Discutons de votre projet ${service} (lien vers /discutons)
-- ## Questions frequentes (3-4 Q/R)
+- Intro 2-3 phrases (probleme business + promesse de la solution)
+- ## ${service} sur mesure : ce que nous livrons (decrit le service en detail, pas le local)
+- ## Notre approche : qualifier votre projet en 5 minutes par chat IA (mettre en avant /discutons)
+- ## Stack technique et methodologie (technos concretes : React, Next.js, TypeScript, Node.js, AWS, etc.)
+- ## Comment nous travaillons avec des clients de ${city} et au-dela (remote-first : visios, slack, github, demos hebdo)
+- ## Eligibilite Credit Impot Innovation pour les clients en France (informatif, pas vendeur)
+- ## Discutons de votre projet (CTA vers /discutons)
+- ## Questions frequentes (3-4 Q/R, exemples : delais typiques, mode de collaboration remote, propriete du code)
 
 Inclure 1-2 fois dans le body un appel d'action vers https://deliverydigital.fr/discutons.`;
 
 const PROMPT_ARTICLE = (keyword) => `Genere un article de blog SEO long-form ciblant "${keyword}".
+
+RAPPEL CRITIQUE : ne JAMAIS argumenter que travailler avec une agence locale ou de proximite est mieux. DELIVERY Digital travaille en remote pour des clients partout dans le monde. L'article doit etre pertinent pour un lecteur situe n'importe ou (France ou international). Si la geographie est mentionnee, c'est uniquement comme fait factuel, jamais comme avantage commercial.
 
 Format JSON STRICT :
 {
@@ -91,7 +97,7 @@ Structure body :
 - Listes a puces, exemples concrets, mini-cas si pertinent
 - Conclusion + CTA vers /discutons (1-2 phrases naturelles)
 
-Le contenu doit apporter une vraie valeur (pas du remplissage). Ecris pour un dirigeant TPE/PME qui veut comprendre.`;
+Le contenu doit apporter une vraie valeur (pas du remplissage). Ecris pour un dirigeant TPE/PME ou tech lead qui veut comprendre, pour un public mondial francophone.`;
 
 const PROMPT_FAQ_BATCH = (theme) => `Genere 5 questions-reponses SEO pour la thematique "${theme}".
 
