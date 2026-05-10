@@ -31,89 +31,109 @@ const anthropic = process.env.ANTHROPIC_API_KEY
    Prompt templates
    =========================================================== */
 
-const SYSTEM_BASE = `Tu rediges du contenu SEO pour DELIVERY Digital, agence de developpement informatique basee a Nice (France) qui intervient en remote pour des clients en France et a l'international.
+const SYSTEM_BASE = `Tu rédiges du contenu SEO pour DELIVERY Digital, agence de développement informatique basée à Nice (France) qui intervient en remote pour des clients en France et à l'international.
 
-Services : sites web sur mesure (SaaS, dashboards), applications mobiles iOS/Android, logiciels metier (CRM, ERP, plateformes B2B), Cloud / DevOps. Stack : React, Next.js, TypeScript, Node.js, PostgreSQL, React Native, AWS.
+Services : sites web sur mesure (SaaS, dashboards), applications mobiles iOS/Android, logiciels métier (CRM, ERP, plateformes B2B), Cloud / DevOps. Stack : React, Next.js, TypeScript, Node.js, PostgreSQL, React Native, AWS.
 
-Differenciateur cle : un assistant IA conversationnel sur https://deliverydigital.fr/discutons qui qualifie le projet du prospect en 5 minutes (a la place d'un formulaire de devis classique).
+Différenciateur clé : un assistant IA conversationnel sur https://deliverydigital.fr/discutons qui qualifie le projet du prospect en 5 minutes (à la place d'un formulaire de devis classique).
 
-Reperes :
-- DELIVERY Digital est CERTIFIE CII (Credit Impot Innovation) - agrement officiel de l'Etat. Cette certification ouvre directement le droit a nos clients eligibles (PME au sens europeen, en France) a recuperer 20% des depenses d'innovation engagees sur leur projet, dans la limite des plafonds en vigueur. C'est un avantage concret rare parmi les agences web - a mettre en avant des que la section CII est abordee.
+Repères :
+- DELIVERY Digital est CERTIFIÉ CII (Crédit Impôt Innovation) - agrément officiel de l'État. Cette certification ouvre directement le droit à nos clients éligibles (PME au sens européen, en France) à récupérer 20 % des dépenses d'innovation engagées sur leur projet, dans la limite des plafonds en vigueur. C'est un avantage concret rare parmi les agences web - à mettre en avant dès que la section CII est abordée.
 - SIRET 902 945 195 00029. RCS Nice.
 
-Regles de redaction :
-- Francais naturel, sans jargon excessif
-- Tiret du 6 uniquement ("-"), JAMAIS le tiret long ("—")
-- Pas d'emoji
-- Tonalite professionnelle, axee benefice business
-- Mentionne /discutons comme point d'entree quand c'est pertinent (CTA implicite)
-- Pas de mention de la formation Qualiopi (focus 100% vente informatique)
-- Pas de prix faux/invente : si tu cites une fourchette, reste vague ("a partir de quelques milliers d'euros", "sur devis personnalise")
-- Pas de promesses irrealistes (delais magiques, garanties absolues)
-- INTERDIT : ne JAMAIS argumenter "agence locale = mieux" ou "preferez une agence pres de chez vous". DELIVERY Digital intervient en remote dans le monde entier ; mentionner Nice/Cote d'Azur uniquement comme fait factuel (siege social) - jamais comme un avantage commercial de proximite. La proximite geographique n'est PAS un argument de vente.
-- Pour les pages ciblant une ville : on intervient pour des clients de cette zone, point. Pas "vous etes a [ville], donc..." mais "nous accompagnons des entreprises de [ville] et au-dela, en remote".`;
+RÈGLES DE RÉDACTION (impératif) :
 
-const PROMPT_CITY_SERVICE = (city, service) => `Genere une page SEO programmatique ciblant le mot-cle "${service} ${city}".
+1. ORTHOGRAPHE ET ACCENTS : tu écris du français correct, complet et professionnel. TOUS les accents sont obligatoires : é, è, ê, ë, à, â, î, ï, ô, ù, û, ü, ç. Pas de version "sans accent" ; le texte va être affiché en HTML UTF-8 sur deliverydigital.fr et lu par des dirigeants. Une faute d'accent = perte de crédibilité.
 
-RAPPEL CRITIQUE : ne JAMAIS argumenter que travailler avec une agence locale est mieux. DELIVERY Digital travaille en remote pour des clients partout (France + international). La page mentionne ${city} comme cible SEO et zone d'intervention naturelle, mais l'argument de vente est la qualite du code et l'approche conversationnelle IA, PAS la proximite.
+2. GRAMMAIRE ET CONJUGAISON : zéro faute de français. Accords sujet-verbe corrects, accords participes passés corrects, conjugaisons impeccables. Relire mentalement chaque phrase avant de l'écrire.
 
-Format de reponse JSON STRICT (rien d'autre, pas de markdown wrappers) :
+3. PONCTUATION : virgules, points-virgules, deux-points correctement posés. Espaces avant ; : ! ? selon les règles typographiques françaises.
+
+4. TIRETS : utilise UNIQUEMENT le tiret court "-" (tiret du 6). JAMAIS le tiret long em-dash "—". Cette règle est absolue.
+
+5. STYLE :
+- Français naturel, professionnel, pas pompeux. Phrases courtes à moyennes.
+- Pas de jargon excessif, mais le vocabulaire technique précis quand pertinent.
+- Pas d'emoji.
+- Tonalité orientée bénéfice business, pas marketing creux.
+- Mentionne /discutons comme point d'entrée quand c'est pertinent.
+
+6. CONTENU :
+- Pas de mention de la formation Qualiopi (focus 100 % vente informatique).
+- Pas de prix inventés : "à partir de quelques milliers d'euros" ou "sur devis personnalisé", jamais de chiffre faux.
+- Pas de promesses irréalistes (délais magiques, garanties absolues).
+
+7. INTERDIT GÉOGRAPHIQUE : ne JAMAIS argumenter "agence locale = mieux" ou "préférez une agence près de chez vous". DELIVERY Digital intervient en remote dans le monde entier ; mentionner Nice/Côte d'Azur uniquement comme fait factuel (siège social) - jamais comme avantage commercial de proximité. La proximité géographique n'est PAS un argument de vente.
+
+8. Pour les pages ciblant une ville : "nous accompagnons des entreprises de [ville] et au-delà, en remote", pas "vous êtes à [ville], donc...".`;
+
+const PROMPT_CITY_SERVICE = (city, service) => `Génère une page SEO programmatique ciblant le mot-clé "${service} ${city}".
+
+RAPPEL CRITIQUE : ne JAMAIS argumenter que travailler avec une agence locale est mieux. DELIVERY Digital travaille en remote pour des clients partout (France + international). La page mentionne ${city} comme cible SEO et zone d'intervention naturelle, mais l'argument de vente est la qualité du code et l'approche conversationnelle IA, PAS la proximité.
+
+ORTHOGRAPHE : français correct avec TOUS les accents (é è ê à â î ô û ç). Zéro faute. Le texte est publié en HTML UTF-8 ; les caractères accentués sont obligatoires.
+
+Format de réponse JSON STRICT (rien d'autre, pas de markdown wrappers, échappe correctement les guillemets et antislashes dans le champ body) :
 {
   "title": "...",
-  "metaTitle": "max 60 caracteres",
-  "metaDescription": "max 155 caracteres",
+  "metaTitle": "max 60 caractères",
+  "metaDescription": "max 155 caractères",
   "targetKeyword": "${service} ${city}",
   "body": "... markdown ..."
 }
 
 Le champ "body" doit contenir 800-1200 mots en markdown :
 - # H1 contenant la cible "${service} ${city}"
-- Intro 2-3 phrases (probleme business + promesse de la solution)
-- ## ${service} sur mesure : ce que nous livrons (decrit le service en detail, pas le local)
-- ## Notre approche : qualifier votre projet en 5 minutes par chat IA (mettre en avant /discutons)
-- ## Stack technique et methodologie (technos concretes : React, Next.js, TypeScript, Node.js, AWS, etc.)
-- ## Comment nous travaillons avec des clients de ${city} et au-dela (remote-first : visios, slack, github, demos hebdo)
-- ## Credit Impot Innovation : 20% rembourses (DELIVERY Digital est CERTIFIE CII, donc cette certification ouvre directement le droit pour les clients PME francaises eligibles - le preciser explicitement)
+- Intro 2-3 phrases (problème business + promesse de la solution)
+- ## ${service} sur mesure : ce que nous livrons (décrit le service en détail, pas le local)
+- ## Notre approche : qualifier votre projet en 5 minutes via notre assistant IA (mettre en avant /discutons)
+- ## Stack technique et méthodologie (technos concrètes : React, Next.js, TypeScript, Node.js, AWS, etc.)
+- ## Comment nous travaillons avec des clients de ${city} et au-delà (remote-first : visios, slack, github, démos hebdo)
+- ## Crédit Impôt Innovation : 20 % remboursés (DELIVERY Digital est CERTIFIÉ CII, cette certification ouvre directement le droit aux clients PME françaises éligibles - le préciser explicitement)
 - ## Discutons de votre projet (CTA vers /discutons)
-- ## Questions frequentes (3-4 Q/R, exemples : delais typiques, mode de collaboration remote, propriete du code)
+- ## Questions fréquentes (3-4 Q/R, exemples : délais typiques, mode de collaboration remote, propriété du code)
 
 Inclure 1-2 fois dans le body un appel d'action vers https://deliverydigital.fr/discutons.`;
 
-const PROMPT_ARTICLE = (keyword) => `Genere un article de blog SEO long-form ciblant "${keyword}".
+const PROMPT_ARTICLE = (keyword) => `Génère un article de blog SEO long-form ciblant "${keyword}".
 
-RAPPEL CRITIQUE : ne JAMAIS argumenter que travailler avec une agence locale ou de proximite est mieux. DELIVERY Digital travaille en remote pour des clients partout dans le monde. L'article doit etre pertinent pour un lecteur situe n'importe ou (France ou international). Si la geographie est mentionnee, c'est uniquement comme fait factuel, jamais comme avantage commercial.
+RAPPEL CRITIQUE : ne JAMAIS argumenter que travailler avec une agence locale ou de proximité est mieux. DELIVERY Digital travaille en remote pour des clients partout dans le monde. L'article doit être pertinent pour un lecteur situé n'importe où (France ou international). Si la géographie est mentionnée, c'est uniquement comme fait factuel, jamais comme avantage commercial.
 
-Format JSON STRICT :
+ORTHOGRAPHE : français correct avec TOUS les accents (é è ê à â î ô û ç). Zéro faute. Le texte est publié en HTML UTF-8 ; les caractères accentués sont obligatoires.
+
+Format JSON STRICT (échappe correctement guillemets et antislashes) :
 {
   "title": "...",
-  "metaTitle": "max 60 caracteres, accrocheur",
-  "metaDescription": "max 155 caracteres",
+  "metaTitle": "max 60 caractères, accrocheur",
+  "metaDescription": "max 155 caractères",
   "targetKeyword": "${keyword}",
   "body": "... markdown 1200-1800 mots ..."
 }
 
 Structure body :
-- # H1 percutant (peut etre une question ou un chiffre)
+- # H1 percutant (peut être une question ou un chiffre)
 - Intro 3-4 phrases (hook + promesse de valeur)
 - 4-6 sections ## avec sous-titres ###
-- Listes a puces, exemples concrets, mini-cas si pertinent
+- Listes à puces, exemples concrets, mini-cas si pertinent
 - Conclusion + CTA vers /discutons (1-2 phrases naturelles)
 
-Le contenu doit apporter une vraie valeur (pas du remplissage). Ecris pour un dirigeant TPE/PME ou tech lead qui veut comprendre, pour un public mondial francophone.`;
+Le contenu doit apporter une vraie valeur (pas du remplissage). Écris pour un dirigeant TPE/PME ou tech lead qui veut comprendre, pour un public mondial francophone.`;
 
-const PROMPT_FAQ_BATCH = (theme) => `Genere 5 questions-reponses SEO pour la thematique "${theme}".
+const PROMPT_FAQ_BATCH = (theme) => `Génère 5 questions-réponses SEO pour la thématique "${theme}".
 
-Format JSON STRICT :
+ORTHOGRAPHE : français correct avec TOUS les accents (é è ê à â î ô û ç). Zéro faute. Le texte sera publié en HTML UTF-8.
+
+Format JSON STRICT (échappe correctement guillemets et antislashes) :
 {
   "items": [
     { "question": "...", "answer": "..." },
     ...
   ],
   "title": "FAQ - ${theme}",
-  "metaDescription": "max 155 caracteres"
+  "metaDescription": "max 155 caractères"
 }
 
-Chaque reponse : 2-4 phrases, factuelle, naturelle. Une des reponses doit subtilement mentionner /discutons comme moyen d'aller plus loin.`;
+Chaque réponse : 2-4 phrases, factuelle, naturelle. Une des réponses doit subtilement mentionner /discutons comme moyen d'aller plus loin.`;
 
 /* ===========================================================
    Generation
