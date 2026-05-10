@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
-import { LayoutDashboard, Users, Sparkles, LogOut, Settings } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { LayoutDashboard, Users, Sparkles, LogOut, MessageSquare, Loader2 } from 'lucide-react';
 import AIOrb from './AIOrb';
 import SeoAdmin from './SeoAdmin';
 import ProspectAdmin from './ProspectAdmin';
+import LiveConversations from './LiveConversations';
 
 const SECRET_KEY = 'dd_seo_admin_secret';
 
-type Section = 'overview' | 'prospects' | 'seo';
+type Section = 'overview' | 'conversations' | 'prospects' | 'seo';
 
 export default function AdminPanel() {
   const [secret, setSecret] = useState<string | null>(() => localStorage.getItem(SECRET_KEY));
@@ -14,8 +15,36 @@ export default function AdminPanel() {
     const p = window.location.pathname;
     if (p.startsWith('/admin/seo')) return 'seo';
     if (p.startsWith('/admin/prospects')) return 'prospects';
+    if (p.startsWith('/admin/conversations')) return 'conversations';
     return 'overview';
   });
+  const [stats, setStats] = useState<{ prospects: number; conversations: number; activeConv: number; published: number } | null>(null);
+
+  const loadStats = useCallback(async () => {
+    if (!secret) return;
+    try {
+      const opts = { headers: { 'x-admin-secret': secret } };
+      const [pStats, conv, seo] = await Promise.all([
+        fetch('/api/admin/prospects/stats', opts).then((r) => r.ok ? r.json() : { total: 0 }),
+        fetch('/api/admin/conversations', opts).then((r) => r.ok ? r.json() : { stats: { total: 0, active: 0 } }),
+        fetch('/api/admin/seo?status=published', opts).then((r) => r.ok ? r.json() : { items: [] }),
+      ]);
+      setStats({
+        prospects: pStats.total || 0,
+        conversations: conv.stats?.total || 0,
+        activeConv: conv.stats?.active || 0,
+        published: (seo.items || []).length,
+      });
+    } catch {}
+  }, [secret]);
+
+  useEffect(() => {
+    if (section === 'overview') {
+      loadStats();
+      const id = setInterval(loadStats, 8000);
+      return () => clearInterval(id);
+    }
+  }, [section, loadStats]);
 
   useEffect(() => {
     const path = section === 'overview' ? '/admin' : `/admin/${section}`;
@@ -54,6 +83,13 @@ export default function AdminPanel() {
 
         <nav className="flex-1 px-3 py-3 space-y-0.5">
           <SideBtn active={section === 'overview'} icon={<LayoutDashboard className="h-4 w-4" />} label="Vue d'ensemble" onClick={() => setSection('overview')} />
+          <SideBtn
+            active={section === 'conversations'}
+            icon={<MessageSquare className="h-4 w-4" />}
+            label="Conversations"
+            badge={stats?.activeConv ? stats.activeConv : undefined}
+            onClick={() => setSection('conversations')}
+          />
           <SideBtn active={section === 'prospects'} icon={<Users className="h-4 w-4" />} label="Prospects" onClick={() => setSection('prospects')} />
           <SideBtn active={section === 'seo'} icon={<Sparkles className="h-4 w-4" />} label="SEO Content" onClick={() => setSection('seo')} />
         </nav>
@@ -72,13 +108,15 @@ export default function AdminPanel() {
       {/* Mobile bottom-bar nav (visible md:hidden) */}
       <div className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white border-t border-black/8 flex">
         <MobileBtn active={section === 'overview'} icon={<LayoutDashboard className="h-4 w-4" />} label="Home" onClick={() => setSection('overview')} />
+        <MobileBtn active={section === 'conversations'} icon={<MessageSquare className="h-4 w-4" />} label="Chats" onClick={() => setSection('conversations')} />
         <MobileBtn active={section === 'prospects'} icon={<Users className="h-4 w-4" />} label="Prospects" onClick={() => setSection('prospects')} />
         <MobileBtn active={section === 'seo'} icon={<Sparkles className="h-4 w-4" />} label="SEO" onClick={() => setSection('seo')} />
       </div>
 
       {/* Main */}
       <main className="flex-1 min-w-0 px-5 sm:px-8 pt-8 pb-24 md:pb-20 max-w-[1200px]">
-        {section === 'overview' && <Overview onGo={setSection} />}
+        {section === 'overview' && <Overview stats={stats} />}
+        {section === 'conversations' && <LiveConversations secret={secret} />}
         {section === 'prospects' && <ProspectAdmin embedded sharedSecret={secret} />}
         {section === 'seo' && <SeoAdmin embedded sharedSecret={secret} />}
       </main>
@@ -86,7 +124,7 @@ export default function AdminPanel() {
   );
 }
 
-function SideBtn({ active, icon, label, onClick }: { active: boolean; icon: React.ReactNode; label: string; onClick: () => void }) {
+function SideBtn({ active, icon, label, badge, onClick }: { active: boolean; icon: React.ReactNode; label: string; badge?: number; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -96,6 +134,11 @@ function SideBtn({ active, icon, label, onClick }: { active: boolean; icon: Reac
     >
       {icon}
       <span className="flex-1 text-left">{label}</span>
+      {badge !== undefined && badge > 0 && (
+        <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-[#34C759] text-white text-[10px] font-bold">
+          {badge}
+        </span>
+      )}
     </button>
   );
 }
@@ -114,59 +157,45 @@ function MobileBtn({ active, icon, label, onClick }: { active: boolean; icon: Re
   );
 }
 
-function Overview({ onGo }: { onGo: (s: Section) => void }) {
+function Overview({ stats }: { stats: { prospects: number; conversations: number; activeConv: number; published: number } | null }) {
   return (
     <>
       <h1
-        className="text-[28px] sm:text-[40px] text-[#1D1D1F] mb-2"
+        className="text-[28px] sm:text-[40px] text-[#1D1D1F] mb-1"
         style={{ fontFamily: '"Charter", "Iowan Old Style", Georgia, serif', fontWeight: 700 }}
       >
-        Bienvenue.
+        Vue d'ensemble.
       </h1>
-      <p className="text-[15px] text-[#86868B] mb-8 max-w-[640px]">
-        Tout votre admin DELIVERY Digital ici. Pilotage des prospects et generation de contenu SEO propulsee par Claude.
-      </p>
+      <p className="text-[14px] text-[#86868B] mb-8">Naviguez via le menu de gauche.</p>
 
-      <div className="grid sm:grid-cols-2 gap-4 max-w-[820px]">
-        <button
-          onClick={() => onGo('prospects')}
-          className="group text-left bg-white rounded-[20px] ring-1 ring-black/5 p-6 hover:ring-black/15 transition-shadow"
-          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
-        >
-          <div className="w-11 h-11 rounded-2xl bg-[#F2EFE9] flex items-center justify-center mb-4">
-            <Users className="h-5 w-5 text-[#1D1D1F]" strokeWidth={1.6} />
-          </div>
-          <h3
-            className="text-[20px] text-[#1D1D1F] mb-1.5"
-            style={{ fontFamily: '"Charter", "Iowan Old Style", Georgia, serif', fontWeight: 700 }}
-          >
-            Prospects
-          </h3>
-          <p className="text-[13.5px] text-[#86868B] leading-relaxed">
-            Pipeline de leads. Sync depuis le chat /discutons, import CSV, qualification, suivi avec timeline.
-          </p>
-        </button>
-
-        <button
-          onClick={() => onGo('seo')}
-          className="group text-left bg-white rounded-[20px] ring-1 ring-black/5 p-6 hover:ring-black/15 transition-shadow"
-          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
-        >
-          <div className="w-11 h-11 rounded-2xl bg-[#F2EFE9] flex items-center justify-center mb-4">
-            <Sparkles className="h-5 w-5 text-[#1D1D1F]" strokeWidth={1.6} />
-          </div>
-          <h3
-            className="text-[20px] text-[#1D1D1F] mb-1.5"
-            style={{ fontFamily: '"Charter", "Iowan Old Style", Georgia, serif', fontWeight: 700 }}
-          >
-            SEO Content
-          </h3>
-          <p className="text-[13.5px] text-[#86868B] leading-relaxed">
-            Agents Claude qui generent pages services x villes, articles blog, FAQ. Reviewer et publier en un clic.
-          </p>
-        </button>
-      </div>
+      {!stats ? (
+        <div className="flex items-center gap-2 text-[#86868B] text-[14px]">
+          <Loader2 className="h-4 w-4 animate-spin" /> Chargement...
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-[820px]">
+          <Stat label="Conv. en direct" value={stats.activeConv} accent="#34C759" pulse={stats.activeConv > 0} />
+          <Stat label="Conv. totales" value={stats.conversations} />
+          <Stat label="Prospects" value={stats.prospects} />
+          <Stat label="Pages SEO publiees" value={stats.published} />
+        </div>
+      )}
     </>
+  );
+}
+
+function Stat({ label, value, accent, pulse }: { label: string; value: number; accent?: string; pulse?: boolean }) {
+  return (
+    <div className="bg-white rounded-[18px] ring-1 ring-black/5 p-4 relative" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <div className="text-[11px] uppercase tracking-wider text-[#86868B] font-semibold mb-1.5">{label}</div>
+      <div className="text-[26px] font-bold tracking-tight" style={{ color: accent || '#1D1D1F' }}>{value}</div>
+      {pulse && (
+        <span className="absolute top-3 right-3 flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#34C759] opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#34C759]" />
+        </span>
+      )}
+    </div>
   );
 }
 
