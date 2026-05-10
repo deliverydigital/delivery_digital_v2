@@ -410,10 +410,11 @@ router.get('/:id/preview.html', requireAdmin, async (req, res) => {
    Send by email
    =========================================================== */
 function getTransporter() {
+  const port = parseInt(process.env.SMTP_PORT || '465', 10);
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587', 10),
-    secure: false,
+    host: process.env.SMTP_HOST || 'ssl0.ovh.net',
+    port,
+    secure: port === 465, // SSL implicite sur 465, STARTTLS sur 587
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
