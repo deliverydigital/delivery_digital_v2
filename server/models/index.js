@@ -11,6 +11,7 @@ import Category from './Category.js';
 import ProjectType from './ProjectType.js';
 import SeoContent from './SeoContent.js';
 import Prospect from './Prospect.js';
+import QuickQuote from './QuickQuote.js';
 
 export {
   User,
@@ -24,7 +25,8 @@ export {
   Category,
   ProjectType,
   SeoContent,
-  Prospect
+  Prospect,
+  QuickQuote
 };
 
 // Export default object with all models
@@ -40,5 +42,6 @@ export default {
   Category,
   ProjectType,
   SeoContent,
-  Prospect
+  Prospect,
+  QuickQuote
 };

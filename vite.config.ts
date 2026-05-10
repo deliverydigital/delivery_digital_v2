@@ -17,6 +17,11 @@ const proxyConfig = {
     changeOrigin: true,
     secure: false,
   },
+  '/devis': {
+    target: 'http://127.0.0.1:3008',
+    changeOrigin: true,
+    secure: false,
+  },
 };
 
 export default defineConfig({
