@@ -60,6 +60,18 @@ const quickQuoteSchema = new Schema({
   sentAt: { type: Date },
   viewedAt: { type: Date },
   acceptedAt: { type: Date },
+  acceptance: {
+    signerName: { type: String },
+    signerEmail: { type: String },
+    ip: { type: String },
+    userAgent: { type: String },
+    signedAt: { type: Date },
+  },
+  rejection: {
+    reason: { type: String },
+    rejectedAt: { type: Date },
+    ip: { type: String },
+  },
 }, { timestamps: true });
 
 quickQuoteSchema.pre('save', function (next) {

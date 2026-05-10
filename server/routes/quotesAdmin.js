@@ -375,11 +375,7 @@ function renderHtml(quote, { publicView = false } = {}) {
 
   ${quote.notes ? `<div class="notes">${escapeHtml(quote.notes).replace(/\n/g, '<br/>')}</div>` : ''}
 
-  ${publicView ? `
-    <div class="cta">
-      <a href="mailto:contact@deliverydigital.fr?subject=${encodeURIComponent(L.quote + ' ' + quote.ref)}">${L.replyCta}</a>
-    </div>
-  ` : ''}
+  ${publicView ? renderAcceptanceBlock(quote, L, lang) : ''}
 
   <div class="footer">
     DELIVERY Digital Technology · 470 promenade des Anglais, 06200 Nice<br/>
@@ -393,6 +389,70 @@ function renderHtml(quote, { publicView = false } = {}) {
 
 function escapeHtml(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+const ACCEPT_LABELS = {
+  fr: { accepted: 'Devis accepté', acceptedOn: 'Accepté le', acceptedBy: 'par', rejected: 'Devis refusé', rejectedOn: 'Refusé le', actionTitle: 'Accepter et signer le devis', actionHelp: 'En signant electroniquement, vous validez le devis et autorisez le demarrage du projet selon les termes ci-dessus.', signerName: 'Votre nom complet', signerEmail: 'Votre email', accept: 'Accepter le devis', reject: 'Refuser', rejectReasonPlaceholder: 'Raison (optionnel)', terms: 'J\'accepte les termes du devis et confirme mon engagement.', thanksTitle: 'Merci pour votre confiance.', thanksBody: 'Votre signature a ete enregistree. Notre equipe revient vers vous tres vite pour la suite.', errorMissing: 'Veuillez remplir nom et email.' },
+  en: { accepted: 'Quote accepted', acceptedOn: 'Accepted on', acceptedBy: 'by', rejected: 'Quote rejected', rejectedOn: 'Rejected on', actionTitle: 'Accept and sign the quote', actionHelp: 'By signing electronically, you validate this quote and allow us to start the project under the above terms.', signerName: 'Your full name', signerEmail: 'Your email', accept: 'Accept quote', reject: 'Decline', rejectReasonPlaceholder: 'Reason (optional)', terms: 'I accept the terms of this quote and confirm my engagement.', thanksTitle: 'Thank you.', thanksBody: 'Your signature has been recorded. Our team will get back to you shortly.', errorMissing: 'Please fill in name and email.' },
+  es: { accepted: 'Presupuesto aceptado', acceptedOn: 'Aceptado el', acceptedBy: 'por', rejected: 'Presupuesto rechazado', rejectedOn: 'Rechazado el', actionTitle: 'Aceptar y firmar el presupuesto', actionHelp: 'Al firmar electronicamente, usted valida este presupuesto y autoriza el inicio del proyecto.', signerName: 'Su nombre completo', signerEmail: 'Su email', accept: 'Aceptar', reject: 'Rechazar', rejectReasonPlaceholder: 'Razon (opcional)', terms: 'Acepto los terminos de este presupuesto.', thanksTitle: 'Gracias.', thanksBody: 'Su firma ha sido registrada.', errorMissing: 'Por favor complete nombre y email.' },
+  de: { accepted: 'Angebot angenommen', acceptedOn: 'Angenommen am', acceptedBy: 'von', rejected: 'Angebot abgelehnt', rejectedOn: 'Abgelehnt am', actionTitle: 'Angebot akzeptieren und unterschreiben', actionHelp: 'Mit der elektronischen Unterschrift bestätigen Sie das Angebot.', signerName: 'Ihr vollständiger Name', signerEmail: 'Ihre E-Mail', accept: 'Akzeptieren', reject: 'Ablehnen', rejectReasonPlaceholder: 'Grund (optional)', terms: 'Ich akzeptiere die Bedingungen dieses Angebots.', thanksTitle: 'Vielen Dank.', thanksBody: 'Ihre Unterschrift wurde erfasst.', errorMissing: 'Bitte Name und E-Mail ausfullen.' },
+  it: { accepted: 'Preventivo accettato', acceptedOn: 'Accettato il', acceptedBy: 'da', rejected: 'Preventivo rifiutato', rejectedOn: 'Rifiutato il', actionTitle: 'Accettare e firmare il preventivo', actionHelp: 'Firmando elettronicamente accetti i termini.', signerName: 'Nome completo', signerEmail: 'Email', accept: 'Accettare', reject: 'Rifiutare', rejectReasonPlaceholder: 'Motivo (facoltativo)', terms: 'Accetto i termini di questo preventivo.', thanksTitle: 'Grazie.', thanksBody: 'La tua firma e stata registrata.', errorMissing: 'Compilare nome ed email.' },
+  pt: { accepted: 'Orçamento aceito', acceptedOn: 'Aceito em', acceptedBy: 'por', rejected: 'Orçamento recusado', rejectedOn: 'Recusado em', actionTitle: 'Aceitar e assinar o orçamento', actionHelp: 'Ao assinar eletronicamente, você valida este orçamento.', signerName: 'Seu nome completo', signerEmail: 'Seu email', accept: 'Aceitar', reject: 'Recusar', rejectReasonPlaceholder: 'Motivo (opcional)', terms: 'Aceito os termos deste orçamento.', thanksTitle: 'Obrigado.', thanksBody: 'Sua assinatura foi registrada.', errorMissing: 'Preencha nome e email.' },
+};
+
+function renderAcceptanceBlock(quote, L, lang) {
+  const A = ACCEPT_LABELS[lang] || ACCEPT_LABELS.fr;
+  const dateLocale = lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : lang === 'de' ? 'de-DE' : lang === 'it' ? 'it-IT' : lang === 'pt' ? 'pt-PT' : 'fr-FR';
+
+  if (quote.status === 'accepted' && quote.acceptance?.signedAt) {
+    const dt = new Date(quote.acceptance.signedAt).toLocaleString(dateLocale);
+    return `
+      <div style="margin:30px 0;padding:24px;background:#34C759;background:linear-gradient(135deg,#34C759,#28A745);border-radius:18px;text-align:center;color:#fff;">
+        <div style="font-size:18px;font-weight:700;margin-bottom:6px;">✓ ${A.accepted}</div>
+        <div style="font-size:13.5px;opacity:0.9;">${A.acceptedOn} <strong>${dt}</strong> ${A.acceptedBy} <strong>${escapeHtml(quote.acceptance.signerName || '')}</strong></div>
+      </div>
+    `;
+  }
+
+  if (quote.status === 'rejected' && quote.rejection?.rejectedAt) {
+    const dt = new Date(quote.rejection.rejectedAt).toLocaleString(dateLocale);
+    return `
+      <div style="margin:30px 0;padding:20px;background:#FFE5E5;border-radius:18px;text-align:center;color:#FF3B30;">
+        <div style="font-size:16px;font-weight:700;">${A.rejected}</div>
+        <div style="font-size:13px;opacity:0.85;margin-top:4px;">${A.rejectedOn} ${dt}</div>
+      </div>
+    `;
+  }
+
+  if (quote.status === 'expired') {
+    return `<div style="margin:30px 0;padding:18px;background:#F5F5F7;border-radius:14px;text-align:center;color:#86868B;font-size:13.5px;">⌛ ${L.validUntil} ${quote.validUntil ? new Date(quote.validUntil).toLocaleDateString(dateLocale) : ''}</div>`;
+  }
+
+  // Not yet accepted - show form
+  return `
+    <div id="accept" style="margin:36px 0 0;padding:28px;background:#F2EFE9;border-radius:18px;background-image:radial-gradient(circle at 1px 1px, rgba(29,29,31,0.08) 1px, transparent 0);background-size:14px 14px;">
+      <h3 style="margin:0 0 6px;font-family:'Charter','Iowan Old Style',Georgia,serif;font-weight:700;font-size:22px;color:#1D1D1F;">${A.actionTitle}</h3>
+      <p style="margin:0 0 18px;font-size:13.5px;color:#86868B;line-height:1.55;">${A.actionHelp}</p>
+
+      <form id="accept-form" method="POST" action="/devis/${quote.publicToken}/accept" style="display:grid;gap:10px;max-width:480px;">
+        <input type="text" name="signerName" required placeholder="${A.signerName}" style="padding:11px 14px;border-radius:10px;border:1px solid #E5E5EA;font-size:14px;outline:none;background:#fff;" />
+        <input type="email" name="signerEmail" required placeholder="${A.signerEmail}" value="${escapeHtml(quote.client?.email || '')}" style="padding:11px 14px;border-radius:10px;border:1px solid #E5E5EA;font-size:14px;outline:none;background:#fff;" />
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:#1D1D1F;line-height:1.45;cursor:pointer;">
+          <input type="checkbox" required style="margin-top:3px;flex-shrink:0;" />
+          <span>${A.terms}</span>
+        </label>
+        <button type="submit" style="margin-top:8px;padding:13px 24px;background:#1D1D1F;color:#fff;border:0;border-radius:999px;font-size:15px;font-weight:600;cursor:pointer;">${A.accept}</button>
+      </form>
+
+      <details style="margin-top:18px;font-size:12.5px;color:#86868B;">
+        <summary style="cursor:pointer;">${A.reject}</summary>
+        <form method="POST" action="/devis/${quote.publicToken}/reject" style="margin-top:10px;display:grid;gap:8px;max-width:480px;">
+          <textarea name="reason" rows="2" placeholder="${A.rejectReasonPlaceholder}" style="padding:8px 12px;border-radius:8px;border:1px solid #E5E5EA;font-size:13px;outline:none;background:#fff;resize:vertical;"></textarea>
+          <button type="submit" style="padding:8px 16px;background:#fff;color:#FF3B30;border:1px solid #FF3B30;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;align-self:start;">${A.reject}</button>
+        </form>
+      </details>
+    </div>
+  `;
 }
 
 router.get('/:id/preview.html', requireAdmin, async (req, res) => {
@@ -454,6 +514,9 @@ router.post('/:id/send', requireAdmin, async (req, res) => {
 /* ===========================================================
    Public view (par token, sans auth) - utilisable par le client
    =========================================================== */
+publicRouter.use(express.urlencoded({ extended: true })); // pour parser les form POST
+publicRouter.use(express.json());
+
 publicRouter.get('/:token', async (req, res) => {
   try {
     const quote = await QuickQuote.findOne({ publicToken: req.params.token });
@@ -465,6 +528,93 @@ publicRouter.get('/:token', async (req, res) => {
     }
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(renderHtml(quote.toObject(), { publicView: true }));
+  } catch (e) {
+    res.status(500).send(e.message);
+  }
+});
+
+/* Accept (signer le devis) */
+publicRouter.post('/:token/accept', async (req, res) => {
+  try {
+    const quote = await QuickQuote.findOne({ publicToken: req.params.token });
+    if (!quote) return res.status(404).send('Devis introuvable');
+    if (quote.status === 'accepted') {
+      return res.redirect(`/devis/${req.params.token}#accept`);
+    }
+    const { signerName, signerEmail } = req.body;
+    const lang = (quote.language || 'fr').toLowerCase();
+    const A = ACCEPT_LABELS[lang] || ACCEPT_LABELS.fr;
+    if (!signerName || !signerEmail) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(400).send(`<p style="font-family:Arial;padding:30px;color:#FF3B30">${A.errorMissing} <a href="/devis/${req.params.token}#accept">Retour</a></p>`);
+    }
+
+    quote.status = 'accepted';
+    quote.acceptedAt = new Date();
+    quote.acceptance = {
+      signerName: String(signerName).trim().slice(0, 200),
+      signerEmail: String(signerEmail).trim().toLowerCase().slice(0, 200),
+      ip: (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim(),
+      userAgent: (req.headers['user-agent'] || '').slice(0, 400),
+      signedAt: new Date(),
+    };
+    await quote.save();
+
+    // Email de confirmation a l'admin + au client
+    try {
+      const transporter = getTransporter();
+      const mailHtml = renderHtml(quote.toObject(), { publicView: true });
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || 'contact@deliverydigital.fr',
+        to: 'contact@deliverydigital.fr',
+        cc: quote.acceptance.signerEmail,
+        subject: `[ACCEPTÉ] ${A.acceptedOn} ${quote.ref} - ${quote.acceptance.signerName}`,
+        html: `<p>Le devis <strong>${quote.ref}</strong> vient d'etre accepte par <strong>${quote.acceptance.signerName}</strong> (${quote.acceptance.signerEmail}).</p><p>IP : ${quote.acceptance.ip} - User Agent : ${quote.acceptance.userAgent}</p>${mailHtml}`,
+      });
+    } catch (e) { console.error('mail confirm err:', e.message); }
+
+    // Si lie a un prospect, mettre a jour son statut
+    try {
+      if (quote.prospectId) {
+        const Prospect = (await import('../models/Prospect.js')).default;
+        await Prospect.findByIdAndUpdate(quote.prospectId, {
+          status: 'won',
+          $push: { timeline: { kind: 'note', body: `Devis ${quote.ref} accepte par ${quote.acceptance.signerName}`, by: 'system', at: new Date() } },
+          lastContactAt: new Date(),
+        });
+      }
+    } catch {}
+
+    res.redirect(`/devis/${req.params.token}#accept`);
+  } catch (e) {
+    res.status(500).send(e.message);
+  }
+});
+
+/* Reject */
+publicRouter.post('/:token/reject', async (req, res) => {
+  try {
+    const quote = await QuickQuote.findOne({ publicToken: req.params.token });
+    if (!quote) return res.status(404).send('Devis introuvable');
+    quote.status = 'rejected';
+    quote.rejection = {
+      reason: String(req.body?.reason || '').slice(0, 600),
+      rejectedAt: new Date(),
+      ip: (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim(),
+    };
+    await quote.save();
+
+    try {
+      const transporter = getTransporter();
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || 'contact@deliverydigital.fr',
+        to: 'contact@deliverydigital.fr',
+        subject: `[REFUSÉ] Devis ${quote.ref}`,
+        html: `<p>Le devis <strong>${quote.ref}</strong> a ete refuse.</p><p><strong>Raison :</strong> ${escapeHtml(quote.rejection.reason || '(non precisee)')}</p>`,
+      });
+    } catch {}
+
+    res.redirect(`/devis/${req.params.token}#accept`);
   } catch (e) {
     res.status(500).send(e.message);
   }
