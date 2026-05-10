@@ -25,7 +25,7 @@ router.get('/catalog', requireAdmin, (req, res) => {
   res.json({
     catalog: [
       // Web
-      { id: 'site-vitrine', category: 'Web', label: 'Site vitrine sur mesure', defaultPrice: 4500, unit: 'forfait', description: 'Site corporate sur mesure (5-8 pages), CMS administrable, responsive, optimise SEO de base.' },
+      { id: 'site-vitrine', category: 'Web', label: 'Site vitrine sur mesure', defaultPrice: 990, unit: 'forfait', description: 'Site corporate sur mesure (5-8 pages), responsive, optimise SEO de base.' },
       { id: 'site-saas', category: 'Web', label: 'Plateforme SaaS / dashboard', defaultPrice: 18000, unit: 'forfait', description: 'Application web complete : auth, dashboard, base de donnees, deploiement.' },
       { id: 'site-ecommerce', category: 'Web', label: 'E-commerce sur mesure', defaultPrice: 12000, unit: 'forfait', description: 'Boutique en ligne complete : catalogue, panier, checkout, gestion commandes, espace admin.' },
       { id: 'refonte', category: 'Web', label: 'Refonte de site existant', defaultPrice: 8500, unit: 'forfait', description: 'Reprise, migration, modernisation d\'un site existant.' },
