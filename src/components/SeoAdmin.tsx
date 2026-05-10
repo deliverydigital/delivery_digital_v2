@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2, FileText, Sparkles, Check, X as XIcon, Edit3, Trash2,
-  ChevronRight, RefreshCw, Plus, Send, Globe, MapPin, FileQuestion,
+  ChevronRight, RefreshCw, Plus, Send, Globe, MapPin, FileQuestion, Copy, Zap,
 } from 'lucide-react';
 import AIOrb from './AIOrb';
 
@@ -133,6 +133,37 @@ export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?
     }
   };
 
+  const bulkSubmitDrafts = async () => {
+    if (filterStatus !== 'draft') return;
+    if (items.length === 0) return;
+    if (!confirm(`Publier les ${items.length} drafts visibles maintenant ?`)) return;
+    try {
+      const ids = items.map((i) => i._id);
+      const r = await api('/api/admin/seo/bulk-submit', { method: 'POST', body: JSON.stringify({ ids }) });
+      alert(`${r.published} pages publiees + IndexNow/Google pinged.`);
+      await load();
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
+  const pingAllPublished = async () => {
+    try {
+      const r = await api('/api/admin/seo/ping-all-published', { method: 'POST' });
+      alert(`${r.count} URLs envoyees a IndexNow (Bing/Yandex) + Google sitemap pinged.`);
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
+  const copyBatchForGSC = (count = 10) => {
+    const urls = items
+      .slice(0, count)
+      .map((i) => `https://deliverydigital.fr${i.type === 'article' ? '/blog/' : '/services/'}${i.slug}`);
+    navigator.clipboard.writeText(urls.join('\n'));
+    alert(`${urls.length} URLs copiees !\n\nColle-les une par une dans GSC > Inspection de l'URL > Demander indexation (max 10/jour).`);
+  };
+
   const rejectItem = async (id: string) => {
     try {
       await api(`/api/admin/seo/${id}/reject`, { method: 'POST' });
@@ -199,6 +230,9 @@ export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?
             onReject={rejectItem}
             onDelete={deleteItem}
             onRefresh={load}
+            onBulkSubmit={bulkSubmitDrafts}
+            onPingAll={pingAllPublished}
+            onCopyBatch={copyBatchForGSC}
           />
         )}
 
@@ -316,6 +350,9 @@ export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?
             onReject={rejectItem}
             onDelete={deleteItem}
             onRefresh={load}
+            onBulkSubmit={bulkSubmitDrafts}
+            onPingAll={pingAllPublished}
+            onCopyBatch={copyBatchForGSC}
           />
         )}
 
@@ -417,6 +454,7 @@ function NavBtn({ active, icon, onClick, label }: { active: boolean; icon: React
 function ListView({
   items, loading, filterStatus, filterType, setFilterType,
   onEdit, onSubmit, onReject, onDelete, onRefresh,
+  onBulkSubmit, onPingAll, onCopyBatch,
 }: {
   items: SeoItem[];
   loading: boolean;
@@ -428,6 +466,9 @@ function ListView({
   onReject: (id: string) => void;
   onDelete: (id: string) => void;
   onRefresh: () => void;
+  onBulkSubmit: () => void;
+  onPingAll: () => void;
+  onCopyBatch: (count?: number) => void;
 }) {
   return (
     <>
@@ -439,13 +480,44 @@ function ListView({
           {filterStatus === 'draft' ? 'A reviewer' : filterStatus === 'published' ? 'Publie' : 'Rejete'}
           <span className="text-[#86868B] ml-2">{items.length}</span>
         </h1>
-        <button
-          onClick={onRefresh}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ring-1 ring-black/8 bg-white text-[12.5px] text-[#1D1D1F] hover:bg-[#F5F5F7]"
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {filterStatus === 'draft' && items.length > 0 && (
+            <button
+              onClick={onBulkSubmit}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#34C759] text-white text-[12.5px] font-semibold hover:bg-[#28A745]"
+            >
+              <Send className="h-3.5 w-3.5" />
+              Publier les {items.length}
+            </button>
+          )}
+          {filterStatus === 'published' && items.length > 0 && (
+            <>
+              <button
+                onClick={() => onCopyBatch(10)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1D1D1F] text-white text-[12.5px] font-semibold hover:bg-[#3C3C43]"
+                title="Copie 10 URLs pour Google Search Console (Inspection URL > Demander indexation)"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                Copier 10 URLs (GSC)
+              </button>
+              <button
+                onClick={onPingAll}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0066CC] text-white text-[12.5px] font-semibold hover:bg-[#0077ED]"
+                title="Ping IndexNow (Bing/Yandex) + Google sitemap"
+              >
+                <Zap className="h-3.5 w-3.5" />
+                Pinger Bing+Google
+              </button>
+            </>
+          )}
+          <button
+            onClick={onRefresh}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ring-1 ring-black/8 bg-white text-[12.5px] text-[#1D1D1F] hover:bg-[#F5F5F7]"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Refresh
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-5">

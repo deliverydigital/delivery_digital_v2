@@ -2,6 +2,43 @@ import express from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import { SeoContent } from '../models/index.js';
 
+const INDEXNOW_KEY = '5287ee2987247abdbf235b0ed464ed74';
+const SITE_HOST = 'deliverydigital.fr';
+const SITE_BASE = `https://${SITE_HOST}`;
+
+async function pingIndexNow(urls) {
+  if (!urls || urls.length === 0) return { ok: true, skipped: true };
+  try {
+    const r = await fetch('https://api.indexnow.org/indexnow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        host: SITE_HOST,
+        key: INDEXNOW_KEY,
+        keyLocation: `${SITE_BASE}/${INDEXNOW_KEY}.txt`,
+        urlList: urls,
+      }),
+    });
+    return { ok: r.ok, status: r.status };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+async function pingGoogleSitemap() {
+  try {
+    const r = await fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(SITE_BASE + '/sitemap.xml')}`);
+    return { ok: r.ok, status: r.status };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+function publicUrlForItem(item) {
+  const path = item.type === 'article' ? `/blog/${item.slug}` : `/services/${item.slug}`;
+  return `${SITE_BASE}${path}`;
+}
+
 const router = express.Router();
 
 // Simple admin auth: header `x-admin-secret` matches env ADMIN_SECRET
@@ -285,7 +322,7 @@ router.patch('/:id', requireAdmin, async (req, res) => {
   }
 });
 
-// Submit (publish)
+// Submit (publish) + auto-ping IndexNow + Google sitemap
 router.post('/:id/submit', requireAdmin, async (req, res) => {
   try {
     const item = await SeoContent.findByIdAndUpdate(
@@ -294,9 +331,43 @@ router.post('/:id/submit', requireAdmin, async (req, res) => {
       { new: true }
     );
     if (!item) return res.status(404).json({ error: 'not found' });
-    res.json({ item });
+
+    // Fire-and-forget pings (n'attend pas la réponse pour répondre)
+    const url = publicUrlForItem(item);
+    pingIndexNow([url]).catch(() => {});
+    pingGoogleSitemap().catch(() => {});
+
+    res.json({ item, pinged: { indexnow: true, googleSitemap: true } });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Re-ping toutes les pages publiees (action manuelle)
+router.post('/ping-all-published', requireAdmin, async (req, res) => {
+  try {
+    const items = await SeoContent.find({ status: 'published' }).select('slug type').lean();
+    const urls = [SITE_BASE + '/', SITE_BASE + '/discutons', ...items.map(publicUrlForItem)];
+    const [indexnow, google] = await Promise.all([pingIndexNow(urls), pingGoogleSitemap()]);
+    res.json({ count: urls.length, indexnow, google });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Bulk submit (publish plusieurs drafts d'un coup) + ping
+router.post('/bulk-submit', requireAdmin, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'ids required' });
+    await SeoContent.updateMany({ _id: { $in: ids } }, { status: 'published', publishedAt: new Date() });
+    const items = await SeoContent.find({ _id: { $in: ids } }).select('slug type').lean();
+    const urls = items.map(publicUrlForItem);
+    pingIndexNow(urls).catch(() => {});
+    pingGoogleSitemap().catch(() => {});
+    res.json({ published: items.length, urls });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
