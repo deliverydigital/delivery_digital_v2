@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MapPin, ChevronRight } from 'lucide-react';
 import AIOrb from './AIOrb';
 
 interface SeoItem {
@@ -14,10 +14,15 @@ interface SeoItem {
   service?: string;
   faqItems?: Array<{ question: string; answer: string }>;
   publishedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
+
+interface RelatedItem { slug: string; title: string; type: string; city?: string; service?: string }
 
 export default function PublicSeoPage({ slug }: { slug: string }) {
   const [item, setItem] = useState<SeoItem | null>(null);
+  const [related, setRelated] = useState<RelatedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -25,44 +30,95 @@ export default function PublicSeoPage({ slug }: { slug: string }) {
     let cancelled = false;
     setLoading(true);
     setNotFound(false);
-    fetch(`/api/seo/${encodeURIComponent(slug)}`)
-      .then(async (r) => {
+
+    Promise.all([
+      fetch(`/api/seo/${encodeURIComponent(slug)}`).then((r) => r.status === 404 ? null : r.json()),
+      fetch('/api/seo').then((r) => r.ok ? r.json() : { items: [] }),
+    ])
+      .then(([detail, list]) => {
         if (cancelled) return;
-        if (r.status === 404) { setNotFound(true); setLoading(false); return; }
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const data = await r.json();
-        setItem(data.item);
+        if (!detail || !detail.item) { setNotFound(true); setLoading(false); return; }
+        const it: SeoItem = detail.item;
+        setItem(it);
 
-        // Update meta tags at runtime
-        if (data.item) {
-          document.title = data.item.metaTitle || data.item.title;
-          updateMetaTag('description', data.item.metaDescription || '');
-          updateMetaTag('og:title', data.item.metaTitle || data.item.title, 'property');
-          updateMetaTag('og:description', data.item.metaDescription || '', 'property');
-          updateMetaTag('og:url', window.location.href, 'property');
-          updateCanonical(window.location.href);
+        // Maillage interne : autres pages services x ville (8 max, autres villes meme service en priorite)
+        const all: RelatedItem[] = (list.items || []).filter((x: any) => x.slug !== slug);
+        const sameService = all.filter((x: any) => x.type === 'city-service' && it.service && x.title.toLowerCase().includes(it.service.toLowerCase().split(' ')[0]));
+        const sameCity = all.filter((x: any) => x.type === 'city-service' && it.city && x.title.toLowerCase().includes(it.city.toLowerCase()));
+        const others = all.filter((x: any) => !sameService.includes(x) && !sameCity.includes(x));
+        const rel = [...sameService.slice(0, 4), ...sameCity.slice(0, 3), ...others.slice(0, 3)].slice(0, 8);
+        setRelated(rel);
 
-          // Inject FAQ JSON-LD
-          if (data.item.type === 'faq' && data.item.faqItems?.length) {
-            injectJsonLd('seo-faq', {
-              '@context': 'https://schema.org',
-              '@type': 'FAQPage',
-              mainEntity: data.item.faqItems.map((q: any) => ({
-                '@type': 'Question',
-                name: q.question,
-                acceptedAnswer: { '@type': 'Answer', text: q.answer },
-              })),
-            });
-          }
+        // Meta tags + JSON-LD
+        document.title = it.metaTitle || it.title;
+        updateMetaTag('description', it.metaDescription || '');
+        updateMetaTag('og:title', it.metaTitle || it.title, 'property');
+        updateMetaTag('og:description', it.metaDescription || '', 'property');
+        updateMetaTag('og:url', window.location.href, 'property');
+        updateMetaTag('og:type', it.type === 'article' ? 'article' : 'website', 'property');
+        updateCanonical(window.location.href);
+
+        const datePublished = it.publishedAt || it.createdAt || new Date().toISOString();
+        const dateModified = it.updatedAt || datePublished;
+
+        // JSON-LD : Article (ou WebPage)
+        injectJsonLd('seo-article', {
+          '@context': 'https://schema.org',
+          '@type': it.type === 'article' ? 'Article' : 'WebPage',
+          headline: it.metaTitle || it.title,
+          name: it.title,
+          description: it.metaDescription,
+          url: window.location.href,
+          datePublished,
+          dateModified,
+          inLanguage: 'fr-FR',
+          author: { '@type': 'Organization', name: 'DELIVERY Digital Technology', url: 'https://deliverydigital.fr' },
+          publisher: {
+            '@type': 'Organization',
+            name: 'DELIVERY Digital Technology',
+            logo: { '@type': 'ImageObject', url: 'https://deliverydigital.fr/apple-touch-icon.png' },
+          },
+        });
+
+        // JSON-LD : BreadcrumbList
+        const breadcrumbs: any[] = [
+          { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://deliverydigital.fr/' },
+        ];
+        if (it.type === 'city-service') {
+          breadcrumbs.push({ '@type': 'ListItem', position: 2, name: 'Services', item: 'https://deliverydigital.fr/discutons' });
+          breadcrumbs.push({ '@type': 'ListItem', position: 3, name: it.title.length > 50 ? it.title.slice(0, 50) + '...' : it.title, item: window.location.href });
+        } else if (it.type === 'article') {
+          breadcrumbs.push({ '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://deliverydigital.fr/discutons' });
+          breadcrumbs.push({ '@type': 'ListItem', position: 3, name: it.title.length > 50 ? it.title.slice(0, 50) + '...' : it.title, item: window.location.href });
+        } else {
+          breadcrumbs.push({ '@type': 'ListItem', position: 2, name: it.title, item: window.location.href });
         }
+        injectJsonLd('seo-breadcrumb', { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: breadcrumbs });
+
+        // JSON-LD : FAQ (extrait du body si pas en faqItems explicite)
+        const faqs = it.faqItems && it.faqItems.length ? it.faqItems : extractFaqFromBody(it.body);
+        if (faqs.length > 0) {
+          injectJsonLd('seo-faq', {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: faqs.map((q) => ({
+              '@type': 'Question',
+              name: q.question,
+              acceptedAnswer: { '@type': 'Answer', text: q.answer },
+            })),
+          });
+        }
+
         setLoading(false);
       })
       .catch(() => { if (!cancelled) { setNotFound(true); setLoading(false); } });
 
     return () => {
       cancelled = true;
-      const tag = document.getElementById('seo-faq');
-      if (tag) tag.remove();
+      ['seo-article', 'seo-breadcrumb', 'seo-faq'].forEach((id) => {
+        const tag = document.getElementById(id);
+        if (tag) tag.remove();
+      });
     };
   }, [slug]);
 
@@ -86,6 +142,15 @@ export default function PublicSeoPage({ slug }: { slug: string }) {
 
   return (
     <article className="max-w-[760px] mx-auto px-5 sm:px-8 pt-[80px] sm:pt-[120px] pb-24">
+      {/* Breadcrumb visible (echo du JSON-LD pour user) */}
+      <nav className="text-[12.5px] text-[#86868B] mb-5 flex items-center flex-wrap gap-1.5" aria-label="Breadcrumb">
+        <a href="/" className="hover:text-[#1D1D1F]">Accueil</a>
+        <ChevronRight className="h-3 w-3" />
+        <a href="/discutons" className="hover:text-[#1D1D1F]">{item.type === 'article' ? 'Blog' : 'Services'}</a>
+        <ChevronRight className="h-3 w-3" />
+        <span className="text-[#1D1D1F] truncate max-w-[300px]">{item.title}</span>
+      </nav>
+
       <div className="prose prose-neutral max-w-none">
         <MarkdownView body={item.body} />
       </div>
@@ -109,6 +174,25 @@ export default function PublicSeoPage({ slug }: { slug: string }) {
           Demarrer la conversation
         </a>
       </div>
+
+      {/* Maillage interne : autres pages */}
+      {related.length > 0 && (
+        <aside className="mt-12 pt-10 border-t border-black/8">
+          <h4 className="text-[14px] font-semibold uppercase tracking-wider text-[#86868B] mb-4">A explorer aussi</h4>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {related.map((r) => (
+              <a
+                key={r.slug}
+                href={r.type === 'article' ? `/blog/${r.slug}` : `/services/${r.slug}`}
+                className="group flex items-start gap-2 p-3 rounded-[12px] bg-[#FAFAFA] hover:bg-[#F2EFE9] transition-colors"
+              >
+                <MapPin className="h-3.5 w-3.5 text-[#86868B] mt-0.5 flex-shrink-0 group-hover:text-[#1D1D1F]" />
+                <span className="text-[13px] text-[#1D1D1F] leading-snug line-clamp-2">{r.title}</span>
+              </a>
+            ))}
+          </div>
+        </aside>
+      )}
     </article>
   );
 }
@@ -143,6 +227,24 @@ function injectJsonLd(id: string, data: any) {
   tag.type = 'application/ld+json';
   tag.textContent = JSON.stringify(data);
   document.head.appendChild(tag);
+}
+
+/* Extrait Q/R d'une section "## Questions frequentes" avec H3 questions */
+function extractFaqFromBody(body: string): Array<{ question: string; answer: string }> {
+  const faqSectionMatch = body.match(/##\s+(?:Questions?\s+(?:fréquentes?|frequentes?))[\s\S]*?(?=\n##\s|$)/i);
+  if (!faqSectionMatch) return [];
+  const section = faqSectionMatch[0];
+  const items: Array<{ question: string; answer: string }> = [];
+
+  // Format possible : ### Question ? \n\n Reponse... \n\n ### autre Question ? ...
+  const re = /(?:###\s+|\*\*)([^\n*]+(?:\?))(?:\*\*)?\s*\n+([^]+?)(?=\n(?:###|\*\*[^*]|\n##)|$)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(section)) !== null) {
+    const question = m[1].trim().replace(/\*+$/, '').trim();
+    const answer = m[2].trim().replace(/^\*+|\*+$/g, '').replace(/\n+/g, ' ').trim();
+    if (question && answer) items.push({ question, answer });
+  }
+  return items.slice(0, 8);
 }
 
 /* ============== Mini Markdown renderer ============== */
