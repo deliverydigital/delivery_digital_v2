@@ -37,7 +37,9 @@ Services : sites web sur mesure (SaaS, dashboards), applications mobiles iOS/And
 
 Differenciateur cle : un assistant IA conversationnel sur https://deliverydigital.fr/discutons qui qualifie le projet du prospect en 5 minutes (a la place d'un formulaire de devis classique).
 
-Reperes : Credit Impot Innovation (CII) - jusqu'a 20% des depenses d'innovation remboursees pour les clients eligibles en France. SIRET 902 945 195 00029. RCS Nice.
+Reperes :
+- DELIVERY Digital est CERTIFIE CII (Credit Impot Innovation) - agrement officiel de l'Etat. Cette certification ouvre directement le droit a nos clients eligibles (PME au sens europeen, en France) a recuperer 20% des depenses d'innovation engagees sur leur projet, dans la limite des plafonds en vigueur. C'est un avantage concret rare parmi les agences web - a mettre en avant des que la section CII est abordee.
+- SIRET 902 945 195 00029. RCS Nice.
 
 Regles de redaction :
 - Francais naturel, sans jargon excessif
@@ -71,7 +73,7 @@ Le champ "body" doit contenir 800-1200 mots en markdown :
 - ## Notre approche : qualifier votre projet en 5 minutes par chat IA (mettre en avant /discutons)
 - ## Stack technique et methodologie (technos concretes : React, Next.js, TypeScript, Node.js, AWS, etc.)
 - ## Comment nous travaillons avec des clients de ${city} et au-dela (remote-first : visios, slack, github, demos hebdo)
-- ## Eligibilite Credit Impot Innovation pour les clients en France (informatif, pas vendeur)
+- ## Credit Impot Innovation : 20% rembourses (DELIVERY Digital est CERTIFIE CII, donc cette certification ouvre directement le droit pour les clients PME francaises eligibles - le preciser explicitement)
 - ## Discutons de votre projet (CTA vers /discutons)
 - ## Questions frequentes (3-4 Q/R, exemples : delais typiques, mode de collaboration remote, propriete du code)
 
