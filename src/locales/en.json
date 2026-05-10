@@ -57,8 +57,10 @@
     "trainingPro": "Pro training"
   },
   "hero": {
-    "title": "The code that powers your ambitions, 20 % refunded via the French CII",
-    "subtitle": "Web, mobile apps, SaaS, CRM, ERP. CII-certified agency - up to 80,000 EUR yearly tax credit for eligible French SMEs.",
+    "title": "Let's build your next digital product",
+    "subtitle": "Web, mobile apps, SaaS, CRM, ERP. Tailor-made code, delivered in weeks. Our AI agent understands your needs.",
+    "titleIntl": "Let's build your next digital product",
+    "subtitleIntl": "Web, mobile apps, SaaS, CRM, ERP. Tailor-made code, delivered in weeks. Our AI agent understands your needs.",
     "cta": {
       "project": "Discuss a project"
     },

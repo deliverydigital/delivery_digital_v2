@@ -59,6 +59,8 @@
   "hero": {
     "title": "Le code qui propulse vos ambitions, 20 % remboursés via le CII",
     "subtitle": "Sites web, applications mobiles, SaaS, CRM, ERP sur mesure. Agence certifiée Crédit Impôt Innovation - jusqu'à 80 000 € de crédit annuel pour les PME éligibles.",
+    "titleIntl": "Construisons votre prochain produit digital",
+    "subtitleIntl": "Sites web, applications mobiles, SaaS, CRM, ERP. Code sur mesure, livré en quelques semaines. Notre agent IA comprend votre besoin.",
     "cta": {
       "project": "Discuter d'un projet"
     },

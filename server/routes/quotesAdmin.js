@@ -80,7 +80,7 @@ router.post('/', requireAdmin, async (req, res) => {
 
 router.patch('/:id', requireAdmin, async (req, res) => {
   try {
-    const allowed = ['client', 'title', 'intro', 'lines', 'taxRate', 'ciiEligible', 'validUntil', 'notes', 'prospectId', 'status'];
+    const allowed = ['client', 'title', 'intro', 'lines', 'taxRate', 'ciiEligible', 'validUntil', 'notes', 'prospectId', 'status', 'currency', 'secondaryCurrency', 'secondaryRate'];
     const updates = {};
     for (const k of allowed) if (k in req.body) updates[k] = req.body[k];
     const item = await QuickQuote.findById(req.params.id);
@@ -105,14 +105,28 @@ router.delete('/:id', requireAdmin, async (req, res) => {
 /* ===========================================================
    Render HTML (preview admin + email body + page publique)
    =========================================================== */
-function fmtEur(n) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(n);
+function fmt(n, currency = 'EUR') {
+  try {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, minimumFractionDigits: 2 }).format(n);
+  } catch {
+    return `${n.toFixed(2)} ${currency}`;
+  }
+}
+function fmtBoth(n, primary, secondary, rate) {
+  const main = fmt(n, primary);
+  if (!secondary || !rate || rate <= 0 || secondary === primary) return main;
+  const conv = fmt(n * rate, secondary);
+  return `${main} <span style="color:#86868B;font-size:11px;font-weight:400;">(≈ ${conv})</span>`;
 }
 
 function renderHtml(quote, { publicView = false } = {}) {
   const validDate = quote.validUntil ? new Date(quote.validUntil).toLocaleDateString('fr-FR') : '';
   const today = new Date().toLocaleDateString('fr-FR');
   const publicLink = `${PUBLIC_BASE}/devis/${quote.publicToken}`;
+  const cur = (quote.currency || 'EUR').toUpperCase();
+  const sec = quote.secondaryCurrency ? quote.secondaryCurrency.toUpperCase() : null;
+  const rate = quote.secondaryRate || 1;
+  const M = (n) => fmtBoth(n, cur, sec, rate);
 
   return `<!doctype html>
 <html lang="fr">
@@ -194,26 +208,26 @@ function renderHtml(quote, { publicView = false } = {}) {
             ${l.details ? `<div class="desc-details">${escapeHtml(l.details)}</div>` : ''}
           </td>
           <td class="num">${l.quantity} ${l.unit ? escapeHtml(l.unit) : ''}</td>
-          <td class="num">${fmtEur(l.unitPrice)}</td>
-          <td class="num"><strong>${fmtEur((l.quantity || 1) * (l.unitPrice || 0))}</strong></td>
+          <td class="num">${M(l.unitPrice)}</td>
+          <td class="num"><strong>${M((l.quantity || 1) * (l.unitPrice || 0))}</strong></td>
         </tr>
       `).join('')}
     </tbody>
   </table>
 
   <div class="totals">
-    <div class="row"><span>Sous-total HT</span><strong>${fmtEur(quote.subtotal)}</strong></div>
-    <div class="row"><span>TVA (${quote.taxRate} %)</span><span>${fmtEur(quote.taxAmount)}</span></div>
-    <div class="row big"><span>Total TTC</span><span>${fmtEur(quote.totalTTC)}</span></div>
+    <div class="row"><span>Sous-total HT</span><strong>${M(quote.subtotal)}</strong></div>
+    <div class="row"><span>TVA (${quote.taxRate} %)</span><span>${M(quote.taxAmount)}</span></div>
+    <div class="row big"><span>Total TTC</span><span>${M(quote.totalTTC)}</span></div>
     ${quote.ciiEligible && quote.ciiAmount > 0 ? `
-      <div class="row cii"><span>↓ Crédit Impôt Innovation</span><span>-${fmtEur(quote.ciiAmount)}</span></div>
-      <div class="row big"><span>Coût net après CII</span><span>${fmtEur(quote.totalTTC - quote.ciiAmount)}</span></div>
+      <div class="row cii"><span>↓ Crédit Impôt Innovation</span><span>-${M(quote.ciiAmount)}</span></div>
+      <div class="row big"><span>Coût net après CII</span><span>${M(quote.totalTTC - quote.ciiAmount)}</span></div>
     ` : ''}
   </div>
 
   ${quote.ciiEligible ? `
     <div class="cii-block">
-      <strong>Crédit Impôt Innovation (CII)</strong> — DELIVERY Digital est certifié CII. Pour les PME françaises éligibles, ${quote.ciiAmount > 0 ? `<strong>${fmtEur(quote.ciiAmount)}</strong> seront récupérés` : '20 % des dépenses d\'innovation seront récupérés'} via ce dispositif fiscal (plafond annuel : 400 000 € de dépenses, soit 80 000 € de crédit max).
+      <strong>Crédit Impôt Innovation (CII)</strong> — DELIVERY Digital est certifié CII. Pour les PME françaises éligibles, ${quote.ciiAmount > 0 ? `<strong>${M(quote.ciiAmount)}</strong> seront récupérés` : '20 % des dépenses d\'innovation seront récupérés'} via ce dispositif fiscal (plafond annuel : 400 000 € de dépenses, soit 80 000 € de crédit max).
     </div>
   ` : ''}
 

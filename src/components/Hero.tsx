@@ -83,6 +83,7 @@ const CIIRow = ({ icon: Icon, title, children }: { icon: React.ElementType; titl
 const Hero = () => {
   const { t } = useTranslation();
   const [isCIIModalOpen, setIsCIIModalOpen] = useState(false);
+  const [isFR, setIsFR] = useState<boolean | null>(null); // null = en attente
 
   // Listen for global "openCIIModal" event so badges from other components can trigger it
   useEffect(() => {
@@ -90,6 +91,23 @@ const Hero = () => {
     window.addEventListener('openCIIModal', open);
     return () => window.removeEventListener('openCIIModal', open);
   }, []);
+
+  // Detection IP : visiteurs FR voient le titre avec CII, etranger voit titre intl
+  useEffect(() => {
+    let cancelled = false;
+    fetch('https://ipapi.co/country/', { signal: AbortSignal.timeout(2500) })
+      .then((r) => r.text())
+      .then((country) => {
+        if (cancelled) return;
+        setIsFR((country || '').trim().toUpperCase() === 'FR');
+      })
+      .catch(() => { if (!cancelled) setIsFR(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Titre selon pays. Tant qu'on attend, affiche la version intl (neutre, pas de CII visible).
+  const heroTitle = isFR === true ? t('hero.title') : t('hero.titleIntl', t('hero.title'));
+  const heroSubtitle = isFR === true ? t('hero.subtitle') : t('hero.subtitleIntl', t('hero.subtitle'));
 
   return (
     <>
@@ -105,7 +123,7 @@ const Hero = () => {
             transition={{ duration: 0.6 }}
             className="display-1 text-[34px] sm:text-[64px] lg:text-[80px] mb-5"
           >
-            {t('hero.title')}
+            {heroTitle}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 8 }}
@@ -113,7 +131,7 @@ const Hero = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-[17px] sm:text-[24px] lg:text-[28px] font-normal text-white/90 max-w-3xl mx-auto leading-snug tracking-tight"
           >
-            {t('hero.subtitle')}
+            {heroSubtitle}
           </motion.p>
 
           {/* Primary CTA: AI assistant */}

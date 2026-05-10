@@ -33,6 +33,10 @@ const quickQuoteSchema = new Schema({
   total: { type: Number, default: 0 },
   totalTTC: { type: Number, default: 0 },
 
+  currency: { type: String, default: 'EUR', uppercase: true, trim: true }, // EUR USD GBP CHF CAD AED MAD AUD ...
+  secondaryCurrency: { type: String, uppercase: true, trim: true }, // affichage parallèle (optionnel)
+  secondaryRate: { type: Number, default: 1 }, // 1 unité de currency = X secondaryCurrency
+
   ciiEligible: { type: Boolean, default: false },
   ciiAmount: { type: Number, default: 0 },
 
