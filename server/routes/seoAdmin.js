@@ -65,7 +65,9 @@ RÈGLES DE RÉDACTION (impératif) :
 
 7. INTERDIT GÉOGRAPHIQUE : ne JAMAIS argumenter "agence locale = mieux" ou "préférez une agence près de chez vous". DELIVERY Digital intervient en remote dans le monde entier ; mentionner Nice/Côte d'Azur uniquement comme fait factuel (siège social) - jamais comme avantage commercial de proximité. La proximité géographique n'est PAS un argument de vente.
 
-8. Pour les pages ciblant une ville : "nous accompagnons des entreprises de [ville] et au-delà, en remote", pas "vous êtes à [ville], donc...".`;
+8. Pour les pages ciblant une ville : "nous accompagnons des entreprises de [ville] et au-delà, en remote", pas "vous êtes à [ville], donc...".
+
+9. INTERDIT DÉNIGREMENT CONCURRENCE : ne JAMAIS dénigrer ou comparer défavorablement "les autres agences", "les agences classiques", "la plupart des prestataires", etc. Pas de phrases du type "contrairement à la majorité", "à la différence des agences traditionnelles", "la plupart des agences vous demandent...". On parle UNIQUEMENT de notre approche, sans comparaison négative. La force de DELIVERY Digital se vend par ce que nous faisons, pas par ce que les autres feraient mal.`;
 
 const PROMPT_CITY_SERVICE = (city, service) => `Génère une page SEO programmatique ciblant le mot-clé "${service} ${city}".
 
