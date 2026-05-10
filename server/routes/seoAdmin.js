@@ -38,7 +38,7 @@ Services : sites web sur mesure (SaaS, dashboards), applications mobiles iOS/And
 Différenciateur clé : un agent IA conversationnel sur https://deliverydigital.fr/discutons qui comprend le besoin du prospect (à la place d'un formulaire de devis classique). Slogan associé : "Notre agent IA comprend votre besoin".
 
 Repères :
-- DELIVERY Digital est CERTIFIÉ CII (Crédit Impôt Innovation) - agrément officiel de l'État. Cette certification ouvre directement le droit à nos clients éligibles (PME au sens européen, en France) à récupérer 20 % des dépenses d'innovation engagées sur leur projet, dans la limite de 400 000 € de dépenses éligibles par an et par entreprise (soit jusqu'à 80 000 € de crédit annuel maximum). C'est un avantage concret rare parmi les agences web - à mettre en avant dès que la section CII est abordée. Toujours préciser le plafond de 400 000 € pour rester crédible.
+- DELIVERY Digital est CERTIFIÉ CII (Crédit Impôt Innovation), un agrément officiel de l'État. Cette certification permet à nos clients PME françaises éligibles de récupérer 20 % des dépenses d'innovation engagées sur leur projet, dans la limite de 400 000 € de dépenses éligibles par an et par entreprise (soit jusqu'à 80 000 € de crédit annuel maximum). Toujours préciser le plafond de 400 000 € pour rester crédible. Présenter le CII de façon factuelle et humble - ne JAMAIS suggérer que d'autres agences ne l'ont pas, ne JAMAIS dire "rare parmi les agences", "exclusif", "différent" ou similaire. Le CII est un dispositif accessible à toute entreprise innovante éligible.
 - SIRET 902 945 195 00029. RCS Nice.
 
 RÈGLES DE RÉDACTION (impératif) :
@@ -52,11 +52,12 @@ RÈGLES DE RÉDACTION (impératif) :
 4. TIRETS : utilise UNIQUEMENT le tiret court "-" (tiret du 6). JAMAIS le tiret long em-dash "—". Cette règle est absolue.
 
 5. STYLE :
-- Français naturel, professionnel, pas pompeux. Phrases courtes à moyennes.
+- Français naturel, professionnel, humble. Phrases courtes à moyennes.
 - Pas de jargon excessif, mais le vocabulaire technique précis quand pertinent.
 - Pas d'emoji.
 - Tonalité orientée bénéfice business, pas marketing creux.
 - Mentionne /discutons comme point d'entrée quand c'est pertinent.
+- INTERDIT VANTARDISE : pas de "le meilleur", "unique en son genre", "incomparable", "différent des autres", "ce que personne ne fait". Pas non plus de "nous sommes parmi les rares à...". On parle factuellement de ce qu'on fait, sans se valoriser au détriment des autres.
 
 6. CONTENU :
 - Pas de mention de la formation Qualiopi (focus 100 % vente informatique).
@@ -91,7 +92,7 @@ Le champ "body" doit contenir 800-1200 mots en markdown :
 - ## Notre agent IA comprend votre besoin (titre H2 EXACT, mettre en avant /discutons et expliquer le fonctionnement)
 - ## Stack technique et méthodologie (technos concrètes : React, Next.js, TypeScript, Node.js, AWS, etc.)
 - ## Comment nous travaillons avec des clients de ${city} et au-delà (remote-first : visios, slack, github, démos hebdo)
-- ## Crédit Impôt Innovation : 20 % remboursés (DELIVERY Digital est CERTIFIÉ CII, cette certification ouvre directement le droit aux clients PME françaises éligibles - le préciser explicitement)
+- ## Crédit Impôt Innovation : 20 % remboursés (présenter factuellement le dispositif CII : taux 20 %, plafond 400 000 € de dépenses éligibles par an, soit jusqu'à 80 000 € de crédit annuel. Préciser que DELIVERY Digital est certifié CII, ce qui facilite l'éligibilité des projets pour les clients PME françaises. Ton humble, pas comparatif.)
 - ## Discutons de votre projet (CTA vers /discutons)
 - ## Questions fréquentes (3-4 Q/R, exemples : délais typiques, mode de collaboration remote, propriété du code)
 
