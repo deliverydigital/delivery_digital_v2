@@ -21,6 +21,11 @@ interface Quote {
   currency: string;
   secondaryCurrency?: string;
   secondaryRate?: number;
+  discountType?: 'none' | 'percent' | 'amount';
+  discountValue?: number;
+  discountAmount?: number;
+  subtotalAfterDiscount?: number;
+  language?: string;
   ciiEligible: boolean;
   ciiAmount: number;
   status: 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected' | 'expired';
@@ -31,6 +36,17 @@ interface Quote {
   sentAt?: string;
   viewedAt?: string;
 }
+
+const LANGUAGES = [
+  { code: 'fr', label: 'Français' },
+  { code: 'en', label: 'English' },
+  { code: 'es', label: 'Español' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'pt', label: 'Português' },
+  { code: 'ar', label: 'العربية' },
+  { code: 'zh', label: '中文' },
+];
 
 const CURRENCIES = [
   { code: 'EUR', label: 'EUR (€)' },
@@ -49,6 +65,7 @@ const CURRENCIES = [
 
 interface CatalogItem {
   id: string;
+  category?: string;
   label: string;
   defaultPrice: number;
   unit: string;
@@ -125,6 +142,11 @@ export default function QuoteAdmin({ secret }: { secret: string }) {
       currency: 'EUR',
       secondaryCurrency: '',
       secondaryRate: 1,
+      language: 'fr',
+      discountType: 'none',
+      discountValue: 0,
+      discountAmount: 0,
+      subtotalAfterDiscount: 0,
       ciiEligible: false,
       ciiAmount: 0,
       status: 'draft',
@@ -289,15 +311,53 @@ function QuoteEditor({
 
   const isNew = q._id === 'new';
 
+  // Autocomplete client depuis prospects
+  const [prospectQuery, setProspectQuery] = useState('');
+  const [prospectSuggestions, setProspectSuggestions] = useState<Array<any>>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  useEffect(() => {
+    if (!prospectQuery || prospectQuery.length < 2) { setProspectSuggestions([]); return; }
+    const timer = setTimeout(() => {
+      api(`/api/admin/prospects?q=${encodeURIComponent(prospectQuery)}&limit=8`)
+        .then((d) => setProspectSuggestions(d.items || []))
+        .catch(() => {});
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [prospectQuery, api]);
+
+  const selectProspect = (p: any) => {
+    setQ({
+      ...q,
+      client: {
+        name: p.fullName || `${p.firstName || ''} ${p.lastName || ''}`.trim() || p.email,
+        email: p.email || '',
+        company: p.company || '',
+        phone: p.phone || '',
+      },
+      prospectId: p._id,
+    } as Quote);
+    setShowSuggestions(false);
+    setProspectQuery('');
+  };
+
   // Recalcul totaux en local
   useEffect(() => {
-    const subtotal = q.lines.reduce((s, l) => s + (l.quantity || 1) * (l.unitPrice || 0), 0);
-    const taxAmount = Math.round(subtotal * (q.taxRate / 100) * 100) / 100;
-    const totalTTC = Math.round((subtotal + taxAmount) * 100) / 100;
-    const ciiAmount = q.ciiEligible ? Math.round(Math.min(subtotal, 400000) * 0.20 * 100) / 100 : 0;
-    setQ((prev) => ({ ...prev, subtotal, taxAmount, totalTTC, ciiAmount }));
+    const round = (n: number) => Math.round(n * 100) / 100;
+    const subtotal = round(q.lines.reduce((s, l) => s + (l.quantity || 1) * (l.unitPrice || 0), 0));
+    let discountAmount = 0;
+    if (q.discountType === 'percent' && (q.discountValue || 0) > 0) {
+      discountAmount = round(subtotal * ((q.discountValue || 0) / 100));
+    } else if (q.discountType === 'amount' && (q.discountValue || 0) > 0) {
+      discountAmount = round(Math.min(q.discountValue || 0, subtotal));
+    }
+    const subtotalAfterDiscount = round(subtotal - discountAmount);
+    const taxAmount = round(subtotalAfterDiscount * (q.taxRate / 100));
+    const totalTTC = round(subtotalAfterDiscount + taxAmount);
+    const ciiAmount = q.ciiEligible ? round(Math.min(subtotalAfterDiscount, 400000) * 0.20) : 0;
+    setQ((prev) => ({ ...prev, subtotal, discountAmount, subtotalAfterDiscount, taxAmount, totalTTC, ciiAmount }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q.lines, q.taxRate, q.ciiEligible]);
+  }, [q.lines, q.taxRate, q.ciiEligible, q.discountType, q.discountValue]);
 
   const cur = q.currency || 'EUR';
   const sec = q.secondaryCurrency || '';
@@ -310,6 +370,8 @@ function QuoteEditor({
         client: q.client, title: q.title, intro: q.intro, lines: q.lines,
         taxRate: q.taxRate, ciiEligible: q.ciiEligible, validUntil: q.validUntil, notes: q.notes,
         currency: q.currency, secondaryCurrency: q.secondaryCurrency, secondaryRate: q.secondaryRate,
+        discountType: q.discountType, discountValue: q.discountValue,
+        language: q.language,
       };
       const res = isNew
         ? await api('/api/admin/quotes-quick', { method: 'POST', body: JSON.stringify(body) })
@@ -387,6 +449,35 @@ function QuoteEditor({
     setQ({ ...q, lines: q.lines.filter((_, i) => i !== idx) });
   };
 
+  const translate = async (target: string) => {
+    if (target === q.language) return;
+    if (q.lines.length === 0 && !q.title.trim()) {
+      alert('Ajoutez au moins une ligne ou un titre avant de traduire.');
+      return;
+    }
+    if (!confirm(`Traduire ce devis en ${LANGUAGES.find((l) => l.code === target)?.label} ? (Les champs FR seront remplaces par leur traduction)`)) return;
+    let saved = q;
+    if (isNew || hasChanges()) {
+      const r = await save();
+      if (!r) return;
+      saved = r;
+    }
+    setBusy(true);
+    try {
+      const r = await api(`/api/admin/quotes-quick/${saved._id}/translate`, {
+        method: 'POST',
+        body: JSON.stringify({ target }),
+      });
+      setQ(r.item);
+      await onSaved();
+      alert('Traduction terminee.');
+    } catch (e: any) {
+      alert(`Erreur traduction : ${e.message}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <>
       <motion.div
@@ -425,6 +516,39 @@ function QuoteEditor({
           <div className="flex-1 overflow-y-auto p-5 space-y-5">
             {/* Client */}
             <Section title="Client">
+              {/* Recherche prospect existant */}
+              <div className="relative mb-3">
+                <label className="block text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-1">Lier un prospect existant (optionnel)</label>
+                <input
+                  type="text"
+                  value={prospectQuery}
+                  onChange={(e) => { setProspectQuery(e.target.value); setShowSuggestions(true); }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  placeholder="Rechercher (nom, email, entreprise)..."
+                  className="w-full px-3 py-2 rounded-[10px] bg-[#F2EFE9] outline-none text-[14px] text-[#1D1D1F]"
+                />
+                {showSuggestions && prospectSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 max-h-[280px] overflow-y-auto bg-white rounded-[12px] ring-1 ring-black/8 shadow-2xl z-10">
+                    {prospectSuggestions.map((p: any) => (
+                      <button
+                        key={p._id}
+                        onMouseDown={(e) => { e.preventDefault(); selectProspect(p); }}
+                        className="w-full text-left px-3 py-2.5 hover:bg-[#FAFAFA] border-b border-black/5 last:border-0"
+                      >
+                        <div className="text-[13.5px] font-semibold text-[#1D1D1F]">{p.fullName || `${p.firstName || ''} ${p.lastName || ''}`.trim() || '(sans nom)'}</div>
+                        <div className="text-[11.5px] text-[#86868B]">
+                          {p.email}{p.company ? ' · ' + p.company : ''}{p.status ? ' · ' + p.status : ''}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {q.prospectId && (
+                  <p className="text-[11px] text-[#34C759] mt-1">✓ Devis lie au prospect en base (le statut sera mis a jour automatiquement)</p>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <Input label="Nom *" value={q.client.name} onChange={(v) => setQ({ ...q, client: { ...q.client, name: v } })} />
                 <Input label="Email *" type="email" value={q.client.email} onChange={(v) => setQ({ ...q, client: { ...q.client, email: v } })} />
@@ -448,23 +572,40 @@ function QuoteEditor({
               </div>
             </Section>
 
-            {/* Catalogue */}
-            <Section title="Ajouter depuis le catalogue">
-              <div className="grid grid-cols-2 gap-2">
-                {catalog.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => addLine(c)}
-                    className="text-left p-3 rounded-[10px] bg-[#FAFAFA] hover:bg-[#F2EFE9] border border-black/5"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[13px] font-semibold text-[#1D1D1F]">{c.label}</span>
-                      <span className="text-[12px] text-[#86868B]">{fmtEur(c.defaultPrice)}</span>
-                    </div>
-                    <div className="text-[11.5px] text-[#86868B] line-clamp-2">{c.description}</div>
-                  </button>
-                ))}
-              </div>
+            {/* Catalogue groupe par categorie */}
+            <Section title={`Ajouter depuis le catalogue (${catalog.length} services)`}>
+              {(() => {
+                const byCat: Record<string, CatalogItem[]> = {};
+                catalog.forEach((c) => {
+                  const cat = c.category || 'Autres';
+                  if (!byCat[cat]) byCat[cat] = [];
+                  byCat[cat].push(c);
+                });
+                return (
+                  <div className="space-y-4">
+                    {Object.entries(byCat).map(([cat, items]) => (
+                      <div key={cat}>
+                        <h5 className="text-[11px] font-semibold uppercase tracking-wider text-[#1D1D1F] mb-2">{cat}</h5>
+                        <div className="grid grid-cols-2 gap-2">
+                          {items.map((c) => (
+                            <button
+                              key={c.id}
+                              onClick={() => addLine(c)}
+                              className="text-left p-3 rounded-[10px] bg-[#FAFAFA] hover:bg-[#F2EFE9] border border-black/5"
+                            >
+                              <div className="flex items-center justify-between mb-1 gap-2">
+                                <span className="text-[13px] font-semibold text-[#1D1D1F]">{c.label}</span>
+                                <span className="text-[12px] text-[#86868B] whitespace-nowrap">{fmtEur(c.defaultPrice)}/{c.unit}</span>
+                              </div>
+                              <div className="text-[11.5px] text-[#86868B] line-clamp-2">{c.description}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
               <button
                 onClick={() => addLine()}
                 className="mt-3 inline-flex items-center gap-1 text-[12.5px] text-[#0066CC] font-semibold hover:underline"
@@ -527,6 +668,33 @@ function QuoteEditor({
               </Section>
             )}
 
+            {/* Langue + traduction */}
+            <Section title="Langue du devis">
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  value={q.language || 'fr'}
+                  onChange={(e) => setQ({ ...q, language: e.target.value })}
+                  className="px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px] cursor-pointer"
+                >
+                  {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+                </select>
+                <span className="text-[12px] text-[#86868B]">|</span>
+                <span className="text-[12px] text-[#86868B] mr-1">Traduire (IA Claude) :</span>
+                {LANGUAGES.filter((l) => l.code !== (q.language || 'fr')).slice(0, 5).map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => translate(l.code)}
+                    disabled={busy || isNew}
+                    className="px-2.5 py-1 rounded-full bg-white ring-1 ring-black/8 text-[12px] text-[#1D1D1F] hover:ring-black/20 disabled:opacity-40"
+                    title={isNew ? 'Enregistrez d\'abord le devis' : ''}
+                  >
+                    → {l.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11.5px] text-[#86868B] mt-2">La traduction remplace le contenu actuel (titre, intro, lignes, notes). Les libelles techniques (Sous-total, TVA, Total TTC...) s'adaptent automatiquement.</p>
+            </Section>
+
             {/* Devises */}
             <Section title="Devise(s)">
               <div className="grid grid-cols-2 gap-3 mb-3">
@@ -568,6 +736,38 @@ function QuoteEditor({
               )}
             </Section>
 
+            {/* Reduction */}
+            <Section title="Reduction (optionnel)">
+              <div className="flex flex-wrap items-center gap-2">
+                {([
+                  { v: 'none', l: 'Aucune' },
+                  { v: 'percent', l: 'Pourcentage' },
+                  { v: 'amount', l: 'Montant fixe' },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.v}
+                    onClick={() => setQ({ ...q, discountType: opt.v, discountValue: opt.v === 'none' ? 0 : (q.discountValue || 0) })}
+                    className={`px-3 py-1.5 rounded-full text-[12.5px] font-medium ${q.discountType === opt.v ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F]'}`}
+                  >
+                    {opt.l}
+                  </button>
+                ))}
+                {q.discountType !== 'none' && (
+                  <div className="flex items-center gap-1 ml-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={q.discountValue || 0}
+                      onChange={(e) => setQ({ ...q, discountValue: parseFloat(e.target.value) || 0 })}
+                      className="w-28 px-2 py-1.5 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px] text-right"
+                      placeholder={q.discountType === 'percent' ? 'ex: 10' : 'ex: 500'}
+                    />
+                    <span className="text-[13px] text-[#86868B]">{q.discountType === 'percent' ? '%' : q.currency}</span>
+                  </div>
+                )}
+              </div>
+            </Section>
+
             {/* CII + TVA + total */}
             <Section title="Total et options">
               <label className="flex items-center gap-2 mb-3 text-[13px] cursor-pointer">
@@ -580,6 +780,15 @@ function QuoteEditor({
               </label>
               <div className="bg-[#F2EFE9] rounded-[12px] p-4 space-y-1.5 text-[14px]">
                 <div className="flex justify-between"><span>Sous-total HT</span><strong>{fmtMain(q.subtotal)}</strong></div>
+                {(q.discountAmount || 0) > 0 && (
+                  <>
+                    <div className="flex justify-between text-[#FF9500]">
+                      <span>Réduction{q.discountType === 'percent' ? ` (${q.discountValue}%)` : ''}</span>
+                      <span>-{fmtMain(q.discountAmount || 0)}</span>
+                    </div>
+                    <div className="flex justify-between"><span>Sous-total après remise</span><strong>{fmtMain(q.subtotalAfterDiscount || 0)}</strong></div>
+                  </>
+                )}
                 <div className="flex justify-between text-[#86868B]"><span>TVA ({q.taxRate}%)</span><span>{fmtMain(q.taxAmount)}</span></div>
                 <div className="flex justify-between text-[16px] pt-2 border-t border-black/10"><strong>Total TTC</strong><strong>{fmtMain(q.totalTTC)}</strong></div>
                 {sec && q.secondaryRate && (

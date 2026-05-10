@@ -27,15 +27,21 @@ const quickQuoteSchema = new Schema({
   intro: { type: String, default: '', trim: true },
   lines: { type: [lineSchema], default: [] },
 
-  subtotal: { type: Number, default: 0 },
+  subtotal: { type: Number, default: 0 }, // somme brute des lignes
+  discountType: { type: String, enum: ['none', 'percent', 'amount'], default: 'none' },
+  discountValue: { type: Number, default: 0 }, // % si type=percent, montant HT si type=amount
+  discountAmount: { type: Number, default: 0 }, // montant HT calcule de la reduction
+  subtotalAfterDiscount: { type: Number, default: 0 },
   taxRate: { type: Number, default: 20 },
   taxAmount: { type: Number, default: 0 },
-  total: { type: Number, default: 0 },
+  total: { type: Number, default: 0 }, // = subtotalAfterDiscount (HT)
   totalTTC: { type: Number, default: 0 },
 
   currency: { type: String, default: 'EUR', uppercase: true, trim: true }, // EUR USD GBP CHF CAD AED MAD AUD ...
   secondaryCurrency: { type: String, uppercase: true, trim: true }, // affichage parallèle (optionnel)
   secondaryRate: { type: Number, default: 1 }, // 1 unité de currency = X secondaryCurrency
+
+  language: { type: String, default: 'fr', lowercase: true, trim: true }, // fr, en, es, de, it, pt, ar, zh
 
   ciiEligible: { type: Boolean, default: false },
   ciiAmount: { type: Number, default: 0 },
@@ -58,12 +64,25 @@ const quickQuoteSchema = new Schema({
 
 quickQuoteSchema.pre('save', function (next) {
   // Compute totals
-  this.subtotal = (this.lines || []).reduce((sum, l) => sum + (l.quantity || 1) * (l.unitPrice || 0), 0);
-  this.taxAmount = Math.round(this.subtotal * (this.taxRate / 100) * 100) / 100;
-  this.total = this.subtotal;
-  this.totalTTC = Math.round((this.subtotal + this.taxAmount) * 100) / 100;
+  const round = (n) => Math.round(n * 100) / 100;
+  this.subtotal = round((this.lines || []).reduce((sum, l) => sum + (l.quantity || 1) * (l.unitPrice || 0), 0));
+
+  // Reduction
+  if (this.discountType === 'percent' && this.discountValue > 0) {
+    this.discountAmount = round(this.subtotal * (this.discountValue / 100));
+  } else if (this.discountType === 'amount' && this.discountValue > 0) {
+    this.discountAmount = round(Math.min(this.discountValue, this.subtotal));
+  } else {
+    this.discountAmount = 0;
+  }
+  this.subtotalAfterDiscount = round(this.subtotal - this.discountAmount);
+
+  this.taxAmount = round(this.subtotalAfterDiscount * (this.taxRate / 100));
+  this.total = this.subtotalAfterDiscount;
+  this.totalTTC = round(this.subtotalAfterDiscount + this.taxAmount);
+
   if (this.ciiEligible) {
-    this.ciiAmount = Math.round(Math.min(this.subtotal, 400000) * 0.20 * 100) / 100;
+    this.ciiAmount = round(Math.min(this.subtotalAfterDiscount, 400000) * 0.20);
   } else {
     this.ciiAmount = 0;
   }
