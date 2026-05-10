@@ -36,7 +36,7 @@ C'est plus rapide (5 minutes vs 30), plus precis, et le prospect garde l'histori
 - **SIRET** : 902 945 195 00029
 - **Code NAF** : 6201Z (Programmation informatique)
 - **RCS** : Nice 902 945 195
-- **Credit Impot Innovation (CII)** : eligible - jusqu'a 20% des depenses d'innovation remboursees par l'Etat. Pour un projet de 20 000 EUR, recuperation de 4 000 EUR (cout final 16 000 EUR).
+- **Credit Impot Innovation (CII)** : DELIVERY Digital est CERTIFIE CII. Les clients PME francaises eligibles recuperent 20 % des depenses d'innovation, dans la limite de 400 000 EUR de depenses eligibles par an (soit jusqu'a 80 000 EUR de credit annuel). Sur un projet de 20 000 EUR, recuperation de 4 000 EUR (cout final 16 000 EUR).
 
 ## Zones d'intervention
 

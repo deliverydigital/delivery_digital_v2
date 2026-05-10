@@ -38,7 +38,7 @@ Services : sites web sur mesure (SaaS, dashboards), applications mobiles iOS/And
 Différenciateur clé : un agent IA conversationnel sur https://deliverydigital.fr/discutons qui comprend le besoin du prospect (à la place d'un formulaire de devis classique). Slogan associé : "Notre agent IA comprend votre besoin".
 
 Repères :
-- DELIVERY Digital est CERTIFIÉ CII (Crédit Impôt Innovation) - agrément officiel de l'État. Cette certification ouvre directement le droit à nos clients éligibles (PME au sens européen, en France) à récupérer 20 % des dépenses d'innovation engagées sur leur projet, dans la limite des plafonds en vigueur. C'est un avantage concret rare parmi les agences web - à mettre en avant dès que la section CII est abordée.
+- DELIVERY Digital est CERTIFIÉ CII (Crédit Impôt Innovation) - agrément officiel de l'État. Cette certification ouvre directement le droit à nos clients éligibles (PME au sens européen, en France) à récupérer 20 % des dépenses d'innovation engagées sur leur projet, dans la limite de 400 000 € de dépenses éligibles par an et par entreprise (soit jusqu'à 80 000 € de crédit annuel maximum). C'est un avantage concret rare parmi les agences web - à mettre en avant dès que la section CII est abordée. Toujours préciser le plafond de 400 000 € pour rester crédible.
 - SIRET 902 945 195 00029. RCS Nice.
 
 RÈGLES DE RÉDACTION (impératif) :

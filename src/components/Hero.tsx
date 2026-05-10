@@ -39,14 +39,14 @@ const CIIModal = ({ isOpen, onClose }) => {
 
         <div className="px-7 py-7 space-y-7">
           <p className="text-[17px] text-[var(--ink-700)] leading-relaxed">
-            Le CII vous permet de récupérer 20% de vos dépenses d'innovation.
-            <br />Si vous payez des impôts : déduction directe de 20%.
-            <br />Si vous ne payez pas d'impôts : remboursement de 20% par l'État.
+            Le CII permet aux PME (au sens européen) de récupérer 20 % de leurs dépenses d'innovation, dans la limite de <strong>400 000 €</strong> de dépenses éligibles par an (soit jusqu'à <strong>80 000 €</strong> de crédit annuel).
+            <br />Si vous payez des impôts : déduction directe.
+            <br />Sinon : remboursement par l'État.
           </p>
 
           <div className="grid gap-6">
             <CIIRow icon={Euro} title="Exemple concret">
-              Pour un projet de 20 000€, vous récupérez 4 000€ (20%). Coût final : 16 000€.
+              Pour un projet de 20 000 € : vous récupérez 4 000 € (20 %). Coût final : 16 000 €. Plafond annuel : 400 000 € de dépenses, soit 80 000 € de crédit maximum.
             </CIIRow>
             <CIIRow icon={Lightbulb} title="Projets éligibles">
               Applications web et mobiles · logiciels sur mesure · intelligence artificielle · solutions innovantes pour votre entreprise.
