@@ -137,6 +137,57 @@ app.use('/api/seo', publicSeoRouter);
 app.use('/api/admin/prospects', prospectsAdminRoutes);
 app.use('/api/admin/conversations', conversationsAdminRoutes);
 
+// Robots.txt (servi par express pour cohérence avec sitemap dynamique)
+app.get('/robots.txt', (req, res) => {
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.send(`# DELIVERY Digital - robots.txt
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /reset-password
+Disallow: /reclamation
+
+User-agent: Googlebot
+Allow: /
+User-agent: Bingbot
+Allow: /
+User-agent: DuckDuckBot
+Allow: /
+User-agent: Applebot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Perplexity-User
+Allow: /
+User-agent: Google-Extended
+Allow: /
+User-agent: Applebot-Extended
+Allow: /
+User-agent: CCBot
+Allow: /
+User-agent: Bytespider
+Allow: /
+User-agent: Meta-ExternalAgent
+Allow: /
+
+Sitemap: https://deliverydigital.fr/sitemap.xml
+`);
+});
+
 // Dynamic sitemap.xml (toutes les pages SEO publiees + statiques)
 app.get('/sitemap.xml', async (req, res) => {
   try {
