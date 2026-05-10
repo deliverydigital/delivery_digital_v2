@@ -62,8 +62,8 @@ const FAQ_THEMES = [
   'Credit Impot Innovation',
 ];
 
-export default function SeoAdmin() {
-  const [secret, setSecret] = useState<string | null>(() => localStorage.getItem(SECRET_KEY));
+export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?: boolean; sharedSecret?: string } = {}) {
+  const [secret, setSecret] = useState<string | null>(() => sharedSecret || localStorage.getItem(SECRET_KEY));
   const [items, setItems] = useState<SeoItem[]>([]);
   const [filterStatus, setFilterStatus] = useState<SeoStatus>('draft');
   const [filterType, setFilterType] = useState<SeoType | 'all'>('all');
@@ -166,8 +166,85 @@ export default function SeoAdmin() {
   };
 
   /* ===== AUTH GATE ===== */
-  if (!secret) {
+  if (!secret && !embedded) {
     return <SecretGate onAuth={(s) => { localStorage.setItem(SECRET_KEY, s); setSecret(s); }} />;
+  }
+  if (!secret) return null;
+
+  const main = (
+    <main className="flex-1 min-w-0 px-5 sm:px-8 pt-8 pb-20 max-w-[1100px]">
+        {error && (
+          <div className="mb-4 rounded-[14px] bg-[#FF3B30]/10 ring-1 ring-[#FF3B30]/20 px-4 py-3 text-[13px] text-[#FF3B30] flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError(null)}><XIcon className="h-4 w-4" /></button>
+          </div>
+        )}
+
+        {view === 'list' && (
+          <ListView
+            items={items}
+            loading={loading}
+            filterStatus={filterStatus}
+            filterType={filterType}
+            setFilterType={setFilterType}
+            onEdit={setEditing}
+            onSubmit={submitItem}
+            onReject={rejectItem}
+            onDelete={deleteItem}
+            onRefresh={load}
+          />
+        )}
+
+        {view === 'generate' && (
+          <GenerateView
+            api={api}
+            onDone={() => { setView('list'); setFilterStatus('draft'); }}
+            generating={generating}
+            setGenerating={setGenerating}
+          />
+        )}
+      </main>
+  );
+
+  const editModal = (
+    <AnimatePresence>
+      {editing && (
+        <EditModal
+          item={editing}
+          onChange={setEditing}
+          onClose={() => setEditing(null)}
+          onSave={saveEdit}
+          onSubmit={async () => { await saveEdit(); await submitItem(editing._id); }}
+        />
+      )}
+    </AnimatePresence>
+  );
+
+  if (embedded) {
+    return (
+      <>
+        <div className="flex flex-wrap gap-2 mb-4">
+          <button
+            onClick={() => { setView('list'); setFilterStatus('draft'); }}
+            className={`px-3 py-1.5 rounded-full text-[12.5px] font-medium ${view === 'list' && filterStatus === 'draft' ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F]'}`}
+          >Drafts</button>
+          <button
+            onClick={() => { setView('list'); setFilterStatus('published'); }}
+            className={`px-3 py-1.5 rounded-full text-[12.5px] font-medium ${view === 'list' && filterStatus === 'published' ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F]'}`}
+          >Published</button>
+          <button
+            onClick={() => { setView('list'); setFilterStatus('rejected'); }}
+            className={`px-3 py-1.5 rounded-full text-[12.5px] font-medium ${view === 'list' && filterStatus === 'rejected' ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F]'}`}
+          >Rejected</button>
+          <button
+            onClick={() => setView('generate')}
+            className={`px-3 py-1.5 rounded-full text-[12.5px] font-medium ${view === 'generate' ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F]'}`}
+          >Generer</button>
+        </div>
+        {main}
+        {editModal}
+      </>
+    );
   }
 
   return (

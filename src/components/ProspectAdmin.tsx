@@ -68,8 +68,8 @@ interface Stats {
   bySource: Record<string, number>;
 }
 
-export default function ProspectAdmin() {
-  const [secret, setSecret] = useState<string | null>(() => localStorage.getItem(SECRET_KEY));
+export default function ProspectAdmin({ embedded = false, sharedSecret }: { embedded?: boolean; sharedSecret?: string } = {}) {
+  const [secret, setSecret] = useState<string | null>(() => sharedSecret || localStorage.getItem(SECRET_KEY));
   const [view, setView] = useState<'list' | 'import' | 'stats'>('list');
   const [items, setItems] = useState<Prospect[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -166,21 +166,22 @@ export default function ProspectAdmin() {
     }
   };
 
-  if (!secret) {
+  if (!secret && !embedded) {
     return <SecretGate onAuth={(s) => { localStorage.setItem(SECRET_KEY, s); setSecret(s); }} />;
   }
+  if (!secret) return null;
 
   return (
     <div
-      className="min-h-screen flex"
-      style={{
+      className={embedded ? '' : 'min-h-screen flex'}
+      style={embedded ? undefined : {
         background: '#F2EFE9',
         backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(29,29,31,0.08) 1px, transparent 0)',
         backgroundSize: '14px 14px',
       }}
     >
       {/* Sidebar */}
-      <aside className="w-[260px] flex-shrink-0 hidden md:flex flex-col bg-white border-r border-black/8 min-h-screen">
+      {!embedded && (<aside className="w-[260px] flex-shrink-0 hidden md:flex flex-col bg-white border-r border-black/8 min-h-screen">
         <div className="px-5 pt-5 pb-4 border-b border-black/5">
           <div className="flex items-center gap-2.5 mb-2">
             <AIOrb size={28} innerColor="#FFFFFF" />
@@ -224,10 +225,28 @@ export default function ProspectAdmin() {
             Se deconnecter
           </button>
         </div>
-      </aside>
+      </aside>)}
+
+      {/* Embedded mini nav (replaces sidebar) */}
+      {embedded && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          <button onClick={() => setView('list')} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] font-medium ${view === 'list' ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F]'}`}>
+            <Users className="h-3.5 w-3.5" />Liste
+          </button>
+          <button onClick={() => setView('stats')} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] font-medium ${view === 'stats' ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F]'}`}>
+            <TrendingUp className="h-3.5 w-3.5" />Stats
+          </button>
+          <button onClick={() => setView('import')} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] font-medium ${view === 'import' ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F]'}`}>
+            <Upload className="h-3.5 w-3.5" />Import CSV
+          </button>
+          <button onClick={syncChats} disabled={syncing} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] font-medium bg-white ring-1 ring-black/8 text-[#1D1D1F] disabled:opacity-50">
+            {syncing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}Sync depuis chats
+          </button>
+        </div>
+      )}
 
       {/* Main */}
-      <main className="flex-1 min-w-0 px-5 sm:px-8 pt-8 pb-20 max-w-[1200px]">
+      <main className={embedded ? 'min-w-0' : 'flex-1 min-w-0 px-5 sm:px-8 pt-8 pb-20 max-w-[1200px]'}>
         {error && (
           <div className="mb-4 rounded-[14px] bg-[#FF3B30]/10 ring-1 ring-[#FF3B30]/20 px-4 py-3 text-[13px] text-[#FF3B30] flex items-center justify-between">
             <span>{error}</span>

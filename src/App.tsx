@@ -8,6 +8,7 @@ import ProjectChat from './components/ProjectChat';
 import SeoAdmin from './components/SeoAdmin';
 import PublicSeoPage from './components/PublicSeoPage';
 import ProspectAdmin from './components/ProspectAdmin';
+import AdminPanel from './components/AdminPanel';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
@@ -57,10 +58,8 @@ function App() {
       setCurrentPage('home');
     } else if (pathname === '/discutons' || pathname === '/projet') {
       setCurrentPage('chat');
-    } else if (pathname === '/admin/seo') {
-      setCurrentPage('seo-admin');
-    } else if (pathname === '/admin/prospects') {
-      setCurrentPage('prospect-admin');
+    } else if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+      setCurrentPage('admin-panel');
     } else if (pathname.startsWith('/services/')) {
       setSeoSlug({ type: 'services', slug: pathname.slice('/services/'.length) });
       setCurrentPage('seo-public');
@@ -158,14 +157,9 @@ function App() {
     );
   }
 
-  // SEO admin dedicated page (no header/footer, full-bleed Apple-style)
-  if (currentPage === 'seo-admin') {
-    return <SeoAdmin />;
-  }
-
-  // Prospects admin dedicated page
-  if (currentPage === 'prospect-admin') {
-    return <ProspectAdmin />;
+  // Admin Panel unifie (Prospects + SEO + Overview)
+  if (currentPage === 'admin-panel') {
+    return <AdminPanel />;
   }
 
   // SEO public page (city-service or article)
