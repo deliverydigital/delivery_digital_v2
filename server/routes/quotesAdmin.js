@@ -43,7 +43,7 @@ router.get('/catalog', requireAdmin, (req, res) => {
 
       // Paiement
       { id: 'stripe-integration', category: 'Paiement', label: 'Integration Stripe (paiement par carte)', defaultPrice: 300, unit: 'forfait', description: 'Stripe Checkout ou Stripe Elements, gestion paiement unique, webhooks, page succes/echec.' },
-      { id: 'stripe-subscription', category: 'Paiement', label: 'Stripe abonnements (SaaS)', defaultPrice: 3500, unit: 'forfait', description: 'Stripe Billing : abonnements recurrents, plans tarifaires, customer portal, webhooks, gestion echec paiement.' },
+      { id: 'stripe-subscription', category: 'Paiement', label: 'Stripe abonnements (SaaS)', defaultPrice: 500, unit: 'forfait', description: 'Stripe Billing : abonnements recurrents, plans tarifaires, customer portal, webhooks, gestion echec paiement.' },
       { id: 'stripe-marketplace', category: 'Paiement', label: 'Stripe Connect (marketplace)', defaultPrice: 5500, unit: 'forfait', description: 'Stripe Connect Express, paiements split entre vendeurs, KYC, payouts automatiques.' },
       { id: 'paypal-integration', category: 'Paiement', label: 'Integration PayPal', defaultPrice: 1200, unit: 'forfait', description: 'Bouton PayPal, gestion ordre + capture, webhooks IPN.' },
       { id: 'paiement-multi', category: 'Paiement', label: 'Multi-providers (Stripe + PayPal + Apple/Google Pay)', defaultPrice: 4500, unit: 'forfait', description: 'Couverture complete des moyens de paiement modernes, abstraction propre cote backend.' },
