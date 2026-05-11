@@ -1,0 +1,289 @@
+{
+  "header": {
+    "home": "Start",
+    "services": "Usługi",
+    "portfolio": "Projekty",
+    "about": "O nas",
+    "contact": "Kontakt",
+    "training": "Szkolenia",
+    "quote": "Wycena",
+    "formationBtn": "Szkolenia",
+    "solutionsBtn": "Rozwiązania"
+  },
+  "tiles": {
+    "eyebrow": "Nasze kompetencje",
+    "ciiBadge": "Certyfikat CII · zwrot do 20%",
+    "stack": "Stack",
+    "cta": {
+      "start": "Omówić projekt",
+      "learn": "Dowiedz się więcej",
+      "trainings": "Zobacz wszystkie szkolenia",
+      "learner": "Strefa kursanta"
+    },
+    "web": {
+      "title": "Rozwiązania",
+      "accent": "webowe",
+      "subhead": "SaaS, dashboardy i aplikacje webowe na wymiar, oparte na najlepszych technologiach."
+    },
+    "mobile": {
+      "title": "Aplikacje",
+      "accent": "natywne",
+      "subhead": "iOS i Android. Natywna wydajność, dopracowany design, wdrożenie w App Store i Play Store pod klucz."
+    },
+    "enterprise": {
+      "title": "Oprogramowanie",
+      "accent": "biznesowe",
+      "subhead": "CRM, ERP, platformy B2B. Zautomatyzowane procesy, zwiększona produktywność."
+    },
+    "cloud": {
+      "title": "Cloud",
+      "accent": "& DevOps",
+      "subhead": "Hosting, monitoring, automatyczne skalowanie. Infrastruktura, która wytrzymuje obciążenie dzień i noc."
+    },
+    "training": {
+      "title": "Szkolenia",
+      "accent": "profesjonalne",
+      "subhead": "Organizacja certyfikowana Qualiopi. Skorzystaj z finansowania OPCO."
+    }
+  },
+  "formationPage": {
+    "eyebrow": "Centrum certyfikowane Qualiopi",
+    "title": "Szkolenia",
+    "accent": "profesjonalne",
+    "subhead": "Organizacja certyfikowana Qualiopi. Skorzystaj z finansowania OPCO."
+  },
+  "heroDark": {
+    "viewServices": "Zobacz nasze usługi",
+    "trainingPro": "Szkolenia profesjonalne"
+  },
+  "hero": {
+    "title": "Kod, który realizuje Twoje ambicje, 20% zwrotu przez CII",
+    "subtitle": "Strony internetowe, aplikacje mobilne, SaaS, CRM, ERP na wymiar. Agencja certyfikowana Kredyt Podatkowy na Innowacje - do 80 000 € rocznego kredytu dla kwalifikujących się MŚP.",
+    "titleIntl": "Zbudujmy Twój następny produkt cyfrowy",
+    "subtitleIntl": "Strony internetowe, aplikacje mobilne, SaaS, CRM, ERP. Kod na wymiar, dostarczony w kilka tygodni.",
+    "cta": {
+      "project": "Omówić projekt"
+    },
+    "badges": {
+      "digital": "Usługi Cyfrowe"
+    }
+  },
+  "services": {
+    "title": "Nasze usługi",
+    "subtitle": "Rozwiązania dopasowane do Twoich potrzeb",
+    "web": {
+      "title": "Rozwój aplikacji webowych",
+      "description": "Strony wizytówkowe, platformy e-commerce i progresywne aplikacje internetowe z najnowszymi technologiami."
+    },
+    "mobile": {
+      "title": "Aplikacje mobilne",
+      "description": "Aplikacje natywne i cross-platform na iOS i Android z optymalnym doświadczeniem użytkownika."
+    },
+    "enterprise": {
+      "title": "Rozwiązania dla firm",
+      "description": "Oprogramowanie na zamówienie, automatyzacja procesów i integracja systemów."
+    },
+    "cloud": {
+      "title": "Usługi Cloud",
+      "description": "Migracja, architektura i wdrożenie aplikacji w chmurze z bezpieczeństwem i wydajnością."
+    },
+    "training": {
+      "title": "Szkolenia profesjonalne",
+      "description": "Organizacja certyfikowana Qualiopi. Programy w zakresie rozwoju web, mobile i DevOps, finansowane przez OPCO."
+    }
+  },
+  "portfolio": {
+    "title": "Nasze projekty",
+    "subtitle": "Odkryj nasze realizacje",
+    "viewProject": "Zobacz projekt",
+    "projects": {
+      "1": {
+        "title": "Platforma e-commerce",
+        "description": "Kompleksowe rozwiązanie z zarządzaniem magazynem, bezpiecznymi płatnościami i zoptymalizowanym doświadczeniem klienta.",
+        "tag": "Web"
+      },
+      "2": {
+        "title": "Aplikacja zarządzania",
+        "description": "Spersonalizowany system ERP do optymalizacji procesów biznesowych i poprawy produktywności.",
+        "tag": "Firma"
+      },
+      "3": {
+        "title": "Aplikacja mobilna",
+        "description": "Aplikacja dostawcza z geolokalizacją i zintegrowanym systemem płatności.",
+        "tag": "Mobile"
+      },
+      "4": {
+        "title": "Infrastruktura Cloud",
+        "description": "Migracja i optymalizacja infrastruktury dla maksymalnej skalowalności i niższych kosztów.",
+        "tag": "Cloud"
+      }
+    }
+  },
+  "about": {
+    "title": "Nasza ekspertyza",
+    "subtitle": "Zespół z pasją",
+    "description": "Z ponad 10-letnim doświadczeniem nasz zespół ekspertów łączy kreatywność i rygor techniczny, by przekształcać Twoje pomysły w wydajne rozwiązania cyfrowe.",
+    "expertise": {
+      "1": {
+        "title": "Rozwój Front-End",
+        "value": "90%"
+      },
+      "2": {
+        "title": "Rozwój Back-End",
+        "value": "95%"
+      },
+      "3": {
+        "title": "UX/UI Design",
+        "value": "85%"
+      },
+      "4": {
+        "title": "DevOps & Cloud",
+        "value": "90%"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Opinie",
+    "subtitle": "Co mówią nasi klienci",
+    "items": {
+      "1": {
+        "text": "Zespół przekształcił naszą wizję w rozwiązanie cyfrowe, które przekroczyło wszystkie nasze oczekiwania. Wyjątkowy profesjonalizm i kompetencje techniczne.",
+        "author": "Marie Dupont",
+        "position": "Dyrektor ds. Marketingu, TechCorp"
+      },
+      "2": {
+        "text": "Byliśmy pod wrażeniem ich zdolności do zrozumienia naszych potrzeb biznesowych i odpowiedzi innowacyjnymi i skutecznymi rozwiązaniami.",
+        "author": "Jean Martin",
+        "position": "CEO, InnovSoft"
+      },
+      "3": {
+        "text": "Ich wsparcie było cenne przez cały projekt. Potrafili dostosować się do naszych ograniczeń i zaproponować trafne rozwiązania.",
+        "author": "Sophie Lefebvre",
+        "position": "CTO, DataFuture"
+      }
+    }
+  },
+  "contact": {
+    "title": "Skontaktuj się z nami",
+    "subtitle": "Porozmawiajmy o Twoim projekcie",
+    "name": "Imię i nazwisko",
+    "email": "E-mail",
+    "phone": "Telefon",
+    "message": "Wiadomość",
+    "subject": "Temat",
+    "submit": "Wyślij",
+    "success": "Wiadomość wysłana pomyślnie! Wkrótce się z Tobą skontaktujemy.",
+    "error": "Wystąpił błąd. Proszę spróbować ponownie."
+  },
+  "footer": {
+    "company": "© 2025 DELIVERY Digital Technology. Wszelkie prawa zastrzeżone.",
+    "links": {
+      "privacy": "Polityka prywatności",
+      "terms": "Warunki użytkowania",
+      "sitemap": "Mapa strony"
+    }
+  },
+  "reclamation": {
+    "badge": "Reklamacja",
+    "title": "Formularz reklamacyjny",
+    "subtitle": "Poważnie traktujemy Twoje obawy. Wypełnij poniższy formularz, a odpowiemy najszybciej jak to możliwe.",
+    "qualityCommitment": {
+      "title": "Nasze zobowiązanie do jakości",
+      "intro": "DELIVERY Digital Nice dąży do świadczenia usług szkoleniowych, które odpowiadają potrzebom i wymaganiom klientów. Jeśli chcesz złożyć reklamację:",
+      "contact": "W każdej chwili możesz kierować pytania, wątpliwości i problemy do swoich stałych kontaktów, którzy dołożą wszelkich starań, aby udzielić Ci odpowiedzi.",
+      "formOption": "Masz również możliwość wysłania zapytania za pomocą poniższego formularza reklamacyjnego.",
+      "processTitle": "Nasz proces rozpatrywania",
+      "steps": {
+        "1": "Wypełniasz formularz, który jest automatycznie wysyłany do zespołu odpowiedzialnego za rozpatrywanie reklamacji",
+        "2": "Potwierdzamy otrzymanie Twojej reklamacji",
+        "3": "Analizujemy Twoje zapytanie w najkrótszym możliwym czasie i oceniamy jego zasadność",
+        "4": "Jeśli Twoje zapytanie jest zasadne, analizujemy przyczyny reklamacji",
+        "5": "Dokładnie badamy przedstawione fakty i przeprowadzamy, w razie potrzeby, niezbędne badania. W takim przypadku informujemy Cię o postępach w sprawie",
+        "6": "Informujemy Cię o naszej odpowiedzi, precyzując wyniki naszego dochodzenia oraz rozwiązania, które proponujemy w celu rozwiązania problemu"
+      },
+      "directContact": "Aby skontaktować się bezpośrednio z zespołem obsługi reklamacji:"
+    },
+    "contactCards": {
+      "email": "E-mail",
+      "phone": "Telefon",
+      "hours": "Godziny pracy"
+    },
+    "form": {
+      "firstName": "Imię",
+      "lastName": "Nazwisko",
+      "email": "E-mail",
+      "phone": "Telefon",
+      "company": "Firma",
+      "orderNumber": "Numer zamówienia",
+      "category": "Kategoria reklamacji",
+      "categoryOptions": {
+        "service": "Jakość usługi",
+        "product": "Produkt/Rezultat",
+        "billing": "Fakturowanie",
+        "support": "Wsparcie techniczne",
+        "training": "Szkolenie",
+        "other": "Inne"
+      },
+      "subject": "Przedmiot reklamacji",
+      "subjectPlaceholder": "Podsumowanie Twojej reklamacji",
+      "description": "Szczegółowy opis",
+      "descriptionPlaceholder": "Proszę szczegółowo opisać swoją reklamację...",
+      "gdpr": "Twoje dane są przetwarzane zgodnie z naszą polityką prywatności i RODO. Zobowiązujemy się odpowiedzieć w ciągu 48 godzin roboczych.",
+      "captcha": "Weryfikacja bezpieczeństwa",
+      "captchaRequired": "Proszę dokończyć weryfikację bezpieczeństwa",
+      "submit": "Wyślij reklamację",
+      "submitting": "Wysyłanie..."
+    },
+    "procedure": {
+      "title": "Procedura rozpatrywania reklamacji",
+      "steps": {
+        "1": "Odbiór i potwierdzenie w ciągu 24h",
+        "2": "Analiza Twojej reklamacji przez nasz zespół",
+        "3": "Szczegółowa odpowiedź w ciągu 48h roboczych",
+        "4": "Monitorowanie i rozwiązanie problemu"
+      },
+      "mediator": "Jeśli nie jesteś zadowolony z naszej odpowiedzi, możesz skontaktować się z naszym kierownikiem ds. jakości lub odwołać się do mediatora konsumenckiego."
+    },
+    "success": {
+      "title": "Reklamacja wysłana pomyślnie",
+      "message": "Otrzymaliśmy Twoją reklamację. Nasz zespół skontaktuje się z Tobą w najkrótszym możliwym czasie w celu rozpatrzenia zapytania.",
+      "responseTime": "Szacowany czas odpowiedzi: 24-48 godzin roboczych",
+      "backHome": "Powrót do strony głównej"
+    }
+  },
+  "invoice": {
+    "title": "Faktura zaliczkowa",
+    "prefix": "FAKTURA",
+    "issuedOn": "Wystawiona dnia",
+    "dueOn": "Termin płatności",
+    "relatedQuote": "Powiązana wycena",
+    "for": "Do wiadomości",
+    "service": "Usługa",
+    "amountExclTax": "Kwota netto",
+    "lineDescription": "{{percent}}% z {{title}} (ref. {{quoteRef}})",
+    "subtotal": "Suma netto",
+    "vat": "VAT ({{rate}}%)",
+    "netToPay": "Do zapłaty",
+    "bankDetails": "Dane bankowe",
+    "beneficiary": "Beneficjent",
+    "bank": "Bank",
+    "iban": "IBAN",
+    "bicSwift": "BIC / SWIFT",
+    "transferRef": "Referencja do podania w przelewie",
+    "mailSubject": "Faktura zaliczkowa {{invoiceRef}} - {{percent}}% wyceny {{quoteRef}}",
+    "mailThanks": "Dziękujemy za zaufanie.",
+    "mailBody": "Po podpisaniu wyceny <strong>{{quoteRef}}</strong>, w załączniku znajdziesz fakturę zaliczkową <strong>{{invoiceRef}}</strong>.",
+    "mailAmount": "Kwota do zapłaty: <strong>{{amount}}</strong> ({{percent}}% całości).",
+    "mailRef": "Dane bankowe i referencja przelewu na fakturze. Termin płatności: <strong>{{dueDate}}</strong>.",
+    "mailStart": "Po otrzymaniu płatności rozpoczynamy projekt."
+  },
+  "emails": {
+    "acceptedSubject": "[ZAAKCEPTOWANA] Wycena {{quoteRef}} podpisana przez {{signerName}}",
+    "acceptedBody": "Wycena <strong>{{quoteRef}}</strong> została właśnie zaakceptowana przez <strong>{{signerName}}</strong> ({{signerEmail}}).",
+    "acceptedMeta": "IP: {{ip}} - User Agent: {{userAgent}}",
+    "rejectedSubject": "[ODRZUCONA] Wycena {{quoteRef}}",
+    "rejectedBody": "Wycena <strong>{{quoteRef}}</strong> została odrzucona.",
+    "rejectedReason": "Powód: {{reason}}",
+    "rejectedNoReason": "(nie podano)"
+  }
+}

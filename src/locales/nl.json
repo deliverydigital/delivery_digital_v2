@@ -1,0 +1,289 @@
+{
+  "header": {
+    "home": "Home",
+    "services": "Diensten",
+    "portfolio": "Projecten",
+    "about": "Over ons",
+    "contact": "Contact",
+    "training": "Opleiding",
+    "quote": "Offerte",
+    "formationBtn": "Opleiding",
+    "solutionsBtn": "Oplossingen"
+  },
+  "tiles": {
+    "eyebrow": "Onze expertise",
+    "ciiBadge": "CII gecertificeerd · tot 20% terugbetaald",
+    "stack": "Stack",
+    "cta": {
+      "start": "Bespreek een project",
+      "learn": "Meer informatie",
+      "trainings": "Alle opleidingen bekijken",
+      "learner": "Leerlingenportaal"
+    },
+    "web": {
+      "title": "Web",
+      "accent": "oplossingen",
+      "subhead": "SaaS, dashboards en webapplicaties op maat, aangedreven door de beste technologieën."
+    },
+    "mobile": {
+      "title": "Native",
+      "accent": "apps",
+      "subhead": "iOS en Android. Native prestaties, verzorgd ontwerp, kant-en-klare implementatie op App Store en Play Store."
+    },
+    "enterprise": {
+      "title": "Business",
+      "accent": "software",
+      "subhead": "CRM, ERP, B2B-platforms. Uw processen geautomatiseerd, uw productiviteit versterkt."
+    },
+    "cloud": {
+      "title": "Cloud",
+      "accent": "& DevOps",
+      "subhead": "Hosting, monitoring, automatische schaalbaarheid. Infrastructuur die de belasting aankan, dag en nacht."
+    },
+    "training": {
+      "title": "Professionele",
+      "accent": "opleiding.",
+      "subhead": "Qualiopi-gecertificeerde organisatie. Profiteer van OPCO-financiering."
+    }
+  },
+  "formationPage": {
+    "eyebrow": "Qualiopi-gecertificeerd centrum",
+    "title": "Professionele",
+    "accent": "opleiding.",
+    "subhead": "Qualiopi-gecertificeerde organisatie. Profiteer van OPCO-financiering."
+  },
+  "heroDark": {
+    "viewServices": "Bekijk onze diensten",
+    "trainingPro": "Professionele opleiding"
+  },
+  "hero": {
+    "title": "De code die uw ambities voortstuwt, 20% terugbetaald via CII",
+    "subtitle": "Websites, mobiele applicaties, SaaS, CRM, ERP op maat. CII-gecertificeerd bureau (Crédit Impôt Innovation) - tot € 80.000 jaarlijkse belastingvermindering voor in aanmerking komende KMO's.",
+    "titleIntl": "Laten we uw volgende digitale product bouwen",
+    "subtitleIntl": "Websites, mobiele apps, SaaS, CRM, ERP. Maatwerk code, geleverd in enkele weken.",
+    "cta": {
+      "project": "Bespreek een project"
+    },
+    "badges": {
+      "digital": "Digitale Diensten"
+    }
+  },
+  "services": {
+    "title": "Onze Diensten",
+    "subtitle": "Oplossingen op maat van uw behoeften",
+    "web": {
+      "title": "Webontwikkeling",
+      "description": "Showcase websites, e-commerceplatforms en progressieve webapplicaties met de nieuwste technologieën."
+    },
+    "mobile": {
+      "title": "Mobiele Applicaties",
+      "description": "Native en cross-platform applicaties voor iOS en Android met een optimale gebruikerservaring."
+    },
+    "enterprise": {
+      "title": "Enterprise Oplossingen",
+      "description": "Maatwerk software, procesautomatisering en systeemintegraties."
+    },
+    "cloud": {
+      "title": "Cloud Diensten",
+      "description": "Migratie, architectuur en implementatie van applicaties in de cloud met beveiliging en prestaties."
+    },
+    "training": {
+      "title": "Professionele Opleiding",
+      "description": "Qualiopi-gecertificeerde organisatie. Programma's in webontwikkeling, mobile en DevOps, financierbaar via uw OPCO."
+    }
+  },
+  "portfolio": {
+    "title": "Onze Projecten",
+    "subtitle": "Ontdek onze realisaties",
+    "viewProject": "Bekijk project",
+    "projects": {
+      "1": {
+        "title": "E-commerce Platform",
+        "description": "Volledige oplossing met voorraadbeheer, veilige betalingen en geoptimaliseerde klantervaring.",
+        "tag": "Web"
+      },
+      "2": {
+        "title": "Beheer Applicatie",
+        "description": "Op maat gemaakt ERP-systeem om bedrijfsprocessen te optimaliseren en productiviteit te verbeteren.",
+        "tag": "Enterprise"
+      },
+      "3": {
+        "title": "Mobiele Applicatie",
+        "description": "Bezorgapplicatie met geolocatie en geïntegreerd betalingssysteem.",
+        "tag": "Mobile"
+      },
+      "4": {
+        "title": "Cloud Infrastructuur",
+        "description": "Migratie en optimalisatie van infrastructuur voor maximale schaalbaarheid en lagere kosten.",
+        "tag": "Cloud"
+      }
+    }
+  },
+  "about": {
+    "title": "Onze Expertise",
+    "subtitle": "Een gepassioneerd team",
+    "description": "Met meer dan 10 jaar ervaring combineert ons team van experts creativiteit en technische precisie om uw ideeën om te zetten in krachtige digitale oplossingen.",
+    "expertise": {
+      "1": {
+        "title": "Front-End Ontwikkeling",
+        "value": "90%"
+      },
+      "2": {
+        "title": "Back-End Ontwikkeling",
+        "value": "95%"
+      },
+      "3": {
+        "title": "UX/UI Design",
+        "value": "85%"
+      },
+      "4": {
+        "title": "DevOps & Cloud",
+        "value": "90%"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Getuigenissen",
+    "subtitle": "Wat onze klanten zeggen",
+    "items": {
+      "1": {
+        "text": "Het team heeft onze visie omgezet in een digitale oplossing die al onze verwachtingen overtrof. Uitzonderlijk professionalisme en technische expertise.",
+        "author": "Marie Dupont",
+        "position": "Marketing Director, TechCorp"
+      },
+      "2": {
+        "text": "We waren onder de indruk van hun vermogen om onze zakelijke behoeften te begrijpen en daarop te reageren met innovatieve en effectieve oplossingen.",
+        "author": "Jean Martin",
+        "position": "CEO, InnovSoft"
+      },
+      "3": {
+        "text": "Hun begeleiding was waardevol gedurende het hele project. Ze wisten zich aan te passen aan onze beperkingen en relevante oplossingen voor te stellen.",
+        "author": "Sophie Lefebvre",
+        "position": "CTO, DataFuture"
+      }
+    }
+  },
+  "contact": {
+    "title": "Neem contact op",
+    "subtitle": "Laten we over uw project praten",
+    "name": "Naam",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "message": "Bericht",
+    "subject": "Onderwerp",
+    "submit": "Verzenden",
+    "success": "Bericht succesvol verzonden! We nemen binnenkort contact met u op.",
+    "error": "Er is een fout opgetreden. Probeer het opnieuw."
+  },
+  "footer": {
+    "company": "© 2025 DELIVERY Digital Technology. Alle rechten voorbehouden.",
+    "links": {
+      "privacy": "Privacybeleid",
+      "terms": "Gebruiksvoorwaarden",
+      "sitemap": "Sitemap"
+    }
+  },
+  "reclamation": {
+    "badge": "Klacht",
+    "title": "Klachtenformulier",
+    "subtitle": "We nemen uw zorgen serieus. Vul het onderstaande formulier in en we nemen zo snel mogelijk contact met u op.",
+    "qualityCommitment": {
+      "title": "Onze kwaliteitstoezegging",
+      "intro": "DELIVERY Digital Nice streeft ernaar opleidingsdiensten te leveren die voldoen aan de behoeften en eisen van haar klanten. Indien u echter een klacht bij ons wilt indienen:",
+      "contact": "U kunt te allen tijde uw vragen, twijfels en ondervonden problemen richten aan uw gebruikelijke contactpersonen, die er alles aan zullen doen om u een antwoord te geven.",
+      "formOption": "U heeft ook de mogelijkheid om uw verzoek te verzenden via onderstaand klachtenformulier.",
+      "processTitle": "Ons verwerkingsproces",
+      "steps": {
+        "1": "U vult het formulier in dat automatisch wordt verzonden naar het team dat verantwoordelijk is voor de behandeling van klachten",
+        "2": "We bevestigen de ontvangst van uw klacht",
+        "3": "We analyseren uw verzoek zo snel mogelijk en beoordelen de ontvankelijkheid ervan",
+        "4": "Als uw verzoek ontvankelijk is, analyseren we de oorzaken van de klacht",
+        "5": "We onderzoeken de gepresenteerde feiten zorgvuldig en voeren indien nodig het nodige onderzoek uit. In dat geval houden we u op de hoogte van de voortgang van het dossier",
+        "6": "We informeren u over ons antwoord, met vermelding van de resultaten van ons onderzoek en de oplossingen die we voorstellen om het probleem op te lossen"
+      },
+      "directContact": "Om rechtstreeks contact op te nemen met het klachtenbehandelingsteam:"
+    },
+    "contactCards": {
+      "email": "E-mail",
+      "phone": "Telefoon",
+      "hours": "Openingstijden"
+    },
+    "form": {
+      "firstName": "Voornaam",
+      "lastName": "Achternaam",
+      "email": "E-mail",
+      "phone": "Telefoon",
+      "company": "Bedrijf",
+      "orderNumber": "Bestelnummer",
+      "category": "Klachtcategorie",
+      "categoryOptions": {
+        "service": "Kwaliteit van dienstverlening",
+        "product": "Product/Deliverable",
+        "billing": "Facturering",
+        "support": "Technische ondersteuning",
+        "training": "Opleiding",
+        "other": "Andere"
+      },
+      "subject": "Onderwerp van de klacht",
+      "subjectPlaceholder": "Samenvatting van uw klacht",
+      "description": "Gedetailleerde beschrijving",
+      "descriptionPlaceholder": "Beschrijf uw klacht gedetailleerd...",
+      "gdpr": "Uw gegevens worden verwerkt in overeenstemming met ons privacybeleid en de AVG. We verbinden ons ertoe u binnen 48 werkuren te antwoorden.",
+      "captcha": "Beveiligingsverificatie",
+      "captchaRequired": "Voltooi de beveiligingsverificatie",
+      "submit": "Klacht indienen",
+      "submitting": "Bezig met verzenden..."
+    },
+    "procedure": {
+      "title": "Klachtenbehandelingsprocedure",
+      "steps": {
+        "1": "Ontvangst en bevestiging binnen 24 uur",
+        "2": "Analyse van uw klacht door ons team",
+        "3": "Gedetailleerd antwoord binnen 48 werkuren",
+        "4": "Opvolging en oplossing van het probleem"
+      },
+      "mediator": "Als u niet tevreden bent met ons antwoord, kunt u contact opnemen met onze kwaliteitsmanager of een beroep doen op een consumentenbemiddelaar."
+    },
+    "success": {
+      "title": "Klacht succesvol ingediend",
+      "message": "We hebben uw klacht goed ontvangen. Ons team neemt zo snel mogelijk contact met u op om uw verzoek te behandelen.",
+      "responseTime": "Geschatte reactietijd: 24-48 werkuren",
+      "backHome": "Terug naar home"
+    }
+  },
+  "invoice": {
+    "title": "Aanbetalingsfactuur",
+    "prefix": "FACTUUR",
+    "issuedOn": "Uitgegeven op",
+    "dueOn": "Vervaldatum",
+    "relatedQuote": "Gerelateerde offerte",
+    "for": "T.a.v.",
+    "service": "Dienst",
+    "amountExclTax": "Bedrag excl. btw",
+    "lineDescription": "{{percent}}% van {{title}} (ref. {{quoteRef}})",
+    "subtotal": "Subtotaal excl. btw",
+    "vat": "BTW ({{rate}}%)",
+    "netToPay": "Te betalen",
+    "bankDetails": "Bankgegevens",
+    "beneficiary": "Begunstigde",
+    "bank": "Bank",
+    "iban": "IBAN",
+    "bicSwift": "BIC / SWIFT",
+    "transferRef": "Referentie voor overschrijving",
+    "mailSubject": "Aanbetalingsfactuur {{invoiceRef}} - {{percent}}% van offerte {{quoteRef}}",
+    "mailThanks": "Bedankt voor uw vertrouwen.",
+    "mailBody": "Na ondertekening van offerte <strong>{{quoteRef}}</strong>, vindt u als bijlage de aanbetalingsfactuur <strong>{{invoiceRef}}</strong>.",
+    "mailAmount": "Te betalen bedrag: <strong>{{amount}}</strong> ({{percent}}% van het totaal).",
+    "mailRef": "Bankgegevens en overboekingsreferentie in de factuur. Vervaldatum: <strong>{{dueDate}}</strong>.",
+    "mailStart": "Bij ontvangst van de betaling starten we het project."
+  },
+  "emails": {
+    "acceptedSubject": "[GEACCEPTEERD] Offerte {{quoteRef}} ondertekend door {{signerName}}",
+    "acceptedBody": "Offerte <strong>{{quoteRef}}</strong> is zojuist geaccepteerd door <strong>{{signerName}}</strong> ({{signerEmail}}).",
+    "acceptedMeta": "IP: {{ip}} - User Agent: {{userAgent}}",
+    "rejectedSubject": "[GEWEIGERD] Offerte {{quoteRef}}",
+    "rejectedBody": "Offerte <strong>{{quoteRef}}</strong> is geweigerd.",
+    "rejectedReason": "Reden: {{reason}}",
+    "rejectedNoReason": "(niet gespecificeerd)"
+  }
+}

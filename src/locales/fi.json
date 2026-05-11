@@ -1,0 +1,289 @@
+{
+  "header": {
+    "home": "Etusivu",
+    "services": "Palvelut",
+    "portfolio": "Projektit",
+    "about": "Tietoa meistä",
+    "contact": "Yhteystiedot",
+    "training": "Koulutus",
+    "quote": "Tarjous",
+    "formationBtn": "Koulutus",
+    "solutionsBtn": "Ratkaisut"
+  },
+  "tiles": {
+    "eyebrow": "Osaamisemme",
+    "ciiBadge": "CII-sertifioitu · jopa 20 % hyvitetään",
+    "stack": "Teknologiat",
+    "cta": {
+      "start": "Keskustele projektista",
+      "learn": "Lue lisää",
+      "trainings": "Katso kaikki koulutukset",
+      "learner": "Opiskelijaalue"
+    },
+    "web": {
+      "title": "Web-",
+      "accent": "ratkaisut",
+      "subhead": "SaaS, hallintapaneelit ja räätälöidyt web-sovellukset, parhaan teknologian voimalla."
+    },
+    "mobile": {
+      "title": "Natiivit",
+      "accent": "sovellukset",
+      "subhead": "iOS ja Android. Natiivi suorituskyky, viimeistelty design, avaimet käteen -käyttöönotto App Storeen ja Play Storeen."
+    },
+    "enterprise": {
+      "title": "Liiketoiminta-",
+      "accent": "ohjelmistot",
+      "subhead": "CRM, ERP, B2B-alustat. Prosessisi automatisoitu, tuottavuutesi tehostettu."
+    },
+    "cloud": {
+      "title": "Cloud",
+      "accent": "& DevOps",
+      "subhead": "Hosting, seuranta, automaattinen skaalautuvuus. Infrastruktuuri, joka kestää kuorman, päivät ja yöt."
+    },
+    "training": {
+      "title": "Ammatillinen",
+      "accent": "koulutus.",
+      "subhead": "Qualiopi-sertifioitu organisaatio. Hyödynnä OPCO-rahoitusta."
+    }
+  },
+  "formationPage": {
+    "eyebrow": "Qualiopi-sertifioitu keskus",
+    "title": "Ammatillinen",
+    "accent": "koulutus.",
+    "subhead": "Qualiopi-sertifioitu organisaatio. Hyödynnä OPCO-rahoitusta."
+  },
+  "heroDark": {
+    "viewServices": "Katso palvelumme",
+    "trainingPro": "Ammatillinen koulutus"
+  },
+  "hero": {
+    "title": "Koodi, joka vie kunnianhimosi eteenpäin, 20 % hyvitetään CII:n kautta",
+    "subtitle": "Verkkosivustot, mobiilisovellukset, SaaS, CRM, ERP räätälöitynä. CII-sertifioitu toimisto – jopa 80 000 € vuosittaista verohyvitystä tukikelpoisille pk-yrityksille.",
+    "titleIntl": "Rakennetaan seuraava digitaalinen tuotteesi",
+    "subtitleIntl": "Verkkosivustot, mobiilisovellukset, SaaS, CRM, ERP. Räätälöity koodi, toimitettuna muutamassa viikossa.",
+    "cta": {
+      "project": "Keskustele projektista"
+    },
+    "badges": {
+      "digital": "Digitaaliset palvelut"
+    }
+  },
+  "services": {
+    "title": "Palvelumme",
+    "subtitle": "Tarpeisiisi räätälöidyt ratkaisut",
+    "web": {
+      "title": "Web-kehitys",
+      "description": "Esittelysivustot, verkkokaupat ja progressiiviset web-sovellukset uusimmilla teknologioilla."
+    },
+    "mobile": {
+      "title": "Mobiilisovellukset",
+      "description": "Natiivit ja cross-platform-sovellukset iOS:lle ja Androidille optimoidulla käyttäjäkokemuksella."
+    },
+    "enterprise": {
+      "title": "Yritysratkaisut",
+      "description": "Räätälöidyt ohjelmistot, prosessiautomaatio ja järjestelmäintegraatiot."
+    },
+    "cloud": {
+      "title": "Pilvipalvelut",
+      "description": "Migraatio, arkkitehtuuri ja sovellusten käyttöönotto pilvessä turvallisuuden ja suorituskyvyn takaamiseksi."
+    },
+    "training": {
+      "title": "Ammatillinen koulutus",
+      "description": "Qualiopi-sertifioitu organisaatio. Ohjelmat web-kehityksessä, mobilessa ja DevOpsissa, rahoitettavissa OPCO:n kautta."
+    }
+  },
+  "portfolio": {
+    "title": "Projektimme",
+    "subtitle": "Tutustu toteutuksiimme",
+    "viewProject": "Katso projekti",
+    "projects": {
+      "1": {
+        "title": "Verkkokauppa-alusta",
+        "description": "Kokonaisratkaisu varastonhallinnalla, turvallisilla maksuilla ja optimoidulla asiakaskokemuksella.",
+        "tag": "Web"
+      },
+      "2": {
+        "title": "Hallintasovellus",
+        "description": "Räätälöity ERP-järjestelmä liiketoimintaprosessien optimointiin ja tuottavuuden parantamiseen.",
+        "tag": "Yritys"
+      },
+      "3": {
+        "title": "Mobiilisovellus",
+        "description": "Toimitussovellus geolokalisaatiolla ja integroidulla maksujärjestelmällä.",
+        "tag": "Mobile"
+      },
+      "4": {
+        "title": "Pilvi-infrastruktuuri",
+        "description": "Infrastruktuurin migraatio ja optimointi maksimaaliseen skaalautuvuuteen ja alentuneisiin kustannuksiin.",
+        "tag": "Cloud"
+      }
+    }
+  },
+  "about": {
+    "title": "Osaamisemme",
+    "subtitle": "Intohimoinen tiimi",
+    "description": "Yli 10 vuoden kokemuksella asiantuntijatiimimme yhdistää luovuuden ja teknisen tarkkuuden muuttaakseen ideasi tehokkaiksi digitaalisiksi ratkaisuiksi.",
+    "expertise": {
+      "1": {
+        "title": "Front-End-kehitys",
+        "value": "90%"
+      },
+      "2": {
+        "title": "Back-End-kehitys",
+        "value": "95%"
+      },
+      "3": {
+        "title": "UX/UI-suunnittelu",
+        "value": "85%"
+      },
+      "4": {
+        "title": "DevOps & Cloud",
+        "value": "90%"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Suositukset",
+    "subtitle": "Mitä asiakkaamme sanovat",
+    "items": {
+      "1": {
+        "text": "Tiimi muutti visiomme digitaaliseksi ratkaisuksi, joka ylitti kaikki odotuksemme. Poikkeuksellinen ammattitaito ja tekninen asiantuntemus.",
+        "author": "Marie Dupont",
+        "position": "Markkinointijohtaja, TechCorp"
+      },
+      "2": {
+        "text": "Olimme vaikuttuneita heidän kyvystään ymmärtää liiketoimintatarpeitamme ja vastata niihin innovatiivisilla ja tehokkaillä ratkaisuilla.",
+        "author": "Jean Martin",
+        "position": "Toimitusjohtaja, InnovSoft"
+      },
+      "3": {
+        "text": "Heidän tukensa oli korvaamatonta koko projektin ajan. He osasivat mukautua rajoitteisiimme ja ehdottaa relevantteja ratkaisuja.",
+        "author": "Sophie Lefebvre",
+        "position": "CTO, DataFuture"
+      }
+    }
+  },
+  "contact": {
+    "title": "Ota yhteyttä",
+    "subtitle": "Puhutaan projektistasi",
+    "name": "Nimi",
+    "email": "Sähköposti",
+    "phone": "Puhelin",
+    "message": "Viesti",
+    "subject": "Aihe",
+    "submit": "Lähetä",
+    "success": "Viesti lähetetty onnistuneesti! Otamme sinuun yhteyttä pian.",
+    "error": "Tapahtui virhe. Yritä uudelleen."
+  },
+  "footer": {
+    "company": "© 2025 DELIVERY Digital Technology. Kaikki oikeudet pidätetään.",
+    "links": {
+      "privacy": "Tietosuojakäytäntö",
+      "terms": "Käyttöehdot",
+      "sitemap": "Sivukartta"
+    }
+  },
+  "reclamation": {
+    "badge": "Valitus",
+    "title": "Valituslomake",
+    "subtitle": "Otamme huolesi vakavasti. Täytä alla oleva lomake, niin vastaamme sinulle mahdollisimman pian.",
+    "qualityCommitment": {
+      "title": "Laatusitoumus",
+      "intro": "DELIVERY Digital Nice pyrkii tarjoamaan koulutuspalveluita, jotka vastaavat asiakkaidensa tarpeisiin ja vaatimuksiin. Jos kuitenkin haluat tehdä valituksen:",
+      "contact": "Voit milloin tahansa kääntyä tavanomaisiin yhteyshenkilöihisi kysymyksinesi, epäilyksinesi ja kohtaamiesi ongelmien kanssa. He tekevät kaikkensa vastatakseen sinulle.",
+      "formOption": "Voit myös lähettää pyyntösi alla olevan valituslomakkeen kautta.",
+      "processTitle": "Käsittelyprosessimme",
+      "steps": {
+        "1": "Täytät lomakkeen, joka lähetetään automaattisesti valitusten käsittelystä vastaavalle tiimille",
+        "2": "Vastaanotamme valituksesi",
+        "3": "Analysoimme pyyntösi mahdollisimman nopeasti ja arvioimme sen hyväksyttävyyden",
+        "4": "Jos pyyntösi on hyväksyttävä, analysoimme valituksen syyt",
+        "5": "Tutkimme huolellisesti esitetyt tosiseikat ja suoritamme tarvittaessa tarvittavat selvitykset. Tässä tapauksessa pidämme sinut ajan tasalla asian etenemisestä",
+        "6": "Ilmoitamme sinulle vastauksemme täsmentäen tutkimuksemme tulokset ja ehdottamamme ratkaisut ongelman ratkaisemiseksi"
+      },
+      "directContact": "Ota suoraan yhteyttä valitusten käsittelytiimiin:"
+    },
+    "contactCards": {
+      "email": "Sähköposti",
+      "phone": "Puhelin",
+      "hours": "Aukioloajat"
+    },
+    "form": {
+      "firstName": "Etunimi",
+      "lastName": "Sukunimi",
+      "email": "Sähköposti",
+      "phone": "Puhelin",
+      "company": "Yritys",
+      "orderNumber": "Tilausnumero",
+      "category": "Valituksen kategoria",
+      "categoryOptions": {
+        "service": "Palvelun laatu",
+        "product": "Tuote/Suorite",
+        "billing": "Laskutus",
+        "support": "Tekninen tuki",
+        "training": "Koulutus",
+        "other": "Muu"
+      },
+      "subject": "Valituksen aihe",
+      "subjectPlaceholder": "Valituksesi yhteenveto",
+      "description": "Yksityiskohtainen kuvaus",
+      "descriptionPlaceholder": "Kuvaile valituksesi yksityiskohtaisesti...",
+      "gdpr": "Tietojasi käsitellään tietosuojakäytäntömme ja GDPR:n mukaisesti. Sitoudumme vastaamaan sinulle 48 tunnin kuluessa.",
+      "captcha": "Turvatarkistus",
+      "captchaRequired": "Suorita turvatarkistus",
+      "submit": "Lähetä valitus",
+      "submitting": "Lähetetään..."
+    },
+    "procedure": {
+      "title": "Valitusten käsittelymenettely",
+      "steps": {
+        "1": "Vastaanotto ja kuittaus 24 tunnin kuluessa",
+        "2": "Tiimimme analysoi valituksesi",
+        "3": "Yksityiskohtainen vastaus 48 tunnin kuluessa",
+        "4": "Seuranta ja ongelman ratkaisu"
+      },
+      "mediator": "Jos et ole tyytyväinen vastaukseemme, voit ottaa yhteyttä laatuvastaavaamme tai kääntyä kuluttaja-asiamiehen puoleen."
+    },
+    "success": {
+      "title": "Valitus lähetetty onnistuneesti",
+      "message": "Olemme vastaanottaneet valituksesi. Tiimimme ottaa sinuun yhteyttä mahdollisimman pian käsitelläkseen pyyntösi.",
+      "responseTime": "Arvioitu vastausaika: 24–48 tuntia",
+      "backHome": "Takaisin etusivulle"
+    }
+  },
+  "invoice": {
+    "title": "Ennakon lasku",
+    "prefix": "LASKU",
+    "issuedOn": "Laadittu",
+    "dueOn": "Eräpäivä",
+    "relatedQuote": "Liittyvä tarjous",
+    "for": "Vastaanottaja",
+    "service": "Palvelu",
+    "amountExclTax": "Summa ilman ALV",
+    "lineDescription": "{{percent}} % kohteesta {{title}} (viite {{quoteRef}})",
+    "subtotal": "Välisumma ilman ALV",
+    "vat": "ALV ({{rate}} %)",
+    "netToPay": "Maksettava yhteensä",
+    "bankDetails": "Pankkitiedot",
+    "beneficiary": "Saaja",
+    "bank": "Pankki",
+    "iban": "IBAN",
+    "bicSwift": "BIC / SWIFT",
+    "transferRef": "Viite tilisiirtoon",
+    "mailSubject": "Ennakon lasku {{invoiceRef}} – {{percent}} % tarjouksesta {{quoteRef}}",
+    "mailThanks": "Kiitos luottamuksestasi.",
+    "mailBody": "Tarjouksen <strong>{{quoteRef}}</strong> allekirjoituksen jälkeen löydät liitteenä ennakon laskun <strong>{{invoiceRef}}</strong>.",
+    "mailAmount": "Maksettava summa: <strong>{{amount}}</strong> ({{percent}} % kokonaissummasta).",
+    "mailRef": "Pankkitiedot ja tilisiirron viite laskussa. Eräpäivä: <strong>{{dueDate}}</strong>.",
+    "mailStart": "Projekti käynnistetään maksun saavuttua."
+  },
+  "emails": {
+    "acceptedSubject": "[HYVÄKSYTTY] Tarjous {{quoteRef}} allekirjoitettu – {{signerName}}",
+    "acceptedBody": "Tarjous <strong>{{quoteRef}}</strong> on juuri hyväksytty henkilön <strong>{{signerName}}</strong> ({{signerEmail}}) toimesta.",
+    "acceptedMeta": "IP: {{ip}} – User Agent: {{userAgent}}",
+    "rejectedSubject": "[HYLÄTTY] Tarjous {{quoteRef}}",
+    "rejectedBody": "Tarjous <strong>{{quoteRef}}</strong> on hylätty.",
+    "rejectedReason": "Syy: {{reason}}",
+    "rejectedNoReason": "(ei ilmoitettu)"
+  }
+}

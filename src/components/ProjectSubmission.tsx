@@ -20,7 +20,8 @@ const ProjectSubmission = () => {
 
   return (
     <>
-      <section className="fixed bottom-6 right-6 z-50 flex flex-col items-end space-y-4">
+      {/* Sticky CTA cache sur mobile (chevauchait les CTA inline). Visible >= md. @author Rabah Ziane - 2026-05-11 */}
+      <section className="hidden md:flex fixed bottom-6 right-6 z-50 flex-col items-end space-y-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}

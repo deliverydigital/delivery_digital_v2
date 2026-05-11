@@ -1,0 +1,289 @@
+{
+  "header": {
+    "home": "Hjem",
+    "services": "Tjenester",
+    "portfolio": "Prosjekter",
+    "about": "Om oss",
+    "contact": "Kontakt",
+    "training": "Opplæring",
+    "quote": "Tilbud",
+    "formationBtn": "Opplæring",
+    "solutionsBtn": "Løsninger"
+  },
+  "tiles": {
+    "eyebrow": "Vår kompetanse",
+    "ciiBadge": "CII-sertifisert · opptil 20% refundert",
+    "stack": "Stack",
+    "cta": {
+      "start": "Diskuter et prosjekt",
+      "learn": "Les mer",
+      "trainings": "Se alle opplæringer",
+      "learner": "Deltagerområde"
+    },
+    "web": {
+      "title": "Web",
+      "accent": "løsninger",
+      "subhead": "SaaS, dashboards og skreddersydde webapplikasjoner, drevet av de beste teknologiene."
+    },
+    "mobile": {
+      "title": "Native",
+      "accent": "apper",
+      "subhead": "iOS og Android. Native ytelse, polert design, App Store og Play Store distribusjon nøkkelferdig."
+    },
+    "enterprise": {
+      "title": "Forretnings",
+      "accent": "programvare",
+      "subhead": "CRM, ERP, B2B-plattformer. Dine prosesser automatisert, din produktivitet økt."
+    },
+    "cloud": {
+      "title": "Cloud",
+      "accent": "& DevOps",
+      "subhead": "Hosting, overvåking, automatisk skalering. Infrastruktur som tåler belastningen, dag og natt."
+    },
+    "training": {
+      "title": "Profesjonell",
+      "accent": "opplæring.",
+      "subhead": "Qualiopi-sertifisert organisasjon. Dra nytte av OPCO-finansiering."
+    }
+  },
+  "formationPage": {
+    "eyebrow": "Qualiopi-sertifisert senter",
+    "title": "Profesjonell",
+    "accent": "opplæring.",
+    "subhead": "Qualiopi-sertifisert organisasjon. Dra nytte av OPCO-finansiering."
+  },
+  "heroDark": {
+    "viewServices": "Se våre tjenester",
+    "trainingPro": "Profesjonell opplæring"
+  },
+  "hero": {
+    "title": "Koden som driver dine ambisjoner, 20% refundert via CII",
+    "subtitle": "Nettsider, mobilapper, SaaS, CRM, ERP på mål. Byrå sertifisert Skattefradrag for Innovasjon - opptil 80 000 € i årlig kreditt for kvalifiserte SMB.",
+    "titleIntl": "La oss bygge ditt neste digitale produkt",
+    "subtitleIntl": "Nettsider, mobilapper, SaaS, CRM, ERP. Skreddersydd kode, levert på uker.",
+    "cta": {
+      "project": "Diskuter et prosjekt"
+    },
+    "badges": {
+      "digital": "Digitale tjenester"
+    }
+  },
+  "services": {
+    "title": "Våre tjenester",
+    "subtitle": "Løsninger tilpasset dine behov",
+    "web": {
+      "title": "Webutvikling",
+      "description": "Nettsider, e-handel og progressive webapplikasjoner med de nyeste teknologiene."
+    },
+    "mobile": {
+      "title": "Mobilapplikasjoner",
+      "description": "Native og kryssplattform applikasjoner for iOS og Android med optimal brukeropplevelse."
+    },
+    "enterprise": {
+      "title": "Bedriftsløsninger",
+      "description": "Skreddersydd programvare, prosessautomatisering og systemintegrasjoner."
+    },
+    "cloud": {
+      "title": "Cloud-tjenester",
+      "description": "Migrering, arkitektur og distribusjon av applikasjoner i skyen med sikkerhet og ytelse."
+    },
+    "training": {
+      "title": "Profesjonell opplæring",
+      "description": "Qualiopi-sertifisert organisasjon. Programmer innen webutvikling, mobil og DevOps, finansierbare via din OPCO."
+    }
+  },
+  "portfolio": {
+    "title": "Våre prosjekter",
+    "subtitle": "Oppdag våre resultater",
+    "viewProject": "Se prosjektet",
+    "projects": {
+      "1": {
+        "title": "E-handelsplattform",
+        "description": "Komplett løsning med lagerstyring, sikre betalinger og optimalisert kundeopplevelse.",
+        "tag": "Web"
+      },
+      "2": {
+        "title": "Styringsapplikasjon",
+        "description": "Tilpasset ERP-system for å optimalisere forretningsprosesser og forbedre produktiviteten.",
+        "tag": "Bedrift"
+      },
+      "3": {
+        "title": "Mobilapplikasjon",
+        "description": "Leveringsapplikasjon med geolokalisering og integrert betalingssystem.",
+        "tag": "Mobil"
+      },
+      "4": {
+        "title": "Cloud-infrastruktur",
+        "description": "Migrering og optimalisering av infrastruktur for maksimal skalerbarhet og reduserte kostnader.",
+        "tag": "Cloud"
+      }
+    }
+  },
+  "about": {
+    "title": "Vår ekspertise",
+    "subtitle": "Et lidenskap lig team",
+    "description": "Med over 10 års erfaring kombinerer vårt team av eksperter kreativitet og teknisk presisjon for å forvandle ideene dine til effektive digitale løsninger.",
+    "expertise": {
+      "1": {
+        "title": "Front-End utvikling",
+        "value": "90%"
+      },
+      "2": {
+        "title": "Back-End utvikling",
+        "value": "95%"
+      },
+      "3": {
+        "title": "UX/UI Design",
+        "value": "85%"
+      },
+      "4": {
+        "title": "DevOps & Cloud",
+        "value": "90%"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Anbefalinger",
+    "subtitle": "Hva kundene våre sier",
+    "items": {
+      "1": {
+        "text": "Teamet forvandlet visjonen vår til en digital løsning som overgikk alle forventningene våre. Eksepsjonell profesjonalitet og teknisk ekspertise.",
+        "author": "Marie Dupont",
+        "position": "Markedsdirektør, TechCorp"
+      },
+      "2": {
+        "text": "Vi ble imponert over deres evne til å forstå våre forretningsbehov og svare med innovative og effektive løsninger.",
+        "author": "Jean Martin",
+        "position": "CEO, InnovSoft"
+      },
+      "3": {
+        "text": "Deres oppfølging var verdifull gjennom hele prosjektet. De klarte å tilpasse seg våre begrensninger og foreslå relevante løsninger.",
+        "author": "Sophie Lefebvre",
+        "position": "CTO, DataFuture"
+      }
+    }
+  },
+  "contact": {
+    "title": "Kontakt oss",
+    "subtitle": "La oss snakke om prosjektet ditt",
+    "name": "Navn",
+    "email": "E-post",
+    "phone": "Telefon",
+    "message": "Melding",
+    "subject": "Emne",
+    "submit": "Send",
+    "success": "Melding sendt! Vi kontakter deg snart.",
+    "error": "En feil oppstod. Vennligst prøv igjen."
+  },
+  "footer": {
+    "company": "© 2025 DELIVERY Digital Technology. Alle rettigheter reservert.",
+    "links": {
+      "privacy": "Personvernerklæring",
+      "terms": "Bruksvilkår",
+      "sitemap": "Nettstedskart"
+    }
+  },
+  "reclamation": {
+    "badge": "Klage",
+    "title": "Klageskjema",
+    "subtitle": "Vi tar bekymringene dine på alvor. Vennligst fyll ut skjemaet nedenfor, så vil vi svare deg så snart som mulig.",
+    "qualityCommitment": {
+      "title": "Vårt kvalitetsengasjement",
+      "intro": "DELIVERY Digital Nice streber etter å levere opplæringstjenester som møter behovene og kravene til våre kunder. Men hvis du ønsker å sende inn en klage:",
+      "contact": "Du kan når som helst rette spørsmål, tvil og problemer til dine vanlige kontakter, som vil gjøre sitt beste for å gi deg et svar.",
+      "formOption": "Du har også muligheten til å sende inn forespørselen din ved hjelp av klageskjemaet nedenfor.",
+      "processTitle": "Vår behandlingsprosedyre",
+      "steps": {
+        "1": "Du fyller ut skjemaet som automatisk sendes til teamet som håndterer klager",
+        "2": "Vi bekrefter mottak av klagen din",
+        "3": "Vi analyserer forespørselen din så raskt som mulig og vurderer om den kan behandles",
+        "4": "Hvis forespørselen din kan behandles, analyserer vi årsakene til klagen",
+        "5": "Vi undersøker nøye de presenterte faktaene og utfører om nødvendig nødvendige undersøkelser. I dette tilfellet holder vi deg informert om fremdriften i saken",
+        "6": "Vi informerer deg om vårt svar, og spesifiserer resultatene av undersøkelsen vår og løsningene vi foreslår for å løse problemet"
+      },
+      "directContact": "For å kontakte klageteamet direkte:"
+    },
+    "contactCards": {
+      "email": "E-post",
+      "phone": "Telefon",
+      "hours": "Åpningstider"
+    },
+    "form": {
+      "firstName": "Fornavn",
+      "lastName": "Etternavn",
+      "email": "E-post",
+      "phone": "Telefon",
+      "company": "Bedrift",
+      "orderNumber": "Ordrenummer",
+      "category": "Klagekategori",
+      "categoryOptions": {
+        "service": "Tjenestekvalitet",
+        "product": "Produkt/Leveranse",
+        "billing": "Fakturering",
+        "support": "Teknisk support",
+        "training": "Opplæring",
+        "other": "Annet"
+      },
+      "subject": "Klagetema",
+      "subjectPlaceholder": "Sammendrag av klagen din",
+      "description": "Detaljert beskrivelse",
+      "descriptionPlaceholder": "Vennligst beskriv klagen din i detalj...",
+      "gdpr": "Dataene dine behandles i henhold til vår personvernerklæring og GDPR. Vi forplikter oss til å svare deg innen 48 virketimer.",
+      "captcha": "Sikkerhetsbekreftelse",
+      "captchaRequired": "Vennligst fullfør sikkerhetsbekreftelsen",
+      "submit": "Send inn klage",
+      "submitting": "Sender inn..."
+    },
+    "procedure": {
+      "title": "Klagebehandlingsprosedyre",
+      "steps": {
+        "1": "Mottak og bekreftelse innen 24 timer",
+        "2": "Analyse av klagen din av vårt team",
+        "3": "Detaljert svar innen 48 virketimer",
+        "4": "Oppfølging og problemløsning"
+      },
+      "mediator": "Hvis du ikke er fornøyd med vårt svar, kan du kontakte vår kvalitetsleder eller henvende deg til en forbrukermekler."
+    },
+    "success": {
+      "title": "Klage sendt inn",
+      "message": "Vi har mottatt klagen din. Vårt team vil kontakte deg så snart som mulig for å behandle forespørselen din.",
+      "responseTime": "Estimert svartid: 24-48 virketimer",
+      "backHome": "Tilbake til forsiden"
+    }
+  },
+  "invoice": {
+    "title": "Forskuddsfaktura",
+    "prefix": "FAKTURA",
+    "issuedOn": "Utstedt",
+    "dueOn": "Forfallsdato",
+    "relatedQuote": "Relatert tilbud",
+    "for": "Til",
+    "service": "Tjeneste",
+    "amountExclTax": "Beløp eks. mva",
+    "lineDescription": "{{percent}} % av {{title}} (ref. {{quoteRef}})",
+    "subtotal": "Delsum eks. mva",
+    "vat": "MVA ({{rate}} %)",
+    "netToPay": "Netto å betale",
+    "bankDetails": "Bankopplysninger",
+    "beneficiary": "Mottaker",
+    "bank": "Bank",
+    "iban": "IBAN",
+    "bicSwift": "BIC / SWIFT",
+    "transferRef": "Referanse som skal angis i overføringen",
+    "mailSubject": "Forskuddsfaktura {{invoiceRef}} - {{percent}} % av tilbud {{quoteRef}}",
+    "mailThanks": "Takk for din tillit.",
+    "mailBody": "Etter signering av tilbud <strong>{{quoteRef}}</strong>, vennligst finn vedlagt forskuddsfaktura <strong>{{invoiceRef}}</strong>.",
+    "mailAmount": "Beløp å betale: <strong>{{amount}}</strong> ({{percent}} % av total).",
+    "mailRef": "Bankopplysninger og overføringsreferanse i fakturaen. Forfallsdato: <strong>{{dueDate}}</strong>.",
+    "mailStart": "Ved mottak av betaling starter vi prosjektet."
+  },
+  "emails": {
+    "acceptedSubject": "[AKSEPTERT] Tilbud {{quoteRef}} signert av {{signerName}}",
+    "acceptedBody": "Tilbud <strong>{{quoteRef}}</strong> har nettopp blitt akseptert av <strong>{{signerName}}</strong> ({{signerEmail}}).",
+    "acceptedMeta": "IP: {{ip}} - User Agent: {{userAgent}}",
+    "rejectedSubject": "[AVVIST] Tilbud {{quoteRef}}",
+    "rejectedBody": "Tilbud <strong>{{quoteRef}}</strong> har blitt avvist.",
+    "rejectedReason": "Årsak: {{reason}}",
+    "rejectedNoReason": "(ikke spesifisert)"
+  }
+}

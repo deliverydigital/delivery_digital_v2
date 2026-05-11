@@ -1,0 +1,289 @@
+{
+  "header": {
+    "home": "Kezdőlap",
+    "services": "Szolgáltatások",
+    "portfolio": "Projektek",
+    "about": "Rólunk",
+    "contact": "Kapcsolat",
+    "training": "Képzés",
+    "quote": "Ajánlat",
+    "formationBtn": "Képzés",
+    "solutionsBtn": "Megoldások"
+  },
+  "tiles": {
+    "eyebrow": "Szaktudásunk",
+    "ciiBadge": "CII tanúsítvánnyal · akár 20% visszatérítés",
+    "stack": "Stack",
+    "cta": {
+      "start": "Projektről beszélünk",
+      "learn": "Tudjon meg többet",
+      "trainings": "Összes képzés megtekintése",
+      "learner": "Tanulói terület"
+    },
+    "web": {
+      "title": "Webes",
+      "accent": "megoldások",
+      "subhead": "SaaS, dashboardok és testreszabott webes alkalmazások a legjobb technológiákkal."
+    },
+    "mobile": {
+      "title": "Natív",
+      "accent": "alkalmazások",
+      "subhead": "iOS és Android. Natív teljesítmény, gondozott design, kulcsrakész App Store és Play Store telepítés."
+    },
+    "enterprise": {
+      "title": "Üzleti",
+      "accent": "szoftverek",
+      "subhead": "CRM, ERP, B2B platformok. Automatizált folyamatok, megnövelt termelékenység."
+    },
+    "cloud": {
+      "title": "Cloud",
+      "accent": "& DevOps",
+      "subhead": "Tárhely, monitoring, automatikus skálázás. Infrastruktúra, amely bírja a terhelést éjjel-nappal."
+    },
+    "training": {
+      "title": "Szakmai",
+      "accent": "képzés.",
+      "subhead": "Qualiopi tanúsítvánnyal rendelkező szervezet. Élvezze az OPCO finanszírozást."
+    }
+  },
+  "formationPage": {
+    "eyebrow": "Qualiopi tanúsítvánnyal rendelkező központ",
+    "title": "Szakmai",
+    "accent": "képzés.",
+    "subhead": "Qualiopi tanúsítvánnyal rendelkező szervezet. Élvezze az OPCO finanszírozást."
+  },
+  "heroDark": {
+    "viewServices": "Szolgáltatásaink megtekintése",
+    "trainingPro": "Szakmai képzés"
+  },
+  "hero": {
+    "title": "A kód, ami felgyorsítja ambícióit, 20%-os CII visszatérítéssel",
+    "subtitle": "Weboldalak, mobil alkalmazások, SaaS, CRM, egyedi ERP. CII Innováció adókedvezmény tanúsítvánnyal – akár évi 80 000 € adókedvezmény a jogosult KKV-k számára.",
+    "titleIntl": "Építsük meg következő digitális termékét",
+    "subtitleIntl": "Weboldalak, mobil alkalmazások, SaaS, CRM, ERP. Egyedi kód, heteken belül leszállítva.",
+    "cta": {
+      "project": "Projektről beszélünk"
+    },
+    "badges": {
+      "digital": "Digitális Szolgáltatások"
+    }
+  },
+  "services": {
+    "title": "Szolgáltatásaink",
+    "subtitle": "Igényeire szabott megoldások",
+    "web": {
+      "title": "Webfejlesztés",
+      "description": "Bemutatkozó weboldalak, e-kereskedelmi platformok és progresszív webes alkalmazások a legújabb technológiákkal."
+    },
+    "mobile": {
+      "title": "Mobil alkalmazások",
+      "description": "Natív és többplatformos alkalmazások iOS-re és Androidra optimális felhasználói élménnyel."
+    },
+    "enterprise": {
+      "title": "Vállalati megoldások",
+      "description": "Egyedi szoftverek, folyamatautomatizálás és rendszerintegrációk."
+    },
+    "cloud": {
+      "title": "Cloud szolgáltatások",
+      "description": "Migráció, architektúra és alkalmazások felhőbe telepítése biztonságosan és nagy teljesítménnyel."
+    },
+    "training": {
+      "title": "Szakmai képzés",
+      "description": "Qualiopi tanúsítvánnyal rendelkező szervezet. Webfejlesztés, mobil és DevOps programok, OPCO-n keresztül finanszírozhatók."
+    }
+  },
+  "portfolio": {
+    "title": "Projektjeink",
+    "subtitle": "Fedezze fel megvalósításainkat",
+    "viewProject": "Projekt megtekintése",
+    "projects": {
+      "1": {
+        "title": "E-kereskedelmi platform",
+        "description": "Komplett megoldás készletkezeléssel, biztonságos fizetésekkel és optimalizált ügyfélélménnyel.",
+        "tag": "Web"
+      },
+      "2": {
+        "title": "Menedzsment alkalmazás",
+        "description": "Egyedi ERP rendszer az üzleti folyamatok optimalizálásához és a termelékenység javításához.",
+        "tag": "Vállalat"
+      },
+      "3": {
+        "title": "Mobil alkalmazás",
+        "description": "Kézbesítési alkalmazás geolokációval és integrált fizetési rendszerrel.",
+        "tag": "Mobil"
+      },
+      "4": {
+        "title": "Cloud infrastruktúra",
+        "description": "Infrastruktúra migráció és optimalizálás a maximális skálázhatóság és csökkentett költségek érdekében.",
+        "tag": "Cloud"
+      }
+    }
+  },
+  "about": {
+    "title": "Szaktudásunk",
+    "subtitle": "Elkötelezett csapat",
+    "description": "Több mint 10 éves tapasztalattal szakértői csapatunk ötvözi a kreativitást és a technikai precizitást, hogy ötleteit hatékony digitális megoldásokká alakítsa.",
+    "expertise": {
+      "1": {
+        "title": "Front-End fejlesztés",
+        "value": "90%"
+      },
+      "2": {
+        "title": "Back-End fejlesztés",
+        "value": "95%"
+      },
+      "3": {
+        "title": "UX/UI Design",
+        "value": "85%"
+      },
+      "4": {
+        "title": "DevOps & Cloud",
+        "value": "90%"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Referenciák",
+    "subtitle": "Mit mondanak ügyfeleink",
+    "items": {
+      "1": {
+        "text": "A csapat vízióinkat olyan digitális megoldássá alakította, amely minden várakozásunkat felülmúlta. Kivételes professzionalizmus és technikai szakértelem.",
+        "author": "Marie Dupont",
+        "position": "Marketing igazgató, TechCorp"
+      },
+      "2": {
+        "text": "Lenyűgözött bennünket, ahogy képesek voltak megérteni üzleti igényeinket és innovatív, hatékony megoldásokkal válaszolni rájuk.",
+        "author": "Jean Martin",
+        "position": "Vezérigazgató, InnovSoft"
+      },
+      "3": {
+        "text": "Támogatásuk felbecsülhetetlen volt a teljes projekt során. Képesek voltak alkalmazkodni korlátainkhoz és releváns megoldásokat javasolni.",
+        "author": "Sophie Lefebvre",
+        "position": "CTO, DataFuture"
+      }
+    }
+  },
+  "contact": {
+    "title": "Lépjen kapcsolatba velünk",
+    "subtitle": "Beszéljünk projektjéről",
+    "name": "Név",
+    "email": "E-mail",
+    "phone": "Telefon",
+    "message": "Üzenet",
+    "subject": "Tárgy",
+    "submit": "Küldés",
+    "success": "Üzenet sikeresen elküldve! Hamarosan felvesszük Önnel a kapcsolatot.",
+    "error": "Hiba történt. Kérjük, próbálja újra."
+  },
+  "footer": {
+    "company": "© 2025 DELIVERY Digital Technology. Minden jog fenntartva.",
+    "links": {
+      "privacy": "Adatvédelmi irányelvek",
+      "terms": "Felhasználási feltételek",
+      "sitemap": "Oldaltérkép"
+    }
+  },
+  "reclamation": {
+    "badge": "Panasz",
+    "title": "Panaszbejelentő űrlap",
+    "subtitle": "Komolyan vesszük aggályait. Kérjük, töltse ki az alábbi űrlapot és a lehető leghamarabb válaszolunk.",
+    "qualityCommitment": {
+      "title": "Minőségi elkötelezettségünk",
+      "intro": "A DELIVERY Digital Nice arra törekszik, hogy olyan képzési szolgáltatásokat nyújtson, amelyek megfelelnek ügyfelei igényeinek és követelményeinek. Ha azonban panaszt szeretne benyújtani:",
+      "contact": "Bármikor fordulhat megszokott kapcsolattartóinkhoz kérdéseivel, kétségeivel és felmerült problémáival, akik mindent megtesznek, hogy választ adjanak Önnek.",
+      "formOption": "Lehetősége van kérését az alábbi panaszbejelentő űrlap segítségével is elküldeni.",
+      "processTitle": "Feldolgozási eljárásunk",
+      "steps": {
+        "1": "Kitölti az űrlapot, amely automatikusan elküldésre kerül a panaszok feldolgozásáért felelős csapatnak",
+        "2": "Visszaigazoljuk panasza beérkezését",
+        "3": "A lehető legrövidebb időn belül elemezzük kérését és értékeljük annak elfogadhatóságát",
+        "4": "Ha kérése elfogadható, elemezzük a panasz okait",
+        "5": "Gondosan megvizsgáljuk a bemutatott tényeket, és szükség esetén elvégezzük a szükséges vizsgálatokat. Ebben az esetben tájékoztatjuk Önt az ügy állásáról",
+        "6": "Tájékoztatjuk Önt válaszunkról, megadva vizsgálatunk eredményét és a probléma megoldására javasolt megoldásokat"
+      },
+      "directContact": "A panaszkezelő csapat közvetlen elérése:"
+    },
+    "contactCards": {
+      "email": "E-mail",
+      "phone": "Telefon",
+      "hours": "Nyitvatartás"
+    },
+    "form": {
+      "firstName": "Keresztnév",
+      "lastName": "Vezetéknév",
+      "email": "E-mail",
+      "phone": "Telefon",
+      "company": "Vállalat",
+      "orderNumber": "Rendelésszám",
+      "category": "Panasz kategóriája",
+      "categoryOptions": {
+        "service": "Szolgáltatás minősége",
+        "product": "Termék/Eredmény",
+        "billing": "Számlázás",
+        "support": "Technikai támogatás",
+        "training": "Képzés",
+        "other": "Egyéb"
+      },
+      "subject": "Panasz tárgya",
+      "subjectPlaceholder": "Panaszának összefoglalása",
+      "description": "Részletes leírás",
+      "descriptionPlaceholder": "Kérjük, részletesen írja le panaszát...",
+      "gdpr": "Adatait adatvédelmi irányelvünknek és a GDPR-nek megfelelően kezeljük. Vállaljuk, hogy 48 munkanapon belül válaszolunk.",
+      "captcha": "Biztonsági ellenőrzés",
+      "captchaRequired": "Kérjük, végezze el a biztonsági ellenőrzést",
+      "submit": "Panasz beküldése",
+      "submitting": "Küldés folyamatban..."
+    },
+    "procedure": {
+      "title": "Panaszkezelési eljárás",
+      "steps": {
+        "1": "Beérkezés és visszaigazolás 24 órán belül",
+        "2": "Panaszának elemzése csapatunk által",
+        "3": "Részletes válasz 48 munkanapon belül",
+        "4": "Nyomon követés és a probléma megoldása"
+      },
+      "mediator": "Ha nem elégedett válaszunkkal, kapcsolatba léphet minőségügyi vezetőnkkel vagy fogyasztói mediátorhoz fordulhat."
+    },
+    "success": {
+      "title": "Panasz sikeresen beküldve",
+      "message": "Megkaptuk panaszát. Csapatunk a lehető legrövidebb időn belül felveszi Önnel a kapcsolatot kérésének feldolgozása érdekében.",
+      "responseTime": "Becsült válaszidő: 24-48 munkanap",
+      "backHome": "Vissza a kezdőlapra"
+    }
+  },
+  "invoice": {
+    "title": "Előlegszámla",
+    "prefix": "SZÁMLA",
+    "issuedOn": "Kiállítva",
+    "dueOn": "Esedékesség",
+    "relatedQuote": "Kapcsolódó árajánlat",
+    "for": "Címzett",
+    "service": "Szolgáltatás",
+    "amountExclTax": "Nettó összeg",
+    "lineDescription": "{{percent}}% – {{title}} (ref. {{quoteRef}})",
+    "subtotal": "Nettó részösszeg",
+    "vat": "ÁFA ({{rate}}%)",
+    "netToPay": "Fizetendő összeg",
+    "bankDetails": "Banki adatok",
+    "beneficiary": "Kedvezményezett",
+    "bank": "Bank",
+    "iban": "IBAN",
+    "bicSwift": "BIC / SWIFT",
+    "transferRef": "Utalásnál feltüntetendő hivatkozás",
+    "mailSubject": "{{invoiceRef}} előlegszámla – {{percent}}% a {{quoteRef}} árajánlatból",
+    "mailThanks": "Köszönjük bizalmát.",
+    "mailBody": "A <strong>{{quoteRef}}</strong> árajánlat aláírását követően mellékletben megtalálja a <strong>{{invoiceRef}}</strong> előlegszámlát.",
+    "mailAmount": "Fizetendő összeg: <strong>{{amount}}</strong> ({{percent}}% az összegből).",
+    "mailRef": "Banki adatok és utalási hivatkozás a számlán. Esedékesség: <strong>{{dueDate}}</strong>.",
+    "mailStart": "A befizetés megérkezésekor elindítjuk a projektet."
+  },
+  "emails": {
+    "acceptedSubject": "[ELFOGADVA] {{quoteRef}} árajánlatot aláírta {{signerName}}",
+    "acceptedBody": "A <strong>{{quoteRef}}</strong> árajánlatot <strong>{{signerName}}</strong> ({{signerEmail}}) elfogadta.",
+    "acceptedMeta": "IP: {{ip}} – User Agent: {{userAgent}}",
+    "rejectedSubject": "[ELUTASÍTVA] {{quoteRef}} árajánlat",
+    "rejectedBody": "A <strong>{{quoteRef}}</strong> árajánlatot elutasították.",
+    "rejectedReason": "Indok: {{reason}}",
+    "rejectedNoReason": "(nincs megadva)"
+  }
+}

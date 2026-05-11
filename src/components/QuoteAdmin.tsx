@@ -7,6 +7,7 @@ import {
 
 interface Line { _id?: string; description: string; details?: string; quantity: number; unit: string; unitPrice: number }
 interface Client { name: string; email: string; company?: string; phone?: string; address?: string }
+interface PaymentScheduleEntry { label: string; percent: number }
 interface Quote {
   _id: string;
   ref: string;
@@ -26,6 +27,8 @@ interface Quote {
   discountAmount?: number;
   subtotalAfterDiscount?: number;
   language?: string;
+  issuer?: 'fr' | 'ae'; // entite emettrice : fr = DELIVERY Digital Nice, ae = DELIVERY DIGITAL TECHNOLOGY FZCO
+  paymentSchedule?: PaymentScheduleEntry[]; // [] = utilise le defaut 50/50 cote serveur
   ciiEligible: boolean;
   ciiAmount: number;
   status: 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected' | 'expired';
@@ -143,6 +146,8 @@ export default function QuoteAdmin({ secret }: { secret: string }) {
       secondaryCurrency: '',
       secondaryRate: 1,
       language: 'fr',
+      issuer: 'fr',
+      paymentSchedule: [],
       discountType: 'none',
       discountValue: 0,
       discountAmount: 0,
@@ -323,6 +328,21 @@ function QuoteEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q.secondaryCurrency, q.currency]);
 
+  // Taux EUR -> devise du devis. Le catalogue est en EUR donc on convertit a l'ajout.
+  // Reste a 1 si la devise du devis EST EUR. Fetch live via /exchange-rate sinon.
+  // @author Rabah Ziane - 2026-05-11
+  const [eurRate, setEurRate] = useState(1);
+  useEffect(() => {
+    const cur = (q.currency || 'EUR').toUpperCase();
+    if (cur === 'EUR') { setEurRate(1); return; }
+    let cancelled = false;
+    api(`/api/admin/quotes-quick/exchange-rate?from=EUR&to=${cur}`)
+      .then((r) => { if (!cancelled && r.rate) setEurRate(r.rate); })
+      .catch(() => { if (!cancelled) setEurRate(1); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q.currency]);
+
   // Autocomplete client depuis prospects
   const [prospectQuery, setProspectQuery] = useState('');
   const [prospectSuggestions, setProspectSuggestions] = useState<Array<any>>([]);
@@ -384,6 +404,8 @@ function QuoteEditor({
         currency: q.currency, secondaryCurrency: q.secondaryCurrency, secondaryRate: q.secondaryRate,
         discountType: q.discountType, discountValue: q.discountValue,
         language: q.language,
+        issuer: q.issuer || 'fr',
+        paymentSchedule: q.paymentSchedule || [],
       };
       const res = isNew
         ? await api('/api/admin/quotes-quick', { method: 'POST', body: JSON.stringify(body) })
@@ -445,8 +467,10 @@ function QuoteEditor({
   };
 
   const addLine = (item?: CatalogItem) => {
+    // Conversion EUR (devise du catalogue) -> devise du devis. Arrondi a 2 decimales.
+    const convertedPrice = item ? Math.round(item.defaultPrice * eurRate * 100) / 100 : 0;
     const newLine: Line = item
-      ? { description: item.label, details: item.description, quantity: 1, unit: item.unit, unitPrice: item.defaultPrice }
+      ? { description: item.label, details: item.description, quantity: 1, unit: item.unit, unitPrice: convertedPrice }
       : { description: '', details: '', quantity: 1, unit: 'forfait', unitPrice: 0 };
     setQ({ ...q, lines: [...q.lines, newLine] });
   };
@@ -565,7 +589,7 @@ function QuoteEditor({
                 <Input label="Nom *" value={q.client.name} onChange={(v) => setQ({ ...q, client: { ...q.client, name: v } })} />
                 <Input label="Email *" type="email" value={q.client.email} onChange={(v) => setQ({ ...q, client: { ...q.client, email: v } })} />
                 <Input label="Entreprise" value={q.client.company} onChange={(v) => setQ({ ...q, client: { ...q.client, company: v } })} />
-                <Input label="Téléphone" value={q.client.phone} onChange={(v) => setQ({ ...q, client: { ...q.client, phone: v } })} />
+                <PhoneInput label="Téléphone" value={q.client.phone} onChange={(v) => setQ({ ...q, client: { ...q.client, phone: v } })} />
               </div>
             </Section>
 
@@ -607,7 +631,7 @@ function QuoteEditor({
                             >
                               <div className="flex items-center justify-between mb-1 gap-2">
                                 <span className="text-[13px] font-semibold text-[#1D1D1F]">{c.label}</span>
-                                <span className="text-[12px] text-[#86868B] whitespace-nowrap">{fmtEur(c.defaultPrice)}/{c.unit}</span>
+                                <span className="text-[12px] text-[#86868B] whitespace-nowrap">{fmtCurrency(Math.round(c.defaultPrice * eurRate * 100) / 100, q.currency)}/{c.unit}</span>
                               </div>
                               <div className="text-[11.5px] text-[#86868B] line-clamp-2">{c.description}</div>
                             </button>
@@ -707,6 +731,37 @@ function QuoteEditor({
               <p className="text-[11.5px] text-[#86868B] mt-2">La traduction remplace le contenu actuel (titre, intro, lignes, notes). Les libelles techniques (Sous-total, TVA, Total TTC...) s'adaptent automatiquement.</p>
             </Section>
 
+            {/* Entite emettrice - bloc qui determine quelle societe edite le devis (Nice ou Dubai). Pilote la devise + la TVA par defaut. @author Rabah Ziane - 2026-05-10 */}
+            <Section title="Entité émettrice">
+              <div className="grid grid-cols-2 gap-3">
+                {([
+                  { v: 'fr', flag: '🇫🇷', name: 'DELIVERY Digital', sub: 'Nice, France · SIRET 902 945 195' },
+                  { v: 'ae', flag: '🇦🇪', name: 'DELIVERY Digital Technology', sub: 'Dubai (FZCO) · IFZA 45734' },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.v}
+                    onClick={() => {
+                      // Bascule entite : on aligne devise + TVA par defaut.
+                      const next = opt.v;
+                      const nextCurrency = next === 'fr' ? 'EUR' : 'AED';
+                      const nextTaxRate = next === 'fr' ? 20 : 0;
+                      setQ({ ...q, issuer: next, currency: nextCurrency, taxRate: nextTaxRate });
+                    }}
+                    className={`text-left p-4 rounded-[14px] ring-1 transition ${
+                      (q.issuer || 'fr') === opt.v
+                        ? 'bg-[#1D1D1F] text-white ring-[#1D1D1F]'
+                        : 'bg-white text-[#1D1D1F] ring-black/8 hover:ring-black/20'
+                    }`}
+                  >
+                    <div className="text-[20px] mb-1">{opt.flag}</div>
+                    <div className="text-[13.5px] font-semibold">{opt.name}</div>
+                    <div className={`text-[11.5px] mt-0.5 ${(q.issuer || 'fr') === opt.v ? 'text-white/70' : 'text-[#86868B]'}`}>{opt.sub}</div>
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-[#86868B] mt-2">Determine le pied de page du devis (raison sociale, adresse, mentions legales) ainsi que la devise et la TVA par defaut.</p>
+            </Section>
+
             {/* Devises */}
             <Section title="Devise(s)">
               <div className="grid grid-cols-2 gap-3 mb-3">
@@ -714,7 +769,13 @@ function QuoteEditor({
                   <label className="block text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-1">Devise principale</label>
                   <select
                     value={q.currency}
-                    onChange={(e) => setQ({ ...q, currency: e.target.value })}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      // TVA auto : EUR uniquement si entite FR. Sinon (devise etrangere ou entite Dubai) -> 0 %.
+                      const issuer = q.issuer || 'fr';
+                      const autoRate = (issuer === 'fr' && next === 'EUR') ? 20 : 0;
+                      setQ({ ...q, currency: next, taxRate: autoRate });
+                    }}
                     className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px] cursor-pointer"
                   >
                     {CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
@@ -797,6 +858,50 @@ function QuoteEditor({
               </div>
             </Section>
 
+            {/* TVA - bloc d'edition du taux applique au devis (presets + custom). Le defaut est ajuste auto selon la devise principale (cf. onChange ci-dessus). @author Rabah Ziane - 2026-05-10 */}
+            <Section title="TVA">
+              <div className="flex flex-wrap items-center gap-2">
+                {([0, 5.5, 10, 20] as const).map((rate) => (
+                  <button
+                    key={rate}
+                    onClick={() => setQ({ ...q, taxRate: rate })}
+                    className={`px-3 py-1.5 rounded-full text-[12.5px] font-medium ${q.taxRate === rate ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F]'}`}
+                  >
+                    {rate === 0 ? 'Aucune (0 %)' : `${String(rate).replace('.', ',')} %`}
+                  </button>
+                ))}
+                {(() => {
+                  const isCustom = ![0, 5.5, 10, 20].includes(q.taxRate);
+                  return (
+                    <>
+                      <button
+                        onClick={() => setQ({ ...q, taxRate: isCustom ? q.taxRate : 8.5 })}
+                        className={`px-3 py-1.5 rounded-full text-[12.5px] font-medium ${isCustom ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F]'}`}
+                      >
+                        Personnalisé
+                      </button>
+                      {isCustom && (
+                        <div className="flex items-center gap-1 ml-2">
+                          <input
+                            type="number"
+                            step="0.1"
+                            min={0}
+                            max={100}
+                            value={q.taxRate}
+                            onChange={(e) => setQ({ ...q, taxRate: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)) })}
+                            className="w-24 px-2 py-1.5 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px] text-right"
+                            placeholder="ex: 8.5"
+                          />
+                          <span className="text-[13px] text-[#86868B]">%</span>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+              <p className="text-[11px] text-[#86868B] mt-2">Defaut : 20 % en EUR, 0 % pour les autres devises (export hors UE). Ajustable a la main.</p>
+            </Section>
+
             {/* CII + TVA + total */}
             <Section title="Total et options">
               <label className="flex items-center gap-2 mb-3 text-[13px] cursor-pointer">
@@ -832,12 +937,94 @@ function QuoteEditor({
               </div>
             </Section>
 
+            {/* Conditions de paiement - defaut 50/50 (acompte/livraison) ou personnalise par devis. La somme doit faire 100. @author Rabah Ziane - 2026-05-10 */}
+            <Section title="Conditions de paiement">
+              {(() => {
+                const isCustom = (q.paymentSchedule || []).length > 0;
+                const sum = (q.paymentSchedule || []).reduce((s, p) => s + (Number(p.percent) || 0), 0);
+                return (
+                  <>
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      <button
+                        onClick={() => setQ({ ...q, paymentSchedule: [] })}
+                        className={`px-3 py-1.5 rounded-full text-[12.5px] font-medium ${!isCustom ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F]'}`}
+                      >
+                        Defaut (50 % acompte / 50 % livraison)
+                      </button>
+                      <button
+                        onClick={() => setQ({ ...q, paymentSchedule: q.paymentSchedule && q.paymentSchedule.length > 0 ? q.paymentSchedule : [
+                          { label: 'Acompte a la signature', percent: 30 },
+                          { label: 'Acompte intermediaire', percent: 40 },
+                          { label: 'Solde a la livraison', percent: 30 },
+                        ] })}
+                        className={`px-3 py-1.5 rounded-full text-[12.5px] font-medium ${isCustom ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F]'}`}
+                      >
+                        Personnaliser
+                      </button>
+                    </div>
+                    {isCustom && (
+                      <div className="space-y-2">
+                        {(q.paymentSchedule || []).map((p, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <input
+                              value={p.label}
+                              onChange={(e) => {
+                                const next = [...(q.paymentSchedule || [])];
+                                next[i] = { ...next[i], label: e.target.value };
+                                setQ({ ...q, paymentSchedule: next });
+                              }}
+                              placeholder="Ex: Acompte a la signature"
+                              className="flex-1 px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[13.5px]"
+                            />
+                            <input
+                              type="number"
+                              step="1"
+                              min={0}
+                              max={100}
+                              value={p.percent}
+                              onChange={(e) => {
+                                const next = [...(q.paymentSchedule || [])];
+                                next[i] = { ...next[i], percent: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)) };
+                                setQ({ ...q, paymentSchedule: next });
+                              }}
+                              className="w-20 px-2 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[13.5px] text-right"
+                            />
+                            <span className="text-[13px] text-[#86868B]">%</span>
+                            <button
+                              onClick={() => {
+                                const next = [...(q.paymentSchedule || [])];
+                                next.splice(i, 1);
+                                setQ({ ...q, paymentSchedule: next });
+                              }}
+                              className="p-1.5 rounded-[8px] text-[#86868B] hover:bg-[#F5F5F7] hover:text-[#FF3B30]"
+                              title="Supprimer cette echeance"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => setQ({ ...q, paymentSchedule: [...(q.paymentSchedule || []), { label: '', percent: 0 }] })}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[12.5px] font-medium bg-white ring-1 ring-black/8 text-[#1D1D1F] hover:ring-black/20"
+                        >
+                          <Plus className="h-3.5 w-3.5" /> Ajouter une echeance
+                        </button>
+                        <p className={`text-[11px] mt-2 ${sum === 100 ? 'text-[#34C759]' : 'text-[#FF9500]'}`}>
+                          Somme : {sum} % {sum !== 100 ? '— doit faire 100 % pour etre valide' : '✓'}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </Section>
+
             <Section title="Notes (optionnel)">
               <textarea
                 value={q.notes || ''}
                 onChange={(e) => setQ({ ...q, notes: e.target.value })}
                 rows={3}
-                placeholder="Conditions de paiement, mentions, etc."
+                placeholder="Conditions specifiques, mentions, etc."
                 className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[13px] resize-none"
               />
             </Section>
@@ -907,6 +1094,86 @@ function Input({ label, value, onChange, type = 'text' }: { label: string; value
         onChange={(e) => onChange(e.target.value)}
         className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px] text-[#1D1D1F]"
       />
+    </div>
+  );
+}
+
+// Champ telephone avec selecteur d'indicatif pays. Liste priorisee FR + Maghreb + Golfe + UE.
+// Stocke en DB sous "+XX numero" pour rester compatible avec le champ string existant.
+// @author Rabah Ziane - 2026-05-11
+const PHONE_COUNTRIES = [
+  { code: '+33', flag: '🇫🇷', name: 'France' },
+  { code: '+971', flag: '🇦🇪', name: 'UAE' },
+  { code: '+212', flag: '🇲🇦', name: 'Maroc' },
+  { code: '+213', flag: '🇩🇿', name: 'Algerie' },
+  { code: '+216', flag: '🇹🇳', name: 'Tunisie' },
+  { code: '+32', flag: '🇧🇪', name: 'Belgique' },
+  { code: '+41', flag: '🇨🇭', name: 'Suisse' },
+  { code: '+352', flag: '🇱🇺', name: 'Luxembourg' },
+  { code: '+44', flag: '🇬🇧', name: 'UK' },
+  { code: '+1', flag: '🇺🇸', name: 'US / Canada' },
+  { code: '+34', flag: '🇪🇸', name: 'Espagne' },
+  { code: '+351', flag: '🇵🇹', name: 'Portugal' },
+  { code: '+39', flag: '🇮🇹', name: 'Italie' },
+  { code: '+49', flag: '🇩🇪', name: 'Allemagne' },
+  { code: '+31', flag: '🇳🇱', name: 'Pays-Bas' },
+  { code: '+966', flag: '🇸🇦', name: 'Arabie Saoudite' },
+  { code: '+974', flag: '🇶🇦', name: 'Qatar' },
+  { code: '+965', flag: '🇰🇼', name: 'Koweit' },
+  { code: '+973', flag: '🇧🇭', name: 'Bahrein' },
+  { code: '+968', flag: '🇴🇲', name: 'Oman' },
+];
+function parsePhone(full?: string): { code: string; number: string } {
+  const v = (full || '').trim();
+  if (!v) return { code: '+33', number: '' };
+  // Trouve l'indicatif le plus long qui matche au debut, en triant par longueur decroissante
+  const sorted = [...PHONE_COUNTRIES].sort((a, b) => b.code.length - a.code.length);
+  for (const c of sorted) {
+    if (v.startsWith(c.code)) {
+      return { code: c.code, number: v.slice(c.code.length).trim() };
+    }
+  }
+  return { code: '+33', number: v };
+}
+function PhoneInput({ label, value, onChange }: { label: string; value?: string; onChange: (v: string) => void }) {
+  // Etat local du code pour que la selection persiste meme quand le numero est vide
+  // (sinon parsePhone('') retombe sur +33 et ecrase le choix de l'utilisateur).
+  const initial = parsePhone(value);
+  const [code, setCode] = useState(initial.code);
+  const [number, setNumber] = useState(initial.number);
+  // Resync si la prop value change depuis l'exterieur (chargement d'un devis existant)
+  useEffect(() => {
+    const p = parsePhone(value);
+    setCode(p.code);
+    setNumber(p.number);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+  const propagate = (c: string, n: string) => {
+    const trimmed = n.trim();
+    onChange(trimmed ? `${c} ${trimmed}` : '');
+  };
+  return (
+    <div>
+      <label className="block text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-1">{label}</label>
+      <div className="flex gap-2">
+        <select
+          value={code}
+          onChange={(e) => { setCode(e.target.value); propagate(e.target.value, number); }}
+          className="px-2 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px] text-[#1D1D1F] cursor-pointer"
+          style={{ minWidth: 110 }}
+        >
+          {PHONE_COUNTRIES.map((c) => (
+            <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+          ))}
+        </select>
+        <input
+          type="tel"
+          value={number}
+          onChange={(e) => { setNumber(e.target.value); propagate(code, e.target.value); }}
+          placeholder="6 12 34 56 78"
+          className="flex-1 min-w-0 px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px] text-[#1D1D1F]"
+        />
+      </div>
     </div>
   );
 }

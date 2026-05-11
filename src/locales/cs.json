@@ -1,0 +1,289 @@
+{
+  "header": {
+    "home": "Domů",
+    "services": "Služby",
+    "portfolio": "Projekty",
+    "about": "O nás",
+    "contact": "Kontakt",
+    "training": "Školení",
+    "quote": "Nabídka",
+    "formationBtn": "Školení",
+    "solutionsBtn": "Řešení"
+  },
+  "tiles": {
+    "eyebrow": "Naše odbornost",
+    "ciiBadge": "Certifikováno CII · až 20% refundováno",
+    "stack": "Stack",
+    "cta": {
+      "start": "Prodiskutovat projekt",
+      "learn": "Zjistit více",
+      "trainings": "Zobrazit všechna školení",
+      "learner": "Prostor účastníka"
+    },
+    "web": {
+      "title": "Webová",
+      "accent": "řešení",
+      "subhead": "SaaS, dashboardy a webové aplikace na míru, poháněné nejlepšími technologiemi."
+    },
+    "mobile": {
+      "title": "Nativní",
+      "accent": "aplikace",
+      "subhead": "iOS a Android. Nativní výkon, propracovaný design, nasazení do App Store a Play Store na klíč."
+    },
+    "enterprise": {
+      "title": "Podnikový",
+      "accent": "software",
+      "subhead": "CRM, ERP, B2B platformy. Vaše procesy automatizované, vaše produktivita posílená."
+    },
+    "cloud": {
+      "title": "Cloud",
+      "accent": "& DevOps",
+      "subhead": "Hosting, monitoring, automatické škálování. Infrastruktura, která zvládne zátěž ve dne i v noci."
+    },
+    "training": {
+      "title": "Profesní",
+      "accent": "školení.",
+      "subhead": "Organizace certifikovaná Qualiopi. Využijte financování OPCO."
+    }
+  },
+  "formationPage": {
+    "eyebrow": "Centrum certifikované Qualiopi",
+    "title": "Profesní",
+    "accent": "školení.",
+    "subhead": "Organizace certifikovaná Qualiopi. Využijte financování OPCO."
+  },
+  "heroDark": {
+    "viewServices": "Zobrazit naše služby",
+    "trainingPro": "Profesní školení"
+  },
+  "hero": {
+    "title": "Kód, který pohání vaše ambice, 20 % refundováno prostřednictvím CII",
+    "subtitle": "Webové stránky, mobilní aplikace, SaaS, CRM, ERP na míru. Agentura certifikovaná Daňový úvěr na inovace - až 80 000 € ročního úvěru pro způsobilé SME.",
+    "titleIntl": "Postavme váš příští digitální produkt",
+    "subtitleIntl": "Webové stránky, mobilní aplikace, SaaS, CRM, ERP. Kód na míru, dodán během několika týdnů.",
+    "cta": {
+      "project": "Prodiskutovat projekt"
+    },
+    "badges": {
+      "digital": "Digitální služby"
+    }
+  },
+  "services": {
+    "title": "Naše služby",
+    "subtitle": "Řešení přizpůsobená vašim potřebám",
+    "web": {
+      "title": "Vývoj webů",
+      "description": "Prezentační weby, e-commerce a progresivní webové aplikace s nejnovějšími technologiemi."
+    },
+    "mobile": {
+      "title": "Mobilní aplikace",
+      "description": "Nativní a multiplatformní aplikace pro iOS a Android s optimální uživatelskou zkušeností."
+    },
+    "enterprise": {
+      "title": "Podniková řešení",
+      "description": "Software na míru, automatizace procesů a integrace systémů."
+    },
+    "cloud": {
+      "title": "Cloudové služby",
+      "description": "Migrace, architektura a nasazení aplikací v cloudu s bezpečností a výkonem."
+    },
+    "training": {
+      "title": "Profesní školení",
+      "description": "Organizace certifikovaná Qualiopi. Programy ve webovém vývoji, mobile a DevOps, financovatelné prostřednictvím vašeho OPCO."
+    }
+  },
+  "portfolio": {
+    "title": "Naše projekty",
+    "subtitle": "Objevte naše realizace",
+    "viewProject": "Zobrazit projekt",
+    "projects": {
+      "1": {
+        "title": "E-commerce platforma",
+        "description": "Kompletní řešení se správou skladu, zabezpečenými platbami a optimalizovanou zákaznickou zkušeností.",
+        "tag": "Web"
+      },
+      "2": {
+        "title": "Aplikace pro řízení",
+        "description": "Personalizovaný ERP systém pro optimalizaci podnikových procesů a zlepšení produktivity.",
+        "tag": "Podnik"
+      },
+      "3": {
+        "title": "Mobilní aplikace",
+        "description": "Doručovací aplikace s geolokací a integrovaným platebním systémem.",
+        "tag": "Mobile"
+      },
+      "4": {
+        "title": "Cloudová infrastruktura",
+        "description": "Migrace a optimalizace infrastruktury pro maximální škálovatelnost a snížené náklady.",
+        "tag": "Cloud"
+      }
+    }
+  },
+  "about": {
+    "title": "Naše odbornost",
+    "subtitle": "Tým plný nadšení",
+    "description": "S více než 10 lety zkušeností náš tým odborníků kombinuje kreativitu a technickou preciznost pro transformaci vašich nápadů do výkonných digitálních řešení.",
+    "expertise": {
+      "1": {
+        "title": "Front-End vývoj",
+        "value": "90%"
+      },
+      "2": {
+        "title": "Back-End vývoj",
+        "value": "95%"
+      },
+      "3": {
+        "title": "UX/UI Design",
+        "value": "85%"
+      },
+      "4": {
+        "title": "DevOps & Cloud",
+        "value": "90%"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Reference",
+    "subtitle": "Co říkají naši klienti",
+    "items": {
+      "1": {
+        "text": "Tým transformoval naši vizi do digitálního řešení, které předčilo všechna naše očekávání. Výjimečná profesionalita a technická expertíza.",
+        "author": "Marie Dupont",
+        "position": "Ředitelka marketingu, TechCorp"
+      },
+      "2": {
+        "text": "Byli jsme ohromeni jejich schopností porozumět našim obchodním potřebám a reagovat inovativními a efektivními řešeními.",
+        "author": "Jean Martin",
+        "position": "CEO, InnovSoft"
+      },
+      "3": {
+        "text": "Jejich podpora byla po celou dobu projektu cenná. Dokázali se přizpůsobit našim omezením a navrhnout relevantní řešení.",
+        "author": "Sophie Lefebvre",
+        "position": "CTO, DataFuture"
+      }
+    }
+  },
+  "contact": {
+    "title": "Kontaktujte nás",
+    "subtitle": "Promluvme si o vašem projektu",
+    "name": "Jméno",
+    "email": "E-mail",
+    "phone": "Telefon",
+    "message": "Zpráva",
+    "subject": "Předmět",
+    "submit": "Odeslat",
+    "success": "Zpráva byla úspěšně odeslána! Brzy vás budeme kontaktovat.",
+    "error": "Došlo k chybě. Zkuste to prosím znovu."
+  },
+  "footer": {
+    "company": "© 2025 DELIVERY Digital Technology. Všechna práva vyhrazena.",
+    "links": {
+      "privacy": "Zásady ochrany osobních údajů",
+      "terms": "Podmínky použití",
+      "sitemap": "Mapa stránek"
+    }
+  },
+  "reclamation": {
+    "badge": "Reklamace",
+    "title": "Reklamační formulář",
+    "subtitle": "Bereme vaše obavy vážně. Vyplňte prosím níže uvedený formulář a my vám odpovíme co nejdříve.",
+    "qualityCommitment": {
+      "title": "Náš závazek ke kvalitě",
+      "intro": "DELIVERY Digital Nice se snaží poskytovat školicí služby, které odpovídají potřebám a požadavkům našich klientů. Pokud nám však chcete podat reklamaci:",
+      "contact": "Kdykoliv se můžete obrátit na vaše obvyklé kontakty s vašimi dotazy, pochybnostmi a problémy, které udělají vše pro to, aby vám poskytly odpověď.",
+      "formOption": "Máte také možnost odeslat svůj požadavek pomocí níže uvedeného reklamačního formuláře.",
+      "processTitle": "Náš proces zpracování",
+      "steps": {
+        "1": "Vyplníte formulář, který je automaticky odeslán týmu pro zpracování reklamací",
+        "2": "Potvrdíme přijetí vaší reklamace",
+        "3": "Analyzujeme váš požadavek co nejdříve a posoudíme jeho přijatelnost",
+        "4": "Pokud je váš požadavek přijatelný, analyzujeme příčiny reklamace",
+        "5": "Pečlivě zkoumáme uvedené skutečnosti a v případě potřeby provádíme potřebný průzkum. V tomto případě vás budeme informovat o průběhu řešení",
+        "6": "Informujeme vás o naší odpovědi s uvedením výsledků našeho šetření a řešení, která navrhujeme k vyřešení problému"
+      },
+      "directContact": "Pro přímý kontakt s týmem pro zpracování reklamací:"
+    },
+    "contactCards": {
+      "email": "E-mail",
+      "phone": "Telefon",
+      "hours": "Hodiny"
+    },
+    "form": {
+      "firstName": "Křestní jméno",
+      "lastName": "Příjmení",
+      "email": "E-mail",
+      "phone": "Telefon",
+      "company": "Společnost",
+      "orderNumber": "Číslo objednávky",
+      "category": "Kategorie reklamace",
+      "categoryOptions": {
+        "service": "Kvalita služby",
+        "product": "Produkt/Výstup",
+        "billing": "Fakturace",
+        "support": "Technická podpora",
+        "training": "Školení",
+        "other": "Jiné"
+      },
+      "subject": "Předmět reklamace",
+      "subjectPlaceholder": "Shrnutí vaší reklamace",
+      "description": "Podrobný popis",
+      "descriptionPlaceholder": "Popište prosím podrobně vaši reklamaci...",
+      "gdpr": "Vaše údaje jsou zpracovávány v souladu s našimi zásadami ochrany osobních údajů a GDPR. Zavazujeme se vám odpovědět do 48 pracovních hodin.",
+      "captcha": "Bezpečnostní ověření",
+      "captchaRequired": "Prosím dokončete bezpečnostní ověření",
+      "submit": "Odeslat reklamaci",
+      "submitting": "Odesílání..."
+    },
+    "procedure": {
+      "title": "Postup zpracování reklamací",
+      "steps": {
+        "1": "Přijetí a potvrzení do 24 hod.",
+        "2": "Analýza vaší reklamace naším týmem",
+        "3": "Podrobná odpověď do 48 pracovních hodin",
+        "4": "Následné řešení a vyřešení problému"
+      },
+      "mediator": "Pokud nejste spokojeni s naší odpovědí, můžete kontaktovat našeho manažera kvality nebo se obrátit na spotřebitelského mediátora."
+    },
+    "success": {
+      "title": "Reklamace byla úspěšně odeslána",
+      "message": "Obdrželi jsme vaši reklamaci. Náš tým vás co nejdříve kontaktuje, aby zpracoval váš požadavek.",
+      "responseTime": "Odhadovaná doba odpovědi: 24-48 pracovních hodin",
+      "backHome": "Zpět na hlavní stránku"
+    }
+  },
+  "invoice": {
+    "title": "Zálohová faktura",
+    "prefix": "FAKTURA",
+    "issuedOn": "Vystavena dne",
+    "dueOn": "Splatnost",
+    "relatedQuote": "Související nabídka",
+    "for": "K rukám",
+    "service": "Služba",
+    "amountExclTax": "Částka bez DPH",
+    "lineDescription": "{{percent}} % z {{title}} (ref. {{quoteRef}})",
+    "subtotal": "Mezisoučet bez DPH",
+    "vat": "DPH ({{rate}} %)",
+    "netToPay": "K úhradě celkem",
+    "bankDetails": "Bankovní údaje",
+    "beneficiary": "Příjemce",
+    "bank": "Banka",
+    "iban": "IBAN",
+    "bicSwift": "BIC / SWIFT",
+    "transferRef": "Referenční číslo pro převod",
+    "mailSubject": "Zálohová faktura {{invoiceRef}} - {{percent}} % z nabídky {{quoteRef}}",
+    "mailThanks": "Děkujeme za vaši důvěru.",
+    "mailBody": "Po podpisu nabídky <strong>{{quoteRef}}</strong> naleznete v příloze zálohovou fakturu <strong>{{invoiceRef}}</strong>.",
+    "mailAmount": "Částka k úhradě: <strong>{{amount}}</strong> ({{percent}} % z celkové částky).",
+    "mailRef": "Bankovní údaje a referenční číslo převodu jsou uvedeny na faktuře. Splatnost: <strong>{{dueDate}}</strong>.",
+    "mailStart": "Po obdržení platby zahájíme projekt."
+  },
+  "emails": {
+    "acceptedSubject": "[PŘIJATO] Nabídka {{quoteRef}} podepsána {{signerName}}",
+    "acceptedBody": "Nabídka <strong>{{quoteRef}}</strong> byla právě přijata od <strong>{{signerName}}</strong> ({{signerEmail}}).",
+    "acceptedMeta": "IP: {{ip}} - User Agent: {{userAgent}}",
+    "rejectedSubject": "[ODMÍTNUTO] Nabídka {{quoteRef}}",
+    "rejectedBody": "Nabídka <strong>{{quoteRef}}</strong> byla odmítnuta.",
+    "rejectedReason": "Důvod: {{reason}}",
+    "rejectedNoReason": "(neuvedeno)"
+  }
+}

@@ -66,6 +66,8 @@ html {
   scroll-behavior: smooth;
   overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
+  width: 100%;
+  position: relative;
 }
 
 body {
@@ -77,6 +79,19 @@ body {
   font-feature-settings: "ss01", "cv01";
   overflow-x: hidden;
   max-width: 100vw;
+  width: 100%;
+  position: relative;
+  /* Empêche le drag-bounce horizontal sur iOS Safari (l'écran qui se balade gauche/droite) */
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
+}
+
+/* Container racine React : meme contrainte, evite tout enfant qui depasse */
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  position: relative;
 }
 
 /* Responsive guards: prevent any media from breaking layout on mobile */
@@ -274,3 +289,114 @@ img, svg, video, iframe { max-width: 100%; height: auto; }
 .fixed.bottom-6.right-6.z-50 { z-index: 45 !important; }
 
 .mockup-responsive { width: 100%; }
+
+/* ============================================================
+   MOBILE SAFETY NET - garantie qualite vue mobile (pro-grade).
+   Bloque tout overflow, scale typography, touch targets WCAG.
+   @author Rabah Ziane - 2026-05-11
+   ============================================================ */
+
+/* 1. Aucun element n'est autorise a depasser horizontalement le viewport.
+   Filet de securite multi-niveaux. */
+html, body, #root, main, section, footer, header, article, aside, nav {
+  max-width: 100vw;
+}
+body, #root {
+  overflow-x: clip; /* clip > hidden : pas de scroll meme avec position: sticky */
+}
+
+/* 2. Images / medias responsives (sans toucher display car ca casse les flex/inline). */
+img, picture, video, canvas, iframe, embed, object {
+  max-width: 100%;
+  height: auto;
+}
+/* SVG : juste max-width pour ne pas deborder, surtout PAS display:block */
+svg { max-width: 100%; }
+
+/* 3. Word-wrap doux uniquement sur les longs blocs de texte (paragraphes).
+   PAS sur titles/spans/boutons qui doivent garder leurs mots intacts. */
+p {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+/* 4. Mobile : padding lateral minimum + safe-area iPhone notch. */
+@media (max-width: 640px) {
+  .container, .container-wide {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+  /* Safe-area pour le fond de page */
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* Headlines : si vraiment trop long, autoriser break (sans hyphenation forcee) */
+  h1, .display-1, h2, .display-2 { overflow-wrap: break-word; }
+}
+
+/* 5. Touch targets : tous les boutons et liens cliquables >= 44x44px sur mobile (WCAG AA). */
+@media (max-width: 640px) and (pointer: coarse) {
+  button:not(.no-touch-min),
+  a.btn, a.btn-pill, a.btn-pill-ghost,
+  [role="button"]:not(.no-touch-min) {
+    min-height: 44px;
+  }
+}
+
+/* 6. Sections cards/grilles : sur mobile, reduire gaps trop larges.
+   NOTE : on ne force PAS le passage a 1-2 cols car ca casse les mockups
+   produit (Dashboard, Pipeline) qui sont concus pour rester en 3-4 cols denses
+   meme sur mobile. Les pages reelles utilisent deja md:grid-cols-X responsive. */
+@media (max-width: 480px) {
+  .gap-12, .gap-16, .gap-20 { gap: 1.5rem; }
+  .gap-8, .gap-10 { gap: 1rem; }
+}
+
+/* 7. Reduit padding/margin sur sections grandes en mobile. */
+@media (max-width: 640px) {
+  section.py-24, section.py-20, section[class*="py-2"][class*="0"] {
+    padding-top: 3.5rem;
+    padding-bottom: 3.5rem;
+  }
+  section.py-32, section[class*="py-3"][class*="0"] {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+}
+
+/* 8. Tableaux responsives : scroll horizontal interne plutot que casser le layout. */
+table { width: 100%; max-width: 100%; }
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* 9. Forms : inputs full-width sur mobile, font-size 16px+ pour eviter le zoom iOS Safari. */
+@media (max-width: 640px) {
+  input[type="text"], input[type="email"], input[type="tel"],
+  input[type="number"], input[type="search"], input[type="url"],
+  input[type="password"], textarea, select {
+    font-size: 16px !important; /* prevent iOS auto-zoom */
+  }
+}
+
+/* 10. Modales : margin externe minimale + scroll interne si trop grand. */
+@media (max-width: 640px) {
+  [class*="fixed"][class*="inset-0"] > div:not(.bg-) {
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+  }
+}
+
+/* 11. Cacher elements clairement desktop sur mobile (WhatsApp widget). */
+@media (max-width: 480px) {
+  .whatsapp_widget_wrapper {
+    bottom: 88px !important;
+    right: 12px !important;
+  }
+  .whatsapp_widget_wrapper .whatsapp_widget_icon {
+    transform: scale(0.85);
+  }
+}
+
+/* 12. Print : reset clean. */
+@media print {
+  .no-print { display: none !important; }
+}

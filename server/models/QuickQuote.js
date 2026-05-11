@@ -43,6 +43,18 @@ const quickQuoteSchema = new Schema({
 
   language: { type: String, default: 'fr', lowercase: true, trim: true }, // fr, en, es, de, it, pt, ar, zh
 
+  // Entite emettrice : 'fr' = DELIVERY Digital Nice (France), 'ae' = DELIVERY DIGITAL TECHNOLOGY FZCO (Dubai)
+  issuer: { type: String, enum: ['fr', 'ae'], default: 'fr' },
+
+  // Echeances de paiement : si vide, le rendu utilise le defaut 50/50 (acompte/livraison)
+  paymentSchedule: {
+    type: [{
+      label: { type: String, trim: true }, // ex: "Acompte a la signature", "Solde a la livraison"
+      percent: { type: Number, min: 0, max: 100 },
+    }],
+    default: [],
+  },
+
   ciiEligible: { type: Boolean, default: false },
   ciiAmount: { type: Number, default: 0 },
 
@@ -71,6 +83,15 @@ const quickQuoteSchema = new Schema({
     reason: { type: String },
     rejectedAt: { type: Date },
     ip: { type: String },
+  },
+  // Facture d'acompte auto-emise a la signature. Trace pour badge "Facture envoyee" cote admin.
+  // @author Rabah Ziane - 2026-05-11
+  invoice: {
+    ref: { type: String },
+    amount: { type: Number },
+    currency: { type: String },
+    sentAt: { type: Date },
+    sentTo: { type: String },
   },
 }, { timestamps: true });
 

@@ -60,7 +60,7 @@
     "title": "Le code qui propulse vos ambitions, 20 % remboursés via le CII",
     "subtitle": "Sites web, applications mobiles, SaaS, CRM, ERP sur mesure. Agence certifiée Crédit Impôt Innovation - jusqu'à 80 000 € de crédit annuel pour les PME éligibles.",
     "titleIntl": "Construisons votre prochain produit digital",
-    "subtitleIntl": "Sites web, applications mobiles, SaaS, CRM, ERP. Code sur mesure, livré en quelques semaines. Notre agent IA comprend votre besoin.",
+    "subtitleIntl": "Sites web, applications mobiles, SaaS, CRM, ERP. Code sur mesure, livré en quelques semaines.",
     "cta": {
       "project": "Discuter d'un projet"
     },
@@ -250,5 +250,40 @@
       "responseTime": "Temps de réponse estimé : 24-48 heures ouvrées",
       "backHome": "Retour à l'accueil"
     }
+  },
+  "invoice": {
+    "title": "Facture d'acompte",
+    "prefix": "FACTURE",
+    "issuedOn": "Émise le",
+    "dueOn": "Échéance",
+    "relatedQuote": "Devis associé",
+    "for": "À l'attention de",
+    "service": "Prestation",
+    "amountExclTax": "Montant HT",
+    "lineDescription": "{{percent}} % de {{title}} (réf. {{quoteRef}})",
+    "subtotal": "Sous-total HT",
+    "vat": "TVA ({{rate}} %)",
+    "netToPay": "Net à payer",
+    "bankDetails": "Coordonnées bancaires",
+    "beneficiary": "Bénéficiaire",
+    "bank": "Banque",
+    "iban": "IBAN",
+    "bicSwift": "BIC / SWIFT",
+    "transferRef": "Référence à indiquer dans le virement",
+    "mailSubject": "Facture d'acompte {{invoiceRef}} - {{percent}} % du devis {{quoteRef}}",
+    "mailThanks": "Merci pour votre confiance.",
+    "mailBody": "Suite à la signature du devis <strong>{{quoteRef}}</strong>, veuillez trouver en pièce jointe la facture d'acompte <strong>{{invoiceRef}}</strong>.",
+    "mailAmount": "Montant à régler : <strong>{{amount}}</strong> ({{percent}} % du total).",
+    "mailRef": "Coordonnées bancaires et référence de virement dans la facture. Échéance : <strong>{{dueDate}}</strong>.",
+    "mailStart": "À réception du paiement, nous démarrons le projet."
+  },
+  "emails": {
+    "acceptedSubject": "[ACCEPTÉ] Devis {{quoteRef}} signé par {{signerName}}",
+    "acceptedBody": "Le devis <strong>{{quoteRef}}</strong> vient d'être accepté par <strong>{{signerName}}</strong> ({{signerEmail}}).",
+    "acceptedMeta": "IP : {{ip}} - User Agent : {{userAgent}}",
+    "rejectedSubject": "[REFUSÉ] Devis {{quoteRef}}",
+    "rejectedBody": "Le devis <strong>{{quoteRef}}</strong> a été refusé.",
+    "rejectedReason": "Raison : {{reason}}",
+    "rejectedNoReason": "(non précisée)"
   }
 }

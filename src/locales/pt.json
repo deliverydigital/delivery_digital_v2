@@ -1,0 +1,289 @@
+{
+  "header": {
+    "home": "Início",
+    "services": "Serviços",
+    "portfolio": "Projetos",
+    "about": "Sobre nós",
+    "contact": "Contacto",
+    "training": "Formação",
+    "quote": "Orçamento",
+    "formationBtn": "Formação",
+    "solutionsBtn": "Soluções"
+  },
+  "tiles": {
+    "eyebrow": "As nossas competências",
+    "ciiBadge": "Certificado CII · até 20% reembolsado",
+    "stack": "Stack",
+    "cta": {
+      "start": "Falar sobre um projeto",
+      "learn": "Saber mais",
+      "trainings": "Ver todas as formações",
+      "learner": "Área do formando"
+    },
+    "web": {
+      "title": "Soluções",
+      "accent": "web",
+      "subhead": "SaaS, dashboards e aplicações web à medida, impulsionadas pelas melhores tecnologias."
+    },
+    "mobile": {
+      "title": "Apps",
+      "accent": "nativas",
+      "subhead": "iOS e Android. Performance nativa, design cuidado, implementação na App Store e Play Store chave-na-mão."
+    },
+    "enterprise": {
+      "title": "Software",
+      "accent": "empresarial",
+      "subhead": "CRM, ERP, plataformas B2B. Os seus processos automatizados, a sua produtividade potenciada."
+    },
+    "cloud": {
+      "title": "Cloud",
+      "accent": "& DevOps",
+      "subhead": "Alojamento, monitorização, escala automática. Uma infraestrutura que aguenta a carga, dia e noite."
+    },
+    "training": {
+      "title": "Formação",
+      "accent": "profissional.",
+      "subhead": "Organismo certificado Qualiopi. Beneficie do financiamento OPCO."
+    }
+  },
+  "formationPage": {
+    "eyebrow": "Centro certificado Qualiopi",
+    "title": "Formação",
+    "accent": "profissional.",
+    "subhead": "Organismo certificado Qualiopi. Beneficie do financiamento OPCO."
+  },
+  "heroDark": {
+    "viewServices": "Ver os nossos serviços",
+    "trainingPro": "Formação profissional"
+  },
+  "hero": {
+    "title": "O código que impulsiona as suas ambições, 20% reembolsados via CII",
+    "subtitle": "Sites web, aplicações móveis, SaaS, CRM, ERP à medida. Agência certificada Crédito Imposto Inovação - até 80 000 € de crédito anual para PME elegíveis.",
+    "titleIntl": "Vamos construir o seu próximo produto digital",
+    "subtitleIntl": "Sites web, aplicações móveis, SaaS, CRM, ERP. Código à medida, entregue em poucas semanas.",
+    "cta": {
+      "project": "Falar sobre um projeto"
+    },
+    "badges": {
+      "digital": "Serviços Digitais"
+    }
+  },
+  "services": {
+    "title": "Os Nossos Serviços",
+    "subtitle": "Soluções adaptadas às suas necessidades",
+    "web": {
+      "title": "Desenvolvimento Web",
+      "description": "Sites institucionais, e-commerce e aplicações web progressivas com as tecnologias mais recentes."
+    },
+    "mobile": {
+      "title": "Aplicações Móveis",
+      "description": "Aplicações nativas e cross-platform para iOS e Android com uma experiência de utilizador otimizada."
+    },
+    "enterprise": {
+      "title": "Soluções Empresariais",
+      "description": "Software à medida, automatização de processos e integrações de sistemas."
+    },
+    "cloud": {
+      "title": "Serviços Cloud",
+      "description": "Migração, arquitetura e implementação de aplicações na cloud com segurança e performance."
+    },
+    "training": {
+      "title": "Formação Profissional",
+      "description": "Organismo certificado Qualiopi. Programas em desenvolvimento web, mobile e DevOps, financiáveis através do seu OPCO."
+    }
+  },
+  "portfolio": {
+    "title": "Os Nossos Projetos",
+    "subtitle": "Descubra as nossas realizações",
+    "viewProject": "Ver o projeto",
+    "projects": {
+      "1": {
+        "title": "Plataforma E-commerce",
+        "description": "Solução completa com gestão de stock, pagamentos seguros e experiência de cliente otimizada.",
+        "tag": "Web"
+      },
+      "2": {
+        "title": "Aplicação de Gestão",
+        "description": "Sistema ERP personalizado para otimizar os processos empresariais e melhorar a produtividade.",
+        "tag": "Empresa"
+      },
+      "3": {
+        "title": "Aplicação Móvel",
+        "description": "Aplicação de entregas com geolocalização e sistema de pagamento integrado.",
+        "tag": "Mobile"
+      },
+      "4": {
+        "title": "Infraestrutura Cloud",
+        "description": "Migração e otimização de infraestrutura para uma escalabilidade máxima e custos reduzidos.",
+        "tag": "Cloud"
+      }
+    }
+  },
+  "about": {
+    "title": "A Nossa Competência",
+    "subtitle": "Uma equipa apaixonada",
+    "description": "Com mais de 10 anos de experiência, a nossa equipa de especialistas combina criatividade e rigor técnico para transformar as suas ideias em soluções digitais de elevado desempenho.",
+    "expertise": {
+      "1": {
+        "title": "Desenvolvimento Front-End",
+        "value": "90%"
+      },
+      "2": {
+        "title": "Desenvolvimento Back-End",
+        "value": "95%"
+      },
+      "3": {
+        "title": "UX/UI Design",
+        "value": "85%"
+      },
+      "4": {
+        "title": "DevOps & Cloud",
+        "value": "90%"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Testemunhos",
+    "subtitle": "O que dizem os nossos clientes",
+    "items": {
+      "1": {
+        "text": "A equipa transformou a nossa visão numa solução digital que superou todas as nossas expectativas. Profissionalismo e competência técnica excecionais.",
+        "author": "Marie Dupont",
+        "position": "Diretora de Marketing, TechCorp"
+      },
+      "2": {
+        "text": "Ficámos impressionados com a sua capacidade de compreender as nossas necessidades empresariais e responder com soluções inovadoras e eficazes.",
+        "author": "Jean Martin",
+        "position": "CEO, InnovSoft"
+      },
+      "3": {
+        "text": "O seu acompanhamento foi precioso ao longo de todo o projeto. Souberam adaptar-se às nossas limitações e propor soluções pertinentes.",
+        "author": "Sophie Lefebvre",
+        "position": "CTO, DataFuture"
+      }
+    }
+  },
+  "contact": {
+    "title": "Contacte-nos",
+    "subtitle": "Vamos falar sobre o seu projeto",
+    "name": "Nome",
+    "email": "Email",
+    "phone": "Telefone",
+    "message": "Mensagem",
+    "subject": "Assunto",
+    "submit": "Enviar",
+    "success": "Mensagem enviada com sucesso! Entraremos em contacto em breve.",
+    "error": "Ocorreu um erro. Por favor, tente novamente."
+  },
+  "footer": {
+    "company": "© 2025 DELIVERY Digital Technology. Todos os direitos reservados.",
+    "links": {
+      "privacy": "Política de privacidade",
+      "terms": "Condições de utilização",
+      "sitemap": "Mapa do site"
+    }
+  },
+  "reclamation": {
+    "badge": "Reclamação",
+    "title": "Formulário de reclamação",
+    "subtitle": "Levamos as suas preocupações a sério. Por favor, preencha o formulário abaixo e responderemos o mais brevemente possível.",
+    "qualityCommitment": {
+      "title": "O nosso compromisso de qualidade",
+      "intro": "A DELIVERY Digital Nice esforça-se por fornecer serviços de formação que respondam às necessidades e exigências dos seus clientes. No entanto, se desejar submeter-nos uma reclamação:",
+      "contact": "Pode, a qualquer momento, dirigir as suas questões, dúvidas e problemas encontrados aos seus contactos habituais, que farão tudo o que estiver ao seu alcance para lhe fornecer uma resposta.",
+      "formOption": "Tem igualmente a possibilidade de enviar o seu pedido utilizando o formulário de reclamação abaixo.",
+      "processTitle": "O nosso processo de tratamento",
+      "steps": {
+        "1": "Preenche o formulário que é automaticamente enviado à equipa responsável pelo tratamento de reclamações",
+        "2": "Acusamos a receção da sua reclamação",
+        "3": "Analisamos o seu pedido com a maior brevidade e avaliamos a sua admissibilidade",
+        "4": "Se o seu pedido for admissível, analisamos as causas da reclamação",
+        "5": "Examinamos atentamente os factos apresentados e efetuamos, se necessário, as pesquisas necessárias. Nesse caso, mantemo-lo informado do andamento do processo",
+        "6": "Informamo-lo da nossa resposta, especificando os resultados da nossa investigação e as soluções que propomos para resolver o problema"
+      },
+      "directContact": "Para contactar diretamente a equipa de tratamento de reclamações:"
+    },
+    "contactCards": {
+      "email": "Email",
+      "phone": "Telefone",
+      "hours": "Horário"
+    },
+    "form": {
+      "firstName": "Nome próprio",
+      "lastName": "Apelido",
+      "email": "Email",
+      "phone": "Telefone",
+      "company": "Empresa",
+      "orderNumber": "Número de encomenda",
+      "category": "Categoria de reclamação",
+      "categoryOptions": {
+        "service": "Qualidade do serviço",
+        "product": "Produto/Entregável",
+        "billing": "Faturação",
+        "support": "Suporte técnico",
+        "training": "Formação",
+        "other": "Outro"
+      },
+      "subject": "Objeto da reclamação",
+      "subjectPlaceholder": "Resumo da sua reclamação",
+      "description": "Descrição detalhada",
+      "descriptionPlaceholder": "Por favor, descreva em detalhe a sua reclamação...",
+      "gdpr": "Os seus dados são tratados em conformidade com a nossa política de privacidade e o RGPD. Comprometemo-nos a responder-lhe no prazo de 48 horas úteis.",
+      "captcha": "Verificação de segurança",
+      "captchaRequired": "Por favor, complete a verificação de segurança",
+      "submit": "Enviar reclamação",
+      "submitting": "A enviar..."
+    },
+    "procedure": {
+      "title": "Procedimento de tratamento de reclamações",
+      "steps": {
+        "1": "Receção e acuso de receção em 24h",
+        "2": "Análise da sua reclamação pela nossa equipa",
+        "3": "Resposta detalhada em 48h úteis",
+        "4": "Acompanhamento e resolução do problema"
+      },
+      "mediator": "Se não estiver satisfeito com a nossa resposta, pode contactar o nosso responsável de qualidade ou recorrer a um mediador de consumo."
+    },
+    "success": {
+      "title": "Reclamação enviada com sucesso",
+      "message": "Recebemos a sua reclamação. A nossa equipa entrará em contacto consigo o mais brevemente possível para tratar o seu pedido.",
+      "responseTime": "Tempo de resposta estimado: 24-48 horas úteis",
+      "backHome": "Voltar ao início"
+    }
+  },
+  "invoice": {
+    "title": "Fatura de adiantamento",
+    "prefix": "FATURA",
+    "issuedOn": "Emitida em",
+    "dueOn": "Vencimento",
+    "relatedQuote": "Orçamento associado",
+    "for": "À atenção de",
+    "service": "Prestação",
+    "amountExclTax": "Montante s/ IVA",
+    "lineDescription": "{{percent}}% de {{title}} (ref. {{quoteRef}})",
+    "subtotal": "Subtotal s/ IVA",
+    "vat": "IVA ({{rate}}%)",
+    "netToPay": "Total a pagar",
+    "bankDetails": "Coordenadas bancárias",
+    "beneficiary": "Beneficiário",
+    "bank": "Banco",
+    "iban": "IBAN",
+    "bicSwift": "BIC / SWIFT",
+    "transferRef": "Referência a indicar na transferência",
+    "mailSubject": "Fatura de adiantamento {{invoiceRef}} - {{percent}}% do orçamento {{quoteRef}}",
+    "mailThanks": "Obrigado pela sua confiança.",
+    "mailBody": "Na sequência da assinatura do orçamento <strong>{{quoteRef}}</strong>, encontrará em anexo a fatura de adiantamento <strong>{{invoiceRef}}</strong>.",
+    "mailAmount": "Montante a liquidar: <strong>{{amount}}</strong> ({{percent}}% do total).",
+    "mailRef": "Coordenadas bancárias e referência de transferência na fatura. Vencimento: <strong>{{dueDate}}</strong>.",
+    "mailStart": "Após receção do pagamento, iniciamos o projeto."
+  },
+  "emails": {
+    "acceptedSubject": "[ACEITE] Orçamento {{quoteRef}} assinado por {{signerName}}",
+    "acceptedBody": "O orçamento <strong>{{quoteRef}}</strong> acaba de ser aceite por <strong>{{signerName}}</strong> ({{signerEmail}}).",
+    "acceptedMeta": "IP: {{ip}} - User Agent: {{userAgent}}",
+    "rejectedSubject": "[RECUSADO] Orçamento {{quoteRef}}",
+    "rejectedBody": "O orçamento <strong>{{quoteRef}}</strong> foi recusado.",
+    "rejectedReason": "Motivo: {{reason}}",
+    "rejectedNoReason": "(não especificado)"
+  }
+}

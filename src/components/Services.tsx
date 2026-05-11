@@ -12,6 +12,7 @@ import {
   CheckCircle2 as CheckIcon, Lock, GraduationCap,
   Menu, FileText, Soup, Package, History, Bike, MapPin, Clock, Wifi, X,
   Phone as PhoneIcon, Database, CalendarDays, Sparkles,
+  AlertTriangle, BookOpen,
 } from 'lucide-react';
 import { useRef } from 'react';
 import {
@@ -58,23 +59,86 @@ function Counter({ to, duration = 1.2, suffix = '', prefix = '', decimals = 0 }:
 /* ============================================================
    1. Web mockup - Analytics dashboard, animated
    ============================================================ */
+/* Illustrations papercraft Pyemes (HandSoap / TagLabel / ShieldCheck / WarningSign / PaperPlane) */
+function Papercraft({ kind }: { kind: 'hand' | 'tag' | 'shield' | 'warn' | 'plane' }) {
+  const sp = { stroke: '#0A0A0C', strokeWidth: 2, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const };
+  if (kind === 'hand') return (
+    <svg viewBox="0 0 120 100" style={{ width: 40, height: 30 }}>
+      <circle cx="35" cy="30" r="8" fill="#DBEAFE" {...sp} />
+      <circle cx="50" cy="20" r="5" fill="#DBEAFE" {...sp} />
+      <circle cx="62" cy="32" r="4" fill="#DBEAFE" {...sp} />
+      <path d="M40 50 L40 80 Q40 90 50 90 L78 90 Q88 90 88 80 L88 55 Q88 50 83 50 Q78 50 78 55 L78 65 L75 65 L75 50 Q75 45 70 45 Q65 45 65 50 L65 65 L62 65 L62 48 Q62 43 57 43 Q52 43 52 48 L52 65 L49 65 L49 52 Q49 47 44 47 Q40 47 40 50 Z" fill="#FFE5D9" {...sp} />
+    </svg>
+  );
+  if (kind === 'tag') return (
+    <svg viewBox="0 0 120 100" style={{ width: 40, height: 30 }}>
+      <path d="M25 30 L75 30 L95 50 L75 70 L25 70 Z" fill="#FEF3C7" {...sp} />
+      <circle cx="35" cy="50" r="4" fill="#fff" {...sp} />
+      <line x1="50" y1="44" x2="78" y2="44" stroke="#0A0A0C" strokeWidth="2" strokeLinecap="round" />
+      <line x1="50" y1="52" x2="72" y2="52" stroke="#0A0A0C" strokeWidth="2" strokeLinecap="round" />
+      <line x1="50" y1="60" x2="76" y2="60" stroke="#0A0A0C" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+  if (kind === 'shield') return (
+    <svg viewBox="0 0 120 100" style={{ width: 40, height: 30 }}>
+      <path d="M60 12 L88 22 L88 50 Q88 74 60 90 Q32 74 32 50 L32 22 Z" fill="#E5DEFF" {...sp} />
+      <path d="M45 50 L55 60 L75 40" fill="none" stroke="#0A0A0C" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+  if (kind === 'warn') return (
+    <svg viewBox="0 0 120 100" style={{ width: 40, height: 30 }}>
+      <path d="M60 15 L95 80 L25 80 Z" fill="#FFE5D9" {...sp} />
+      <line x1="60" y1="35" x2="60" y2="58" stroke="#0A0A0C" strokeWidth="4" strokeLinecap="round" />
+      <circle cx="60" cy="68" r="2.5" fill="#0A0A0C" />
+    </svg>
+  );
+  return (
+    <svg viewBox="0 0 120 100" style={{ width: 40, height: 30 }}>
+      <path d="M30 65 L100 25 L55 60 Z" fill="#D5F4E6" {...sp} />
+      <path d="M55 60 L100 25 L60 80 Z" fill="#B8E8D2" {...sp} />
+      <path d="M55 60 L60 80 L48 72 Z" fill="#D5F4E6" {...sp} />
+    </svg>
+  );
+}
+
 function WebMock() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useFmInView(ref, { once: false, amount: 0.4 });
-  const bars = [42, 58, 49, 71, 88, 64, 95];
-
-  // Live "incoming visit" pulse - increment a fake counter every 2s
-  const [liveVisits, setLiveVisits] = useState(12400);
+  // Conformite progression (effet visuel : 0 -> 100 en 6s, pause 1.2s, reset)
+  const [conformite, setConformite] = useState(0);
   useEffect(() => {
-    if (!inView) return;
-    const id = setInterval(() => setLiveVisits((v) => v + Math.floor(Math.random() * 6) + 1), 1800);
-    return () => clearInterval(id);
+    if (!inView) { setConformite(0); return; }
+    let raf = 0; let phase: 'count' | 'pause' = 'count'; let start = performance.now();
+    const DURATION = 6000, PAUSE = 1200;
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      if (phase === 'count') {
+        if (elapsed >= DURATION) { setConformite(100); phase = 'pause'; start = now; }
+        else setConformite(Math.round((elapsed / DURATION) * 100));
+      } else if (elapsed >= PAUSE) { phase = 'count'; start = now; setConformite(0); }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   }, [inView]);
+  // Etape progression
+  const [etape] = useState(4);
 
   return (
+    <div ref={ref} className="relative w-full max-w-[760px] mx-auto pb-2">
+      {/* Cadre iPad TOUJOURS visible (desktop + mobile) */}
+      <div
+        className="absolute inset-0 -m-[8px] sm:-m-[12px] md:-m-[14px] rounded-[24px] sm:rounded-[30px] md:rounded-[34px] pointer-events-none"
+        style={{
+          background: 'linear-gradient(180deg, #1F2937 0%, #111827 100%)',
+          boxShadow: '0 30px 60px -20px rgba(0,0,0,0.35), inset 0 0 0 1.5px rgba(255,255,255,0.06)',
+        }}
+        aria-hidden
+      >
+        <div className="absolute top-1 sm:top-1.5 left-1/2 -translate-x-1/2 w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-[#0B0E14] ring-1 ring-white/8" />
+      </div>
     <div
-      ref={ref}
-      className="relative w-full max-w-[680px] aspect-[16/10] rounded-[22px] mx-auto overflow-hidden"
+      className="relative w-full aspect-[16/10] rounded-[18px] sm:rounded-[22px] mx-auto overflow-hidden"
       style={{
         background: '#F5F5F7',
         boxShadow: '0 30px 60px -20px rgba(0,0,0,0.15)',
@@ -89,126 +153,203 @@ function WebMock() {
         <div className="ml-3 flex-1 h-4 rounded-full bg-[#F2F2F7]" />
       </div>
 
-      <div className="absolute top-9 inset-x-6 bottom-6 flex gap-3">
-        {/* Sidebar with real icons */}
-        <div className="w-[22%] rounded-[12px] p-2 space-y-1 bg-white border border-[#E5E5EA]">
-          <div className="flex items-center gap-1.5 px-1.5 py-1">
-            <div className="w-4 h-4 rounded-md bg-[#1D1D1F] flex items-center justify-center text-white text-[7.5px] font-bold">A</div>
-            <span className="text-[10px] font-bold text-[#1D1D1F]">Acme</span>
-          </div>
-          {[
-            { Icon: LayoutDashboard, label: 'Tableau' },
-            { Icon: Eye, label: 'Visites' },
-            { Icon: Zap, label: 'Conversion' },
-            { Icon: Users, label: 'Clients' },
-            { Icon: Wallet, label: 'Revenu' },
-            { Icon: Settings, label: 'Réglages' },
-          ].map(({ Icon, label }, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -6 }}
-              animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.4, delay: 0.05 + i * 0.05 }}
-              className={`flex items-center gap-1.5 px-1.5 py-1 rounded-[5px] ${i === 0 ? 'bg-[#1D1D1F] text-white' : ''}`}
-            >
-              <Icon
-                className={i === 0 ? 'text-white' : 'text-[#86868B]'}
-                style={{ width: 9, height: 9 }}
-                strokeWidth={1.6}
-              />
-              <span className="text-[8.5px] font-medium" style={{ color: i === 0 ? '#fff' : '#1D1D1F' }}>{label}</span>
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="flex-1 flex flex-col gap-2.5">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-[10px] font-medium text-[#86868B]">Tableau de bord</div>
-              <div className="text-[16px] font-bold text-[#1D1D1F] tracking-tight">Vue d'ensemble</div>
-            </div>
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#86868B] to-[#1D1D1F]" />
+      <div className="absolute top-9 inset-x-0 bottom-0 flex bg-[#F8F8F7]">
+        {/* SIDEBAR Pyemes : noir avec quadrillage + sections (Vue d'ensemble / PMS / Tarif / Support / User) */}
+        <div
+          className="w-[28%] flex-shrink-0 p-2 sm:p-2.5 text-white flex flex-col gap-1.5 overflow-hidden"
+          style={{
+            background: '#0F1216',
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
+            backgroundSize: '10px 10px',
+          }}
+        >
+          {/* Logo Pyemes : hub-and-spokes (4 cardinaux + 5 cercles) - identique pyemes.com */}
+          <div className="flex items-center gap-1 mb-1">
+            <svg viewBox="-50 -50 100 100" style={{ width: 13, height: 13, display: 'block' }} className="flex-shrink-0" aria-hidden>
+              <g>
+                <line x1="0" y1="0" x2="0" y2="-42" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" />
+                <line x1="0" y1="0" x2="0" y2="42" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" />
+                <line x1="0" y1="0" x2="-42" y2="0" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" />
+                <line x1="0" y1="0" x2="42" y2="0" stroke="#fff" strokeWidth="4.5" strokeLinecap="round" />
+                <circle cx="0" cy="0" r="11" fill="#fff" />
+                <circle cx="0" cy="-42" r="7" fill="#fff" />
+                <circle cx="0" cy="42" r="7" fill="#fff" />
+                <circle cx="-42" cy="0" r="7" fill="#fff" />
+                <circle cx="42" cy="0" r="7" fill="#fff" />
+              </g>
+            </svg>
+            <span className="text-[10px] sm:text-[11px] font-bold text-white tracking-tight">Pyemes</span>
           </div>
 
-          {/* KPI tiles - count up with icons */}
-          <div className="grid grid-cols-3 gap-2">
+          {/* Vue d'ensemble - item actif */}
+          <motion.div
+            initial={{ opacity: 0, x: -6 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.4, delay: 0.05 }}
+            className="flex items-center gap-1 px-1.5 py-1 rounded-[4px] bg-white/8"
+          >
+            <LayoutDashboard className="text-white flex-shrink-0" style={{ width: 8, height: 8 }} strokeWidth={1.7} />
+            <span className="text-[8px] font-semibold text-white whitespace-nowrap overflow-hidden">Vue d'ensemble</span>
+          </motion.div>
+
+          {/* Section PMS */}
+          <div className="mt-1">
+            <div className="text-[6.5px] sm:text-[7px] font-bold tracking-[0.1em] text-white/45 px-1 mb-0.5 leading-tight">PLAN DE MAÎTRISE SANITAIRE</div>
             {[
-              { l: 'Visites', live: true, suffix: '', Icon: Eye, delta: '+18%' },
-              { l: 'Conversion', val: 3.2, suffix: '%', decimals: 1, Icon: Zap, delta: '+2.1%' },
-              { l: 'Revenu', val: 48, suffix: 'K€', Icon: Wallet, delta: '+9%' },
-            ].map((k, i) => (
+              { Icon: Sparkles, label: 'Bonnes pratiques' },
+              { Icon: FileText, label: 'Traçabilités' },
+              { Icon: Shield, label: 'Méthodes HACCP' },
+              { Icon: AlertTriangle, label: 'Non-conformités' },
+              { Icon: BookOpen, label: 'Documents' },
+              { Icon: Send, label: 'Envoyer mon PMS' },
+            ].map(({ Icon, label }, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 8 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.4, delay: 0.2 + i * 0.08 }}
-                className="rounded-[10px] p-2 bg-white border border-[#E5E5EA] relative"
+                initial={{ opacity: 0, x: -4 }}
+                animate={inView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.3, delay: 0.1 + i * 0.04 }}
+                className="flex items-center gap-1 px-1.5 py-[3px] rounded-[3px]"
               >
-                <div className="flex items-center gap-1 text-[9px] text-[#86868B] font-medium">
-                  <k.Icon className="text-[#86868B]" style={{ width: 9, height: 9 }} strokeWidth={1.7} />
-                  {k.l}
-                </div>
-                <div className="text-[15px] font-bold text-[#1D1D1F] tabular-nums leading-tight mt-0.5">
-                  {k.live ? (
-                    <motion.span
-                      key={liveVisits}
-                      initial={{ opacity: 0.4, y: 2 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="inline-block"
-                    >
-                      {liveVisits.toLocaleString('fr-FR')}
-                    </motion.span>
-                  ) : (
-                    <Counter to={k.val!} suffix={k.suffix} decimals={k.decimals} />
-                  )}
-                </div>
-                <div className="text-[9px] text-[#1D1D1F] font-semibold flex items-center gap-0.5">
-                  <ArrowUpRight className="h-2.5 w-2.5" strokeWidth={2.2} />
-                  {k.delta}
-                </div>
-                {k.live && (
-                  <motion.span
-                    className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#1D1D1F]"
-                    animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ duration: 1.4, repeat: Infinity }}
-                  />
-                )}
+                <Icon className="text-white/55 flex-shrink-0" style={{ width: 7.5, height: 7.5 }} strokeWidth={1.6} />
+                <span className="text-[7.5px] text-white/70 whitespace-nowrap overflow-hidden text-ellipsis">{label}</span>
               </motion.div>
             ))}
           </div>
 
-          {/* Chart - bars grow staggered */}
-          <div className="flex-1 rounded-[10px] p-3 bg-white border border-[#E5E5EA] flex flex-col">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-semibold text-[#1D1D1F]">Trafic - 7 jours</span>
-              <span className="inline-flex items-center gap-0.5 text-[9px] text-[#1D1D1F] font-semibold">
-                <TrendingUp className="h-2.5 w-2.5" strokeWidth={2} />
-                +12,4 %
-              </span>
+          {/* Card Tarif Pyemes complete (recommande + prix + economie + CTA + sous-mention) */}
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.4, delay: 0.4 }}
+            className="mt-auto rounded-[6px] bg-white/5 ring-1 ring-white/10 p-1.5 overflow-hidden"
+          >
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-[5.5px] sm:text-[6px] font-bold tracking-[0.1em] text-white/50">PLAN · ANNUEL</span>
+              <span className="text-[5.5px] sm:text-[6px] font-bold tracking-[0.08em] text-[#10B981]">RECOMMANDÉ</span>
             </div>
-            <div className="flex-1 flex items-end gap-1.5 relative">
-              {bars.map((h, i) => (
+            <div className="text-[7px] sm:text-[7.5px] font-semibold text-white leading-tight">PMS Pyemes</div>
+            <div className="text-[11px] sm:text-[13px] font-bold text-white leading-none tabular-nums">14 €<span className="text-[6px] text-white/55 font-normal ml-0.5">/mois HT</span></div>
+            <div className="text-[5.5px] sm:text-[6px] text-white/55 leading-tight mt-0.5">Annuel · économie 60€/an · 9€/mois promo</div>
+            <div className="mt-1 rounded-[4px] bg-white text-[#0F1216] text-[6.5px] sm:text-[7px] font-bold px-1.5 py-1 text-center">Choisir mon forfait</div>
+            <div className="text-[5.5px] text-white/45 text-center mt-0.5">3 forfaits · Stripe</div>
+          </motion.div>
+
+          {/* Footer sidebar : Support + User + Logout (cache mobile pour densite) */}
+          <div className="hidden sm:block space-y-1 pt-1">
+            <div className="flex items-center gap-1 px-1">
+              <div className="rounded-full bg-white/8 flex items-center justify-center" style={{ width: 11, height: 11 }}>
+                <span className="text-white/70 text-[7px]">💡</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[6.5px] font-semibold text-white/85 leading-tight">Idée & support</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 px-1 pt-0.5 border-t border-white/8">
+              <div className="rounded-full bg-[#10B981] flex items-center justify-center text-white text-[5.5px] font-bold" style={{ width: 11, height: 11 }}>NA</div>
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <div className="text-[6px] font-semibold text-white/85 leading-tight truncate">NOVASKILL ACAD...</div>
+                <div className="text-[5.5px] text-white/45 tabular-nums leading-tight">999 458 946 00012</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* MAIN CONTENT */}
+        <div className="flex-1 flex flex-col gap-1.5 sm:gap-2 p-2 sm:p-3 min-w-0 overflow-hidden">
+          {/* BANNER CONFORMITÉ + PROCHAINE ETAPE GUIDÉE */}
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="rounded-[8px] bg-white ring-1 ring-black/5 p-2 relative overflow-hidden"
+          >
+            <div className="absolute top-0 inset-x-0 h-[2px] bg-[#E5E5EA]">
+              <div className="h-full transition-[width] duration-150" style={{ width: conformite + '%', background: 'linear-gradient(to right, #6B3D1F 0%, #1FB54E 33%, #F5A623 66%, #2BB7DE 100%)' }} />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <div className="text-[6px] sm:text-[6.5px] font-bold tracking-[0.1em] uppercase text-[#86868B] leading-tight">Conformité</div>
+              <div className="text-[12px] sm:text-[14px] font-bold text-[#1D1D1F] tabular-nums leading-none">{conformite} %</div>
+            </div>
+            <div className="mt-1.5 rounded-[5px] bg-[#F1F0EE] ring-1 ring-black/5 p-1.5 flex items-center gap-1.5">
+              {/* IsoPms cube isometrique - identique a pyemes.com */}
+              <svg viewBox="0 0 40 40" style={{ width: 22, height: 22 }} className="flex-shrink-0" aria-hidden>
+                <path d="M6 17 L20 24 L34 17 L20 10 Z" fill="#D5C8FF" stroke="#0A0A0C" strokeWidth="1.2" strokeLinejoin="round"/>
+                <path d="M6 17 L20 24 L20 32 L6 25 Z" fill="#FFFFFF" stroke="#0A0A0C" strokeWidth="1.2" strokeLinejoin="round"/>
+                <path d="M20 24 L34 17 L34 25 L20 32 Z" fill="#F4EDE0" stroke="#0A0A0C" strokeWidth="1.2" strokeLinejoin="round"/>
+                <rect x="22" y="20" width="6" height="2" fill="#FCD34D" stroke="#0A0A0C" strokeWidth="0.6"/>
+              </svg>
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <div className="text-[5.5px] sm:text-[6px] font-bold tracking-[0.08em] uppercase text-[#86868B] leading-tight">Prochaine étape guidée</div>
+                <div className="text-[7.5px] sm:text-[8px] font-semibold text-[#1D1D1F] leading-tight truncate">Choisissez votre forfait</div>
+                <div className="text-[6px] sm:text-[6.5px] text-[#86868B] leading-tight truncate">Dès 9€/mois · Stripe · sans engagement</div>
+              </div>
+              <div className="rounded-full bg-[#1D1D1F] text-white text-[6.5px] sm:text-[7px] font-semibold px-1.5 sm:px-2 py-0.5 whitespace-nowrap flex-shrink-0">Choisir →</div>
+            </div>
+            <div className="flex items-center justify-between mt-1">
+              <span className="text-[6px] sm:text-[6.5px] text-[#1D1D1F] font-medium truncate">Voir les 19 actions à traiter →</span>
+              <span className="text-[6px] sm:text-[6.5px] text-[#86868B] tabular-nums flex-shrink-0 ml-1">Étape {etape} / 22</span>
+            </div>
+          </motion.div>
+
+          {/* TOOLBAR DARK */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : {}}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="rounded-[8px] bg-[#0F1216] px-1.5 py-1 flex items-center gap-1 overflow-hidden whitespace-nowrap"
+          >
+            <span className="text-white/45 text-[8px] px-0.5 flex-shrink-0">←</span>
+            <span className="text-white/45 text-[8px] px-0.5 flex-shrink-0">→</span>
+            <span className="text-white/25 text-[8px] mx-0.5 flex-shrink-0">|</span>
+            {[
+              { Icon: Activity, label: 'Température' },
+              { Icon: Database, label: 'Réception' },
+              { Icon: FileText, label: 'Tracer un lot' },
+            ].map(({ Icon, label }, i) => (
+              <div key={i} className="flex-1 bg-white/10 rounded-full flex items-center justify-center gap-1 px-2 py-1 overflow-hidden">
+                <Icon className="text-white/80 flex-shrink-0" style={{ width: 7, height: 7 }} strokeWidth={1.7} />
+                <span className="text-[6.5px] sm:text-[7px] text-white/90 font-medium">{label}</span>
+              </div>
+            ))}
+          </motion.div>
+
+          {/* TABLEAU DE BORD - BIENVENUE */}
+          <div className="px-0.5">
+            <div className="text-[6.5px] sm:text-[7px] font-bold tracking-[0.1em] uppercase text-[#86868B] leading-tight">Tableau de bord</div>
+            <div className="text-[12px] sm:text-[14px] font-bold text-[#1D1D1F] tracking-tight leading-tight">Bienvenue</div>
+          </div>
+
+          {/* PLAN DE MAÎTRISE SANITAIRE - 5 cards Pyemes avec illustrations papercraft */}
+          <div>
+            <div className="text-[6.5px] sm:text-[7px] font-bold tracking-[0.1em] uppercase text-[#86868B] px-0.5 mb-1">Plan de maîtrise sanitaire</div>
+            <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
+              {[
+                { title: "Bonnes pratiques d'hygiène", sub: 'Procédures de nettoyage, désinfection, lavage des mains.', illu: 'hand' },
+                { title: 'Traçabilités', sub: 'Réceptions, températures, lots, DLC.', illu: 'tag' },
+                { title: 'Méthodes HACCP', sub: 'Tableau HACCP et 7 principes Codex Alimentarius.', illu: 'shield' },
+                { title: 'Non-conformités', sub: 'Fiches NC + actions correctives.', illu: 'warn' },
+                { title: 'Envoyer mon PMS', sub: 'Lien lecture seule pour la DDPP.', illu: 'plane' },
+              ].map((c, i) => (
                 <motion.div
                   key={i}
-                  className="flex-1 rounded-t-[3px] bg-[#1D1D1F] relative"
-                  initial={{ scaleY: 0 }}
-                  animate={inView ? { scaleY: 1 } : { scaleY: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ height: `${h}%`, opacity: 0.55 + i * 0.06, transformOrigin: 'bottom' }}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={inView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.35, delay: 0.3 + i * 0.05 }}
+                  className="rounded-[6px] sm:rounded-[8px] bg-white ring-1 ring-black/5 p-1.5 sm:p-2 flex flex-col gap-1 overflow-hidden relative"
+                  style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
                 >
-                  {i === bars.length - 1 && (
-                    <motion.div
-                      className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white ring-2 ring-[#1D1D1F]"
-                      animate={{ scale: [1, 1.4, 1] }}
-                      transition={{ duration: 1.4, repeat: Infinity }}
-                    />
-                  )}
+                  <div className="text-[7px] sm:text-[8px] font-bold text-[#1D1D1F] leading-tight min-h-[20px]">{c.title}</div>
+                  <div className="text-[5.5px] sm:text-[6.5px] text-[#86868B] leading-snug overflow-hidden min-h-[18px]" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{c.sub}</div>
+                  <div className="mt-auto flex justify-center pt-1">
+                    <Papercraft kind={c.illu as 'hand' | 'tag' | 'shield' | 'warn' | 'plane'} />
+                  </div>
                 </motion.div>
               ))}
             </div>
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }
@@ -935,9 +1076,20 @@ function EnterpriseMock() {
   ];
 
   return (
+    <div ref={ref} className="relative w-full max-w-[760px] mx-auto pb-2">
+      {/* Cadre iPad TOUJOURS visible (desktop + mobile) : bezel sombre + camera notch. */}
+      <div
+        className="absolute inset-0 -m-[8px] sm:-m-[12px] md:-m-[14px] rounded-[24px] sm:rounded-[30px] md:rounded-[34px] pointer-events-none"
+        style={{
+          background: 'linear-gradient(180deg, #1F2937 0%, #111827 100%)',
+          boxShadow: '0 30px 60px -20px rgba(0,0,0,0.35), inset 0 0 0 1.5px rgba(255,255,255,0.06)',
+        }}
+        aria-hidden
+      >
+        <div className="absolute top-1 sm:top-1.5 left-1/2 -translate-x-1/2 w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-[#0B0E14] ring-1 ring-white/8" />
+      </div>
     <div
-      ref={ref}
-      className="relative w-full max-w-[680px] aspect-[16/10] rounded-[22px] mx-auto overflow-x-auto overflow-y-hidden sm:overflow-hidden"
+      className="relative w-full aspect-[16/10] rounded-[18px] sm:rounded-[22px] mx-auto overflow-x-auto overflow-y-hidden sm:overflow-hidden"
       style={{
         background: '#F1F2F4',
         boxShadow: '0 40px 80px -25px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.05)',
@@ -963,8 +1115,8 @@ function EnterpriseMock() {
             ))}
           </div>
           <div className="flex items-center gap-1 ml-1">
-            <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#172B4D] text-white font-semibold">Tous (24)</span>
-            <span className="text-[10px] px-2 py-0.5 rounded-md bg-white text-[#374151] ring-1 ring-black/8 font-medium">Chaud (8)</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#172B4D] text-white font-semibold">Tous</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-md bg-white text-[#374151] ring-1 ring-black/8 font-medium">Chaud</span>
           </div>
         </div>
       </div>
@@ -1021,7 +1173,8 @@ function EnterpriseMock() {
                         <div className="text-[10px] font-semibold text-[#172B4D] truncate flex-1 leading-tight">Nouvelle Boutique</div>
                       </div>
                       <div className="text-[11px] font-bold text-[#172B4D] tabular-nums">36K€</div>
-                      <div className="flex items-center justify-between pt-0.5">
+                      {/* Meta cachee sur mobile pour densite reduite */}
+                      <div className="hidden sm:flex items-center justify-between pt-0.5">
                         <span className="inline-flex items-center gap-0.5 text-[#5E6C84]" style={{ fontSize: 8 }}>
                           <CalendarDays style={{ width: 8, height: 8 }} strokeWidth={1.8} />
                           10 mai
@@ -1065,7 +1218,8 @@ function EnterpriseMock() {
                       {c.amt && (
                         <div className="text-[11px] font-bold text-[#172B4D] tabular-nums tracking-tight">{c.amt}</div>
                       )}
-                      <div className="flex items-center justify-between pt-0.5">
+                      {/* Meta + avatars caches sur mobile pour densite reduite (tag + nom + montant uniquement) */}
+                      <div className="hidden sm:flex items-center justify-between pt-0.5">
                         <div className="flex items-center gap-1.5 text-[#5E6C84]">
                           {c.due && (
                             <span className="inline-flex items-center gap-0.5" style={{ fontSize: 8 }}>
@@ -1112,6 +1266,7 @@ function EnterpriseMock() {
         })}
       </div>
     </div>
+    </div>
   );
 }
 
@@ -1126,6 +1281,10 @@ function CloudMock() {
   const [cpu, setCpu] = useState(32);
   const [ram, setRam] = useState(61);
   const [latency, setLatency] = useState(42);
+  // Sparkline live (rolling 24 points, refresh chaque 800ms)
+  const [spark, setSpark] = useState<number[]>(() => Array.from({ length: 24 }, () => 30 + Math.random() * 40));
+  // Notifications count (clignote en s'incrementant)
+  const [notifs, setNotifs] = useState(3);
 
   useEffect(() => {
     if (!inView) return;
@@ -1133,7 +1292,9 @@ function CloudMock() {
       setCpu((c) => Math.max(20, Math.min(45, c + (Math.random() * 6 - 3))));
       setRam((r) => Math.max(50, Math.min(72, r + (Math.random() * 4 - 2))));
       setLatency((l) => Math.max(35, Math.min(55, l + (Math.random() * 6 - 3))));
-    }, 1500);
+      // Sparkline : decale + ajoute un nouveau point
+      setSpark((prev) => [...prev.slice(1), 30 + Math.random() * 50]);
+    }, 800);
     return () => clearInterval(id);
   }, [inView]);
 
@@ -1145,19 +1306,30 @@ function CloudMock() {
   ];
 
   return (
+    <div ref={ref} className="relative w-full max-w-[760px] mx-auto pb-2">
+      {/* Cadre iPad TOUJOURS visible (desktop + mobile) */}
+      <div
+        className="absolute inset-0 -m-[8px] sm:-m-[12px] md:-m-[14px] rounded-[24px] sm:rounded-[30px] md:rounded-[34px] pointer-events-none"
+        style={{
+          background: 'linear-gradient(180deg, #1F2937 0%, #111827 100%)',
+          boxShadow: '0 30px 60px -20px rgba(0,0,0,0.35), inset 0 0 0 1.5px rgba(255,255,255,0.06)',
+        }}
+        aria-hidden
+      >
+        <div className="absolute top-1 sm:top-1.5 left-1/2 -translate-x-1/2 w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-[#0B0E14] ring-1 ring-white/8" />
+      </div>
     <div
-      ref={ref}
-      className="relative w-full max-w-[680px] aspect-[16/10] rounded-[22px] mx-auto overflow-hidden p-5"
+      className="relative w-full aspect-[16/10] rounded-[18px] sm:rounded-[22px] mx-auto overflow-hidden p-4 sm:p-5"
       style={{
         background: 'linear-gradient(135deg, #0E0E10, #1A1A1F)',
         boxShadow: '0 30px 60px -20px rgba(0,0,0,0.5)',
         border: '1px solid rgba(255,255,255,0.10)',
       }}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
         <div>
-          <div className="text-[10px] text-white/55 font-medium">Production · eu-west-3</div>
-          <div className="text-[18px] font-bold tracking-tight text-white">État serveurs</div>
+          <div className="text-[9px] sm:text-[10px] text-white/55 font-medium">Production · eu-west-3</div>
+          <div className="text-[15px] sm:text-[18px] font-bold tracking-tight text-white">État serveurs</div>
         </div>
         <motion.div
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 ring-1 ring-white/15"
@@ -1191,7 +1363,8 @@ function CloudMock() {
               <span className="text-white/45">{srv.region}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-16 h-1 rounded-full bg-white/10 overflow-hidden">
+              {/* Barre de charge cachee sur mobile (pour densite), pourcentage seul */}
+              <div className="hidden sm:block w-16 h-1 rounded-full bg-white/10 overflow-hidden">
                 <motion.div className="h-full rounded-full bg-white" initial={{ width: 0 }} animate={inView ? { width: `${srv.baseLoad}%` } : {}} transition={{ duration: 1.2, delay: 0.6 + i * 0.1 }} />
               </div>
               <span className="text-white/65 tabular-nums w-9 text-right">{srv.baseLoad}%</span>
@@ -1199,6 +1372,7 @@ function CloudMock() {
           </motion.div>
         ))}
       </div>
+    </div>
     </div>
   );
 }

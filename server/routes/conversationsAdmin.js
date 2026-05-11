@@ -26,8 +26,15 @@ router.get('/', requireAdmin, async (req, res) => {
       .limit(parseInt(limit, 10))
       .lean();
 
-    const userIds = [...new Set(sessions.map((s) => String(s.userId)))];
-    const users = await ChatUser.find({ _id: { $in: userIds } }).lean();
+    // Filtrer les userId null/undefined/string invalide pour eviter le crash Mongoose
+    // ("Cast to ObjectId failed for value 'null'"). @author Rabah Ziane - 2026-05-11
+    const userIds = [...new Set(
+      sessions
+        .map((s) => s.userId)
+        .filter((id) => id != null && String(id) !== 'null' && /^[a-f\d]{24}$/i.test(String(id)))
+        .map((id) => String(id))
+    )];
+    const users = userIds.length > 0 ? await ChatUser.find({ _id: { $in: userIds } }).lean() : [];
     const userMap = Object.fromEntries(users.map((u) => [String(u._id), u]));
 
     let items = sessions.map((s) => {

@@ -1,0 +1,289 @@
+{
+  "header": {
+    "home": "Startseite",
+    "services": "Leistungen",
+    "portfolio": "Projekte",
+    "about": "Über uns",
+    "contact": "Kontakt",
+    "training": "Schulung",
+    "quote": "Angebot",
+    "formationBtn": "Schulung",
+    "solutionsBtn": "Lösungen"
+  },
+  "tiles": {
+    "eyebrow": "Unsere Expertise",
+    "ciiBadge": "CII-zertifiziert · bis zu 20 % erstattungsfähig",
+    "stack": "Stack",
+    "cta": {
+      "start": "Projekt besprechen",
+      "learn": "Mehr erfahren",
+      "trainings": "Alle Schulungen ansehen",
+      "learner": "Teilnehmerbereich"
+    },
+    "web": {
+      "title": "Web-",
+      "accent": "Lösungen",
+      "subhead": "SaaS, Dashboards und maßgeschneiderte Webanwendungen, angetrieben von den besten Technologien."
+    },
+    "mobile": {
+      "title": "Native",
+      "accent": "Apps",
+      "subhead": "iOS und Android. Native Performance, ausgefeiltes Design, schlüsselfertige Bereitstellung im App Store und Play Store."
+    },
+    "enterprise": {
+      "title": "Business-",
+      "accent": "Software",
+      "subhead": "CRM, ERP, B2B-Plattformen. Ihre Prozesse automatisiert, Ihre Produktivität gesteigert."
+    },
+    "cloud": {
+      "title": "Cloud",
+      "accent": "& DevOps",
+      "subhead": "Hosting, Monitoring, automatische Skalierung. Infrastruktur, die der Last standhält, Tag und Nacht."
+    },
+    "training": {
+      "title": "Professional",
+      "accent": "Training.",
+      "subhead": "Qualiopi-zertifizierte Organisation. Profitieren Sie von OPCO-Förderung."
+    }
+  },
+  "formationPage": {
+    "eyebrow": "Qualiopi-zertifiziertes Zentrum",
+    "title": "Professional",
+    "accent": "Training.",
+    "subhead": "Qualiopi-zertifizierte Organisation. Profitieren Sie von OPCO-Förderung."
+  },
+  "heroDark": {
+    "viewServices": "Unsere Leistungen ansehen",
+    "trainingPro": "Professional Training"
+  },
+  "hero": {
+    "title": "Code, der Ihre Ambitionen vorantreibt, 20 % über CII erstattungsfähig",
+    "subtitle": "Websites, mobile Apps, SaaS, CRM, ERP nach Maß. Agentur mit Crédit Impôt Innovation-Zertifizierung – bis zu 80.000 € jährliche Steuergutschrift für berechtigte KMU.",
+    "titleIntl": "Lassen Sie uns Ihr nächstes digitales Produkt entwickeln",
+    "subtitleIntl": "Websites, mobile Apps, SaaS, CRM, ERP. Maßgeschneiderter Code, geliefert in wenigen Wochen.",
+    "cta": {
+      "project": "Projekt besprechen"
+    },
+    "badges": {
+      "digital": "Digitale Dienstleistungen"
+    }
+  },
+  "services": {
+    "title": "Unsere Leistungen",
+    "subtitle": "Lösungen, die auf Ihre Anforderungen zugeschnitten sind",
+    "web": {
+      "title": "Webentwicklung",
+      "description": "Unternehmenswebsites, E-Commerce und Progressive Web Apps mit modernsten Technologien."
+    },
+    "mobile": {
+      "title": "Mobile Anwendungen",
+      "description": "Native und plattformübergreifende Anwendungen für iOS und Android mit optimaler Benutzererfahrung."
+    },
+    "enterprise": {
+      "title": "Unternehmenslösungen",
+      "description": "Maßgeschneiderte Software, Prozessautomatisierung und Systemintegrationen."
+    },
+    "cloud": {
+      "title": "Cloud-Services",
+      "description": "Migration, Architektur und Deployment von Anwendungen in der Cloud mit Sicherheit und Performance."
+    },
+    "training": {
+      "title": "Professionelle Schulung",
+      "description": "Qualiopi-zertifizierte Organisation. Programme für Webentwicklung, Mobile und DevOps, finanzierbar über Ihren OPCO."
+    }
+  },
+  "portfolio": {
+    "title": "Unsere Projekte",
+    "subtitle": "Entdecken Sie unsere Referenzen",
+    "viewProject": "Projekt ansehen",
+    "projects": {
+      "1": {
+        "title": "E-Commerce-Plattform",
+        "description": "Komplettlösung mit Lagerverwaltung, sicheren Zahlungen und optimierter Customer Experience.",
+        "tag": "Web"
+      },
+      "2": {
+        "title": "Management-Anwendung",
+        "description": "Individuelles ERP-System zur Optimierung von Geschäftsprozessen und Steigerung der Produktivität.",
+        "tag": "Enterprise"
+      },
+      "3": {
+        "title": "Mobile Anwendung",
+        "description": "Liefer-App mit Geolokalisierung und integriertem Zahlungssystem.",
+        "tag": "Mobile"
+      },
+      "4": {
+        "title": "Cloud-Infrastruktur",
+        "description": "Migration und Optimierung der Infrastruktur für maximale Skalierbarkeit und reduzierte Kosten.",
+        "tag": "Cloud"
+      }
+    }
+  },
+  "about": {
+    "title": "Unsere Expertise",
+    "subtitle": "Ein leidenschaftliches Team",
+    "description": "Mit über 10 Jahren Erfahrung verbindet unser Expertenteam Kreativität und technische Präzision, um Ihre Ideen in leistungsstarke digitale Lösungen zu verwandeln.",
+    "expertise": {
+      "1": {
+        "title": "Front-End-Entwicklung",
+        "value": "90%"
+      },
+      "2": {
+        "title": "Back-End-Entwicklung",
+        "value": "95%"
+      },
+      "3": {
+        "title": "UX/UI Design",
+        "value": "85%"
+      },
+      "4": {
+        "title": "DevOps & Cloud",
+        "value": "90%"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Referenzen",
+    "subtitle": "Was unsere Kunden sagen",
+    "items": {
+      "1": {
+        "text": "Das Team hat unsere Vision in eine digitale Lösung verwandelt, die alle Erwartungen übertroffen hat. Außergewöhnliche Professionalität und technische Expertise.",
+        "author": "Marie Dupont",
+        "position": "Marketing-Direktorin, TechCorp"
+      },
+      "2": {
+        "text": "Wir waren beeindruckt von ihrer Fähigkeit, unsere geschäftlichen Anforderungen zu verstehen und mit innovativen und effizienten Lösungen zu antworten.",
+        "author": "Jean Martin",
+        "position": "CEO, InnovSoft"
+      },
+      "3": {
+        "text": "Ihre Begleitung war während des gesamten Projekts wertvoll. Sie konnten sich an unsere Anforderungen anpassen und relevante Lösungen vorschlagen.",
+        "author": "Sophie Lefebvre",
+        "position": "CTO, DataFuture"
+      }
+    }
+  },
+  "contact": {
+    "title": "Kontaktieren Sie uns",
+    "subtitle": "Sprechen wir über Ihr Projekt",
+    "name": "Name",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "message": "Nachricht",
+    "subject": "Betreff",
+    "submit": "Senden",
+    "success": "Nachricht erfolgreich gesendet! Wir werden uns in Kürze bei Ihnen melden.",
+    "error": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+  },
+  "footer": {
+    "company": "© 2025 DELIVERY Digital Technology. Alle Rechte vorbehalten.",
+    "links": {
+      "privacy": "Datenschutzrichtlinie",
+      "terms": "Nutzungsbedingungen",
+      "sitemap": "Sitemap"
+    }
+  },
+  "reclamation": {
+    "badge": "Beschwerde",
+    "title": "Beschwerdeformular",
+    "subtitle": "Wir nehmen Ihre Anliegen ernst. Bitte füllen Sie das folgende Formular aus und wir werden Ihnen schnellstmöglich antworten.",
+    "qualityCommitment": {
+      "title": "Unser Qualitätsversprechen",
+      "intro": "DELIVERY Digital Nice ist bestrebt, Schulungsleistungen zu erbringen, die den Bedürfnissen und Anforderungen unserer Kunden entsprechen. Falls Sie eine Beschwerde einreichen möchten:",
+      "contact": "Sie können sich jederzeit mit Ihren Fragen, Zweifeln und aufgetretenen Problemen an Ihre üblichen Ansprechpartner wenden, die alles tun werden, um Ihnen eine Antwort zu geben.",
+      "formOption": "Sie haben auch die Möglichkeit, Ihre Anfrage über das untenstehende Beschwerdeformular zu senden.",
+      "processTitle": "Unser Bearbeitungsprozess",
+      "steps": {
+        "1": "Sie füllen das Formular aus, das automatisch an das für die Beschwerdebearbeitung zuständige Team gesendet wird",
+        "2": "Wir bestätigen den Eingang Ihrer Beschwerde",
+        "3": "Wir analysieren Ihre Anfrage schnellstmöglich und bewerten ihre Zulässigkeit",
+        "4": "Ist Ihre Anfrage zulässig, analysieren wir die Ursachen der Beschwerde",
+        "5": "Wir prüfen die vorgetragenen Sachverhalte sorgfältig und führen bei Bedarf erforderliche Nachforschungen durch. In diesem Fall halten wir Sie über den Fortschritt des Falls auf dem Laufenden",
+        "6": "Wir informieren Sie über unsere Antwort unter Angabe der Ergebnisse unserer Untersuchung und der Lösungen, die wir zur Problemlösung vorschlagen"
+      },
+      "directContact": "Um das Team für Beschwerdebearbeitung direkt zu kontaktieren:"
+    },
+    "contactCards": {
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "hours": "Öffnungszeiten"
+    },
+    "form": {
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "company": "Unternehmen",
+      "orderNumber": "Auftragsnummer",
+      "category": "Beschwerdekategorie",
+      "categoryOptions": {
+        "service": "Servicequalität",
+        "product": "Produkt/Lieferung",
+        "billing": "Abrechnung",
+        "support": "Technischer Support",
+        "training": "Schulung",
+        "other": "Sonstiges"
+      },
+      "subject": "Beschwerdegegenstand",
+      "subjectPlaceholder": "Zusammenfassung Ihrer Beschwerde",
+      "description": "Detaillierte Beschreibung",
+      "descriptionPlaceholder": "Bitte beschreiben Sie Ihre Beschwerde im Detail...",
+      "gdpr": "Ihre Daten werden gemäß unserer Datenschutzrichtlinie und der DSGVO verarbeitet. Wir verpflichten uns, Ihnen innerhalb von 48 Werktagen zu antworten.",
+      "captcha": "Sicherheitsüberprüfung",
+      "captchaRequired": "Bitte führen Sie die Sicherheitsüberprüfung durch",
+      "submit": "Beschwerde absenden",
+      "submitting": "Wird gesendet..."
+    },
+    "procedure": {
+      "title": "Verfahren zur Beschwerdebearbeitung",
+      "steps": {
+        "1": "Eingang und Empfangsbestätigung innerhalb von 24 Std.",
+        "2": "Analyse Ihrer Beschwerde durch unser Team",
+        "3": "Detaillierte Antwort innerhalb von 48 Werktagen",
+        "4": "Nachverfolgung und Problemlösung"
+      },
+      "mediator": "Wenn Sie mit unserer Antwort nicht zufrieden sind, können Sie unseren Qualitätsbeauftragten kontaktieren oder einen Verbraucherschlichter einschalten."
+    },
+    "success": {
+      "title": "Beschwerde erfolgreich eingereicht",
+      "message": "Wir haben Ihre Beschwerde erhalten. Unser Team wird sich schnellstmöglich mit Ihnen in Verbindung setzen, um Ihre Anfrage zu bearbeiten.",
+      "responseTime": "Geschätzte Antwortzeit: 24-48 Werktage",
+      "backHome": "Zurück zur Startseite"
+    }
+  },
+  "invoice": {
+    "title": "Anzahlungsrechnung",
+    "prefix": "RECHNUNG",
+    "issuedOn": "Ausgestellt am",
+    "dueOn": "Fälligkeit",
+    "relatedQuote": "Zugehöriges Angebot",
+    "for": "Zu Händen von",
+    "service": "Leistung",
+    "amountExclTax": "Betrag netto",
+    "lineDescription": "{{percent}} % von {{title}} (Ref. {{quoteRef}})",
+    "subtotal": "Zwischensumme netto",
+    "vat": "MwSt. ({{rate}} %)",
+    "netToPay": "Zahlbetrag",
+    "bankDetails": "Bankverbindung",
+    "beneficiary": "Begünstigter",
+    "bank": "Bank",
+    "iban": "IBAN",
+    "bicSwift": "BIC / SWIFT",
+    "transferRef": "Verwendungszweck für Überweisung",
+    "mailSubject": "Anzahlungsrechnung {{invoiceRef}} - {{percent}} % des Angebots {{quoteRef}}",
+    "mailThanks": "Vielen Dank für Ihr Vertrauen.",
+    "mailBody": "Nach Unterzeichnung des Angebots <strong>{{quoteRef}}</strong> finden Sie im Anhang die Anzahlungsrechnung <strong>{{invoiceRef}}</strong>.",
+    "mailAmount": "Zu zahlender Betrag: <strong>{{amount}}</strong> ({{percent}} % des Gesamtbetrags).",
+    "mailRef": "Bankverbindung und Überweisungsreferenz in der Rechnung. Fälligkeit: <strong>{{dueDate}}</strong>.",
+    "mailStart": "Nach Zahlungseingang starten wir das Projekt."
+  },
+  "emails": {
+    "acceptedSubject": "[ANGENOMMEN] Angebot {{quoteRef}} unterzeichnet von {{signerName}}",
+    "acceptedBody": "Das Angebot <strong>{{quoteRef}}</strong> wurde soeben von <strong>{{signerName}}</strong> ({{signerEmail}}) angenommen.",
+    "acceptedMeta": "IP: {{ip}} - User Agent: {{userAgent}}",
+    "rejectedSubject": "[ABGELEHNT] Angebot {{quoteRef}}",
+    "rejectedBody": "Das Angebot <strong>{{quoteRef}}</strong> wurde abgelehnt.",
+    "rejectedReason": "Grund: {{reason}}",
+    "rejectedNoReason": "(nicht angegeben)"
+  }
+}

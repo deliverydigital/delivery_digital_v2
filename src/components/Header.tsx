@@ -1,11 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Menu, X, Globe, ChevronDown, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Logo from './Logo';
 import TrainingClientSpace from './TrainingClientSpace';
 import Auth from './Auth';
 import { useAuth } from '../hooks/useApi';
+
+// Liste des langues supportees. L'ordre = ordre d'affichage dans le dropdown.
+// L'auto-detection navigator.language (via i18next-browser-languagedetector) gere le defaut.
+// @author Rabah Ziane - 2026-05-11
+const LANGUAGES = [
+  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: 'es', label: 'Español', flag: '🇪🇸' },
+  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+  { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+  { code: 'pt', label: 'Português', flag: '🇵🇹' },
+  { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
+  { code: 'sv', label: 'Svenska', flag: '🇸🇪' },
+  { code: 'da', label: 'Dansk', flag: '🇩🇰' },
+  { code: 'no', label: 'Norsk', flag: '🇳🇴' },
+  { code: 'fi', label: 'Suomi', flag: '🇫🇮' },
+  { code: 'pl', label: 'Polski', flag: '🇵🇱' },
+  { code: 'cs', label: 'Čeština', flag: '🇨🇿' },
+  { code: 'hu', label: 'Magyar', flag: '🇭🇺' },
+  { code: 'ro', label: 'Română', flag: '🇷🇴' },
+  { code: 'el', label: 'Ελληνικά', flag: '🇬🇷' },
+  { code: 'tr', label: 'Türkçe', flag: '🇹🇷' },
+  { code: 'ru', label: 'Русский', flag: '🇷🇺' },
+  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
+  { code: 'he', label: 'עברית', flag: '🇮🇱' },
+  { code: 'fa', label: 'فارسی', flag: '🇮🇷' },
+  { code: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'zh', label: '中文', flag: '🇨🇳' },
+  { code: 'ja', label: '日本語', flag: '🇯🇵' },
+  { code: 'ko', label: '한국어', flag: '🇰🇷' },
+];
 
 /**
  * Apple.fr-style top nav:
@@ -24,8 +55,24 @@ const Header = () => {
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
-  const changeLanguage = () => {
-    i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr');
+  // Etat du dropdown langues
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
+  // Fermer dropdown quand on clic en dehors
+  useEffect(() => {
+    if (!langOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [langOpen]);
+  const currentLangCode = (i18n.language || 'fr').split('-')[0];
+  const currentLang = LANGUAGES.find((l) => l.code === currentLangCode) || LANGUAGES[0];
+  const pickLanguage = (code: string) => {
+    i18n.changeLanguage(code);
+    try { localStorage.setItem('i18nextLng', code); } catch {}
+    setLangOpen(false);
   };
 
   const handleAuthSuccess = () => {
@@ -76,8 +123,43 @@ const Header = () => {
               ))}
             </nav>
 
-            {/* Right tools - one primary CTA */}
+            {/* Right tools - language switcher + primary CTA */}
             <div className="hidden md:flex items-center gap-2.5">
+              {/* Language switcher (desktop) */}
+              <div className="relative" ref={langRef}>
+                <button
+                  onClick={() => setLangOpen((o) => !o)}
+                  className="px-2.5 py-1 rounded-full text-[12px] text-white/85 hover:text-white inline-flex items-center gap-1.5 hover:bg-white/10 transition-colors"
+                  aria-label="Choisir la langue"
+                >
+                  <Globe size={13} />
+                  <span>{currentLang.flag} {currentLang.code.toUpperCase()}</span>
+                  <ChevronDown size={11} className={`transition-transform ${langOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {langOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-[220px] max-h-[420px] overflow-y-auto rounded-[14px] bg-[rgba(20,20,22,0.96)] backdrop-blur-xl ring-1 ring-white/10 shadow-2xl py-2"
+                    >
+                      {LANGUAGES.map((l) => (
+                        <button
+                          key={l.code}
+                          onClick={() => pickLanguage(l.code)}
+                          className={`w-full text-left px-3.5 py-2 text-[13px] flex items-center gap-2.5 hover:bg-white/10 transition-colors ${l.code === currentLangCode ? 'text-white font-semibold bg-white/5' : 'text-white/85'}`}
+                        >
+                          <span className="text-[15px]">{l.flag}</span>
+                          <span className="flex-1">{l.label}</span>
+                          {l.code === currentLangCode && <span className="text-[#0066CC]">●</span>}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               <a
                 href="/discutons"
                 className="px-3.5 py-1 rounded-full text-[12px] font-medium text-white bg-[#0066CC] hover:bg-[#0077ED] transition-colors inline-flex items-center"
@@ -124,6 +206,24 @@ const Header = () => {
                 >
                   Discutons de votre projet ›
                 </a>
+              </div>
+              {/* Language switcher (mobile) */}
+              <div className="pt-6">
+                <div className="text-[11px] uppercase tracking-wider text-white/50 mb-2 flex items-center gap-1.5">
+                  <Globe size={12} /> Langue
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {LANGUAGES.map((l) => (
+                    <button
+                      key={l.code}
+                      onClick={() => { pickLanguage(l.code); toggleMenu(); }}
+                      className={`px-3 py-2 rounded-[10px] text-[13.5px] flex items-center gap-2 transition-colors ${l.code === currentLangCode ? 'bg-white/15 text-white font-semibold' : 'bg-white/5 text-white/80 hover:bg-white/10'}`}
+                    >
+                      <span>{l.flag}</span>
+                      <span className="truncate">{l.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </motion.div>

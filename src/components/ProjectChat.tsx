@@ -18,6 +18,23 @@ const STARTER_SUGGESTIONS = [
   "Je veux refondre mon site existant",
 ];
 
+/* Strip markdown bold (**...**) for plain-text contexts (chips, single-line previews). */
+function stripBold(s: string): string {
+  return s.replace(/\*\*([^*]+)\*\*/g, '$1');
+}
+
+/* Render text with **bold** markers as JSX (strong) + preserve newlines via parent whitespace-pre-wrap. */
+function renderRichText(text: string): React.ReactNode {
+  if (!text) return null;
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} className="font-semibold">{part.slice(2, -2)}</strong>;
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 /* Extract bullet/dash/numbered list items from assistant text. 2+ items required. */
 function extractListItems(text: string): string[] {
   if (!text) return [];
@@ -247,7 +264,7 @@ const ProjectChat = () => {
   const send = async (text?: string) => {
     let content = (text ?? input).trim();
     if (picked.size > 0) {
-      const picks = Array.from(picked).join(', ');
+      const picks = Array.from(picked).map(stripBold).join(', ');
       content = content ? `${picks}. ${content}` : picks;
     }
     if (!content || busy) return;
@@ -349,7 +366,7 @@ const ProjectChat = () => {
 
   return (
     <div
-      className="h-[100dvh] flex overflow-hidden"
+      className="h-[100dvh] w-screen max-w-full flex overflow-hidden"
       style={{
         background: '#F2EFE9',
         backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(29,29,31,0.10) 1px, transparent 0)',
@@ -423,7 +440,7 @@ const ProjectChat = () => {
               </p>
             </div>
           )}
-          <div className="max-w-[760px] mx-auto w-full px-5 py-4 pb-[200px] space-y-4">
+          <div className="max-w-[760px] mx-auto w-full px-5 py-4 pb-[320px] space-y-4">
             <AnimatePresence initial={false}>
               {messages.map((m, i) => (
                 <motion.div
@@ -434,14 +451,14 @@ const ProjectChat = () => {
                   className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-[18px] px-4 py-3 text-[15px] leading-[1.45] whitespace-pre-wrap ${
+                    className={`max-w-[85%] break-words overflow-wrap-anywhere rounded-[18px] px-4 py-3 text-[15px] leading-[1.45] whitespace-pre-wrap ${
                       m.role === 'user' ? 'bg-[#1D1D1F] text-white' : 'bg-white text-[#1D1D1F] ring-1 ring-black/5'
                     }`}
                     style={m.role === 'user'
-                      ? { boxShadow: '0 2px 10px -2px rgba(0,0,0,0.18)' }
-                      : { boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+                      ? { overflowWrap: 'anywhere', wordBreak: 'break-word', boxShadow: '0 2px 10px -2px rgba(0,0,0,0.18)' }
+                      : { overflowWrap: 'anywhere', wordBreak: 'break-word', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
                   >
-                    {m.content}
+                    {m.role === 'assistant' ? renderRichText(m.content) : m.content}
                   </div>
                 </motion.div>
               ))}
@@ -496,14 +513,14 @@ const ProjectChat = () => {
         </div>
 
         {/* Composer - fixed bottom */}
-        <div className="fixed bottom-0 left-0 right-0 lg:left-[280px] z-30 pt-4 pb-[max(20px,env(safe-area-inset-bottom))] bg-gradient-to-t from-[#F2EFE9] via-[#F2EFE9]/95 to-transparent">
+        <div className="fixed bottom-0 left-0 right-0 lg:left-[280px] z-30 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] bg-[#F2EFE9] border-t border-black/5 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.08)]">
           <div className="max-w-[760px] mx-auto px-5">
             {inlineSuggestions.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25 }}
-                className="flex flex-wrap gap-2 mb-2.5"
+                className="flex flex-wrap gap-1 mb-2"
               >
                 {inlineSuggestions.map((s) => {
                   const isOn = picked.has(s);
@@ -511,22 +528,23 @@ const ProjectChat = () => {
                     <button
                       key={s}
                       onClick={() => togglePick(s)}
-                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[13px] font-medium transition-all ${
+                      className={`inline-flex items-center gap-0.5 px-1.5 py-[3px] rounded-full text-[10px] leading-tight font-medium transition-all max-w-[180px] ${
                         isOn
                           ? 'bg-[#1D1D1F] text-white ring-1 ring-[#1D1D1F]'
                           : 'bg-white text-[#1D1D1F] ring-1 ring-black/8 hover:ring-black/20'
                       }`}
                       style={!isOn ? { boxShadow: '0 1px 2px rgba(0,0,0,0.03)' } : undefined}
+                      title={stripBold(s)}
                     >
-                      {isOn && <span className="text-[10px]">✓</span>}
-                      {s}
+                      {isOn && <span className="text-[8px]">✓</span>}
+                      <span className="truncate">{stripBold(s)}</span>
                     </button>
                   );
                 })}
                 {picked.size > 0 && (
                   <button
                     onClick={() => setPicked(new Set())}
-                    className="text-[11.5px] text-[#86868B] hover:text-[#1D1D1F] underline px-2"
+                    className="text-[9.5px] text-[#86868B] hover:text-[#1D1D1F] underline px-1"
                   >
                     Tout retirer
                   </button>
@@ -560,7 +578,7 @@ const ProjectChat = () => {
               </button>
             </form>
             <p className="text-center text-[11px] text-[#86868B] mt-2">
-              Vos messages restent confidentiels et servent uniquement à qualifier votre projet.
+              Vos messages restent confidentiels et servent uniquement pour votre projet.
             </p>
           </div>
         </div>

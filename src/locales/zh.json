@@ -1,0 +1,289 @@
+{
+  "header": {
+    "home": "首页",
+    "services": "服务",
+    "portfolio": "项目",
+    "about": "关于",
+    "contact": "联系",
+    "training": "培训",
+    "quote": "报价",
+    "formationBtn": "培训",
+    "solutionsBtn": "解决方案"
+  },
+  "tiles": {
+    "eyebrow": "我们的专业领域",
+    "ciiBadge": "CII 认证 · 最高报销 20%",
+    "stack": "技术栈",
+    "cta": {
+      "start": "洽谈项目",
+      "learn": "了解更多",
+      "trainings": "查看所有培训",
+      "learner": "学员专区"
+    },
+    "web": {
+      "title": "Web",
+      "accent": "解决方案",
+      "subhead": "SaaS、仪表板和定制化 Web 应用，采用顶尖技术驱动。"
+    },
+    "mobile": {
+      "title": "原生",
+      "accent": "应用",
+      "subhead": "iOS 和 Android。原生性能，精致设计，App Store 和 Play Store 一站式部署。"
+    },
+    "enterprise": {
+      "title": "企业",
+      "accent": "软件",
+      "subhead": "CRM、ERP、B2B 平台。流程自动化，生产力倍增。"
+    },
+    "cloud": {
+      "title": "云服务",
+      "accent": "& DevOps",
+      "subhead": "托管、监控、自动扩展。全天候承载高负荷的基础设施。"
+    },
+    "training": {
+      "title": "专业",
+      "accent": "培训",
+      "subhead": "Qualiopi 认证机构。享受 OPCO 资金支持。"
+    }
+  },
+  "formationPage": {
+    "eyebrow": "Qualiopi 认证中心",
+    "title": "专业",
+    "accent": "培训",
+    "subhead": "Qualiopi 认证机构。享受 OPCO 资金支持。"
+  },
+  "heroDark": {
+    "viewServices": "查看我们的服务",
+    "trainingPro": "专业培训"
+  },
+  "hero": {
+    "title": "驱动您雄心的代码，通过 CII 报销 20%",
+    "subtitle": "定制化网站、移动应用、SaaS、CRM、ERP。CII 创新税收抵免认证机构 - 符合条件的中小企业每年最高可获 80,000 欧元税收抵免。",
+    "titleIntl": "打造您的下一代数字产品",
+    "subtitleIntl": "网站、移动应用、SaaS、CRM、ERP。定制代码，数周交付。",
+    "cta": {
+      "project": "洽谈项目"
+    },
+    "badges": {
+      "digital": "数字服务"
+    }
+  },
+  "services": {
+    "title": "我们的服务",
+    "subtitle": "量身定制的解决方案",
+    "web": {
+      "title": "Web 开发",
+      "description": "展示网站、电商平台及渐进式 Web 应用，采用最新技术。"
+    },
+    "mobile": {
+      "title": "移动应用",
+      "description": "iOS 和 Android 原生及跨平台应用，提供最佳用户体验。"
+    },
+    "enterprise": {
+      "title": "企业解决方案",
+      "description": "定制软件、流程自动化及系统集成。"
+    },
+    "cloud": {
+      "title": "云服务",
+      "description": "云端应用迁移、架构设计和部署，兼具安全性与性能。"
+    },
+    "training": {
+      "title": "专业培训",
+      "description": "Qualiopi 认证机构。提供 Web 开发、移动端和 DevOps 课程，可通过 OPCO 融资。"
+    }
+  },
+  "portfolio": {
+    "title": "我们的项目",
+    "subtitle": "探索我们的成果",
+    "viewProject": "查看项目",
+    "projects": {
+      "1": {
+        "title": "电商平台",
+        "description": "包含库存管理、安全支付和优化客户体验的完整解决方案。",
+        "tag": "Web"
+      },
+      "2": {
+        "title": "管理应用",
+        "description": "定制化 ERP 系统，优化企业流程，提升生产力。",
+        "tag": "企业"
+      },
+      "3": {
+        "title": "移动应用",
+        "description": "带地理定位和集成支付系统的配送应用。",
+        "tag": "移动"
+      },
+      "4": {
+        "title": "云基础设施",
+        "description": "基础设施迁移与优化，实现最大可扩展性和降低成本。",
+        "tag": "云服务"
+      }
+    }
+  },
+  "about": {
+    "title": "我们的专业能力",
+    "subtitle": "充满激情的团队",
+    "description": "拥有超过 10 年经验，我们的专家团队融合创造力与技术严谨，将您的创意转化为高性能数字解决方案。",
+    "expertise": {
+      "1": {
+        "title": "前端开发",
+        "value": "90%"
+      },
+      "2": {
+        "title": "后端开发",
+        "value": "95%"
+      },
+      "3": {
+        "title": "UX/UI 设计",
+        "value": "85%"
+      },
+      "4": {
+        "title": "DevOps & 云服务",
+        "value": "90%"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "客户评价",
+    "subtitle": "客户的真实反馈",
+    "items": {
+      "1": {
+        "text": "团队将我们的愿景转化为超出所有预期的数字解决方案。专业精神和技术实力卓越。",
+        "author": "Marie Dupont",
+        "position": "营销总监，TechCorp"
+      },
+      "2": {
+        "text": "他们理解我们业务需求并以创新高效的解决方案回应的能力令我们印象深刻。",
+        "author": "Jean Martin",
+        "position": "首席执行官，InnovSoft"
+      },
+      "3": {
+        "text": "他们在整个项目中的支持非常宝贵。能够适应我们的限制并提供相关解决方案。",
+        "author": "Sophie Lefebvre",
+        "position": "首席技术官，DataFuture"
+      }
+    }
+  },
+  "contact": {
+    "title": "联系我们",
+    "subtitle": "让我们谈谈您的项目",
+    "name": "姓名",
+    "email": "邮箱",
+    "phone": "电话",
+    "message": "留言",
+    "subject": "主题",
+    "submit": "发送",
+    "success": "消息发送成功！我们会尽快与您联系。",
+    "error": "发生错误，请重试。"
+  },
+  "footer": {
+    "company": "© 2025 DELIVERY Digital Technology. 版权所有。",
+    "links": {
+      "privacy": "隐私政策",
+      "terms": "使用条款",
+      "sitemap": "网站地图"
+    }
+  },
+  "reclamation": {
+    "badge": "投诉",
+    "title": "投诉表单",
+    "subtitle": "我们认真对待您的关切。请填写以下表单，我们将尽快回复您。",
+    "qualityCommitment": {
+      "title": "我们的质量承诺",
+      "intro": "DELIVERY Digital Nice 致力于提供满足客户需求和要求的培训服务。但是，如果您希望向我们提交投诉：",
+      "contact": "您可以随时向您的常规联系人提出问题、疑虑和遇到的问题，他们将尽一切可能为您提供答复。",
+      "formOption": "您也可以使用以下投诉表单发送您的请求。",
+      "processTitle": "我们的处理流程",
+      "steps": {
+        "1": "您填写表单，系统自动发送至投诉处理团队",
+        "2": "我们确认收到您的投诉",
+        "3": "我们尽快分析您的请求并评估其可受理性",
+        "4": "如果您的请求可受理，我们分析投诉原因",
+        "5": "我们仔细审查提交的事实，必要时进行调查。在此情况下，我们会及时告知您案件进展",
+        "6": "我们将告知您我们的答复，说明调查结果以及我们提出的解决方案"
+      },
+      "directContact": "直接联系投诉处理团队："
+    },
+    "contactCards": {
+      "email": "邮箱",
+      "phone": "电话",
+      "hours": "工作时间"
+    },
+    "form": {
+      "firstName": "名",
+      "lastName": "姓",
+      "email": "邮箱",
+      "phone": "电话",
+      "company": "公司",
+      "orderNumber": "订单号",
+      "category": "投诉类别",
+      "categoryOptions": {
+        "service": "服务质量",
+        "product": "产品/交付物",
+        "billing": "计费",
+        "support": "技术支持",
+        "training": "培训",
+        "other": "其他"
+      },
+      "subject": "投诉主题",
+      "subjectPlaceholder": "您的投诉摘要",
+      "description": "详细描述",
+      "descriptionPlaceholder": "请详细描述您的投诉...",
+      "gdpr": "您的数据按照我们的隐私政策和 GDPR 处理。我们承诺在 48 个工作小时内回复您。",
+      "captcha": "安全验证",
+      "captchaRequired": "请完成安全验证",
+      "submit": "提交投诉",
+      "submitting": "正在发送..."
+    },
+    "procedure": {
+      "title": "投诉处理程序",
+      "steps": {
+        "1": "24 小时内接收并确认",
+        "2": "我们的团队分析您的投诉",
+        "3": "48 个工作小时内提供详细答复",
+        "4": "跟进并解决问题"
+      },
+      "mediator": "如果您对我们的答复不满意，可以联系我们的质量负责人或诉诸消费者调解员。"
+    },
+    "success": {
+      "title": "投诉提交成功",
+      "message": "我们已收到您的投诉。我们的团队将尽快与您联系以处理您的请求。",
+      "responseTime": "预计响应时间：24-48 个工作小时",
+      "backHome": "返回首页"
+    }
+  },
+  "invoice": {
+    "title": "预付款发票",
+    "prefix": "发票",
+    "issuedOn": "开具日期",
+    "dueOn": "到期日",
+    "relatedQuote": "关联报价单",
+    "for": "收件人",
+    "service": "服务",
+    "amountExclTax": "不含税金额",
+    "lineDescription": "{{title}} 的 {{percent}}%（编号 {{quoteRef}}）",
+    "subtotal": "不含税小计",
+    "vat": "增值税（{{rate}}%）",
+    "netToPay": "应付金额",
+    "bankDetails": "银行信息",
+    "beneficiary": "收款人",
+    "bank": "银行",
+    "iban": "IBAN",
+    "bicSwift": "BIC / SWIFT",
+    "transferRef": "转账备注",
+    "mailSubject": "预付款发票 {{invoiceRef}} - 报价单 {{quoteRef}} 的 {{percent}}%",
+    "mailThanks": "感谢您的信任。",
+    "mailBody": "根据报价单 <strong>{{quoteRef}}</strong> 的签署，请查收附件中的预付款发票 <strong>{{invoiceRef}}</strong>。",
+    "mailAmount": "应付金额：<strong>{{amount}}</strong>（总额的 {{percent}}%）。",
+    "mailRef": "银行信息和转账备注见发票。到期日：<strong>{{dueDate}}</strong>。",
+    "mailStart": "收到付款后，我们将启动项目。"
+  },
+  "emails": {
+    "acceptedSubject": "[已接受] 报价单 {{quoteRef}} 由 {{signerName}} 签署",
+    "acceptedBody": "报价单 <strong>{{quoteRef}}</strong> 已被 <strong>{{signerName}}</strong>（{{signerEmail}}）接受。",
+    "acceptedMeta": "IP：{{ip}} - User Agent：{{userAgent}}",
+    "rejectedSubject": "[已拒绝] 报价单 {{quoteRef}}",
+    "rejectedBody": "报价单 <strong>{{quoteRef}}</strong> 已被拒绝。",
+    "rejectedReason": "原因：{{reason}}",
+    "rejectedNoReason": "（未说明）"
+  }
+}

@@ -1,0 +1,289 @@
+{
+  "header": {
+    "home": "Ana Sayfa",
+    "services": "Hizmetler",
+    "portfolio": "Projeler",
+    "about": "Hakkımızda",
+    "contact": "İletişim",
+    "training": "Eğitim",
+    "quote": "Teklif",
+    "formationBtn": "Eğitim",
+    "solutionsBtn": "Çözümler"
+  },
+  "tiles": {
+    "eyebrow": "Uzmanlık alanlarımız",
+    "ciiBadge": "CII sertifikalı · %20'ye kadar geri ödeme",
+    "stack": "Stack",
+    "cta": {
+      "start": "Proje görüşmesi",
+      "learn": "Detaylı bilgi",
+      "trainings": "Tüm eğitimleri görüntüle",
+      "learner": "Öğrenci alanı"
+    },
+    "web": {
+      "title": "Web",
+      "accent": "çözümleri",
+      "subhead": "SaaS, kontrol panelleri ve özel web uygulamaları, en iyi teknolojilerle destekleniyor."
+    },
+    "mobile": {
+      "title": "Native",
+      "accent": "uygulamalar",
+      "subhead": "iOS ve Android. Native performans, özenli tasarım, App Store ve Play Store yayını anahtar teslim."
+    },
+    "enterprise": {
+      "title": "Kurumsal",
+      "accent": "yazılım",
+      "subhead": "CRM, ERP, B2B platformları. Süreçleriniz otomatik, verimliliğiniz artırılmış."
+    },
+    "cloud": {
+      "title": "Cloud",
+      "accent": "& DevOps",
+      "subhead": "Hosting, izleme, otomatik ölçeklendirme. Gece gündüz yükü kaldıran altyapı."
+    },
+    "training": {
+      "title": "Profesyonel",
+      "accent": "eğitim.",
+      "subhead": "Qualiopi sertifikalı kuruluş. OPCO finansmanından yararlanın."
+    }
+  },
+  "formationPage": {
+    "eyebrow": "Qualiopi sertifikalı merkez",
+    "title": "Profesyonel",
+    "accent": "eğitim.",
+    "subhead": "Qualiopi sertifikalı kuruluş. OPCO finansmanından yararlanın."
+  },
+  "heroDark": {
+    "viewServices": "Hizmetlerimizi görün",
+    "trainingPro": "Profesyonel eğitim"
+  },
+  "hero": {
+    "title": "Hedeflerinizi güçlendiren kod, CII ile %20 geri ödeme",
+    "subtitle": "Web siteleri, mobil uygulamalar, SaaS, CRM, özel ERP. Crédit Impôt Innovation sertifikalı ajans - uygun KOBİ'ler için yıllık 80.000 €'ya kadar vergi kredisi.",
+    "titleIntl": "Bir sonraki dijital ürününüzü birlikte inşa edelim",
+    "subtitleIntl": "Web siteleri, mobil uygulamalar, SaaS, CRM, ERP. Özel kod, haftalar içinde teslim.",
+    "cta": {
+      "project": "Proje görüşmesi"
+    },
+    "badges": {
+      "digital": "Dijital Hizmetler"
+    }
+  },
+  "services": {
+    "title": "Hizmetlerimiz",
+    "subtitle": "İhtiyaçlarınıza uyarlanmış çözümler",
+    "web": {
+      "title": "Web Geliştirme",
+      "description": "En güncel teknolojilerle vitrin siteleri, e-ticaret ve progressive web uygulamaları."
+    },
+    "mobile": {
+      "title": "Mobil Uygulamalar",
+      "description": "Optimal kullanıcı deneyimiyle iOS ve Android için native ve cross-platform uygulamalar."
+    },
+    "enterprise": {
+      "title": "Kurumsal Çözümler",
+      "description": "Özel yazılımlar, süreç otomasyonu ve sistem entegrasyonları."
+    },
+    "cloud": {
+      "title": "Cloud Hizmetleri",
+      "description": "Güvenlik ve performansla bulut ortamında uygulama taşıma, mimari ve dağıtım."
+    },
+    "training": {
+      "title": "Profesyonel Eğitim",
+      "description": "Qualiopi sertifikalı kuruluş. Web geliştirme, mobil ve DevOps alanında OPCO finanse edilebilir programlar."
+    }
+  },
+  "portfolio": {
+    "title": "Projelerimiz",
+    "subtitle": "Gerçekleştirdiklerimizi keşfedin",
+    "viewProject": "Projeyi görüntüle",
+    "projects": {
+      "1": {
+        "title": "E-ticaret Platformu",
+        "description": "Stok yönetimi, güvenli ödemeler ve optimize edilmiş müşteri deneyimi ile eksiksiz çözüm.",
+        "tag": "Web"
+      },
+      "2": {
+        "title": "Yönetim Uygulaması",
+        "description": "İş süreçlerini optimize etmek ve verimliliği artırmak için özelleştirilmiş ERP sistemi.",
+        "tag": "Kurumsal"
+      },
+      "3": {
+        "title": "Mobil Uygulama",
+        "description": "Konum takibi ve entegre ödeme sistemi ile teslimat uygulaması.",
+        "tag": "Mobil"
+      },
+      "4": {
+        "title": "Cloud Altyapı",
+        "description": "Maksimum ölçeklenebilirlik ve düşük maliyetler için altyapı taşıma ve optimizasyonu.",
+        "tag": "Cloud"
+      }
+    }
+  },
+  "about": {
+    "title": "Uzmanlığımız",
+    "subtitle": "Tutkulu bir ekip",
+    "description": "10 yılı aşkın deneyimimizle uzman ekibimiz, fikirlerinizi yüksek performanslı dijital çözümlere dönüştürmek için yaratıcılığı teknik titizlikle birleştiriyor.",
+    "expertise": {
+      "1": {
+        "title": "Front-End Geliştirme",
+        "value": "90%"
+      },
+      "2": {
+        "title": "Back-End Geliştirme",
+        "value": "95%"
+      },
+      "3": {
+        "title": "UX/UI Tasarım",
+        "value": "85%"
+      },
+      "4": {
+        "title": "DevOps & Cloud",
+        "value": "90%"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Referanslar",
+    "subtitle": "Müşterilerimiz ne diyor",
+    "items": {
+      "1": {
+        "text": "Ekip, vizyonumuzu tüm beklentilerimizi aşan bir dijital çözüme dönüştürdü. Olağanüstü profesyonellik ve teknik uzmanlık.",
+        "author": "Marie Dupont",
+        "position": "Pazarlama Direktörü, TechCorp"
+      },
+      "2": {
+        "text": "İş ihtiyaçlarımızı anlama ve yenilikçi ve etkili çözümlerle yanıt verme yetenekleri bizi etkiledi.",
+        "author": "Jean Martin",
+        "position": "CEO, InnovSoft"
+      },
+      "3": {
+        "text": "Proje boyunca destekleri çok değerliydi. Kısıtlarımıza uyum sağlamayı ve uygun çözümler sunmayı bildiler.",
+        "author": "Sophie Lefebvre",
+        "position": "CTO, DataFuture"
+      }
+    }
+  },
+  "contact": {
+    "title": "Bize ulaşın",
+    "subtitle": "Projeniz hakkında konuşalım",
+    "name": "Ad Soyad",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "message": "Mesaj",
+    "subject": "Konu",
+    "submit": "Gönder",
+    "success": "Mesajınız başarıyla gönderildi! En kısa sürede sizinle iletişime geçeceğiz.",
+    "error": "Bir hata oluştu. Lütfen tekrar deneyin."
+  },
+  "footer": {
+    "company": "© 2025 DELIVERY Digital Technology. Tüm hakları saklıdır.",
+    "links": {
+      "privacy": "Gizlilik Politikası",
+      "terms": "Kullanım Koşulları",
+      "sitemap": "Site Haritası"
+    }
+  },
+  "reclamation": {
+    "badge": "Şikayet",
+    "title": "Şikayet Formu",
+    "subtitle": "Endişelerinizi ciddiye alıyoruz. Lütfen aşağıdaki formu doldurun, en kısa sürede size yanıt vereceğiz.",
+    "qualityCommitment": {
+      "title": "Kalite taahhüdümüz",
+      "intro": "DELIVERY Digital Nice, müşterilerinin ihtiyaç ve gereksinimlerini karşılayan eğitim hizmetleri sunmak için çaba göstermektedir. Ancak bize şikayet göndermek isterseniz:",
+      "contact": "Her zaman sorularınızı, şüphelerinizi ve karşılaştığınız sorunları size yanıt vermek için ellerinden geleni yapacak olan alışılagelmiş iletişim kişilerinize iletebilirsiniz.",
+      "formOption": "Ayrıca aşağıdaki şikayet formunu kullanarak talebinizi gönderme seçeneğiniz de bulunmaktadır.",
+      "processTitle": "İşlem sürecimiz",
+      "steps": {
+        "1": "Formu doldurursunuz ve otomatik olarak şikayet işleme ekibine gönderilir",
+        "2": "Şikayetinizin alındığını onaylarız",
+        "3": "Talebinizi en kısa sürede analiz eder ve kabul edilebilirliğini değerlendiririz",
+        "4": "Talebiniz kabul edilebilir ise şikayetin nedenlerini analiz ederiz",
+        "5": "Sunulan olguları dikkatlice inceleriz ve gerekirse gerekli araştırmaları yaparız. Bu durumda sizi dosyanın ilerleyişi hakkında bilgilendiririz",
+        "6": "Araştırmamızın sonuçlarını ve sorunu çözmek için önerdiğimiz çözümleri belirterek yanıtımızı size bildiririz"
+      },
+      "directContact": "Şikayet işleme ekibiyle doğrudan iletişim kurmak için:"
+    },
+    "contactCards": {
+      "email": "E-posta",
+      "phone": "Telefon",
+      "hours": "Çalışma saatleri"
+    },
+    "form": {
+      "firstName": "Ad",
+      "lastName": "Soyad",
+      "email": "E-posta",
+      "phone": "Telefon",
+      "company": "Şirket",
+      "orderNumber": "Sipariş numarası",
+      "category": "Şikayet kategorisi",
+      "categoryOptions": {
+        "service": "Hizmet kalitesi",
+        "product": "Ürün/Teslimat",
+        "billing": "Faturalandırma",
+        "support": "Teknik destek",
+        "training": "Eğitim",
+        "other": "Diğer"
+      },
+      "subject": "Şikayet konusu",
+      "subjectPlaceholder": "Şikayetinizin özeti",
+      "description": "Detaylı açıklama",
+      "descriptionPlaceholder": "Lütfen şikayetinizi detaylı olarak açıklayın...",
+      "gdpr": "Verileriniz gizlilik politikamıza ve GDPR'ye uygun olarak işlenmektedir. 48 iş saati içinde size yanıt vermeyi taahhüt ediyoruz.",
+      "captcha": "Güvenlik doğrulaması",
+      "captchaRequired": "Lütfen güvenlik doğrulamasını tamamlayın",
+      "submit": "Şikayeti gönder",
+      "submitting": "Gönderiliyor..."
+    },
+    "procedure": {
+      "title": "Şikayet işleme prosedürü",
+      "steps": {
+        "1": "24 saat içinde alındı onayı",
+        "2": "Ekibimiz tarafından şikayetinizin analizi",
+        "3": "48 iş saati içinde detaylı yanıt",
+        "4": "Takip ve sorun çözümü"
+      },
+      "mediator": "Yanıtımızdan memnun kalmazsanız, kalite sorumlumuza başvurabilir veya tüketici arabulucusuna başvurabilirsiniz."
+    },
+    "success": {
+      "title": "Şikayet başarıyla gönderildi",
+      "message": "Şikayetinizi aldık. Ekibimiz talebinizi işleme almak için en kısa sürede sizinle iletişime geçecektir.",
+      "responseTime": "Tahmini yanıt süresi: 24-48 iş saati",
+      "backHome": "Ana sayfaya dön"
+    }
+  },
+  "invoice": {
+    "title": "Avans faturası",
+    "prefix": "FATURA",
+    "issuedOn": "Düzenleme tarihi",
+    "dueOn": "Vade",
+    "relatedQuote": "İlgili teklif",
+    "for": "Sayın",
+    "service": "Hizmet",
+    "amountExclTax": "KDV hariç tutar",
+    "lineDescription": "{{title}} için %{{percent}} (ref. {{quoteRef}})",
+    "subtotal": "Ara toplam (KDV hariç)",
+    "vat": "KDV (%{{rate}})",
+    "netToPay": "Ödenecek tutar",
+    "bankDetails": "Banka bilgileri",
+    "beneficiary": "Alıcı",
+    "bank": "Banka",
+    "iban": "IBAN",
+    "bicSwift": "BIC / SWIFT",
+    "transferRef": "Havalede belirtilecek referans",
+    "mailSubject": "Avans faturası {{invoiceRef}} - {{quoteRef}} teklifinin %{{percent}}'i",
+    "mailThanks": "Güveniniz için teşekkür ederiz.",
+    "mailBody": "<strong>{{quoteRef}}</strong> teklifinin imzalanmasının ardından, ekte <strong>{{invoiceRef}}</strong> avans faturasını bulabilirsiniz.",
+    "mailAmount": "Ödenecek tutar: <strong>{{amount}}</strong> (toplamın %{{percent}}'i).",
+    "mailRef": "Banka bilgileri ve havale referansı faturadadır. Vade: <strong>{{dueDate}}</strong>.",
+    "mailStart": "Ödemenin alınmasının ardından projeye başlıyoruz."
+  },
+  "emails": {
+    "acceptedSubject": "[KABUL EDİLDİ] {{quoteRef}} teklifi {{signerName}} tarafından imzalandı",
+    "acceptedBody": "<strong>{{quoteRef}}</strong> teklifi <strong>{{signerName}}</strong> ({{signerEmail}}) tarafından kabul edildi.",
+    "acceptedMeta": "IP: {{ip}} - User Agent: {{userAgent}}",
+    "rejectedSubject": "[REDDEDİLDİ] {{quoteRef}} teklifi",
+    "rejectedBody": "<strong>{{quoteRef}}</strong> teklifi reddedildi.",
+    "rejectedReason": "Sebep: {{reason}}",
+    "rejectedNoReason": "(belirtilmedi)"
+  }
+}

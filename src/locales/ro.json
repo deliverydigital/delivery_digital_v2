@@ -1,0 +1,289 @@
+{
+  "header": {
+    "home": "Acasă",
+    "services": "Servicii",
+    "portfolio": "Proiecte",
+    "about": "Despre",
+    "contact": "Contact",
+    "training": "Formare",
+    "quote": "Ofertă",
+    "formationBtn": "Formare",
+    "solutionsBtn": "Soluții"
+  },
+  "tiles": {
+    "eyebrow": "Expertiza noastră",
+    "ciiBadge": "Certificat CII · până la 20% rambursat",
+    "stack": "Stack",
+    "cta": {
+      "start": "Discutați un proiect",
+      "learn": "Aflați mai multe",
+      "trainings": "Vezi toate cursurile",
+      "learner": "Spațiu cursant"
+    },
+    "web": {
+      "title": "Soluții",
+      "accent": "web",
+      "subhead": "SaaS, dashboard-uri și aplicații web personalizate, propulsate de cele mai bune tehnologii."
+    },
+    "mobile": {
+      "title": "Aplicații",
+      "accent": "native",
+      "subhead": "iOS și Android. Performanță nativă, design rafinat, implementare App Store și Play Store la cheie."
+    },
+    "enterprise": {
+      "title": "Software",
+      "accent": "business",
+      "subhead": "CRM, ERP, platforme B2B. Procesele dumneavoastră automatizate, productivitatea amplificată."
+    },
+    "cloud": {
+      "title": "Cloud",
+      "accent": "& DevOps",
+      "subhead": "Hosting, monitorizare, scalare automată. O infrastructură care ține pasul cu sarcina, zi și noapte."
+    },
+    "training": {
+      "title": "Formare",
+      "accent": "profesională.",
+      "subhead": "Organism certificat Qualiopi. Beneficiați de finanțare OPCO."
+    }
+  },
+  "formationPage": {
+    "eyebrow": "Centru certificat Qualiopi",
+    "title": "Formare",
+    "accent": "profesională.",
+    "subhead": "Organism certificat Qualiopi. Beneficiați de finanțare OPCO."
+  },
+  "heroDark": {
+    "viewServices": "Vezi serviciile noastre",
+    "trainingPro": "Formare profesională"
+  },
+  "hero": {
+    "title": "Codul care vă propulsează ambițiile, 20% rambursat prin CII",
+    "subtitle": "Site-uri web, aplicații mobile, SaaS, CRM, ERP personalizate. Agenție certificată Credit Impozit Inovare - până la 80.000 € credit anual pentru IMM-urile eligibile.",
+    "titleIntl": "Să construim următorul dumneavoastră produs digital",
+    "subtitleIntl": "Site-uri web, aplicații mobile, SaaS, CRM, ERP. Cod personalizat, livrat în câteva săptămâni.",
+    "cta": {
+      "project": "Discutați un proiect"
+    },
+    "badges": {
+      "digital": "Servicii Digitale"
+    }
+  },
+  "services": {
+    "title": "Serviciile Noastre",
+    "subtitle": "Soluții adaptate nevoilor dumneavoastră",
+    "web": {
+      "title": "Dezvoltare Web",
+      "description": "Site-uri de prezentare, e-commerce și aplicații web progresive cu cele mai recente tehnologii."
+    },
+    "mobile": {
+      "title": "Aplicații Mobile",
+      "description": "Aplicații native și cross-platform pentru iOS și Android cu experiență utilizator optimă."
+    },
+    "enterprise": {
+      "title": "Soluții Enterprise",
+      "description": "Software personalizat, automatizare de procese și integrări de sisteme."
+    },
+    "cloud": {
+      "title": "Servicii Cloud",
+      "description": "Migrare, arhitectură și implementare de aplicații în cloud cu securitate și performanță."
+    },
+    "training": {
+      "title": "Formare Profesională",
+      "description": "Organism certificat Qualiopi. Programe de dezvoltare web, mobile și DevOps, finanțabile prin OPCO-ul dumneavoastră."
+    }
+  },
+  "portfolio": {
+    "title": "Proiectele Noastre",
+    "subtitle": "Descoperiți realizările noastre",
+    "viewProject": "Vezi proiectul",
+    "projects": {
+      "1": {
+        "title": "Platformă E-commerce",
+        "description": "Soluție completă cu gestionare stocuri, plăți securizate și experiență client optimizată.",
+        "tag": "Web"
+      },
+      "2": {
+        "title": "Aplicație de Gestiune",
+        "description": "Sistem ERP personalizat pentru optimizarea proceselor de business și îmbunătățirea productivității.",
+        "tag": "Enterprise"
+      },
+      "3": {
+        "title": "Aplicație Mobilă",
+        "description": "Aplicație de livrare cu geolocalizare și sistem de plată integrat.",
+        "tag": "Mobile"
+      },
+      "4": {
+        "title": "Infrastructură Cloud",
+        "description": "Migrare și optimizare de infrastructură pentru scalabilitate maximă și costuri reduse.",
+        "tag": "Cloud"
+      }
+    }
+  },
+  "about": {
+    "title": "Expertiza Noastră",
+    "subtitle": "O echipă pasionată",
+    "description": "Cu peste 10 ani de experiență, echipa noastră de experți combină creativitatea și rigoarea tehnică pentru a transforma ideile dumneavoastră în soluții digitale performante.",
+    "expertise": {
+      "1": {
+        "title": "Dezvoltare Front-End",
+        "value": "90%"
+      },
+      "2": {
+        "title": "Dezvoltare Back-End",
+        "value": "95%"
+      },
+      "3": {
+        "title": "UX/UI Design",
+        "value": "85%"
+      },
+      "4": {
+        "title": "DevOps & Cloud",
+        "value": "90%"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Testimoniale",
+    "subtitle": "Ce spun clienții noștri",
+    "items": {
+      "1": {
+        "text": "Echipa a transformat viziunea noastră într-o soluție digitală care a depășit toate așteptările. Profesionalism și expertiză tehnică excepționale.",
+        "author": "Marie Dupont",
+        "position": "Director Marketing, TechCorp"
+      },
+      "2": {
+        "text": "Am fost impresionați de capacitatea lor de a înțelege nevoile noastre de business și de a răspunde cu soluții inovatoare și eficiente.",
+        "author": "Jean Martin",
+        "position": "CEO, InnovSoft"
+      },
+      "3": {
+        "text": "Îndrumarea lor a fost prețioasă pe parcursul întregului proiect. Au știut să se adapteze constrângerilor noastre și să propună soluții pertinente.",
+        "author": "Sophie Lefebvre",
+        "position": "CTO, DataFuture"
+      }
+    }
+  },
+  "contact": {
+    "title": "Contactați-ne",
+    "subtitle": "Să discutăm despre proiectul dumneavoastră",
+    "name": "Nume",
+    "email": "Email",
+    "phone": "Telefon",
+    "message": "Mesaj",
+    "subject": "Subiect",
+    "submit": "Trimite",
+    "success": "Mesaj trimis cu succes! Vă vom contacta în curând.",
+    "error": "A apărut o eroare. Vă rugăm încercați din nou."
+  },
+  "footer": {
+    "company": "© 2025 DELIVERY Digital Technology. Toate drepturile rezervate.",
+    "links": {
+      "privacy": "Politica de confidențialitate",
+      "terms": "Condiții de utilizare",
+      "sitemap": "Hartă site"
+    }
+  },
+  "reclamation": {
+    "badge": "Reclamație",
+    "title": "Formular de reclamație",
+    "subtitle": "Luăm în serios preocupările dumneavoastră. Vă rugăm completați formularul de mai jos și vă vom răspunde în cel mai scurt timp.",
+    "qualityCommitment": {
+      "title": "Angajamentul nostru pentru calitate",
+      "intro": "DELIVERY Digital Nice se străduiește să furnizeze servicii de formare care răspund nevoilor și cerințelor clienților săi. Totuși, dacă doriți să ne transmiteți o reclamație:",
+      "contact": "Puteți, oricând, să adresați întrebările, îndoielile și problemele întâmpinate persoanelor dumneavoastră de contact obișnuite, care vor face tot posibilul să vă ofere un răspuns.",
+      "formOption": "Aveți, de asemenea, posibilitatea de a trimite solicitarea folosind formularul de reclamație de mai jos.",
+      "processTitle": "Procedura noastră de tratare",
+      "steps": {
+        "1": "Completați formularul care este trimis automat echipei responsabile de tratarea reclamațiilor",
+        "2": "Confirmăm primirea reclamației dumneavoastră",
+        "3": "Analizăm solicitarea în cel mai scurt timp și evaluăm admisibilitatea acesteia",
+        "4": "Dacă solicitarea este admisibilă, analizăm cauzele reclamației",
+        "5": "Examinăm cu atenție faptele prezentate și efectuăm, dacă este necesar, cercetările necesare. În acest caz, vă ținem la curent cu progresul dosarului",
+        "6": "Vă informăm cu privire la răspunsul nostru, precizând rezultatele investigației și soluțiile pe care le propunem pentru rezolvarea problemei"
+      },
+      "directContact": "Pentru a contacta direct echipa de tratare a reclamațiilor:"
+    },
+    "contactCards": {
+      "email": "Email",
+      "phone": "Telefon",
+      "hours": "Program"
+    },
+    "form": {
+      "firstName": "Prenume",
+      "lastName": "Nume",
+      "email": "Email",
+      "phone": "Telefon",
+      "company": "Companie",
+      "orderNumber": "Număr comandă",
+      "category": "Categorie reclamație",
+      "categoryOptions": {
+        "service": "Calitate serviciu",
+        "product": "Produs/Livrabil",
+        "billing": "Facturare",
+        "support": "Suport tehnic",
+        "training": "Formare",
+        "other": "Altele"
+      },
+      "subject": "Obiectul reclamației",
+      "subjectPlaceholder": "Rezumatul reclamației dumneavoastră",
+      "description": "Descriere detaliată",
+      "descriptionPlaceholder": "Vă rugăm descrieți în detaliu reclamația dumneavoastră...",
+      "gdpr": "Datele dumneavoastră sunt prelucrate în conformitate cu politica noastră de confidențialitate și GDPR. Ne angajăm să vă răspundem în termen de 48 de ore lucrătoare.",
+      "captcha": "Verificare de securitate",
+      "captchaRequired": "Vă rugăm completați verificarea de securitate",
+      "submit": "Trimite reclamația",
+      "submitting": "Se trimite..."
+    },
+    "procedure": {
+      "title": "Procedură de tratare a reclamațiilor",
+      "steps": {
+        "1": "Primire și confirmare în 24h",
+        "2": "Analiza reclamației de către echipa noastră",
+        "3": "Răspuns detaliat în 48h lucrătoare",
+        "4": "Monitorizare și rezolvare a problemei"
+      },
+      "mediator": "Dacă nu sunteți mulțumit de răspunsul nostru, puteți contacta responsabilul nostru de calitate sau apela la un mediator de consum."
+    },
+    "success": {
+      "title": "Reclamație trimisă cu succes",
+      "message": "Am primit reclamația dumneavoastră. Echipa noastră vă va contacta în cel mai scurt timp pentru a trata solicitarea.",
+      "responseTime": "Timp estimat de răspuns: 24-48 ore lucrătoare",
+      "backHome": "Înapoi la pagina principală"
+    }
+  },
+  "invoice": {
+    "title": "Factură de avans",
+    "prefix": "FACTURĂ",
+    "issuedOn": "Emisă la",
+    "dueOn": "Scadență",
+    "relatedQuote": "Ofertă asociată",
+    "for": "În atenția",
+    "service": "Prestație",
+    "amountExclTax": "Sumă fără TVA",
+    "lineDescription": "{{percent}}% din {{title}} (ref. {{quoteRef}})",
+    "subtotal": "Subtotal fără TVA",
+    "vat": "TVA ({{rate}}%)",
+    "netToPay": "Total de plată",
+    "bankDetails": "Coordonate bancare",
+    "beneficiary": "Beneficiar",
+    "bank": "Bancă",
+    "iban": "IBAN",
+    "bicSwift": "BIC / SWIFT",
+    "transferRef": "Referință de indicat în transfer",
+    "mailSubject": "Factură de avans {{invoiceRef}} - {{percent}}% din oferta {{quoteRef}}",
+    "mailThanks": "Vă mulțumim pentru încredere.",
+    "mailBody": "În urma semnării ofertei <strong>{{quoteRef}}</strong>, vă rugăm găsiți atașată factura de avans <strong>{{invoiceRef}}</strong>.",
+    "mailAmount": "Sumă de achitat: <strong>{{amount}}</strong> ({{percent}}% din total).",
+    "mailRef": "Coordonate bancare și referință transfer în factură. Scadență: <strong>{{dueDate}}</strong>.",
+    "mailStart": "La primirea plății, începem proiectul."
+  },
+  "emails": {
+    "acceptedSubject": "[ACCEPTATĂ] Oferta {{quoteRef}} semnată de {{signerName}}",
+    "acceptedBody": "Oferta <strong>{{quoteRef}}</strong> tocmai a fost acceptată de <strong>{{signerName}}</strong> ({{signerEmail}}).",
+    "acceptedMeta": "IP: {{ip}} - User Agent: {{userAgent}}",
+    "rejectedSubject": "[REFUZATĂ] Oferta {{quoteRef}}",
+    "rejectedBody": "Oferta <strong>{{quoteRef}}</strong> a fost refuzată.",
+    "rejectedReason": "Motiv: {{reason}}",
+    "rejectedNoReason": "(neprecizat)"
+  }
+}
