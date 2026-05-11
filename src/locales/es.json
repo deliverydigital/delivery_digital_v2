@@ -15,10 +15,10 @@
     "ciiBadge": "Certificado CII · hasta 20% reembolsado",
     "stack": "Stack",
     "cta": {
-      "start": "Hablar de un proyecto",
-      "learn": "Más información",
+      "start": "Hablar sobre un proyecto",
+      "learn": "Saber más",
       "trainings": "Ver todas las formaciones",
-      "learner": "Área del alumno"
+      "learner": "Área de formación"
     },
     "web": {
       "title": "Soluciones",
@@ -28,28 +28,28 @@
     "mobile": {
       "title": "Apps",
       "accent": "nativas",
-      "subhead": "iOS y Android. Rendimiento nativo, diseño cuidado, despliegue en App Store y Play Store llave en mano."
+      "subhead": "iOS y Android. Rendimiento nativo, diseño cuidado, despliegue llave en mano en App Store y Play Store."
     },
     "enterprise": {
       "title": "Software",
-      "accent": "empresarial",
+      "accent": "corporativo",
       "subhead": "CRM, ERP, plataformas B2B. Tus procesos automatizados, tu productividad potenciada."
     },
     "cloud": {
       "title": "Cloud",
       "accent": "& DevOps",
-      "subhead": "Alojamiento, monitorización, escalado automático. Una infraestructura que aguanta la carga, día y noche."
+      "subhead": "Hosting, monitorización, escalado automático. Una infraestructura que soporta la carga, día y noche."
     },
     "training": {
       "title": "Formación",
-      "accent": "profesional",
+      "accent": "profesional.",
       "subhead": "Centro certificado Qualiopi. Aprovecha la financiación OPCO."
     }
   },
   "formationPage": {
     "eyebrow": "Centro certificado Qualiopi",
     "title": "Formación",
-    "accent": "profesional",
+    "accent": "profesional.",
     "subhead": "Centro certificado Qualiopi. Aprovecha la financiación OPCO."
   },
   "heroDark": {
@@ -62,7 +62,7 @@
     "titleIntl": "Construyamos tu próximo producto digital",
     "subtitleIntl": "Sitios web, aplicaciones móviles, SaaS, CRM, ERP. Código a medida, entregado en pocas semanas.",
     "cta": {
-      "project": "Hablar de un proyecto"
+      "project": "Hablar sobre un proyecto"
     },
     "badges": {
       "digital": "Servicios Digitales"
@@ -77,11 +77,11 @@
     },
     "mobile": {
       "title": "Aplicaciones Móviles",
-      "description": "Aplicaciones nativas y multiplataforma para iOS y Android con una experiencia de usuario óptima."
+      "description": "Aplicaciones nativas y multiplataforma para iOS y Android con experiencia de usuario óptima."
     },
     "enterprise": {
       "title": "Soluciones Empresariales",
-      "description": "Software a medida, automatización de procesos e integraciones de sistemas."
+      "description": "Software a medida, automatización de procesos e integración de sistemas."
     },
     "cloud": {
       "title": "Servicios Cloud",
@@ -89,7 +89,7 @@
     },
     "training": {
       "title": "Formación Profesional",
-      "description": "Centro certificado Qualiopi. Programas en desarrollo web, móvil y DevOps, financiables mediante tu OPCO."
+      "description": "Centro certificado Qualiopi. Programas de desarrollo web, móvil y DevOps, financiables mediante tu OPCO."
     }
   },
   "portfolio": {
@@ -99,7 +99,7 @@
     "projects": {
       "1": {
         "title": "Plataforma E-commerce",
-        "description": "Solución completa con gestión de stock, pagos seguros y experiencia de cliente optimizada.",
+        "description": "Solución completa con gestión de stocks, pagos seguros y experiencia de cliente optimizada.",
         "tag": "Web"
       },
       "2": {
@@ -133,7 +133,7 @@
         "value": "95%"
       },
       "3": {
-        "title": "Diseño UX/UI",
+        "title": "UX/UI Design",
         "value": "85%"
       },
       "4": {
@@ -148,17 +148,17 @@
     "items": {
       "1": {
         "text": "El equipo transformó nuestra visión en una solución digital que superó todas nuestras expectativas. Profesionalidad y experiencia técnica excepcionales.",
-        "author": "María López",
+        "author": "María Dupont",
         "position": "Directora de Marketing, TechCorp"
       },
       "2": {
         "text": "Nos impresionó su capacidad para comprender nuestras necesidades empresariales y responder con soluciones innovadoras y eficaces.",
-        "author": "Juan Martínez",
+        "author": "Juan Martín",
         "position": "CEO, InnovSoft"
       },
       "3": {
         "text": "Su acompañamiento fue valioso durante todo el proyecto. Supieron adaptarse a nuestras limitaciones y proponer soluciones pertinentes.",
-        "author": "Sofía García",
+        "author": "Sofía Lefebvre",
         "position": "CTO, DataFuture"
       }
     }
@@ -186,22 +186,22 @@
   "reclamation": {
     "badge": "Reclamación",
     "title": "Formulario de reclamación",
-    "subtitle": "Nos tomamos tus preocupaciones en serio. Rellena el formulario a continuación y te responderemos lo antes posible.",
+    "subtitle": "Nos tomamos muy en serio tus inquietudes. Por favor, rellena el formulario a continuación y te responderemos lo antes posible.",
     "qualityCommitment": {
       "title": "Nuestro compromiso de calidad",
-      "intro": "DELIVERY Digital Nice se esfuerza por ofrecer servicios de formación que satisfagan las necesidades y requisitos de sus clientes. No obstante, si deseas presentarnos una reclamación:",
-      "contact": "Puedes, en cualquier momento, dirigir tus preguntas, dudas y problemas encontrados a tus contactos habituales, que harán todo lo posible para darte una respuesta.",
-      "formOption": "También tienes la opción de enviar tu solicitud utilizando el formulario de reclamación a continuación.",
+      "intro": "DELIVERY Digital Nice se esfuerza por ofrecer servicios de formación que respondan a las necesidades y exigencias de sus clientes. Sin embargo, si deseas presentarnos una reclamación:",
+      "contact": "Puedes, en cualquier momento, dirigir tus preguntas, dudas y problemas a tus contactos habituales, que harán todo lo posible por darte una respuesta.",
+      "formOption": "También tienes la posibilidad de enviar tu solicitud utilizando el formulario de reclamación a continuación.",
       "processTitle": "Nuestro proceso de tramitación",
       "steps": {
         "1": "Rellenas el formulario que se envía automáticamente al equipo encargado del tratamiento de reclamaciones",
         "2": "Acusamos recibo de tu reclamación",
         "3": "Analizamos tu solicitud lo antes posible y evaluamos su admisibilidad",
         "4": "Si tu solicitud es admisible, analizamos las causas de la reclamación",
-        "5": "Examinamos detenidamente los hechos presentados y realizamos, si es necesario, las investigaciones pertinentes. En este caso, te mantenemos informado del avance del caso",
-        "6": "Te informamos de nuestra respuesta, especificando los resultados de nuestra investigación y las soluciones que proponemos para resolver el problema"
+        "5": "Examinamos detenidamente los hechos presentados y realizamos, si es necesario, las investigaciones oportunas. En ese caso, te mantenemos informado del avance del expediente",
+        "6": "Te informamos de nuestra respuesta, precisando los resultados de nuestra investigación y las soluciones que proponemos para resolver el problema"
       },
-      "directContact": "Para contactar directamente con el equipo de tramitación de reclamaciones:"
+      "directContact": "Para contactar directamente con el equipo de tratamiento de reclamaciones:"
     },
     "contactCards": {
       "email": "Email",
@@ -235,7 +235,7 @@
       "submitting": "Enviando..."
     },
     "procedure": {
-      "title": "Procedimiento de tramitación de reclamaciones",
+      "title": "Procedimiento de tratamiento de reclamaciones",
       "steps": {
         "1": "Recepción y acuse de recibo en 24h",
         "2": "Análisis de tu reclamación por nuestro equipo",
@@ -246,7 +246,7 @@
     },
     "success": {
       "title": "Reclamación enviada con éxito",
-      "message": "Hemos recibido tu reclamación. Nuestro equipo te contactará lo antes posible para tramitar tu solicitud.",
+      "message": "Hemos recibido tu reclamación. Nuestro equipo se pondrá en contacto contigo lo antes posible para tramitar tu solicitud.",
       "responseTime": "Tiempo de respuesta estimado: 24-48 horas laborables",
       "backHome": "Volver al inicio"
     }
@@ -275,7 +275,7 @@
     "mailBody": "Tras la firma del presupuesto <strong>{{quoteRef}}</strong>, adjuntamos la factura de anticipo <strong>{{invoiceRef}}</strong>.",
     "mailAmount": "Importe a abonar: <strong>{{amount}}</strong> ({{percent}}% del total).",
     "mailRef": "Datos bancarios y referencia de transferencia en la factura. Vencimiento: <strong>{{dueDate}}</strong>.",
-    "mailStart": "Al recibir el pago, iniciamos el proyecto."
+    "mailStart": "Al recibir el pago, iniciaremos el proyecto."
   },
   "emails": {
     "acceptedSubject": "[ACEPTADO] Presupuesto {{quoteRef}} firmado por {{signerName}}",
@@ -285,5 +285,34 @@
     "rejectedBody": "El presupuesto <strong>{{quoteRef}}</strong> ha sido rechazado.",
     "rejectedReason": "Motivo: {{reason}}",
     "rejectedNoReason": "(no especificado)"
-  }
+  },
+  "cii": {
+    "title": "Crédito Fiscal Innovación",
+    "close": "Cerrar",
+    "exampleTitle": "Ejemplo concreto",
+    "exampleBody": "Para un proyecto de 20.000 €: recuperas 4.000 € (20%). Coste final: 16.000 €. Límite anual: 400.000 € de gastos, es decir, 80.000 € de crédito máximo.",
+    "eligibleTitle": "Proyectos elegibles",
+    "eligibleBody": "Aplicaciones web y móviles · software a medida · inteligencia artificial · soluciones innovadoras para tu empresa.",
+    "benefitTitle": "Cómo beneficiarse",
+    "benefitBody": "Inviertes con nosotros · proporcionamos todos los justificantes · recibes tu crédito o reembolso.",
+    "taxLine": "Si pagas impuestos: deducción directa.",
+    "refundLine": "Si no: reembolso por el Estado."
+  },
+  "common": {
+    "discussProject": "Hablemos de tu proyecto",
+    "discussProjectArrow": "Hablemos de tu proyecto ›",
+    "chooseLanguage": "Elegir idioma",
+    "startConversation": "Iniciar conversación"
+  },
+  "chat": {
+    "typePlaceholder": "Escribe tu mensaje",
+    "typing": "DELIVERY Digital está escribiendo...",
+    "describeIdea": "Describe tu idea. Un experto te responderá en 24h.",
+    "letsTalk": "Hablemos de tu proyecto.",
+    "logout": "Cerrar sesión",
+    "confidential": "Tus mensajes son confidenciales y se utilizan únicamente para tu proyecto.",
+    "noConv": "Aún no hay conversaciones.",
+    "aiUnderstands": "Nuestro agente IA comprende tu necesidad. Un experto te responderá en 24h."
+  },
+  "discuter": "Hablar sobre un proyecto"
 }

@@ -3,7 +3,7 @@
     "home": "Início",
     "services": "Serviços",
     "portfolio": "Projetos",
-    "about": "Sobre nós",
+    "about": "Sobre",
     "contact": "Contacto",
     "training": "Formação",
     "quote": "Orçamento",
@@ -15,10 +15,10 @@
     "ciiBadge": "Certificado CII · até 20% reembolsado",
     "stack": "Stack",
     "cta": {
-      "start": "Falar sobre um projeto",
+      "start": "Discutir um projeto",
       "learn": "Saber mais",
       "trainings": "Ver todas as formações",
-      "learner": "Área do formando"
+      "learner": "Área de formandos"
     },
     "web": {
       "title": "Soluções",
@@ -28,12 +28,12 @@
     "mobile": {
       "title": "Apps",
       "accent": "nativas",
-      "subhead": "iOS e Android. Performance nativa, design cuidado, implementação na App Store e Play Store chave-na-mão."
+      "subhead": "iOS e Android. Performance nativa, design cuidado, implementação App Store e Play Store chave-na-mão."
     },
     "enterprise": {
       "title": "Software",
       "accent": "empresarial",
-      "subhead": "CRM, ERP, plataformas B2B. Os seus processos automatizados, a sua produtividade potenciada."
+      "subhead": "CRM, ERP, plataformas B2B. Os seus processos automatizados, a sua produtividade otimizada."
     },
     "cloud": {
       "title": "Cloud",
@@ -43,14 +43,14 @@
     "training": {
       "title": "Formação",
       "accent": "profissional.",
-      "subhead": "Organismo certificado Qualiopi. Beneficie do financiamento OPCO."
+      "subhead": "Organismo certificado Qualiopi. Beneficie de financiamento OPCO."
     }
   },
   "formationPage": {
     "eyebrow": "Centro certificado Qualiopi",
     "title": "Formação",
     "accent": "profissional.",
-    "subhead": "Organismo certificado Qualiopi. Beneficie do financiamento OPCO."
+    "subhead": "Organismo certificado Qualiopi. Beneficie de financiamento OPCO."
   },
   "heroDark": {
     "viewServices": "Ver os nossos serviços",
@@ -58,11 +58,11 @@
   },
   "hero": {
     "title": "O código que impulsiona as suas ambições, 20% reembolsados via CII",
-    "subtitle": "Sites web, aplicações móveis, SaaS, CRM, ERP à medida. Agência certificada Crédito Imposto Inovação - até 80 000 € de crédito anual para PME elegíveis.",
+    "subtitle": "Sites web, aplicações móveis, SaaS, CRM, ERP à medida. Agência certificada Crédito Fiscal Inovação - até 80 000 € de crédito anual para PME elegíveis.",
     "titleIntl": "Vamos construir o seu próximo produto digital",
     "subtitleIntl": "Sites web, aplicações móveis, SaaS, CRM, ERP. Código à medida, entregue em poucas semanas.",
     "cta": {
-      "project": "Falar sobre um projeto"
+      "project": "Discutir um projeto"
     },
     "badges": {
       "digital": "Serviços Digitais"
@@ -99,13 +99,13 @@
     "projects": {
       "1": {
         "title": "Plataforma E-commerce",
-        "description": "Solução completa com gestão de stock, pagamentos seguros e experiência de cliente otimizada.",
+        "description": "Solução completa com gestão de stocks, pagamentos seguros e experiência de cliente otimizada.",
         "tag": "Web"
       },
       "2": {
         "title": "Aplicação de Gestão",
-        "description": "Sistema ERP personalizado para otimizar os processos empresariais e melhorar a produtividade.",
-        "tag": "Empresa"
+        "description": "Sistema ERP personalizado para otimizar processos empresariais e melhorar a produtividade.",
+        "tag": "Empresarial"
       },
       "3": {
         "title": "Aplicação Móvel",
@@ -114,7 +114,7 @@
       },
       "4": {
         "title": "Infraestrutura Cloud",
-        "description": "Migração e otimização de infraestrutura para uma escalabilidade máxima e custos reduzidos.",
+        "description": "Migração e otimização de infraestrutura para escalabilidade máxima e custos reduzidos.",
         "tag": "Cloud"
       }
     }
@@ -122,7 +122,7 @@
   "about": {
     "title": "A Nossa Competência",
     "subtitle": "Uma equipa apaixonada",
-    "description": "Com mais de 10 anos de experiência, a nossa equipa de especialistas combina criatividade e rigor técnico para transformar as suas ideias em soluções digitais de elevado desempenho.",
+    "description": "Com mais de 10 anos de experiência, a nossa equipa de especialistas combina criatividade e rigor técnico para transformar as suas ideias em soluções digitais de alto desempenho.",
     "expertise": {
       "1": {
         "title": "Desenvolvimento Front-End",
@@ -147,18 +147,18 @@
     "subtitle": "O que dizem os nossos clientes",
     "items": {
       "1": {
-        "text": "A equipa transformou a nossa visão numa solução digital que superou todas as nossas expectativas. Profissionalismo e competência técnica excecionais.",
-        "author": "Marie Dupont",
+        "text": "A equipa transformou a nossa visão numa solução digital que superou todas as nossas expetativas. Profissionalismo e competência técnica excecionais.",
+        "author": "Maria Silva",
         "position": "Diretora de Marketing, TechCorp"
       },
       "2": {
-        "text": "Ficámos impressionados com a sua capacidade de compreender as nossas necessidades empresariais e responder com soluções inovadoras e eficazes.",
-        "author": "Jean Martin",
+        "text": "Ficámos impressionados com a capacidade deles em compreender as nossas necessidades de negócio e responder com soluções inovadoras e eficazes.",
+        "author": "João Santos",
         "position": "CEO, InnovSoft"
       },
       "3": {
-        "text": "O seu acompanhamento foi precioso ao longo de todo o projeto. Souberam adaptar-se às nossas limitações e propor soluções pertinentes.",
-        "author": "Sophie Lefebvre",
+        "text": "O acompanhamento foi precioso ao longo de todo o projeto. Souberam adaptar-se às nossas restrições e propor soluções pertinentes.",
+        "author": "Sofia Costa",
         "position": "CTO, DataFuture"
       }
     }
@@ -178,27 +178,27 @@
   "footer": {
     "company": "© 2025 DELIVERY Digital Technology. Todos os direitos reservados.",
     "links": {
-      "privacy": "Política de privacidade",
-      "terms": "Condições de utilização",
-      "sitemap": "Mapa do site"
+      "privacy": "Política de Privacidade",
+      "terms": "Condições de Utilização",
+      "sitemap": "Mapa do Site"
     }
   },
   "reclamation": {
     "badge": "Reclamação",
     "title": "Formulário de reclamação",
-    "subtitle": "Levamos as suas preocupações a sério. Por favor, preencha o formulário abaixo e responderemos o mais brevemente possível.",
+    "subtitle": "Levamos as suas preocupações a sério. Por favor, preencha o formulário abaixo e responderemos o mais rapidamente possível.",
     "qualityCommitment": {
       "title": "O nosso compromisso de qualidade",
-      "intro": "A DELIVERY Digital Nice esforça-se por fornecer serviços de formação que respondam às necessidades e exigências dos seus clientes. No entanto, se desejar submeter-nos uma reclamação:",
+      "intro": "A DELIVERY Digital Nice esforça-se por fornecer serviços de formação que respondam às necessidades e exigências dos seus clientes. No entanto, se desejar submeter uma reclamação:",
       "contact": "Pode, a qualquer momento, dirigir as suas questões, dúvidas e problemas encontrados aos seus contactos habituais, que farão tudo o que estiver ao seu alcance para lhe fornecer uma resposta.",
-      "formOption": "Tem igualmente a possibilidade de enviar o seu pedido utilizando o formulário de reclamação abaixo.",
+      "formOption": "Tem também a possibilidade de enviar o seu pedido utilizando o formulário de reclamação abaixo.",
       "processTitle": "O nosso processo de tratamento",
       "steps": {
-        "1": "Preenche o formulário que é automaticamente enviado à equipa responsável pelo tratamento de reclamações",
+        "1": "Preenche o formulário que é automaticamente enviado para a equipa responsável pelo tratamento de reclamações",
         "2": "Acusamos a receção da sua reclamação",
-        "3": "Analisamos o seu pedido com a maior brevidade e avaliamos a sua admissibilidade",
+        "3": "Analisamos o seu pedido o mais rapidamente possível e avaliamos a sua admissibilidade",
         "4": "Se o seu pedido for admissível, analisamos as causas da reclamação",
-        "5": "Examinamos atentamente os factos apresentados e efetuamos, se necessário, as pesquisas necessárias. Nesse caso, mantemo-lo informado do andamento do processo",
+        "5": "Examinamos atentamente os factos apresentados e efetuamos, se necessário, as pesquisas necessárias. Neste caso, mantemo-lo informado sobre o progresso do processo",
         "6": "Informamo-lo da nossa resposta, especificando os resultados da nossa investigação e as soluções que propomos para resolver o problema"
       },
       "directContact": "Para contactar diretamente a equipa de tratamento de reclamações:"
@@ -228,7 +228,7 @@
       "subjectPlaceholder": "Resumo da sua reclamação",
       "description": "Descrição detalhada",
       "descriptionPlaceholder": "Por favor, descreva em detalhe a sua reclamação...",
-      "gdpr": "Os seus dados são tratados em conformidade com a nossa política de privacidade e o RGPD. Comprometemo-nos a responder-lhe no prazo de 48 horas úteis.",
+      "gdpr": "Os seus dados são tratados em conformidade com a nossa política de privacidade e o RGPD. Comprometemo-nos a responder-lhe num prazo de 48 horas úteis.",
       "captcha": "Verificação de segurança",
       "captchaRequired": "Por favor, complete a verificação de segurança",
       "submit": "Enviar reclamação",
@@ -246,15 +246,15 @@
     },
     "success": {
       "title": "Reclamação enviada com sucesso",
-      "message": "Recebemos a sua reclamação. A nossa equipa entrará em contacto consigo o mais brevemente possível para tratar o seu pedido.",
+      "message": "Recebemos a sua reclamação. A nossa equipa contactá-lo-á o mais rapidamente possível para tratar do seu pedido.",
       "responseTime": "Tempo de resposta estimado: 24-48 horas úteis",
       "backHome": "Voltar ao início"
     }
   },
   "invoice": {
-    "title": "Fatura de adiantamento",
+    "title": "Fatura de sinal",
     "prefix": "FATURA",
-    "issuedOn": "Emitida em",
+    "issuedOn": "Emitida a",
     "dueOn": "Vencimento",
     "relatedQuote": "Orçamento associado",
     "for": "À atenção de",
@@ -264,17 +264,17 @@
     "subtotal": "Subtotal s/ IVA",
     "vat": "IVA ({{rate}}%)",
     "netToPay": "Total a pagar",
-    "bankDetails": "Coordenadas bancárias",
+    "bankDetails": "Dados bancários",
     "beneficiary": "Beneficiário",
     "bank": "Banco",
     "iban": "IBAN",
     "bicSwift": "BIC / SWIFT",
     "transferRef": "Referência a indicar na transferência",
-    "mailSubject": "Fatura de adiantamento {{invoiceRef}} - {{percent}}% do orçamento {{quoteRef}}",
+    "mailSubject": "Fatura de sinal {{invoiceRef}} - {{percent}}% do orçamento {{quoteRef}}",
     "mailThanks": "Obrigado pela sua confiança.",
-    "mailBody": "Na sequência da assinatura do orçamento <strong>{{quoteRef}}</strong>, encontrará em anexo a fatura de adiantamento <strong>{{invoiceRef}}</strong>.",
+    "mailBody": "Na sequência da assinatura do orçamento <strong>{{quoteRef}}</strong>, queira encontrar em anexo a fatura de sinal <strong>{{invoiceRef}}</strong>.",
     "mailAmount": "Montante a liquidar: <strong>{{amount}}</strong> ({{percent}}% do total).",
-    "mailRef": "Coordenadas bancárias e referência de transferência na fatura. Vencimento: <strong>{{dueDate}}</strong>.",
+    "mailRef": "Dados bancários e referência de transferência na fatura. Vencimento: <strong>{{dueDate}}</strong>.",
     "mailStart": "Após receção do pagamento, iniciamos o projeto."
   },
   "emails": {
@@ -285,5 +285,34 @@
     "rejectedBody": "O orçamento <strong>{{quoteRef}}</strong> foi recusado.",
     "rejectedReason": "Motivo: {{reason}}",
     "rejectedNoReason": "(não especificado)"
-  }
+  },
+  "cii": {
+    "title": "Crédito Fiscal Inovação",
+    "close": "Fechar",
+    "exampleTitle": "Exemplo concreto",
+    "exampleBody": "Para um projeto de 20 000 €: recupera 4 000 € (20%). Custo final: 16 000 €. Limite anual: 400 000 € de despesas, ou seja, 80 000 € de crédito máximo.",
+    "eligibleTitle": "Projetos elegíveis",
+    "eligibleBody": "Aplicações web e móveis · software à medida · inteligência artificial · soluções inovadoras para a sua empresa.",
+    "benefitTitle": "Como beneficiar",
+    "benefitBody": "Investe connosco · fornecemos todos os comprovativos · recebe o seu crédito ou reembolso.",
+    "taxLine": "Se pagar impostos: dedução direta.",
+    "refundLine": "Caso contrário: reembolso pelo Estado."
+  },
+  "common": {
+    "discussProject": "Vamos discutir o seu projeto",
+    "discussProjectArrow": "Vamos discutir o seu projeto ›",
+    "chooseLanguage": "Escolher idioma",
+    "startConversation": "Iniciar a conversa"
+  },
+  "chat": {
+    "typePlaceholder": "Digite a sua mensagem",
+    "typing": "DELIVERY Digital está a escrever...",
+    "describeIdea": "Descreva a sua ideia. Um especialista responde em 24h.",
+    "letsTalk": "Vamos falar sobre o seu projeto.",
+    "logout": "Terminar sessão",
+    "confidential": "As suas mensagens permanecem confidenciais e servem apenas para o seu projeto.",
+    "noConv": "Ainda sem conversas.",
+    "aiUnderstands": "O nosso agente IA compreende a sua necessidade. Um especialista responde em 24h."
+  },
+  "discuter": "Discutir um projeto"
 }

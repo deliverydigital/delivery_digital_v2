@@ -250,5 +250,69 @@
       "responseTime": "Estimated response time: 24-48 business hours",
       "backHome": "Back to Home"
     }
-  }
+  },
+  "emails": {
+    "acceptedSubject": "[ACCEPTED] Quote {{quoteRef}} signed by {{signerName}}",
+    "acceptedBody": "Quote <strong>{{quoteRef}}</strong> has just been accepted.",
+    "acceptedMeta": "IP: {{ip}} · User Agent: {{userAgent}}",
+    "rejectedSubject": "[REJECTED] Quote {{quoteRef}}",
+    "rejectedBody": "Quote <strong>{{quoteRef}}</strong> has been rejected.",
+    "rejectedReason": "Reason: {{reason}}",
+    "rejectedNoReason": "(not specified)"
+  },
+  "invoice": {
+    "prefix": "INVOICE",
+    "title": "Deposit invoice",
+    "for": "Attention to",
+    "relatedQuote": "Related quote",
+    "issuedOn": "Issued on",
+    "dueOn": "Due date",
+    "service": "Service",
+    "lineDescription": "{{percent}}% of {{title}} (ref. {{quoteRef}})",
+    "subtotal": "Subtotal excl. VAT",
+    "amountExclTax": "Amount excl. VAT",
+    "vat": "VAT ({{rate}}%)",
+    "netToPay": "Net to pay",
+    "bankDetails": "Bank details",
+    "beneficiary": "Beneficiary",
+    "iban": "IBAN",
+    "bicSwift": "BIC / SWIFT",
+    "bank": "Bank",
+    "transferRef": "Transfer reference to include",
+    "mailSubject": "Deposit invoice {{invoiceRef}} - {{percent}}% of quote {{quoteRef}}",
+    "mailBody": "Following the signature of quote <strong>{{quoteRef}}</strong>, please find attached the deposit invoice.",
+    "mailAmount": "Amount to pay: <strong>{{amount}}</strong> ({{percent}}% of total).",
+    "mailRef": "Bank details and transfer reference are in the attached invoice.",
+    "mailStart": "Upon receipt of payment, we'll start the project.",
+    "mailThanks": "Thank you for your trust."
+  },
+  "cii": {
+    "title": "Innovation Tax Credit",
+    "close": "Close",
+    "exampleTitle": "Concrete example",
+    "exampleBody": "For a €20,000 project: you recover €4,000 (20%). Final cost: €16,000. Annual cap: €400,000 in expenses, i.e. up to €80,000 in credit.",
+    "eligibleTitle": "Eligible projects",
+    "eligibleBody": "Web and mobile applications · custom software · artificial intelligence · innovative solutions for your business.",
+    "benefitTitle": "How to benefit",
+    "benefitBody": "You invest with us · we provide all supporting documents · you receive your credit or refund.",
+    "taxLine": "If you pay taxes: direct deduction.",
+    "refundLine": "Otherwise: refund from the State."
+  },
+  "common": {
+    "discussProject": "Let's discuss your project",
+    "discussProjectArrow": "Let's discuss your project ›",
+    "chooseLanguage": "Choose language",
+    "startConversation": "Start the conversation"
+  },
+  "chat": {
+    "typePlaceholder": "Type your message",
+    "typing": "DELIVERY Digital is typing...",
+    "describeIdea": "Describe your idea. An expert will get back to you within 24h.",
+    "letsTalk": "Let's talk about your project.",
+    "logout": "Log out",
+    "confidential": "Your messages stay confidential and are only used for your project.",
+    "noConv": "No conversation yet.",
+    "aiUnderstands": "Our AI agent understands your need. An expert gets back to you within 24h."
+  },
+  "discuter": "Discuss a project"
 }

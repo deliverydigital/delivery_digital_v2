@@ -1,9 +1,11 @@
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, MessageCircle } from 'lucide-react';
 import DigitalClientSpace from './DigitalClientSpace';
 
 const ProjectSubmission = () => {
+  const { t } = useTranslation();
   const [isDigitalSpaceOpen, setIsDigitalSpaceOpen] = useState(false);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ const ProjectSubmission = () => {
             className="btn btn-primary shadow-lg inline-flex items-center"
           >
             <Plus className="h-5 w-5 mr-2" />
-            Discuter d'un projet
+            {t("discuter")}
           </a>
         </motion.div>
       </section>

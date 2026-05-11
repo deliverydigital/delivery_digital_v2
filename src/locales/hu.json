@@ -6,24 +6,24 @@
     "about": "Rólunk",
     "contact": "Kapcsolat",
     "training": "Képzés",
-    "quote": "Ajánlat",
+    "quote": "Árajánlat",
     "formationBtn": "Képzés",
     "solutionsBtn": "Megoldások"
   },
   "tiles": {
-    "eyebrow": "Szaktudásunk",
-    "ciiBadge": "CII tanúsítvánnyal · akár 20% visszatérítés",
+    "eyebrow": "Szakterületeink",
+    "ciiBadge": "CII tanúsítvány · akár 20% visszatérítés",
     "stack": "Stack",
     "cta": {
-      "start": "Projektről beszélünk",
-      "learn": "Tudjon meg többet",
+      "start": "Projektről beszélgetni",
+      "learn": "Bővebben",
       "trainings": "Összes képzés megtekintése",
       "learner": "Tanulói terület"
     },
     "web": {
-      "title": "Webes",
+      "title": "Web",
       "accent": "megoldások",
-      "subhead": "SaaS, dashboardok és testreszabott webes alkalmazások a legjobb technológiákkal."
+      "subhead": "SaaS, dashboardok és testreszabott webalkalmazások a legjobb technológiákkal."
     },
     "mobile": {
       "title": "Natív",
@@ -33,36 +33,36 @@
     "enterprise": {
       "title": "Üzleti",
       "accent": "szoftverek",
-      "subhead": "CRM, ERP, B2B platformok. Automatizált folyamatok, megnövelt termelékenység."
+      "subhead": "CRM, ERP, B2B platformok. Automatizált folyamatok, növelt termelékenység."
     },
     "cloud": {
       "title": "Cloud",
       "accent": "& DevOps",
-      "subhead": "Tárhely, monitoring, automatikus skálázás. Infrastruktúra, amely bírja a terhelést éjjel-nappal."
+      "subhead": "Hosting, monitoring, automatikus skálázás. Infrastruktúra, amely bírja a terhelést éjjel-nappal."
     },
     "training": {
       "title": "Szakmai",
       "accent": "képzés.",
-      "subhead": "Qualiopi tanúsítvánnyal rendelkező szervezet. Élvezze az OPCO finanszírozást."
+      "subhead": "Qualiopi tanúsított szervezet. Élvezze az OPCO finanszírozást."
     }
   },
   "formationPage": {
-    "eyebrow": "Qualiopi tanúsítvánnyal rendelkező központ",
+    "eyebrow": "Qualiopi tanúsított központ",
     "title": "Szakmai",
     "accent": "képzés.",
-    "subhead": "Qualiopi tanúsítvánnyal rendelkező szervezet. Élvezze az OPCO finanszírozást."
+    "subhead": "Qualiopi tanúsított szervezet. Élvezze az OPCO finanszírozást."
   },
   "heroDark": {
     "viewServices": "Szolgáltatásaink megtekintése",
     "trainingPro": "Szakmai képzés"
   },
   "hero": {
-    "title": "A kód, ami felgyorsítja ambícióit, 20%-os CII visszatérítéssel",
-    "subtitle": "Weboldalak, mobil alkalmazások, SaaS, CRM, egyedi ERP. CII Innováció adókedvezmény tanúsítvánnyal – akár évi 80 000 € adókedvezmény a jogosult KKV-k számára.",
+    "title": "A kód, amely előreviszi ambícióit, 20% visszatérítés CII révén",
+    "subtitle": "Weboldalak, mobilalkalmazások, SaaS, CRM, ERP testreszabva. Innovációs Adókedvezmény tanúsított ügynökség - akár évi 80 000 € kedvezmény jogosult KKV-k számára.",
     "titleIntl": "Építsük meg következő digitális termékét",
-    "subtitleIntl": "Weboldalak, mobil alkalmazások, SaaS, CRM, ERP. Egyedi kód, heteken belül leszállítva.",
+    "subtitleIntl": "Weboldalak, mobilalkalmazások, SaaS, CRM, ERP. Testreszabott kód, heteken belül szállítva.",
     "cta": {
-      "project": "Projektről beszélünk"
+      "project": "Projektről beszélgetni"
     },
     "badges": {
       "digital": "Digitális Szolgáltatások"
@@ -70,26 +70,26 @@
   },
   "services": {
     "title": "Szolgáltatásaink",
-    "subtitle": "Igényeire szabott megoldások",
+    "subtitle": "Az Ön igényeihez igazított megoldások",
     "web": {
       "title": "Webfejlesztés",
-      "description": "Bemutatkozó weboldalak, e-kereskedelmi platformok és progresszív webes alkalmazások a legújabb technológiákkal."
+      "description": "Bemutatkozó oldalak, e-kereskedelem és progresszív webalkalmazások a legújabb technológiákkal."
     },
     "mobile": {
-      "title": "Mobil alkalmazások",
-      "description": "Natív és többplatformos alkalmazások iOS-re és Androidra optimális felhasználói élménnyel."
+      "title": "Mobilalkalmazások",
+      "description": "Natív és cross-platform alkalmazások iOS-re és Androidra optimális felhasználói élménnyel."
     },
     "enterprise": {
       "title": "Vállalati megoldások",
-      "description": "Egyedi szoftverek, folyamatautomatizálás és rendszerintegrációk."
+      "description": "Testreszabott szoftverek, folyamatautomatizálás és rendszerintegrációk."
     },
     "cloud": {
       "title": "Cloud szolgáltatások",
-      "description": "Migráció, architektúra és alkalmazások felhőbe telepítése biztonságosan és nagy teljesítménnyel."
+      "description": "Migráció, architektúra és alkalmazások telepítése a felhőbe biztonsággal és teljesítménnyel."
     },
     "training": {
       "title": "Szakmai képzés",
-      "description": "Qualiopi tanúsítvánnyal rendelkező szervezet. Webfejlesztés, mobil és DevOps programok, OPCO-n keresztül finanszírozhatók."
+      "description": "Qualiopi tanúsított szervezet. Webfejlesztés, mobil és DevOps programok, OPCO-n keresztül finanszírozható."
     }
   },
   "portfolio": {
@@ -99,30 +99,30 @@
     "projects": {
       "1": {
         "title": "E-kereskedelmi platform",
-        "description": "Komplett megoldás készletkezeléssel, biztonságos fizetésekkel és optimalizált ügyfélélménnyel.",
+        "description": "Teljes megoldás készletkezeléssel, biztonságos fizetésekkel és optimalizált ügyfélélménnyel.",
         "tag": "Web"
       },
       "2": {
         "title": "Menedzsment alkalmazás",
-        "description": "Egyedi ERP rendszer az üzleti folyamatok optimalizálásához és a termelékenység javításához.",
+        "description": "Személyre szabott ERP rendszer az üzleti folyamatok optimalizálására és a termelékenység növelésére.",
         "tag": "Vállalat"
       },
       "3": {
-        "title": "Mobil alkalmazás",
-        "description": "Kézbesítési alkalmazás geolokációval és integrált fizetési rendszerrel.",
+        "title": "Mobilalkalmazás",
+        "description": "Kiszállítási alkalmazás geolokációval és integrált fizetési rendszerrel.",
         "tag": "Mobil"
       },
       "4": {
         "title": "Cloud infrastruktúra",
-        "description": "Infrastruktúra migráció és optimalizálás a maximális skálázhatóság és csökkentett költségek érdekében.",
+        "description": "Infrastruktúra migráció és optimalizálás maximális skálázhatóságért és csökkentett költségekért.",
         "tag": "Cloud"
       }
     }
   },
   "about": {
-    "title": "Szaktudásunk",
+    "title": "Szakértelmünk",
     "subtitle": "Elkötelezett csapat",
-    "description": "Több mint 10 éves tapasztalattal szakértői csapatunk ötvözi a kreativitást és a technikai precizitást, hogy ötleteit hatékony digitális megoldásokká alakítsa.",
+    "description": "Több mint 10 éves tapasztalattal szakértő csapatunk ötvözi a kreativitást és a technikai precizitást, hogy ötleteit teljesítő digitális megoldásokká alakítsa.",
     "expertise": {
       "1": {
         "title": "Front-End fejlesztés",
@@ -147,17 +147,17 @@
     "subtitle": "Mit mondanak ügyfeleink",
     "items": {
       "1": {
-        "text": "A csapat vízióinkat olyan digitális megoldássá alakította, amely minden várakozásunkat felülmúlta. Kivételes professzionalizmus és technikai szakértelem.",
+        "text": "A csapat elképzelésünket olyan digitális megoldássá alakította, amely minden várakozásunkat felülmúlta. Kivételes professziónalizmus és technikai szakértelem.",
         "author": "Marie Dupont",
         "position": "Marketing igazgató, TechCorp"
       },
       "2": {
-        "text": "Lenyűgözött bennünket, ahogy képesek voltak megérteni üzleti igényeinket és innovatív, hatékony megoldásokkal válaszolni rájuk.",
+        "text": "Lenyűgözött bennünket, ahogy megértették üzleti igényeinket és innovatív, hatékony megoldásokkal válaszoltak.",
         "author": "Jean Martin",
-        "position": "Vezérigazgató, InnovSoft"
+        "position": "CEO, InnovSoft"
       },
       "3": {
-        "text": "Támogatásuk felbecsülhetetlen volt a teljes projekt során. Képesek voltak alkalmazkodni korlátainkhoz és releváns megoldásokat javasolni.",
+        "text": "Támogatásuk értékes volt a projekt során végig. Tudtak alkalmazkodni korlátainkhoz és releváns megoldásokat javasolni.",
         "author": "Sophie Lefebvre",
         "position": "CTO, DataFuture"
       }
@@ -178,30 +178,30 @@
   "footer": {
     "company": "© 2025 DELIVERY Digital Technology. Minden jog fenntartva.",
     "links": {
-      "privacy": "Adatvédelmi irányelvek",
+      "privacy": "Adatvédelmi szabályzat",
       "terms": "Felhasználási feltételek",
       "sitemap": "Oldaltérkép"
     }
   },
   "reclamation": {
-    "badge": "Panasz",
-    "title": "Panaszbejelentő űrlap",
-    "subtitle": "Komolyan vesszük aggályait. Kérjük, töltse ki az alábbi űrlapot és a lehető leghamarabb válaszolunk.",
+    "badge": "Reklamáció",
+    "title": "Reklamációs űrlap",
+    "subtitle": "Komolyan vesszük aggodalmait. Kérjük, töltse ki az alábbi űrlapot, és a lehető leghamarabb válaszolunk.",
     "qualityCommitment": {
       "title": "Minőségi elkötelezettségünk",
-      "intro": "A DELIVERY Digital Nice arra törekszik, hogy olyan képzési szolgáltatásokat nyújtson, amelyek megfelelnek ügyfelei igényeinek és követelményeinek. Ha azonban panaszt szeretne benyújtani:",
-      "contact": "Bármikor fordulhat megszokott kapcsolattartóinkhoz kérdéseivel, kétségeivel és felmerült problémáival, akik mindent megtesznek, hogy választ adjanak Önnek.",
-      "formOption": "Lehetősége van kérését az alábbi panaszbejelentő űrlap segítségével is elküldeni.",
+      "intro": "A DELIVERY Digital Nice arra törekszik, hogy olyan képzési szolgáltatásokat nyújtson, amelyek megfelelnek ügyfelei igényeinek és követelményeinek. Ha azonban reklamációt kíván benyújtani:",
+      "contact": "Bármikor fordulhat kérdéseivel, kétségeivel és felmerülő problémáival szokásos kapcsolattartóinkhoz, akik mindent megtesznek, hogy választ adjanak.",
+      "formOption": "Lehetősége van továbbá az alábbi reklamációs űrlap használatával elküldeni kérését.",
       "processTitle": "Feldolgozási eljárásunk",
       "steps": {
-        "1": "Kitölti az űrlapot, amely automatikusan elküldésre kerül a panaszok feldolgozásáért felelős csapatnak",
-        "2": "Visszaigazoljuk panasza beérkezését",
-        "3": "A lehető legrövidebb időn belül elemezzük kérését és értékeljük annak elfogadhatóságát",
-        "4": "Ha kérése elfogadható, elemezzük a panasz okait",
-        "5": "Gondosan megvizsgáljuk a bemutatott tényeket, és szükség esetén elvégezzük a szükséges vizsgálatokat. Ebben az esetben tájékoztatjuk Önt az ügy állásáról",
-        "6": "Tájékoztatjuk Önt válaszunkról, megadva vizsgálatunk eredményét és a probléma megoldására javasolt megoldásokat"
+        "1": "Kitölti az űrlapot, amely automatikusan elküldésre kerül a reklamációkezelő csapathoz",
+        "2": "Visszaigazoljuk reklamációja beérkezését",
+        "3": "A lehető leghamarabb elemezzük kérését és értékeljük annak elfogadhatóságát",
+        "4": "Ha kérése elfogadható, elemezzük a reklamáció okait",
+        "5": "Gondosan megvizsgáljuk a bemutatott tényeket és szükség esetén elvégezzük a szükséges kutatást. Ebben az esetben tájékoztatjuk az ügy előrehaladásáról",
+        "6": "Tájékoztatjuk válaszunkról, megadva vizsgálatunk eredményeit és a probléma megoldására javasolt megoldásokat"
       },
-      "directContact": "A panaszkezelő csapat közvetlen elérése:"
+      "directContact": "A reklamációkezelő csapat közvetlen elérése:"
     },
     "contactCards": {
       "email": "E-mail",
@@ -215,7 +215,7 @@
       "phone": "Telefon",
       "company": "Vállalat",
       "orderNumber": "Rendelésszám",
-      "category": "Panasz kategóriája",
+      "category": "Reklamáció kategóriája",
       "categoryOptions": {
         "service": "Szolgáltatás minősége",
         "product": "Termék/Eredmény",
@@ -224,29 +224,29 @@
         "training": "Képzés",
         "other": "Egyéb"
       },
-      "subject": "Panasz tárgya",
-      "subjectPlaceholder": "Panaszának összefoglalása",
+      "subject": "Reklamáció tárgya",
+      "subjectPlaceholder": "Reklamációja összefoglalása",
       "description": "Részletes leírás",
-      "descriptionPlaceholder": "Kérjük, részletesen írja le panaszát...",
-      "gdpr": "Adatait adatvédelmi irányelvünknek és a GDPR-nek megfelelően kezeljük. Vállaljuk, hogy 48 munkanapon belül válaszolunk.",
+      "descriptionPlaceholder": "Kérjük, írja le részletesen reklamációját...",
+      "gdpr": "Adatait adatvédelmi szabályzatunknak és a GDPR-nak megfelelően kezeljük. Vállaljuk, hogy 48 munkanapon belül válaszolunk.",
       "captcha": "Biztonsági ellenőrzés",
       "captchaRequired": "Kérjük, végezze el a biztonsági ellenőrzést",
-      "submit": "Panasz beküldése",
+      "submit": "Reklamáció beküldése",
       "submitting": "Küldés folyamatban..."
     },
     "procedure": {
-      "title": "Panaszkezelési eljárás",
+      "title": "Reklamációkezelési eljárás",
       "steps": {
-        "1": "Beérkezés és visszaigazolás 24 órán belül",
-        "2": "Panaszának elemzése csapatunk által",
+        "1": "Fogadás és visszaigazolás 24 órán belül",
+        "2": "Reklamációja elemzése csapatunk által",
         "3": "Részletes válasz 48 munkanapon belül",
-        "4": "Nyomon követés és a probléma megoldása"
+        "4": "Követés és a probléma megoldása"
       },
-      "mediator": "Ha nem elégedett válaszunkkal, kapcsolatba léphet minőségügyi vezetőnkkel vagy fogyasztói mediátorhoz fordulhat."
+      "mediator": "Ha nem elégedett válaszunkkal, kapcsolatba léphet minőségi felelősünkkel vagy fogyasztói közvetítőhöz fordulhat."
     },
     "success": {
-      "title": "Panasz sikeresen beküldve",
-      "message": "Megkaptuk panaszát. Csapatunk a lehető legrövidebb időn belül felveszi Önnel a kapcsolatot kérésének feldolgozása érdekében.",
+      "title": "Reklamáció sikeresen elküldve",
+      "message": "Megkaptuk reklamációját. Csapatunk a lehető leghamarabb felveszi Önnel a kapcsolatot kérésének feldolgozásához.",
       "responseTime": "Becsült válaszidő: 24-48 munkanap",
       "backHome": "Vissza a kezdőlapra"
     }
@@ -260,30 +260,59 @@
     "for": "Címzett",
     "service": "Szolgáltatás",
     "amountExclTax": "Nettó összeg",
-    "lineDescription": "{{percent}}% – {{title}} (ref. {{quoteRef}})",
-    "subtotal": "Nettó részösszeg",
+    "lineDescription": "{{percent}}% {{title}} (ref. {{quoteRef}})",
+    "subtotal": "Részösszeg ÁFA nélkül",
     "vat": "ÁFA ({{rate}}%)",
-    "netToPay": "Fizetendő összeg",
+    "netToPay": "Fizetendő nettó",
     "bankDetails": "Banki adatok",
     "beneficiary": "Kedvezményezett",
     "bank": "Bank",
     "iban": "IBAN",
     "bicSwift": "BIC / SWIFT",
-    "transferRef": "Utalásnál feltüntetendő hivatkozás",
-    "mailSubject": "{{invoiceRef}} előlegszámla – {{percent}}% a {{quoteRef}} árajánlatból",
+    "transferRef": "Az utalásban feltüntetendő hivatkozás",
+    "mailSubject": "Előlegszámla {{invoiceRef}} - {{percent}}% az árajánlat {{quoteRef}}",
     "mailThanks": "Köszönjük bizalmát.",
-    "mailBody": "A <strong>{{quoteRef}}</strong> árajánlat aláírását követően mellékletben megtalálja a <strong>{{invoiceRef}}</strong> előlegszámlát.",
-    "mailAmount": "Fizetendő összeg: <strong>{{amount}}</strong> ({{percent}}% az összegből).",
+    "mailBody": "A(z) <strong>{{quoteRef}}</strong> árajánlat aláírását követően mellékelten megtalálja a(z) <strong>{{invoiceRef}}</strong> előlegszámlát.",
+    "mailAmount": "Fizetendő összeg: <strong>{{amount}}</strong> ({{percent}}% a teljes összegből).",
     "mailRef": "Banki adatok és utalási hivatkozás a számlán. Esedékesség: <strong>{{dueDate}}</strong>.",
-    "mailStart": "A befizetés megérkezésekor elindítjuk a projektet."
+    "mailStart": "A befizetés megérkezésekor indítjuk a projektet."
   },
   "emails": {
-    "acceptedSubject": "[ELFOGADVA] {{quoteRef}} árajánlatot aláírta {{signerName}}",
-    "acceptedBody": "A <strong>{{quoteRef}}</strong> árajánlatot <strong>{{signerName}}</strong> ({{signerEmail}}) elfogadta.",
-    "acceptedMeta": "IP: {{ip}} – User Agent: {{userAgent}}",
+    "acceptedSubject": "[ELFOGADVA] {{quoteRef}} árajánlat aláírta {{signerName}}",
+    "acceptedBody": "A(z) <strong>{{quoteRef}}</strong> árajánlatot <strong>{{signerName}}</strong> ({{signerEmail}}) elfogadta.",
+    "acceptedMeta": "IP: {{ip}} - User Agent: {{userAgent}}",
     "rejectedSubject": "[ELUTASÍTVA] {{quoteRef}} árajánlat",
-    "rejectedBody": "A <strong>{{quoteRef}}</strong> árajánlatot elutasították.",
+    "rejectedBody": "A(z) <strong>{{quoteRef}}</strong> árajánlat elutasításra került.",
     "rejectedReason": "Indok: {{reason}}",
     "rejectedNoReason": "(nincs megadva)"
-  }
+  },
+  "cii": {
+    "title": "Innovációs Adókedvezmény",
+    "close": "Bezárás",
+    "exampleTitle": "Konkrét példa",
+    "exampleBody": "Egy 20 000 €-s projektnél: 4 000 € visszatérítés (20%). Végső költség: 16 000 €. Éves limit: 400 000 € kiadás, azaz maximum 80 000 € kedvezmény.",
+    "eligibleTitle": "Jogosult projektek",
+    "eligibleBody": "Web- és mobilalkalmazások · testreszabott szoftverek · mesterséges intelligencia · innovatív megoldások vállalkozása számára.",
+    "benefitTitle": "Hogyan élhet vele",
+    "benefitBody": "Ön befektet velünk · mi biztosítjuk az összes igazolást · Ön megkapja a kedvezményt vagy visszatérítést.",
+    "taxLine": "Ha adót fizet: közvetlen levonás.",
+    "refundLine": "Egyébként: állami visszatérítés."
+  },
+  "common": {
+    "discussProject": "Beszéljünk projektjéről",
+    "discussProjectArrow": "Beszéljünk projektjéről ›",
+    "chooseLanguage": "Nyelv választása",
+    "startConversation": "Beszélgetés indítása"
+  },
+  "chat": {
+    "typePlaceholder": "Írja be üzenetét",
+    "typing": "DELIVERY Digital épp ír...",
+    "describeIdea": "Írja le ötletét. Egy szakértő 24 órán belül válaszol.",
+    "letsTalk": "Beszéljünk projektjéről.",
+    "logout": "Kijelentkezés",
+    "confidential": "Üzenetei bizalmasak maradnak és csak projektjéhez kerülnek felhasználásra.",
+    "noConv": "Még nincs beszélgetés.",
+    "aiUnderstands": "AI ügynökünk megérti igényét. Egy szakértő 24 órán belül válaszol."
+  },
+  "discuter": "Projektről beszélgetni"
 }

@@ -41,13 +41,17 @@ const en = JSON.parse(await fs.readFile('./src/locales/en.json', 'utf-8'));
 
 async function translateOne(target) {
   const outPath = `./src/locales/${target.code}.json`;
-  try {
-    const existing = await fs.stat(outPath).catch(() => null);
-    if (existing) {
-      console.log(`[skip] ${target.code} (already exists)`);
-      return;
-    }
-  } catch {}
+  // Mode force : on regenere meme si le fichier existe (au cas ou fr.json a evolue).
+  // Pour skipper, passer SKIP_EXISTING=1.
+  if (process.env.SKIP_EXISTING) {
+    try {
+      const existing = await fs.stat(outPath).catch(() => null);
+      if (existing) {
+        console.log(`[skip] ${target.code} (already exists, SKIP_EXISTING=1)`);
+        return;
+      }
+    } catch {}
+  }
 
   const prompt = `You are translating UI strings for a B2B web agency website (DELIVERY Digital - web/mobile/SaaS development). Translate the French JSON below into ${target.name}. Rules:
 - Keep the same JSON structure and keys exactly.

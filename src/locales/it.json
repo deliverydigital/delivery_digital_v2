@@ -15,20 +15,20 @@
     "ciiBadge": "Certificato CII · fino al 20% rimborsato",
     "stack": "Stack",
     "cta": {
-      "start": "Discutere un progetto",
+      "start": "Parliamo di un progetto",
       "learn": "Scopri di più",
       "trainings": "Vedi tutte le formazioni",
-      "learner": "Area studente"
+      "learner": "Area corsista"
     },
     "web": {
       "title": "Soluzioni",
       "accent": "web",
-      "subhead": "SaaS, dashboard e applicazioni web su misura, alimentate dalle migliori tecnologie."
+      "subhead": "SaaS, dashboard e applicazioni web su misura, potenziate dalle migliori tecnologie."
     },
     "mobile": {
       "title": "App",
       "accent": "native",
-      "subhead": "iOS e Android. Prestazioni native, design curato, deployment su App Store e Play Store chiavi in mano."
+      "subhead": "iOS e Android. Performance native, design curato, deployment chiavi in mano su App Store e Play Store."
     },
     "enterprise": {
       "title": "Software",
@@ -42,14 +42,14 @@
     },
     "training": {
       "title": "Formazione",
-      "accent": "professionale",
+      "accent": "professionale.",
       "subhead": "Ente certificato Qualiopi. Approfitta del finanziamento OPCO."
     }
   },
   "formationPage": {
     "eyebrow": "Centro certificato Qualiopi",
     "title": "Formazione",
-    "accent": "professionale",
+    "accent": "professionale.",
     "subhead": "Ente certificato Qualiopi. Approfitta del finanziamento OPCO."
   },
   "heroDark": {
@@ -58,11 +58,11 @@
   },
   "hero": {
     "title": "Il codice che alimenta le tue ambizioni, 20% rimborsato tramite CII",
-    "subtitle": "Siti web, applicazioni mobili, SaaS, CRM, ERP su misura. Agenzia certificata Credito d'Imposta Innovazione - fino a 80.000 € di credito annuo per le PMI ammissibili.",
-    "titleIntl": "Costruiamo il tuo prossimo prodotto digitale",
-    "subtitleIntl": "Siti web, app mobili, SaaS, CRM, ERP. Codice su misura, consegnato in poche settimane.",
+    "subtitle": "Siti web, app mobile, SaaS, CRM, ERP su misura. Agenzia certificata Credito d'Imposta Innovazione - fino a 80.000 € di credito annuo per le PMI idonee.",
+    "titleIntl": "Realizziamo il tuo prossimo prodotto digitale",
+    "subtitleIntl": "Siti web, app mobile, SaaS, CRM, ERP. Codice su misura, consegnato in poche settimane.",
     "cta": {
-      "project": "Discutere un progetto"
+      "project": "Parliamo di un progetto"
     },
     "badges": {
       "digital": "Servizi Digitali"
@@ -73,15 +73,15 @@
     "subtitle": "Soluzioni adattate alle tue esigenze",
     "web": {
       "title": "Sviluppo Web",
-      "description": "Siti vetrina, e-commerce e applicazioni web progressive con le tecnologie più recenti."
+      "description": "Siti vetrina, e-commerce e progressive web app con le tecnologie più recenti."
     },
     "mobile": {
-      "title": "Applicazioni Mobili",
-      "description": "Applicazioni native e cross-platform per iOS e Android con un'esperienza utente ottimale."
+      "title": "Applicazioni Mobile",
+      "description": "Applicazioni native e cross-platform per iOS e Android con esperienza utente ottimale."
     },
     "enterprise": {
-      "title": "Soluzioni Enterprise",
-      "description": "Software su misura, automazione di processi e integrazioni di sistemi."
+      "title": "Soluzioni Aziendali",
+      "description": "Software su misura, automazione dei processi e integrazioni di sistemi."
     },
     "cloud": {
       "title": "Servizi Cloud",
@@ -89,7 +89,7 @@
     },
     "training": {
       "title": "Formazione Professionale",
-      "description": "Ente certificato Qualiopi. Programmi di sviluppo web, mobile e DevOps, finanziabili tramite il tuo OPCO."
+      "description": "Ente certificato Qualiopi. Programmi in sviluppo web, mobile e DevOps, finanziabili tramite OPCO."
     }
   },
   "portfolio": {
@@ -99,28 +99,28 @@
     "projects": {
       "1": {
         "title": "Piattaforma E-commerce",
-        "description": "Soluzione completa con gestione inventario, pagamenti sicuri ed esperienza cliente ottimizzata.",
+        "description": "Soluzione completa con gestione magazzino, pagamenti sicuri ed esperienza cliente ottimizzata.",
         "tag": "Web"
       },
       "2": {
         "title": "Applicazione Gestionale",
         "description": "Sistema ERP personalizzato per ottimizzare i processi aziendali e migliorare la produttività.",
-        "tag": "Enterprise"
+        "tag": "Azienda"
       },
       "3": {
         "title": "Applicazione Mobile",
-        "description": "Applicazione di consegna con geolocalizzazione e sistema di pagamento integrato.",
+        "description": "App di consegna con geolocalizzazione e sistema di pagamento integrato.",
         "tag": "Mobile"
       },
       "4": {
         "title": "Infrastruttura Cloud",
-        "description": "Migrazione e ottimizzazione dell'infrastruttura per una scalabilità massima e costi ridotti.",
+        "description": "Migrazione e ottimizzazione dell'infrastruttura per massima scalabilità e costi ridotti.",
         "tag": "Cloud"
       }
     }
   },
   "about": {
-    "title": "La nostra competenza",
+    "title": "La nostra esperienza",
     "subtitle": "Un team appassionato",
     "description": "Con oltre 10 anni di esperienza, il nostro team di esperti combina creatività e rigore tecnico per trasformare le tue idee in soluzioni digitali performanti.",
     "expertise": {
@@ -147,18 +147,18 @@
     "subtitle": "Cosa dicono i nostri clienti",
     "items": {
       "1": {
-        "text": "Il team ha trasformato la nostra visione in una soluzione digitale che ha superato tutte le nostre aspettative. Professionalità e competenza tecnica eccezionali.",
-        "author": "Marie Dupont",
+        "text": "Il team ha trasformato la nostra visione in una soluzione digitale che ha superato tutte le nostre aspettative. Professionalità ed expertise tecnica eccezionali.",
+        "author": "Maria Rossi",
         "position": "Direttrice Marketing, TechCorp"
       },
       "2": {
-        "text": "Siamo rimasti impressionati dalla loro capacità di comprendere le nostre esigenze aziendali e di rispondere con soluzioni innovative ed efficaci.",
-        "author": "Jean Martin",
+        "text": "Siamo rimasti colpiti dalla loro capacità di comprendere le nostre esigenze aziendali e di rispondere con soluzioni innovative ed efficaci.",
+        "author": "Giovanni Bianchi",
         "position": "CEO, InnovSoft"
       },
       "3": {
         "text": "Il loro supporto è stato prezioso durante tutto il progetto. Hanno saputo adattarsi ai nostri vincoli e proporre soluzioni pertinenti.",
-        "author": "Sophie Lefebvre",
+        "author": "Sofia Verdi",
         "position": "CTO, DataFuture"
       }
     }
@@ -172,7 +172,7 @@
     "message": "Messaggio",
     "subject": "Oggetto",
     "submit": "Invia",
-    "success": "Messaggio inviato con successo! Ti contatteremo presto.",
+    "success": "Messaggio inviato con successo! Ti contatteremo a breve.",
     "error": "Si è verificato un errore. Riprova."
   },
   "footer": {
@@ -186,22 +186,22 @@
   "reclamation": {
     "badge": "Reclamo",
     "title": "Modulo di reclamo",
-    "subtitle": "Prendiamo sul serio le tue preoccupazioni. Compila il modulo qui sotto e ti risponderemo al più presto.",
+    "subtitle": "Prendiamo sul serio le tue preoccupazioni. Compila il modulo qui sotto e ti risponderemo il prima possibile.",
     "qualityCommitment": {
       "title": "Il nostro impegno per la qualità",
-      "intro": "DELIVERY Digital Nice si impegna a fornire servizi di formazione che rispondono alle esigenze e ai requisiti dei propri clienti. Tuttavia, se desideri presentarci un reclamo:",
-      "contact": "Puoi, in qualsiasi momento, rivolgere le tue domande, dubbi e problemi riscontrati ai tuoi contatti abituali, che faranno tutto il possibile per fornirti una risposta.",
+      "intro": "DELIVERY Digital Nice si impegna a fornire servizi formativi che rispondano alle esigenze e ai requisiti dei clienti. Tuttavia, se desideri presentarci un reclamo:",
+      "contact": "Puoi, in qualsiasi momento, rivolgere domande, dubbi e problemi riscontrati ai tuoi referenti abituali, che faranno del loro meglio per fornirti una risposta.",
       "formOption": "Hai anche la possibilità di inviare la tua richiesta utilizzando il modulo di reclamo qui sotto.",
       "processTitle": "Il nostro processo di gestione",
       "steps": {
-        "1": "Compili il modulo che viene automaticamente inviato al team responsabile della gestione dei reclami",
+        "1": "Compili il modulo che viene automaticamente inviato al team incaricato della gestione dei reclami",
         "2": "Confermiamo la ricezione del tuo reclamo",
-        "3": "Analizziamo la tua richiesta nel più breve tempo possibile e valutiamo la sua ammissibilità",
+        "3": "Analizziamo la tua richiesta nel più breve tempo possibile e ne valutiamo l'ammissibilità",
         "4": "Se la tua richiesta è ammissibile, analizziamo le cause del reclamo",
         "5": "Esaminiamo attentamente i fatti presentati ed effettuiamo, se necessario, le ricerche necessarie. In questo caso, ti teniamo informato sull'avanzamento della pratica",
-        "6": "Ti informiamo della nostra risposta, precisando i risultati della nostra indagine e le soluzioni che proponiamo per risolvere il problema"
+        "6": "Ti comunichiamo la nostra risposta, precisando i risultati dell'indagine e le soluzioni che proponiamo per risolvere il problema"
       },
-      "directContact": "Per contattare direttamente il team di gestione dei reclami:"
+      "directContact": "Per contattare direttamente il team di gestione reclami:"
     },
     "contactCards": {
       "email": "Email",
@@ -215,7 +215,7 @@
       "phone": "Telefono",
       "company": "Azienda",
       "orderNumber": "Numero d'ordine",
-      "category": "Categoria di reclamo",
+      "category": "Categoria del reclamo",
       "categoryOptions": {
         "service": "Qualità del servizio",
         "product": "Prodotto/Deliverable",
@@ -235,18 +235,18 @@
       "submitting": "Invio in corso..."
     },
     "procedure": {
-      "title": "Procedura di gestione dei reclami",
+      "title": "Procedura di gestione reclami",
       "steps": {
         "1": "Ricezione e conferma entro 24h",
         "2": "Analisi del tuo reclamo da parte del nostro team",
         "3": "Risposta dettagliata entro 48h lavorative",
         "4": "Follow-up e risoluzione del problema"
       },
-      "mediator": "Se non sei soddisfatto della nostra risposta, puoi contattare il nostro responsabile qualità o ricorrere a un mediatore dei consumatori."
+      "mediator": "Se non sei soddisfatto della nostra risposta, puoi contattare il nostro responsabile qualità o rivolgerti a un mediatore del consumatore."
     },
     "success": {
       "title": "Reclamo inviato con successo",
-      "message": "Abbiamo ricevuto il tuo reclamo. Il nostro team ti contatterà al più presto per gestire la tua richiesta.",
+      "message": "Abbiamo ricevuto il tuo reclamo. Il nostro team ti contatterà il prima possibile per gestire la tua richiesta.",
       "responseTime": "Tempo di risposta stimato: 24-48 ore lavorative",
       "backHome": "Torna alla home"
     }
@@ -259,11 +259,11 @@
     "relatedQuote": "Preventivo associato",
     "for": "All'attenzione di",
     "service": "Prestazione",
-    "amountExclTax": "Importo netto",
+    "amountExclTax": "Importo al netto IVA",
     "lineDescription": "{{percent}}% di {{title}} (rif. {{quoteRef}})",
-    "subtotal": "Subtotale netto",
+    "subtotal": "Subtotale al netto IVA",
     "vat": "IVA ({{rate}}%)",
-    "netToPay": "Totale da pagare",
+    "netToPay": "Netto a pagare",
     "bankDetails": "Coordinate bancarie",
     "beneficiary": "Beneficiario",
     "bank": "Banca",
@@ -272,8 +272,8 @@
     "transferRef": "Riferimento da indicare nel bonifico",
     "mailSubject": "Fattura di acconto {{invoiceRef}} - {{percent}}% del preventivo {{quoteRef}}",
     "mailThanks": "Grazie per la fiducia.",
-    "mailBody": "A seguito della firma del preventivo <strong>{{quoteRef}}</strong>, trova in allegato la fattura di acconto <strong>{{invoiceRef}}</strong>.",
-    "mailAmount": "Importo da saldare: <strong>{{amount}}</strong> ({{percent}}% del totale).",
+    "mailBody": "A seguito della firma del preventivo <strong>{{quoteRef}}</strong>, trovi in allegato la fattura di acconto <strong>{{invoiceRef}}</strong>.",
+    "mailAmount": "Importo da versare: <strong>{{amount}}</strong> ({{percent}}% del totale).",
     "mailRef": "Coordinate bancarie e riferimento bonifico nella fattura. Scadenza: <strong>{{dueDate}}</strong>.",
     "mailStart": "Al ricevimento del pagamento, avvieremo il progetto."
   },
@@ -283,7 +283,36 @@
     "acceptedMeta": "IP: {{ip}} - User Agent: {{userAgent}}",
     "rejectedSubject": "[RIFIUTATO] Preventivo {{quoteRef}}",
     "rejectedBody": "Il preventivo <strong>{{quoteRef}}</strong> è stato rifiutato.",
-    "rejectedReason": "Motivazione: {{reason}}",
-    "rejectedNoReason": "(non specificata)"
-  }
+    "rejectedReason": "Motivo: {{reason}}",
+    "rejectedNoReason": "(non specificato)"
+  },
+  "cii": {
+    "title": "Credito d'Imposta Innovazione",
+    "close": "Chiudi",
+    "exampleTitle": "Esempio concreto",
+    "exampleBody": "Per un progetto da 20.000 €: recuperi 4.000 € (20%). Costo finale: 16.000 €. Massimale annuo: 400.000 € di spese, ovvero 80.000 € di credito massimo.",
+    "eligibleTitle": "Progetti idonei",
+    "eligibleBody": "Applicazioni web e mobile · software su misura · intelligenza artificiale · soluzioni innovative per la tua azienda.",
+    "benefitTitle": "Come beneficiarne",
+    "benefitBody": "Investi con noi · forniamo tutti i giustificativi · ricevi il tuo credito o rimborso.",
+    "taxLine": "Se paghi le tasse: detrazione diretta.",
+    "refundLine": "Altrimenti: rimborso da parte dello Stato."
+  },
+  "common": {
+    "discussProject": "Parliamo del tuo progetto",
+    "discussProjectArrow": "Parliamo del tuo progetto ›",
+    "chooseLanguage": "Scegli la lingua",
+    "startConversation": "Avvia la conversazione"
+  },
+  "chat": {
+    "typePlaceholder": "Scrivi il tuo messaggio",
+    "typing": "DELIVERY Digital sta scrivendo...",
+    "describeIdea": "Descrivi la tua idea. Un esperto ti ricontatta entro 24h.",
+    "letsTalk": "Parliamo del tuo progetto.",
+    "logout": "Disconnetti",
+    "confidential": "I tuoi messaggi restano confidenziali e servono solo per il tuo progetto.",
+    "noConv": "Nessuna conversazione per ora.",
+    "aiUnderstands": "Il nostro agente IA comprende la tua esigenza. Un esperto ti ricontatta entro 24h."
+  },
+  "discuter": "Parliamo di un progetto"
 }

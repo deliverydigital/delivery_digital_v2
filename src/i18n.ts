@@ -82,4 +82,95 @@ const applyHtmlAttrs = (lng: string) => {
 applyHtmlAttrs(i18n.language);
 i18n.on('languageChanged', applyHtmlAttrs);
 
+// =====================================================================
+// Geo-IP detection : combo IP + navigator
+// Si localStorage absent (1re visite), on tente le pays via IP en arriere
+// plan. Si la langue mappee du pays differe de celle deja active (navigator),
+// on change. Timeout court (800ms) pour eviter un flash trop long.
+// L'utilisateur peut toujours changer manuellement -> localStorage prime ensuite.
+// @author Rabah Ziane - 2026-05-11
+// =====================================================================
+const COUNTRY_TO_LANG: Record<string, string> = {
+  // French
+  FR: 'fr', BE: 'fr', LU: 'fr', MC: 'fr', SN: 'fr', CI: 'fr', CM: 'fr', ML: 'fr', BF: 'fr', NE: 'fr', GA: 'fr', CG: 'fr', MG: 'fr',
+  // English
+  GB: 'en', US: 'en', AU: 'en', NZ: 'en', IE: 'en', ZA: 'en', NG: 'en', KE: 'en', GH: 'en', PH: 'en', SG: 'en', MY: 'en', CA: 'en', IN: 'en',
+  // Spanish
+  ES: 'es', MX: 'es', AR: 'es', CO: 'es', CL: 'es', PE: 'es', VE: 'es', EC: 'es', UY: 'es', PY: 'es', BO: 'es', CR: 'es', DO: 'es', GT: 'es', HN: 'es', NI: 'es', PA: 'es', PR: 'es', SV: 'es', CU: 'es',
+  // German
+  DE: 'de', AT: 'de', CH: 'de', LI: 'de',
+  // Italian
+  IT: 'it', SM: 'it', VA: 'it',
+  // Portuguese
+  PT: 'pt', BR: 'pt', AO: 'pt', MZ: 'pt', CV: 'pt',
+  // Dutch
+  NL: 'nl', SR: 'nl', AW: 'nl',
+  // Swedish
+  SE: 'sv',
+  // Danish
+  DK: 'da', FO: 'da', GL: 'da',
+  // Norwegian
+  NO: 'no', SJ: 'no',
+  // Finnish
+  FI: 'fi', AX: 'fi',
+  // Polish
+  PL: 'pl',
+  // Czech / Slovak (proches)
+  CZ: 'cs', SK: 'cs',
+  // Hungarian
+  HU: 'hu',
+  // Romanian
+  RO: 'ro', MD: 'ro',
+  // Greek
+  GR: 'el', CY: 'el',
+  // Turkish
+  TR: 'tr',
+  // Russian
+  RU: 'ru', BY: 'ru', KZ: 'ru', KG: 'ru', UA: 'ru',
+  // Arabic
+  SA: 'ar', AE: 'ar', EG: 'ar', MA: 'ar', DZ: 'ar', TN: 'ar', QA: 'ar', KW: 'ar', BH: 'ar', OM: 'ar', JO: 'ar', LB: 'ar', SY: 'ar', IQ: 'ar', YE: 'ar', LY: 'ar', SD: 'ar', PS: 'ar',
+  // Hebrew
+  IL: 'he',
+  // Persian / Farsi
+  IR: 'fa', AF: 'fa', TJ: 'fa',
+  // Chinese
+  CN: 'zh', TW: 'zh', HK: 'zh', MO: 'zh',
+  // Japanese
+  JP: 'ja',
+  // Korean
+  KR: 'ko', KP: 'ko',
+};
+
+async function detectCountryLang(timeoutMs = 800): Promise<string | null> {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    // api.country.is : gratuit, sans rate limit declare, JSON { ip, country }
+    const r = await fetch('https://api.country.is/', { signal: ctrl.signal });
+    clearTimeout(t);
+    if (!r.ok) return null;
+    const data = await r.json();
+    const country = String(data?.country || '').toUpperCase();
+    return COUNTRY_TO_LANG[country] || null;
+  } catch {
+    return null;
+  }
+}
+
+// On ne tente la geoloc que si l'utilisateur n'a pas deja choisi une langue
+// (sinon son choix manuel doit primer, c'est l'objet du localStorage).
+const hasManualChoice = (() => {
+  try { return !!localStorage.getItem('i18nextLng'); } catch { return false; }
+})();
+
+if (!hasManualChoice) {
+  detectCountryLang().then((lang) => {
+    if (!lang) return;
+    const current = (i18n.language || '').split('-')[0];
+    if (lang === current) return;
+    if (!Object.keys(resources).includes(lang)) return;
+    i18n.changeLanguage(lang);
+  });
+}
+
 export default i18n;

@@ -12,18 +12,18 @@
   },
   "tiles": {
     "eyebrow": "Nasze kompetencje",
-    "ciiBadge": "Certyfikat CII · zwrot do 20%",
+    "ciiBadge": "Certyfikat CII · do 20% zwrotu",
     "stack": "Stack",
     "cta": {
-      "start": "Omówić projekt",
+      "start": "Omów projekt",
       "learn": "Dowiedz się więcej",
       "trainings": "Zobacz wszystkie szkolenia",
-      "learner": "Strefa kursanta"
+      "learner": "Strefa uczestnika"
     },
     "web": {
       "title": "Rozwiązania",
-      "accent": "webowe",
-      "subhead": "SaaS, dashboardy i aplikacje webowe na wymiar, oparte na najlepszych technologiach."
+      "accent": "web",
+      "subhead": "SaaS, dashboardy i aplikacje webowe na zamówienie, napędzane najlepszymi technologiami."
     },
     "mobile": {
       "title": "Aplikacje",
@@ -38,7 +38,7 @@
     "cloud": {
       "title": "Cloud",
       "accent": "& DevOps",
-      "subhead": "Hosting, monitoring, automatyczne skalowanie. Infrastruktura, która wytrzymuje obciążenie dzień i noc."
+      "subhead": "Hosting, monitoring, automatyczne skalowanie. Infrastruktura, która wytrzyma obciążenie dzień i noc."
     },
     "training": {
       "title": "Szkolenia",
@@ -57,72 +57,72 @@
     "trainingPro": "Szkolenia profesjonalne"
   },
   "hero": {
-    "title": "Kod, który realizuje Twoje ambicje, 20% zwrotu przez CII",
-    "subtitle": "Strony internetowe, aplikacje mobilne, SaaS, CRM, ERP na wymiar. Agencja certyfikowana Kredyt Podatkowy na Innowacje - do 80 000 € rocznego kredytu dla kwalifikujących się MŚP.",
-    "titleIntl": "Zbudujmy Twój następny produkt cyfrowy",
-    "subtitleIntl": "Strony internetowe, aplikacje mobilne, SaaS, CRM, ERP. Kod na wymiar, dostarczony w kilka tygodni.",
+    "title": "Kod, który napędza Twoje ambicje, 20% zwrotu dzięki CII",
+    "subtitle": "Strony internetowe, aplikacje mobilne, SaaS, CRM, ERP na zamówienie. Agencja certyfikowana Kredyt Podatkowy na Innowacje - do 80 000 € rocznego kredytu dla uprawnionych MŚP.",
+    "titleIntl": "Zbudujmy Twój kolejny produkt cyfrowy",
+    "subtitleIntl": "Strony internetowe, aplikacje mobilne, SaaS, CRM, ERP. Kod na zamówienie, dostarczony w kilka tygodni.",
     "cta": {
-      "project": "Omówić projekt"
+      "project": "Omów projekt"
     },
     "badges": {
       "digital": "Usługi Cyfrowe"
     }
   },
   "services": {
-    "title": "Nasze usługi",
-    "subtitle": "Rozwiązania dopasowane do Twoich potrzeb",
+    "title": "Nasze Usługi",
+    "subtitle": "Rozwiązania dostosowane do Twoich potrzeb",
     "web": {
-      "title": "Rozwój aplikacji webowych",
-      "description": "Strony wizytówkowe, platformy e-commerce i progresywne aplikacje internetowe z najnowszymi technologiami."
+      "title": "Rozwój Web",
+      "description": "Strony wizytówkowe, e-commerce i progresywne aplikacje webowe z najnowszymi technologiami."
     },
     "mobile": {
-      "title": "Aplikacje mobilne",
-      "description": "Aplikacje natywne i cross-platform na iOS i Android z optymalnym doświadczeniem użytkownika."
+      "title": "Aplikacje Mobilne",
+      "description": "Aplikacje natywne i cross-platform dla iOS i Android z optymalnym doświadczeniem użytkownika."
     },
     "enterprise": {
-      "title": "Rozwiązania dla firm",
-      "description": "Oprogramowanie na zamówienie, automatyzacja procesów i integracja systemów."
+      "title": "Rozwiązania Enterprise",
+      "description": "Oprogramowanie na zamówienie, automatyzacja procesów i integracje systemów."
     },
     "cloud": {
       "title": "Usługi Cloud",
-      "description": "Migracja, architektura i wdrożenie aplikacji w chmurze z bezpieczeństwem i wydajnością."
+      "description": "Migracja, architektura i wdrażanie aplikacji w chmurze z bezpieczeństwem i wydajnością."
     },
     "training": {
-      "title": "Szkolenia profesjonalne",
+      "title": "Szkolenia Profesjonalne",
       "description": "Organizacja certyfikowana Qualiopi. Programy w zakresie rozwoju web, mobile i DevOps, finansowane przez OPCO."
     }
   },
   "portfolio": {
-    "title": "Nasze projekty",
+    "title": "Nasze Projekty",
     "subtitle": "Odkryj nasze realizacje",
     "viewProject": "Zobacz projekt",
     "projects": {
       "1": {
-        "title": "Platforma e-commerce",
+        "title": "Platforma E-commerce",
         "description": "Kompleksowe rozwiązanie z zarządzaniem magazynem, bezpiecznymi płatnościami i zoptymalizowanym doświadczeniem klienta.",
         "tag": "Web"
       },
       "2": {
-        "title": "Aplikacja zarządzania",
+        "title": "Aplikacja Zarządzająca",
         "description": "Spersonalizowany system ERP do optymalizacji procesów biznesowych i poprawy produktywności.",
-        "tag": "Firma"
+        "tag": "Enterprise"
       },
       "3": {
-        "title": "Aplikacja mobilna",
+        "title": "Aplikacja Mobilna",
         "description": "Aplikacja dostawcza z geolokalizacją i zintegrowanym systemem płatności.",
         "tag": "Mobile"
       },
       "4": {
         "title": "Infrastruktura Cloud",
-        "description": "Migracja i optymalizacja infrastruktury dla maksymalnej skalowalności i niższych kosztów.",
+        "description": "Migracja i optymalizacja infrastruktury dla maksymalnej skalowalności i obniżonych kosztów.",
         "tag": "Cloud"
       }
     }
   },
   "about": {
-    "title": "Nasza ekspertyza",
+    "title": "Nasza Ekspertyza",
     "subtitle": "Zespół z pasją",
-    "description": "Z ponad 10-letnim doświadczeniem nasz zespół ekspertów łączy kreatywność i rygor techniczny, by przekształcać Twoje pomysły w wydajne rozwiązania cyfrowe.",
+    "description": "Z ponad 10-letnim doświadczeniem nasz zespół ekspertów łączy kreatywność z rygorem technicznym, aby przekształcić Twoje pomysły w wydajne rozwiązania cyfrowe.",
     "expertise": {
       "1": {
         "title": "Rozwój Front-End",
@@ -147,18 +147,18 @@
     "subtitle": "Co mówią nasi klienci",
     "items": {
       "1": {
-        "text": "Zespół przekształcił naszą wizję w rozwiązanie cyfrowe, które przekroczyło wszystkie nasze oczekiwania. Wyjątkowy profesjonalizm i kompetencje techniczne.",
-        "author": "Marie Dupont",
-        "position": "Dyrektor ds. Marketingu, TechCorp"
+        "text": "Zespół przekształcił naszą wizję w rozwiązanie cyfrowe, które przewyższyło wszystkie nasze oczekiwania. Wyjątkowy profesjonalizm i ekspertyza techniczna.",
+        "author": "Maria Kowalska",
+        "position": "Dyrektor Marketingu, TechCorp"
       },
       "2": {
-        "text": "Byliśmy pod wrażeniem ich zdolności do zrozumienia naszych potrzeb biznesowych i odpowiedzi innowacyjnymi i skutecznymi rozwiązaniami.",
-        "author": "Jean Martin",
+        "text": "Byliśmy pod wrażeniem ich zdolności do zrozumienia naszych potrzeb biznesowych i odpowiedzenia na nie innowacyjnymi i skutecznymi rozwiązaniami.",
+        "author": "Jan Nowak",
         "position": "CEO, InnovSoft"
       },
       "3": {
         "text": "Ich wsparcie było cenne przez cały projekt. Potrafili dostosować się do naszych ograniczeń i zaproponować trafne rozwiązania.",
-        "author": "Sophie Lefebvre",
+        "author": "Anna Wiśniewska",
         "position": "CTO, DataFuture"
       }
     }
@@ -166,14 +166,14 @@
   "contact": {
     "title": "Skontaktuj się z nami",
     "subtitle": "Porozmawiajmy o Twoim projekcie",
-    "name": "Imię i nazwisko",
-    "email": "E-mail",
+    "name": "Nazwisko",
+    "email": "Email",
     "phone": "Telefon",
     "message": "Wiadomość",
     "subject": "Temat",
     "submit": "Wyślij",
     "success": "Wiadomość wysłana pomyślnie! Wkrótce się z Tobą skontaktujemy.",
-    "error": "Wystąpił błąd. Proszę spróbować ponownie."
+    "error": "Wystąpił błąd. Spróbuj ponownie."
   },
   "footer": {
     "company": "© 2025 DELIVERY Digital Technology. Wszelkie prawa zastrzeżone.",
@@ -186,40 +186,40 @@
   "reclamation": {
     "badge": "Reklamacja",
     "title": "Formularz reklamacyjny",
-    "subtitle": "Poważnie traktujemy Twoje obawy. Wypełnij poniższy formularz, a odpowiemy najszybciej jak to możliwe.",
+    "subtitle": "Poważnie traktujemy Twoje obawy. Wypełnij poniższy formularz, a odpowiemy w najkrótszym możliwym czasie.",
     "qualityCommitment": {
-      "title": "Nasze zobowiązanie do jakości",
-      "intro": "DELIVERY Digital Nice dąży do świadczenia usług szkoleniowych, które odpowiadają potrzebom i wymaganiom klientów. Jeśli chcesz złożyć reklamację:",
-      "contact": "W każdej chwili możesz kierować pytania, wątpliwości i problemy do swoich stałych kontaktów, którzy dołożą wszelkich starań, aby udzielić Ci odpowiedzi.",
-      "formOption": "Masz również możliwość wysłania zapytania za pomocą poniższego formularza reklamacyjnego.",
+      "title": "Nasze zobowiązanie jakościowe",
+      "intro": "DELIVERY Digital Nice dąży do świadczenia usług szkoleniowych odpowiadających potrzebom i wymaganiom klientów. Jeśli chcesz złożyć reklamację:",
+      "contact": "W każdej chwili możesz kierować pytania, wątpliwości i napotkane problemy do swoich zwykłych kontaktów, którzy dołożą wszelkich starań, aby udzielić odpowiedzi.",
+      "formOption": "Masz również możliwość wysłania zgłoszenia za pomocą poniższego formularza reklamacyjnego.",
       "processTitle": "Nasz proces rozpatrywania",
       "steps": {
         "1": "Wypełniasz formularz, który jest automatycznie wysyłany do zespołu odpowiedzialnego za rozpatrywanie reklamacji",
         "2": "Potwierdzamy otrzymanie Twojej reklamacji",
-        "3": "Analizujemy Twoje zapytanie w najkrótszym możliwym czasie i oceniamy jego zasadność",
-        "4": "Jeśli Twoje zapytanie jest zasadne, analizujemy przyczyny reklamacji",
-        "5": "Dokładnie badamy przedstawione fakty i przeprowadzamy, w razie potrzeby, niezbędne badania. W takim przypadku informujemy Cię o postępach w sprawie",
-        "6": "Informujemy Cię o naszej odpowiedzi, precyzując wyniki naszego dochodzenia oraz rozwiązania, które proponujemy w celu rozwiązania problemu"
+        "3": "Analizujemy Twoje zgłoszenie w najkrótszym możliwym czasie i oceniamy jego zasadność",
+        "4": "Jeśli zgłoszenie jest zasadne, analizujemy przyczyny reklamacji",
+        "5": "Dokładnie badamy przedstawione fakty i przeprowadzamy niezbędne poszukiwania. W tym przypadku informujemy Cię o postępie sprawy",
+        "6": "Informujemy Cię o naszej odpowiedzi, precyzując wyniki naszego dochodzenia i proponowane rozwiązania problemu"
       },
-      "directContact": "Aby skontaktować się bezpośrednio z zespołem obsługi reklamacji:"
+      "directContact": "Aby bezpośrednio skontaktować się z zespołem rozpatrującym reklamacje:"
     },
     "contactCards": {
-      "email": "E-mail",
+      "email": "Email",
       "phone": "Telefon",
-      "hours": "Godziny pracy"
+      "hours": "Godziny"
     },
     "form": {
       "firstName": "Imię",
       "lastName": "Nazwisko",
-      "email": "E-mail",
+      "email": "Email",
       "phone": "Telefon",
       "company": "Firma",
       "orderNumber": "Numer zamówienia",
       "category": "Kategoria reklamacji",
       "categoryOptions": {
         "service": "Jakość usługi",
-        "product": "Produkt/Rezultat",
-        "billing": "Fakturowanie",
+        "product": "Produkt/Dostawa",
+        "billing": "Rozliczenia",
         "support": "Wsparcie techniczne",
         "training": "Szkolenie",
         "other": "Inne"
@@ -227,26 +227,26 @@
       "subject": "Przedmiot reklamacji",
       "subjectPlaceholder": "Podsumowanie Twojej reklamacji",
       "description": "Szczegółowy opis",
-      "descriptionPlaceholder": "Proszę szczegółowo opisać swoją reklamację...",
+      "descriptionPlaceholder": "Opisz szczegółowo swoją reklamację...",
       "gdpr": "Twoje dane są przetwarzane zgodnie z naszą polityką prywatności i RODO. Zobowiązujemy się odpowiedzieć w ciągu 48 godzin roboczych.",
       "captcha": "Weryfikacja bezpieczeństwa",
-      "captchaRequired": "Proszę dokończyć weryfikację bezpieczeństwa",
+      "captchaRequired": "Prosimy o uzupełnienie weryfikacji bezpieczeństwa",
       "submit": "Wyślij reklamację",
       "submitting": "Wysyłanie..."
     },
     "procedure": {
       "title": "Procedura rozpatrywania reklamacji",
       "steps": {
-        "1": "Odbiór i potwierdzenie w ciągu 24h",
+        "1": "Odbiór i potwierdzenie otrzymania w ciągu 24h",
         "2": "Analiza Twojej reklamacji przez nasz zespół",
-        "3": "Szczegółowa odpowiedź w ciągu 48h roboczych",
-        "4": "Monitorowanie i rozwiązanie problemu"
+        "3": "Szczegółowa odpowiedź w ciągu 48 godzin roboczych",
+        "4": "Monitoring i rozwiązanie problemu"
       },
-      "mediator": "Jeśli nie jesteś zadowolony z naszej odpowiedzi, możesz skontaktować się z naszym kierownikiem ds. jakości lub odwołać się do mediatora konsumenckiego."
+      "mediator": "Jeśli nie jesteś zadowolony z naszej odpowiedzi, możesz skontaktować się z naszym menedżerem ds. jakości lub odwołać się do mediatora konsumenckiego."
     },
     "success": {
       "title": "Reklamacja wysłana pomyślnie",
-      "message": "Otrzymaliśmy Twoją reklamację. Nasz zespół skontaktuje się z Tobą w najkrótszym możliwym czasie w celu rozpatrzenia zapytania.",
+      "message": "Otrzymaliśmy Twoją reklamację. Nasz zespół skontaktuje się z Tobą w najkrótszym możliwym czasie, aby rozpatrzyć zgłoszenie.",
       "responseTime": "Szacowany czas odpowiedzi: 24-48 godzin roboczych",
       "backHome": "Powrót do strony głównej"
     }
@@ -257,11 +257,11 @@
     "issuedOn": "Wystawiona dnia",
     "dueOn": "Termin płatności",
     "relatedQuote": "Powiązana wycena",
-    "for": "Do wiadomości",
+    "for": "Do",
     "service": "Usługa",
     "amountExclTax": "Kwota netto",
     "lineDescription": "{{percent}}% z {{title}} (ref. {{quoteRef}})",
-    "subtotal": "Suma netto",
+    "subtotal": "Suma częściowa netto",
     "vat": "VAT ({{rate}}%)",
     "netToPay": "Do zapłaty",
     "bankDetails": "Dane bankowe",
@@ -269,21 +269,50 @@
     "bank": "Bank",
     "iban": "IBAN",
     "bicSwift": "BIC / SWIFT",
-    "transferRef": "Referencja do podania w przelewie",
+    "transferRef": "Numer referencyjny przelewu",
     "mailSubject": "Faktura zaliczkowa {{invoiceRef}} - {{percent}}% wyceny {{quoteRef}}",
     "mailThanks": "Dziękujemy za zaufanie.",
-    "mailBody": "Po podpisaniu wyceny <strong>{{quoteRef}}</strong>, w załączniku znajdziesz fakturę zaliczkową <strong>{{invoiceRef}}</strong>.",
-    "mailAmount": "Kwota do zapłaty: <strong>{{amount}}</strong> ({{percent}}% całości).",
-    "mailRef": "Dane bankowe i referencja przelewu na fakturze. Termin płatności: <strong>{{dueDate}}</strong>.",
+    "mailBody": "W związku z podpisaniem wyceny <strong>{{quoteRef}}</strong>, w załączniku znajdziesz fakturę zaliczkową <strong>{{invoiceRef}}</strong>.",
+    "mailAmount": "Kwota do zapłaty: <strong>{{amount}}</strong> ({{percent}}% sumy).",
+    "mailRef": "Dane bankowe i numer referencyjny przelewu w fakturze. Termin płatności: <strong>{{dueDate}}</strong>.",
     "mailStart": "Po otrzymaniu płatności rozpoczynamy projekt."
   },
   "emails": {
-    "acceptedSubject": "[ZAAKCEPTOWANA] Wycena {{quoteRef}} podpisana przez {{signerName}}",
+    "acceptedSubject": "[ZAAKCEPTOWANO] Wycena {{quoteRef}} podpisana przez {{signerName}}",
     "acceptedBody": "Wycena <strong>{{quoteRef}}</strong> została właśnie zaakceptowana przez <strong>{{signerName}}</strong> ({{signerEmail}}).",
     "acceptedMeta": "IP: {{ip}} - User Agent: {{userAgent}}",
-    "rejectedSubject": "[ODRZUCONA] Wycena {{quoteRef}}",
+    "rejectedSubject": "[ODRZUCONO] Wycena {{quoteRef}}",
     "rejectedBody": "Wycena <strong>{{quoteRef}}</strong> została odrzucona.",
     "rejectedReason": "Powód: {{reason}}",
-    "rejectedNoReason": "(nie podano)"
-  }
+    "rejectedNoReason": "(nieokreślony)"
+  },
+  "cii": {
+    "title": "Kredyt Podatkowy na Innowacje",
+    "close": "Zamknij",
+    "exampleTitle": "Konkretny przykład",
+    "exampleBody": "Dla projektu za 20 000 €: odzyskujesz 4 000 € (20%). Koszt końcowy: 16 000 €. Roczny limit: 400 000 € wydatków, czyli maksymalnie 80 000 € kredytu.",
+    "eligibleTitle": "Projekty kwalifikujące się",
+    "eligibleBody": "Aplikacje webowe i mobilne · oprogramowanie na zamówienie · sztuczna inteligencja · innowacyjne rozwiązania dla Twojej firmy.",
+    "benefitTitle": "Jak skorzystać",
+    "benefitBody": "Inwestujesz z nami · dostarczamy wszystkie dokumenty · otrzymujesz kredyt lub zwrot.",
+    "taxLine": "Jeśli płacisz podatki: bezpośrednie odliczenie.",
+    "refundLine": "W przeciwnym razie: zwrot od państwa."
+  },
+  "common": {
+    "discussProject": "Porozmawiajmy o Twoim projekcie",
+    "discussProjectArrow": "Porozmawiajmy o Twoim projekcie ›",
+    "chooseLanguage": "Wybierz język",
+    "startConversation": "Rozpocznij rozmowę"
+  },
+  "chat": {
+    "typePlaceholder": "Wpisz wiadomość",
+    "typing": "DELIVERY Digital pisze...",
+    "describeIdea": "Opisz swój pomysł. Ekspert skontaktuje się z Tobą w ciągu 24h.",
+    "letsTalk": "Porozmawiajmy o Twoim projekcie.",
+    "logout": "Wyloguj się",
+    "confidential": "Twoje wiadomości pozostają poufne i są wykorzystywane wyłącznie do celów Twojego projektu.",
+    "noConv": "Brak konwersacji.",
+    "aiUnderstands": "Nasz agent AI rozumie Twoje potrzeby. Ekspert skontaktuje się z Tobą w ciągu 24h."
+  },
+  "discuter": "Omów projekt"
 }

@@ -285,5 +285,34 @@
     "rejectedBody": "Le devis <strong>{{quoteRef}}</strong> a été refusé.",
     "rejectedReason": "Raison : {{reason}}",
     "rejectedNoReason": "(non précisée)"
-  }
+  },
+  "cii": {
+    "title": "Crédit Impôt Innovation",
+    "close": "Fermer",
+    "exampleTitle": "Exemple concret",
+    "exampleBody": "Pour un projet de 20 000 € : vous récupérez 4 000 € (20 %). Coût final : 16 000 €. Plafond annuel : 400 000 € de dépenses, soit 80 000 € de crédit maximum.",
+    "eligibleTitle": "Projets éligibles",
+    "eligibleBody": "Applications web et mobiles · logiciels sur mesure · intelligence artificielle · solutions innovantes pour votre entreprise.",
+    "benefitTitle": "Comment en bénéficier",
+    "benefitBody": "Vous investissez avec nous · nous fournissons tous les justificatifs · vous recevez votre crédit ou remboursement.",
+    "taxLine": "Si vous payez des impôts : déduction directe.",
+    "refundLine": "Sinon : remboursement par l'État."
+  },
+  "common": {
+    "discussProject": "Discutons de votre projet",
+    "discussProjectArrow": "Discutons de votre projet ›",
+    "chooseLanguage": "Choisir la langue",
+    "startConversation": "Démarrer la conversation"
+  },
+  "chat": {
+    "typePlaceholder": "Tapez votre message",
+    "typing": "DELIVERY Digital est en train d'écrire...",
+    "describeIdea": "Décrivez votre idée. Un expert revient vers vous sous 24h.",
+    "letsTalk": "Parlons de votre projet.",
+    "logout": "Se déconnecter",
+    "confidential": "Vos messages restent confidentiels et servent uniquement pour votre projet.",
+    "noConv": "Aucune conversation pour l'instant.",
+    "aiUnderstands": "Notre agent IA comprend votre besoin. Un expert revient vers vous sous 24 h."
+  },
+  "discuter": "Discuter d'un projet"
 }

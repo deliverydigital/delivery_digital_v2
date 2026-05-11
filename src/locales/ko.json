@@ -17,50 +17,50 @@
     "cta": {
       "start": "프로젝트 상담",
       "learn": "자세히 보기",
-      "trainings": "모든 교육 과정 보기",
-      "learner": "수강생 공간"
+      "trainings": "전체 교육 보기",
+      "learner": "학습자 영역"
     },
     "web": {
       "title": "웹",
       "accent": "솔루션",
-      "subhead": "최고의 기술로 구현하는 SaaS, 대시보드 및 맞춤형 웹 애플리케이션."
+      "subhead": "최고의 기술로 구축된 SaaS, 대시보드 및 맞춤형 웹 애플리케이션."
     },
     "mobile": {
       "title": "네이티브",
       "accent": "앱",
-      "subhead": "iOS와 Android. 네이티브 성능, 세련된 디자인, App Store 및 Play Store 배포까지 턴키 서비스."
+      "subhead": "iOS 및 Android. 네이티브 성능, 세련된 디자인, App Store 및 Play Store 배포 턴키 제공."
     },
     "enterprise": {
       "title": "비즈니스",
       "accent": "소프트웨어",
-      "subhead": "CRM, ERP, B2B 플랫폼. 프로세스 자동화로 생산성을 극대화합니다."
+      "subhead": "CRM, ERP, B2B 플랫폼. 프로세스 자동화로 생산성 향상."
     },
     "cloud": {
       "title": "클라우드",
       "accent": "& DevOps",
-      "subhead": "호스팅, 모니터링, 자동 확장. 24시간 안정적인 인프라를 제공합니다."
+      "subhead": "호스팅, 모니터링, 자동 확장. 24시간 안정적인 인프라."
     },
     "training": {
       "title": "전문",
       "accent": "교육",
-      "subhead": "Qualiopi 인증 기관. OPCO 지원금을 활용하세요."
+      "subhead": "Qualiopi 인증 기관. OPCO 지원금 활용 가능."
     }
   },
   "formationPage": {
     "eyebrow": "Qualiopi 인증 센터",
     "title": "전문",
     "accent": "교육",
-    "subhead": "Qualiopi 인증 기관. OPCO 지원금을 활용하세요."
+    "subhead": "Qualiopi 인증 기관. OPCO 지원금 활용 가능."
   },
   "heroDark": {
     "viewServices": "서비스 보기",
     "trainingPro": "전문 교육"
   },
   "hero": {
-    "title": "귀사의 목표를 실현하는 코드, CII를 통해 20% 환급",
-    "subtitle": "웹사이트, 모바일 앱, SaaS, CRM, ERP 맞춤 개발. 혁신세액공제 인증 에이전시 - 적격 중소기업은 연간 최대 80,000유로 세액공제 혜택.",
-    "titleIntl": "귀사의 차세대 디지털 제품을 함께 만들어갑니다",
-    "subtitleIntl": "웹, 모바일 앱, SaaS, CRM, ERP. 맞춤 코드, 수 주 내 제공.",
+    "title": "귀사의 비전을 실현하는 코드, CII를 통해 20% 환급",
+    "subtitle": "맞춤형 웹사이트, 모바일 앱, SaaS, CRM, ERP. 혁신 세액공제 인증 에이전시 - 적격 중소기업에 연간 최대 80,000유로 세액공제.",
+    "titleIntl": "차세대 디지털 제품을 함께 만들어갑니다",
+    "subtitleIntl": "웹사이트, 모바일 앱, SaaS, CRM, ERP. 맞춤 코드, 몇 주 내 제공.",
     "cta": {
       "project": "프로젝트 상담"
     },
@@ -70,14 +70,14 @@
   },
   "services": {
     "title": "서비스",
-    "subtitle": "맞춤형 솔루션 제공",
+    "subtitle": "맞춤형 솔루션",
     "web": {
       "title": "웹 개발",
-      "description": "최신 기술로 구현하는 기업 웹사이트, 이커머스 플랫폼 및 프로그레시브 웹 앱."
+      "description": "최신 기술로 구축된 홍보 사이트, 이커머스, 프로그레시브 웹 애플리케이션."
     },
     "mobile": {
       "title": "모바일 애플리케이션",
-      "description": "최적의 사용자 경험을 제공하는 iOS 및 Android 네이티브 및 크로스플랫폼 앱."
+      "description": "최적의 사용자 경험을 제공하는 iOS 및 Android용 네이티브 및 크로스 플랫폼 앱."
     },
     "enterprise": {
       "title": "엔터프라이즈 솔루션",
@@ -85,11 +85,11 @@
     },
     "cloud": {
       "title": "클라우드 서비스",
-      "description": "보안과 성능을 고려한 클라우드 마이그레이션, 아키텍처 설계 및 배포."
+      "description": "보안과 성능을 갖춘 클라우드 마이그레이션, 아키텍처 및 배포."
     },
     "training": {
       "title": "전문 교육",
-      "description": "Qualiopi 인증 기관. 웹 개발, 모바일, DevOps 과정, OPCO 지원금으로 수강 가능."
+      "description": "Qualiopi 인증 기관. 웹 개발, 모바일 및 DevOps 교육, OPCO 지원금 활용 가능."
     }
   },
   "portfolio": {
@@ -99,8 +99,8 @@
     "projects": {
       "1": {
         "title": "이커머스 플랫폼",
-        "description": "재고 관리, 안전한 결제 및 최적화된 고객 경험을 갖춘 완전한 솔루션.",
-        "tag": "Web"
+        "description": "재고 관리, 안전한 결제, 최적화된 고객 경험을 갖춘 완벽한 솔루션.",
+        "tag": "웹"
       },
       "2": {
         "title": "관리 애플리케이션",
@@ -109,20 +109,20 @@
       },
       "3": {
         "title": "모바일 애플리케이션",
-        "description": "위치 추적 및 통합 결제 시스템을 갖춘 배송 앱.",
-        "tag": "Mobile"
+        "description": "위치 기반 서비스 및 통합 결제 시스템을 갖춘 배송 애플리케이션.",
+        "tag": "모바일"
       },
       "4": {
         "title": "클라우드 인프라",
         "description": "최대 확장성과 비용 절감을 위한 인프라 마이그레이션 및 최적화.",
-        "tag": "Cloud"
+        "tag": "클라우드"
       }
     }
   },
   "about": {
     "title": "전문성",
     "subtitle": "열정적인 팀",
-    "description": "10년 이상의 경험을 바탕으로, 전문가 팀이 창의성과 기술적 정확성을 결합하여 귀사의 아이디어를 고성능 디지털 솔루션으로 전환합니다.",
+    "description": "10년 이상의 경험을 바탕으로 전문가 팀이 창의성과 기술적 엄격함을 결합하여 귀사의 아이디어를 고성능 디지털 솔루션으로 전환합니다.",
     "expertise": {
       "1": {
         "title": "프론트엔드 개발",
@@ -137,27 +137,27 @@
         "value": "85%"
       },
       "4": {
-        "title": "DevOps & Cloud",
+        "title": "DevOps & 클라우드",
         "value": "90%"
       }
     }
   },
   "testimonials": {
     "title": "고객 후기",
-    "subtitle": "고객사의 평가",
+    "subtitle": "고객의 목소리",
     "items": {
       "1": {
-        "text": "팀이 우리의 비전을 기대 이상의 디지털 솔루션으로 구현했습니다. 탁월한 전문성과 기술력입니다.",
-        "author": "마리 뒤퐁",
+        "text": "팀이 우리의 비전을 모든 기대를 뛰어넘는 디지털 솔루션으로 전환했습니다. 뛰어난 전문성과 기술 전문지식.",
+        "author": "마리 듀퐁",
         "position": "마케팅 이사, TechCorp"
       },
       "2": {
-        "text": "비즈니스 요구사항을 이해하고 혁신적이고 효과적인 솔루션으로 대응하는 능력이 인상적이었습니다.",
+        "text": "우리의 비즈니스 요구사항을 이해하고 혁신적이고 효과적인 솔루션으로 대응하는 능력에 깊은 인상을 받았습니다.",
         "author": "장 마르탱",
         "position": "CEO, InnovSoft"
       },
       "3": {
-        "text": "프로젝트 전반에 걸쳐 귀중한 지원을 받았습니다. 제약사항에 유연하게 대응하며 적절한 솔루션을 제안했습니다.",
+        "text": "프로젝트 전반에 걸쳐 귀중한 지원을 제공했습니다. 우리의 제약 사항에 적응하고 적절한 솔루션을 제안했습니다.",
         "author": "소피 르페브르",
         "position": "CTO, DataFuture"
       }
@@ -165,7 +165,7 @@
   },
   "contact": {
     "title": "문의하기",
-    "subtitle": "프로젝트에 대해 상담하세요",
+    "subtitle": "프로젝트에 대해 논의해보세요",
     "name": "이름",
     "email": "이메일",
     "phone": "전화번호",
@@ -178,7 +178,7 @@
   "footer": {
     "company": "© 2025 DELIVERY Digital Technology. All rights reserved.",
     "links": {
-      "privacy": "개인정보처리방침",
+      "privacy": "개인정보 보호정책",
       "terms": "이용약관",
       "sitemap": "사이트맵"
     }
@@ -186,27 +186,27 @@
   "reclamation": {
     "badge": "불만 접수",
     "title": "불만 접수 양식",
-    "subtitle": "고객님의 우려사항을 진지하게 받아들입니다. 아래 양식을 작성해주시면 신속히 답변드리겠습니다.",
+    "subtitle": "고객님의 우려사항을 진지하게 받아들입니다. 아래 양식을 작성해주시면 최대한 빠르게 답변드리겠습니다.",
     "qualityCommitment": {
       "title": "품질 약속",
-      "intro": "DELIVERY Digital Nice는 고객의 요구사항과 기대에 부응하는 교육 서비스를 제공하기 위해 노력합니다. 불만사항이 있으실 경우:",
-      "contact": "언제든지 담당자에게 질문, 의문사항 및 발생한 문제를 전달하실 수 있으며, 최선을 다해 답변드리겠습니다.",
-      "formOption": "또한 아래 불만 접수 양식을 통해 요청사항을 보내실 수 있습니다.",
+      "intro": "DELIVERY Digital Nice는 고객의 요구와 기대에 부응하는 교육 서비스를 제공하기 위해 노력합니다. 불만 사항을 접수하시려면:",
+      "contact": "언제든지 평소 담당자에게 질문, 의구심, 문제점을 문의하시면 최선을 다해 답변드리겠습니다.",
+      "formOption": "아래 불만 접수 양식을 통해 요청사항을 보내실 수도 있습니다.",
       "processTitle": "처리 절차",
       "steps": {
-        "1": "양식을 작성하시면 불만 처리 담당팀에 자동으로 전송됩니다",
-        "2": "불만 접수 확인 통지를 보내드립니다",
-        "3": "신속하게 요청사항을 분석하고 접수 가능 여부를 평가합니다",
-        "4": "접수 가능한 경우, 불만의 원인을 분석합니다",
-        "5": "제시된 사실을 면밀히 검토하고 필요시 조사를 진행합니다. 이 경우 진행 상황을 알려드립니다",
-        "6": "조사 결과와 문제 해결을 위한 제안 사항을 포함한 답변을 드립니다"
+        "1": "양식을 작성하시면 불만 처리 담당 팀에 자동으로 전송됩니다",
+        "2": "불만 접수 확인을 보내드립니다",
+        "3": "최대한 빠르게 요청사항을 분석하고 적격성을 평가합니다",
+        "4": "요청이 적격한 경우 불만의 원인을 분석합니다",
+        "5": "제시된 사실을 면밀히 검토하고 필요시 조사를 진행합니다. 이 경우 진행 상황을 계속 알려드립니다",
+        "6": "조사 결과 및 문제 해결을 위한 제안을 포함한 답변을 드립니다"
       },
-      "directContact": "불만 처리팀 직접 연락:"
+      "directContact": "불만 처리 팀 직접 연락:"
     },
     "contactCards": {
       "email": "이메일",
       "phone": "전화",
-      "hours": "업무시간"
+      "hours": "운영 시간"
     },
     "form": {
       "firstName": "이름",
@@ -214,21 +214,21 @@
       "email": "이메일",
       "phone": "전화번호",
       "company": "회사명",
-      "orderNumber": "주문번호",
+      "orderNumber": "주문 번호",
       "category": "불만 유형",
       "categoryOptions": {
         "service": "서비스 품질",
-        "product": "제품/납품물",
+        "product": "제품/결과물",
         "billing": "청구",
         "support": "기술 지원",
         "training": "교육",
         "other": "기타"
       },
       "subject": "불만 제목",
-      "subjectPlaceholder": "불만사항 요약",
+      "subjectPlaceholder": "불만 사항 요약",
       "description": "상세 설명",
-      "descriptionPlaceholder": "불만사항을 상세히 작성해주세요...",
-      "gdpr": "귀하의 데이터는 개인정보처리방침 및 GDPR에 따라 처리됩니다. 영업일 기준 48시간 이내 답변드릴 것을 약속합니다.",
+      "descriptionPlaceholder": "불만 사항을 자세히 설명해주세요...",
+      "gdpr": "귀하의 데이터는 개인정보 보호정책 및 GDPR에 따라 처리됩니다. 영업일 기준 48시간 이내에 답변드릴 것을 약속합니다.",
       "captcha": "보안 확인",
       "captchaRequired": "보안 확인을 완료해주세요",
       "submit": "불만 접수",
@@ -237,53 +237,82 @@
     "procedure": {
       "title": "불만 처리 절차",
       "steps": {
-        "1": "24시간 이내 접수 및 확인",
-        "2": "담당팀의 불만사항 분석",
-        "3": "영업일 기준 48시간 이내 상세 답변",
-        "4": "문제 해결 및 후속 조치"
+        "1": "24시간 내 접수 및 확인",
+        "2": "담당 팀의 불만 분석",
+        "3": "영업일 기준 48시간 내 상세 답변",
+        "4": "문제 추적 및 해결"
       },
-      "mediator": "답변에 만족하지 못하실 경우, 품질 관리 책임자에게 연락하시거나 소비자 조정 기관에 요청하실 수 있습니다."
+      "mediator": "답변에 만족하지 못하시는 경우 품질 책임자에게 연락하시거나 소비자 중재인에게 요청하실 수 있습니다."
     },
     "success": {
-      "title": "불만사항이 성공적으로 접수되었습니다",
-      "message": "불만사항을 접수했습니다. 담당팀이 요청사항을 처리하기 위해 신속히 연락드리겠습니다.",
+      "title": "불만이 성공적으로 접수되었습니다",
+      "message": "불만 사항을 접수했습니다. 담당 팀이 최대한 빠르게 처리하여 연락드리겠습니다.",
       "responseTime": "예상 답변 시간: 영업일 기준 24-48시간",
       "backHome": "홈으로 돌아가기"
     }
   },
   "invoice": {
     "title": "계약금 청구서",
-    "prefix": "INVOICE",
+    "prefix": "청구서",
     "issuedOn": "발행일",
-    "dueOn": "지급기한",
+    "dueOn": "지불 기한",
     "relatedQuote": "관련 견적서",
     "for": "수신",
     "service": "서비스",
-    "amountExclTax": "공급가액",
-    "lineDescription": "{{title}}의 {{percent}}% (견적서 {{quoteRef}})",
-    "subtotal": "소계",
+    "amountExclTax": "부가세 제외 금액",
+    "lineDescription": "{{title}}의 {{percent}}% (참조. {{quoteRef}})",
+    "subtotal": "소계 (부가세 제외)",
     "vat": "부가세 ({{rate}}%)",
-    "netToPay": "지급액",
-    "bankDetails": "계좌정보",
+    "netToPay": "지불 총액",
+    "bankDetails": "은행 정보",
     "beneficiary": "수취인",
     "bank": "은행",
     "iban": "IBAN",
     "bicSwift": "BIC / SWIFT",
-    "transferRef": "이체 시 참조번호",
+    "transferRef": "송금 시 기재할 참조번호",
     "mailSubject": "계약금 청구서 {{invoiceRef}} - 견적서 {{quoteRef}}의 {{percent}}%",
-    "mailThanks": "신뢰에 감사드립니다.",
-    "mailBody": "견적서 <strong>{{quoteRef}}</strong> 서명에 따라, 계약금 청구서 <strong>{{invoiceRef}}</strong>를 첨부합니다.",
-    "mailAmount": "지급액: <strong>{{amount}}</strong> (총액의 {{percent}}%).",
-    "mailRef": "계좌정보 및 이체 참조번호는 청구서를 확인하세요. 지급기한: <strong>{{dueDate}}</strong>.",
+    "mailThanks": "신뢰해 주셔서 감사합니다.",
+    "mailBody": "견적서 <strong>{{quoteRef}}</strong> 서명에 따라 계약금 청구서 <strong>{{invoiceRef}}</strong>를 첨부 파일로 보내드립니다.",
+    "mailAmount": "지불 금액: <strong>{{amount}}</strong> (총액의 {{percent}}%).",
+    "mailRef": "은행 정보 및 송금 참조번호는 청구서에 기재되어 있습니다. 지불 기한: <strong>{{dueDate}}</strong>.",
     "mailStart": "결제 확인 후 프로젝트를 시작합니다."
   },
   "emails": {
-    "acceptedSubject": "[승인됨] 견적서 {{quoteRef}}가 {{signerName}}에 의해 서명됨",
-    "acceptedBody": "견적서 <strong>{{quoteRef}}</strong>가 <strong>{{signerName}}</strong> ({{signerEmail}})에 의해 승인되었습니다.",
+    "acceptedSubject": "[승인됨] {{signerName}}님이 견적서 {{quoteRef}} 서명",
+    "acceptedBody": "<strong>{{signerName}}</strong> ({{signerEmail}})님이 견적서 <strong>{{quoteRef}}</strong>를 승인했습니다.",
     "acceptedMeta": "IP: {{ip}} - User Agent: {{userAgent}}",
-    "rejectedSubject": "[거부됨] 견적서 {{quoteRef}}",
-    "rejectedBody": "견적서 <strong>{{quoteRef}}</strong>가 거부되었습니다.",
+    "rejectedSubject": "[거절됨] 견적서 {{quoteRef}}",
+    "rejectedBody": "견적서 <strong>{{quoteRef}}</strong>가 거절되었습니다.",
     "rejectedReason": "사유: {{reason}}",
     "rejectedNoReason": "(명시되지 않음)"
-  }
+  },
+  "cii": {
+    "title": "혁신 세액공제",
+    "close": "닫기",
+    "exampleTitle": "구체적 사례",
+    "exampleBody": "20,000유로 프로젝트의 경우: 4,000유로(20%) 환급. 실제 비용: 16,000유로. 연간 한도: 지출 400,000유로, 즉 최대 세액공제 80,000유로.",
+    "eligibleTitle": "적격 프로젝트",
+    "eligibleBody": "웹 및 모바일 애플리케이션 · 맞춤형 소프트웨어 · 인공지능 · 귀사를 위한 혁신적 솔루션.",
+    "benefitTitle": "혜택 받는 방법",
+    "benefitBody": "저희와 투자하시면 · 모든 증빙 서류를 제공하고 · 세액공제 또는 환급을 받으실 수 있습니다.",
+    "taxLine": "법인세를 납부하시는 경우: 직접 공제.",
+    "refundLine": "그렇지 않은 경우: 정부 환급."
+  },
+  "common": {
+    "discussProject": "프로젝트 논의하기",
+    "discussProjectArrow": "프로젝트 논의하기 ›",
+    "chooseLanguage": "언어 선택",
+    "startConversation": "대화 시작하기"
+  },
+  "chat": {
+    "typePlaceholder": "메시지를 입력하세요",
+    "typing": "DELIVERY Digital이 입력 중...",
+    "describeIdea": "아이디어를 설명해주세요. 전문가가 24시간 이내에 연락드립니다.",
+    "letsTalk": "프로젝트에 대해 이야기해보세요.",
+    "logout": "로그아웃",
+    "confidential": "메시지는 기밀로 유지되며 프로젝트 목적으로만 사용됩니다.",
+    "noConv": "아직 대화가 없습니다.",
+    "aiUnderstands": "AI 에이전트가 귀하의 요구사항을 파악했습니다. 전문가가 24시간 이내에 연락드립니다."
+  },
+  "discuter": "프로젝트 상담"
 }

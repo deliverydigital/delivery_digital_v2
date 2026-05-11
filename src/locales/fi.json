@@ -11,24 +11,24 @@
     "solutionsBtn": "Ratkaisut"
   },
   "tiles": {
-    "eyebrow": "Osaamisemme",
+    "eyebrow": "Asiantuntemuksemme",
     "ciiBadge": "CII-sertifioitu · jopa 20 % hyvitetään",
     "stack": "Teknologiat",
     "cta": {
       "start": "Keskustele projektista",
       "learn": "Lue lisää",
       "trainings": "Katso kaikki koulutukset",
-      "learner": "Opiskelijaalue"
+      "learner": "Opiskelija-alue"
     },
     "web": {
       "title": "Web-",
       "accent": "ratkaisut",
-      "subhead": "SaaS, hallintapaneelit ja räätälöidyt web-sovellukset, parhaan teknologian voimalla."
+      "subhead": "SaaS, hallintapaneelit ja räätälöidyt web-sovellukset parhaan teknologian voimalla."
     },
     "mobile": {
       "title": "Natiivit",
       "accent": "sovellukset",
-      "subhead": "iOS ja Android. Natiivi suorituskyky, viimeistelty design, avaimet käteen -käyttöönotto App Storeen ja Play Storeen."
+      "subhead": "iOS ja Android. Natiivi suorituskyky, hiottu muotoilu, avaimet käteen -julkaisu App Storeen ja Play Storeen."
     },
     "enterprise": {
       "title": "Liiketoiminta-",
@@ -38,7 +38,7 @@
     "cloud": {
       "title": "Cloud",
       "accent": "& DevOps",
-      "subhead": "Hosting, seuranta, automaattinen skaalautuvuus. Infrastruktuuri, joka kestää kuorman, päivät ja yöt."
+      "subhead": "Hosting, seuranta, automaattinen skaalaus. Infrastruktuuri, joka kestää kuormituksen yötä päivää."
     },
     "training": {
       "title": "Ammatillinen",
@@ -57,10 +57,10 @@
     "trainingPro": "Ammatillinen koulutus"
   },
   "hero": {
-    "title": "Koodi, joka vie kunnianhimosi eteenpäin, 20 % hyvitetään CII:n kautta",
-    "subtitle": "Verkkosivustot, mobiilisovellukset, SaaS, CRM, ERP räätälöitynä. CII-sertifioitu toimisto – jopa 80 000 € vuosittaista verohyvitystä tukikelpoisille pk-yrityksille.",
+    "title": "Koodi, joka vie tavoitteesi eteenpäin – 20 % hyvitetään CII:n kautta",
+    "subtitle": "Verkkosivustot, mobiilisovellukset, SaaS, CII-, ERP-järjestelmät räätälöitynä. CII-sertifioitu toimisto – jopa 80 000 € vuosittaista verohyvitystä tukikelpoisille pk-yrityksille.",
     "titleIntl": "Rakennetaan seuraava digitaalinen tuotteesi",
-    "subtitleIntl": "Verkkosivustot, mobiilisovellukset, SaaS, CRM, ERP. Räätälöity koodi, toimitettuna muutamassa viikossa.",
+    "subtitleIntl": "Verkkosivustot, mobiilisovellukset, SaaS, CRM, ERP. Räätälöity koodi, toimitettuna viikkojen kuluessa.",
     "cta": {
       "project": "Keskustele projektista"
     },
@@ -73,23 +73,23 @@
     "subtitle": "Tarpeisiisi räätälöidyt ratkaisut",
     "web": {
       "title": "Web-kehitys",
-      "description": "Esittelysivustot, verkkokaupat ja progressiiviset web-sovellukset uusimmilla teknologioilla."
+      "description": "Esittelysivustot, verkkokauppa-alustat ja progressiiviset web-sovellukset uusimmilla teknologioilla."
     },
     "mobile": {
       "title": "Mobiilisovellukset",
-      "description": "Natiivit ja cross-platform-sovellukset iOS:lle ja Androidille optimoidulla käyttäjäkokemuksella."
+      "description": "Natiivit ja cross-platform-sovellukset iOS:lle ja Androidille optimaalisella käyttökokemuksella."
     },
     "enterprise": {
       "title": "Yritysratkaisut",
-      "description": "Räätälöidyt ohjelmistot, prosessiautomaatio ja järjestelmäintegraatiot."
+      "description": "Räätälöidyt ohjelmistot, prosessien automatisointi ja järjestelmäintegraatiot."
     },
     "cloud": {
-      "title": "Pilvipalvelut",
-      "description": "Migraatio, arkkitehtuuri ja sovellusten käyttöönotto pilvessä turvallisuuden ja suorituskyvyn takaamiseksi."
+      "title": "Cloud-palvelut",
+      "description": "Migraatio, arkkitehtuuri ja sovellusten pilvikäyttöönotto turvallisuuden ja suorituskyvyn takaamiseksi."
     },
     "training": {
       "title": "Ammatillinen koulutus",
-      "description": "Qualiopi-sertifioitu organisaatio. Ohjelmat web-kehityksessä, mobilessa ja DevOpsissa, rahoitettavissa OPCO:n kautta."
+      "description": "Qualiopi-sertifioitu organisaatio. Koulutusohjelmat web-kehitykseen, mobiiliin ja DevOpsiin, rahoitettavissa OPCO:n kautta."
     }
   },
   "portfolio": {
@@ -99,7 +99,7 @@
     "projects": {
       "1": {
         "title": "Verkkokauppa-alusta",
-        "description": "Kokonaisratkaisu varastonhallinnalla, turvallisilla maksuilla ja optimoidulla asiakaskokemuksella.",
+        "description": "Kokonaisratkaisu varastonhallinnalla, turvatuilla maksuilla ja optimoidulla asiakaskokemuksella.",
         "tag": "Web"
       },
       "2": {
@@ -109,20 +109,20 @@
       },
       "3": {
         "title": "Mobiilisovellus",
-        "description": "Toimitussovellus geolokalisaatiolla ja integroidulla maksujärjestelmällä.",
-        "tag": "Mobile"
+        "description": "Toimitus-sovellus geopaikannuksella ja integroidulla maksujärjestelmällä.",
+        "tag": "Mobiili"
       },
       "4": {
         "title": "Pilvi-infrastruktuuri",
-        "description": "Infrastruktuurin migraatio ja optimointi maksimaaliseen skaalautuvuuteen ja alentuneisiin kustannuksiin.",
-        "tag": "Cloud"
+        "description": "Infrastruktuurin migraatio ja optimointi maksimaalista skaalautuvuutta ja alennettuja kustannuksia varten.",
+        "tag": "Pilvi"
       }
     }
   },
   "about": {
-    "title": "Osaamisemme",
+    "title": "Asiantuntemuksemme",
     "subtitle": "Intohimoinen tiimi",
-    "description": "Yli 10 vuoden kokemuksella asiantuntijatiimimme yhdistää luovuuden ja teknisen tarkkuuden muuttaakseen ideasi tehokkaiksi digitaalisiksi ratkaisuiksi.",
+    "description": "Yli 10 vuoden kokemuksella asiantuntijatiimimme yhdistää luovuuden ja teknisen tarkkuuden muuttaakseen ideasi suorituskykyisiksi digitaalisiksi ratkaisuiksi.",
     "expertise": {
       "1": {
         "title": "Front-End-kehitys",
@@ -147,17 +147,17 @@
     "subtitle": "Mitä asiakkaamme sanovat",
     "items": {
       "1": {
-        "text": "Tiimi muutti visiomme digitaaliseksi ratkaisuksi, joka ylitti kaikki odotuksemme. Poikkeuksellinen ammattitaito ja tekninen asiantuntemus.",
+        "text": "Tiimi muutti visiomme digitaaliseksi ratkaisuksi, joka ylitti kaikki odotuksemme. Poikkeuksellista ammattitaitoa ja teknistä asiantuntemusta.",
         "author": "Marie Dupont",
         "position": "Markkinointijohtaja, TechCorp"
       },
       "2": {
-        "text": "Olimme vaikuttuneita heidän kyvystään ymmärtää liiketoimintatarpeitamme ja vastata niihin innovatiivisilla ja tehokkaillä ratkaisuilla.",
+        "text": "Heidän kykynsä ymmärtää liiketoimintatarpeitamme ja vastata niihin innovatiivisilla ja tehokkaillaan ratkaisuilla teki meihin vaikutuksen.",
         "author": "Jean Martin",
         "position": "Toimitusjohtaja, InnovSoft"
       },
       "3": {
-        "text": "Heidän tukensa oli korvaamatonta koko projektin ajan. He osasivat mukautua rajoitteisiimme ja ehdottaa relevantteja ratkaisuja.",
+        "text": "Heidän tukensa oli korvaamatonta koko projektin ajan. He osasivat sopeutua rajoitteisiimme ja tarjota osuvia ratkaisuja.",
         "author": "Sophie Lefebvre",
         "position": "CTO, DataFuture"
       }
@@ -165,7 +165,7 @@
   },
   "contact": {
     "title": "Ota yhteyttä",
-    "subtitle": "Puhutaan projektistasi",
+    "subtitle": "Keskustellaan projektistasi",
     "name": "Nimi",
     "email": "Sähköposti",
     "phone": "Puhelin",
@@ -186,22 +186,22 @@
   "reclamation": {
     "badge": "Valitus",
     "title": "Valituslomake",
-    "subtitle": "Otamme huolesi vakavasti. Täytä alla oleva lomake, niin vastaamme sinulle mahdollisimman pian.",
+    "subtitle": "Otamme huolesi vakavasti. Täytä alla oleva lomake ja vastaamme sinulle mahdollisimman pian.",
     "qualityCommitment": {
-      "title": "Laatusitoumus",
-      "intro": "DELIVERY Digital Nice pyrkii tarjoamaan koulutuspalveluita, jotka vastaavat asiakkaidensa tarpeisiin ja vaatimuksiin. Jos kuitenkin haluat tehdä valituksen:",
-      "contact": "Voit milloin tahansa kääntyä tavanomaisiin yhteyshenkilöihisi kysymyksinesi, epäilyksinesi ja kohtaamiesi ongelmien kanssa. He tekevät kaikkensa vastatakseen sinulle.",
+      "title": "Laatusitoumuksemme",
+      "intro": "DELIVERY Digital Nice pyrkii tarjoamaan koulutuspalveluita, jotka vastaavat asiakkaidemme tarpeita ja vaatimuksia. Jos haluat kuitenkin tehdä valituksen:",
+      "contact": "Voit milloin tahansa esittää kysymyksiäsi, epäilyjäsi ja kohtaamiasi ongelmia tavanomaisille yhteyshenkilöillesi, jotka tekevät kaikkensa vastatakseen sinulle.",
       "formOption": "Voit myös lähettää pyyntösi alla olevan valituslomakkeen kautta.",
       "processTitle": "Käsittelyprosessimme",
       "steps": {
-        "1": "Täytät lomakkeen, joka lähetetään automaattisesti valitusten käsittelystä vastaavalle tiimille",
-        "2": "Vastaanotamme valituksesi",
+        "1": "Täytät lomakkeen, joka lähetetään automaattisesti valitusten käsittelytiimille",
+        "2": "Kuittaamme valituksesi vastaanotetuksi",
         "3": "Analysoimme pyyntösi mahdollisimman nopeasti ja arvioimme sen hyväksyttävyyden",
         "4": "Jos pyyntösi on hyväksyttävä, analysoimme valituksen syyt",
-        "5": "Tutkimme huolellisesti esitetyt tosiseikat ja suoritamme tarvittaessa tarvittavat selvitykset. Tässä tapauksessa pidämme sinut ajan tasalla asian etenemisestä",
-        "6": "Ilmoitamme sinulle vastauksemme täsmentäen tutkimuksemme tulokset ja ehdottamamme ratkaisut ongelman ratkaisemiseksi"
+        "5": "Tutkimme esitetyt tosiasiat huolellisesti ja suoritamme tarvittaessa tarpeelliset selvitykset. Tässä tapauksessa pidämme sinut ajan tasalla asian etenemisestä",
+        "6": "Ilmoitamme sinulle vastauksestamme täsmentäen tutkimuksemme tulokset ja ehdottamamme ratkaisut ongelman ratkaisemiseksi"
       },
-      "directContact": "Ota suoraan yhteyttä valitusten käsittelytiimiin:"
+      "directContact": "Ottaaksesi suoraan yhteyttä valitusten käsittelytiimiin:"
     },
     "contactCards": {
       "email": "Sähköposti",
@@ -242,7 +242,7 @@
         "3": "Yksityiskohtainen vastaus 48 tunnin kuluessa",
         "4": "Seuranta ja ongelman ratkaisu"
       },
-      "mediator": "Jos et ole tyytyväinen vastaukseemme, voit ottaa yhteyttä laatuvastaavaamme tai kääntyä kuluttaja-asiamiehen puoleen."
+      "mediator": "Jos et ole tyytyväinen vastaukseemme, voit ottaa yhteyttä laatupäälliköömme tai vedota kuluttajasovittelijaan."
     },
     "success": {
       "title": "Valitus lähetetty onnistuneesti",
@@ -252,38 +252,67 @@
     }
   },
   "invoice": {
-    "title": "Ennakon lasku",
+    "title": "Ennakkomaksulasku",
     "prefix": "LASKU",
     "issuedOn": "Laadittu",
     "dueOn": "Eräpäivä",
     "relatedQuote": "Liittyvä tarjous",
     "for": "Vastaanottaja",
     "service": "Palvelu",
-    "amountExclTax": "Summa ilman ALV",
-    "lineDescription": "{{percent}} % kohteesta {{title}} (viite {{quoteRef}})",
-    "subtotal": "Välisumma ilman ALV",
+    "amountExclTax": "Summa ilman ALV:tä",
+    "lineDescription": "{{percent}} % / {{title}} (viite {{quoteRef}})",
+    "subtotal": "Välisumma ilman ALV:tä",
     "vat": "ALV ({{rate}} %)",
-    "netToPay": "Maksettava yhteensä",
+    "netToPay": "Maksettava netto",
     "bankDetails": "Pankkitiedot",
     "beneficiary": "Saaja",
     "bank": "Pankki",
     "iban": "IBAN",
     "bicSwift": "BIC / SWIFT",
-    "transferRef": "Viite tilisiirtoon",
-    "mailSubject": "Ennakon lasku {{invoiceRef}} – {{percent}} % tarjouksesta {{quoteRef}}",
+    "transferRef": "Tilisiirtoon merkittävä viite",
+    "mailSubject": "Ennakkomaksulasku {{invoiceRef}} – {{percent}} % tarjouksesta {{quoteRef}}",
     "mailThanks": "Kiitos luottamuksestasi.",
-    "mailBody": "Tarjouksen <strong>{{quoteRef}}</strong> allekirjoituksen jälkeen löydät liitteenä ennakon laskun <strong>{{invoiceRef}}</strong>.",
+    "mailBody": "Tarjouksen <strong>{{quoteRef}}</strong> allekirjoituksen jälkeen liitteenä on ennakkomaksulasku <strong>{{invoiceRef}}</strong>.",
     "mailAmount": "Maksettava summa: <strong>{{amount}}</strong> ({{percent}} % kokonaissummasta).",
     "mailRef": "Pankkitiedot ja tilisiirron viite laskussa. Eräpäivä: <strong>{{dueDate}}</strong>.",
-    "mailStart": "Projekti käynnistetään maksun saavuttua."
+    "mailStart": "Maksun vastaanotettuamme aloitamme projektin."
   },
   "emails": {
-    "acceptedSubject": "[HYVÄKSYTTY] Tarjous {{quoteRef}} allekirjoitettu – {{signerName}}",
-    "acceptedBody": "Tarjous <strong>{{quoteRef}}</strong> on juuri hyväksytty henkilön <strong>{{signerName}}</strong> ({{signerEmail}}) toimesta.",
+    "acceptedSubject": "[HYVÄKSYTTY] Tarjous {{quoteRef}} allekirjoittanut {{signerName}}",
+    "acceptedBody": "Tarjouksen <strong>{{quoteRef}}</strong> on juuri hyväksynyt <strong>{{signerName}}</strong> ({{signerEmail}}).",
     "acceptedMeta": "IP: {{ip}} – User Agent: {{userAgent}}",
     "rejectedSubject": "[HYLÄTTY] Tarjous {{quoteRef}}",
     "rejectedBody": "Tarjous <strong>{{quoteRef}}</strong> on hylätty.",
     "rejectedReason": "Syy: {{reason}}",
-    "rejectedNoReason": "(ei ilmoitettu)"
-  }
+    "rejectedNoReason": "(ei täsmennetty)"
+  },
+  "cii": {
+    "title": "Innovaatioverohyvitys",
+    "close": "Sulje",
+    "exampleTitle": "Konkreettinen esimerkki",
+    "exampleBody": "20 000 € projektille: saat takaisin 4 000 € (20 %). Lopullinen hinta: 16 000 €. Vuotuinen yläraja: 400 000 € kuluja, eli jopa 80 000 € hyvitystä.",
+    "eligibleTitle": "Tukikelpoiset projektit",
+    "eligibleBody": "Web- ja mobiilisovellukset · räätälöidyt ohjelmistot · tekoäly · innovatiiviset ratkaisut liiketoiminnallesi.",
+    "benefitTitle": "Miten hyödyntää",
+    "benefitBody": "Investoit kanssamme · toimitamme kaikki tositteet · saat verohyvityksesi tai hyvityksen.",
+    "taxLine": "Jos maksat veroja: suora vähennys.",
+    "refundLine": "Muuten: valtion myöntämä hyvitys."
+  },
+  "common": {
+    "discussProject": "Keskustellaan projektistasi",
+    "discussProjectArrow": "Keskustellaan projektistasi ›",
+    "chooseLanguage": "Valitse kieli",
+    "startConversation": "Aloita keskustelu"
+  },
+  "chat": {
+    "typePlaceholder": "Kirjoita viestisi",
+    "typing": "DELIVERY Digital kirjoittaa...",
+    "describeIdea": "Kuvaile ideasi. Asiantuntija palaa luoksesi 24 tunnin kuluessa.",
+    "letsTalk": "Keskustellaan projektistasi.",
+    "logout": "Kirjaudu ulos",
+    "confidential": "Viestisi pysyvät luottamuksellisina ja niitä käytetään ainoastaan projektiasi varten.",
+    "noConv": "Ei vielä keskusteluja.",
+    "aiUnderstands": "Tekoälyagenttimme ymmärtää tarpeesi. Asiantuntija palaa luoksesi 24 tunnin kuluessa."
+  },
+  "discuter": "Keskustele projektista"
 }

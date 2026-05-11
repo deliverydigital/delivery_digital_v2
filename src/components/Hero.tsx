@@ -13,7 +13,8 @@ import AIOrb from './AIOrb';
 /* ============================================================
    CII Modal - Apple-style sheet
    ============================================================ */
-const CIIModal = ({ isOpen, onClose }) => {
+const CIIModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black/55 backdrop-blur-md z-50 flex items-center justify-center p-4">
@@ -26,12 +27,12 @@ const CIIModal = ({ isOpen, onClose }) => {
       >
         <div className="px-7 pt-6 pb-5 border-b border-[var(--ink-100)] flex justify-between items-center">
           <h3 className="display-3 text-[22px] text-[var(--ink-900)]">
-            Crédit Impôt Innovation
+            {t("cii.title")}
           </h3>
           <button
             onClick={onClose}
             className="text-[var(--ink-500)] hover:text-[var(--ink-900)] -mr-1"
-            aria-label="Fermer"
+            aria-label={t("cii.close")}
           >
             <X className="h-5 w-5" />
           </button>
@@ -45,20 +46,20 @@ const CIIModal = ({ isOpen, onClose }) => {
           </p>
 
           <div className="grid gap-6">
-            <CIIRow icon={Euro} title="Exemple concret">
+            <CIIRow icon={Euro} title={t("cii.exampleTitle")}>
               Pour un projet de 20 000 € : vous récupérez 4 000 € (20 %). Coût final : 16 000 €. Plafond annuel : 400 000 € de dépenses, soit 80 000 € de crédit maximum.
             </CIIRow>
-            <CIIRow icon={Lightbulb} title="Projets éligibles">
+            <CIIRow icon={Lightbulb} title={t("cii.eligibleTitle")}>
               Applications web et mobiles · logiciels sur mesure · intelligence artificielle · solutions innovantes pour votre entreprise.
             </CIIRow>
-            <CIIRow icon={CheckCircle2} title="Comment en bénéficier">
+            <CIIRow icon={CheckCircle2} title={t("cii.benefitTitle")}>
               Vous investissez avec nous · nous fournissons tous les justificatifs · vous recevez votre crédit ou remboursement.
             </CIIRow>
           </div>
         </div>
 
         <div className="px-7 py-5 bg-[var(--ink-50)] flex justify-end">
-          <button onClick={onClose} className="btn-pill">Fermer</button>
+          <button onClick={onClose} className="btn-pill">{t("cii.close")}</button>
         </div>
       </motion.div>
     </div>
@@ -66,6 +67,7 @@ const CIIModal = ({ isOpen, onClose }) => {
 };
 
 const CIIRow = ({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) => (
+  // CIIRow ne consomme pas t() directement, juste affiche les props - donc pas besoin de useTranslation ici.
   <div className="flex items-start gap-4">
     <div className="bg-[var(--ink-50)] p-3 rounded-2xl flex-shrink-0">
       <Icon className="h-5 w-5 text-[var(--ink-900)]" strokeWidth={1.5} />
@@ -147,7 +149,7 @@ const Hero = () => {
               style={{ boxShadow: '0 12px 30px -10px rgba(10, 132, 255, 0.55)' }}
             >
               <AIOrb size={22} innerColor="#0066CC" />
-              Discutons de votre projet
+              {t("common.discussProject")}
               <span className="text-[18px] transition-transform group-hover:translate-x-0.5">›</span>
             </a>
           </motion.div>
@@ -196,7 +198,7 @@ const Hero = () => {
         chatPersonName="Support"
         chatMessage={<>Bonjour 👋 <br /><br /> Comment pouvons-nous vous aider?</>}
         footerBgColor="#1D1D1F"
-        placeholder="Tapez votre message"
+        placeholder={t("chat.typePlaceholder")}
         btnBgColor="#0066CC"
         btnTxt="Démarrer la discussion"
       />

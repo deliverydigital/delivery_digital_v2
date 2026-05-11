@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { Loader2, MapPin, ChevronRight } from 'lucide-react';
 import AIOrb from './AIOrb';
@@ -21,6 +22,7 @@ interface SeoItem {
 interface RelatedItem { slug: string; title: string; type: string; city?: string; service?: string }
 
 export default function PublicSeoPage({ slug }: { slug: string }) {
+  const { t } = useTranslation();
   const [item, setItem] = useState<SeoItem | null>(null);
   const [related, setRelated] = useState<RelatedItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -165,7 +167,7 @@ export default function PublicSeoPage({ slug }: { slug: string }) {
           Discutons de votre projet
         </h3>
         <p className="text-[15px] text-[#86868B] mb-6 max-w-[480px] mx-auto">
-          Notre agent IA comprend votre besoin. Un expert revient vers vous sous 24 h.
+          {t("chat.aiUnderstands")}
         </p>
         <a
           href="/discutons"

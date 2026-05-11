@@ -6,61 +6,61 @@
     "about": "会社概要",
     "contact": "お問い合わせ",
     "training": "研修",
-    "quote": "見積もり",
+    "quote": "お見積り",
     "formationBtn": "研修",
     "solutionsBtn": "ソリューション"
   },
   "tiles": {
-    "eyebrow": "私たちの専門分野",
-    "ciiBadge": "CII認定 · 最大20%還付",
+    "eyebrow": "当社の専門分野",
+    "ciiBadge": "CII認定 · 最大20%還元",
     "stack": "技術スタック",
     "cta": {
       "start": "プロジェクトについて相談",
       "learn": "詳細を見る",
-      "trainings": "すべての研修を見る",
-      "learner": "受講者専用ページ"
+      "trainings": "全研修を見る",
+      "learner": "受講者ポータル"
     },
     "web": {
       "title": "Web",
       "accent": "ソリューション",
-      "subhead": "SaaS、ダッシュボード、カスタムWebアプリケーションを最先端技術で実現。"
+      "subhead": "SaaS、ダッシュボード、カスタムWebアプリケーション。最先端技術で実現します。"
     },
     "mobile": {
       "title": "ネイティブ",
       "accent": "アプリ",
-      "subhead": "iOSとAndroid対応。ネイティブパフォーマンス、洗練されたデザイン、App StoreとPlay Storeへのターンキー展開。"
+      "subhead": "iOS・Android対応。ネイティブパフォーマンス、洗練されたデザイン、App Store・Play Storeへの一括デプロイ。"
     },
     "enterprise": {
       "title": "業務",
       "accent": "システム",
-      "subhead": "CRM、ERP、B2Bプラットフォーム。業務プロセスの自動化と生産性の向上を実現。"
+      "subhead": "CRM、ERP、B2Bプラットフォーム。業務プロセスを自動化し、生産性を向上させます。"
     },
     "cloud": {
       "title": "Cloud",
       "accent": "& DevOps",
-      "subhead": "ホスティング、監視、自動スケーリング。24時間365日負荷に対応するインフラ。"
+      "subhead": "ホスティング、監視、自動スケーリング。24時間365日、負荷に耐えるインフラを提供します。"
     },
     "training": {
-      "title": "プロ向け",
+      "title": "法人向け",
       "accent": "研修",
-      "subhead": "Qualiopi認定機関。OPCO助成金を活用可能。"
+      "subhead": "Qualiopi認定機関。OPCO助成金をご活用いただけます。"
     }
   },
   "formationPage": {
     "eyebrow": "Qualiopi認定センター",
-    "title": "プロ向け",
+    "title": "法人向け",
     "accent": "研修",
-    "subhead": "Qualiopi認定機関。OPCO助成金を活用可能。"
+    "subhead": "Qualiopi認定機関。OPCO助成金をご活用いただけます。"
   },
   "heroDark": {
     "viewServices": "サービスを見る",
-    "trainingPro": "プロ向け研修"
+    "trainingPro": "法人向け研修"
   },
   "hero": {
-    "title": "ビジネスを推進するコード、CIIで20%還付",
-    "subtitle": "Webサイト、モバイルアプリ、SaaS、CRM、ERPをオーダーメイドで開発。CII(イノベーション税額控除)認定代理店 - 対象中小企業は年間最大80,000ユーロの税額控除が可能。",
+    "title": "あなたのビジョンを実現するコード、CIIで20%還元",
+    "subtitle": "Webサイト、モバイルアプリ、SaaS、CRM、ERPをオーダーメイドで開発。イノベーション税額控除認定機関 - 対象企業は年間最大80,000ユーロの控除を受けられます。",
     "titleIntl": "次世代デジタルプロダクトを共に構築",
-    "subtitleIntl": "Webサイト、モバイルアプリ、SaaS、CRM、ERP。オーダーメイドコードを数週間で納品。",
+    "subtitleIntl": "Webサイト、モバイルアプリ、SaaS、CRM、ERP。カスタムコード、数週間で納品。",
     "cta": {
       "project": "プロジェクトについて相談"
     },
@@ -69,42 +69,42 @@
     }
   },
   "services": {
-    "title": "私たちのサービス",
-    "subtitle": "お客様のニーズに合わせたソリューション",
+    "title": "サービス",
+    "subtitle": "お客様のニーズに最適なソリューション",
     "web": {
       "title": "Web開発",
-      "description": "コーポレートサイト、ECサイト、最新技術を使用したプログレッシブWebアプリケーション。"
+      "description": "コーポレートサイト、ECサイト、プログレッシブWebアプリケーションを最新技術で開発します。"
     },
     "mobile": {
       "title": "モバイルアプリケーション",
-      "description": "iOS・Android向けのネイティブ・クロスプラットフォームアプリケーション。最適なユーザー体験を提供。"
+      "description": "iOS・Android向けネイティブ・クロスプラットフォームアプリを最適なUXで提供します。"
     },
     "enterprise": {
       "title": "エンタープライズソリューション",
-      "description": "カスタムソフトウェア、業務プロセスの自動化、システム統合。"
+      "description": "カスタムソフトウェア、プロセス自動化、システム連携をご提供します。"
     },
     "cloud": {
       "title": "クラウドサービス",
-      "description": "クラウドへの移行、アーキテクチャ設計、アプリケーションのデプロイメント。セキュリティとパフォーマンスを両立。"
+      "description": "クラウドへの移行、アーキテクチャ設計、アプリケーションデプロイをセキュアかつ高性能に実現します。"
     },
     "training": {
-      "title": "プロフェッショナル研修",
-      "description": "Qualiopi認定機関。Web開発、モバイル、DevOpsの研修プログラム。OPCOによる助成金利用が可能。"
+      "title": "法人向け研修",
+      "description": "Qualiopi認定機関。Web開発、モバイル、DevOps研修をご提供。OPCOによる助成金対象プログラム。"
     }
   },
   "portfolio": {
-    "title": "実績紹介",
-    "subtitle": "私たちの成果をご覧ください",
+    "title": "実績",
+    "subtitle": "当社の開発事例",
     "viewProject": "プロジェクトを見る",
     "projects": {
       "1": {
         "title": "ECプラットフォーム",
-        "description": "在庫管理、安全な決済、最適化された顧客体験を備えた包括的なソリューション。",
+        "description": "在庫管理、安全な決済、最適化された顧客体験を備えた統合ソリューション。",
         "tag": "Web"
       },
       "2": {
-        "title": "業務管理アプリケーション",
-        "description": "業務プロセスを最適化し生産性を向上させるカスタムERPシステム。",
+        "title": "管理アプリケーション",
+        "description": "業務プロセスを最適化し、生産性を向上させるカスタムERPシステム。",
         "tag": "エンタープライズ"
       },
       "3": {
@@ -114,15 +114,15 @@
       },
       "4": {
         "title": "クラウドインフラ",
-        "description": "最大限のスケーラビリティとコスト削減を実現するインフラの移行と最適化。",
-        "tag": "クラウド"
+        "description": "最大限のスケーラビリティとコスト削減を実現するインフラ移行・最適化。",
+        "tag": "Cloud"
       }
     }
   },
   "about": {
-    "title": "私たちの専門性",
+    "title": "当社の専門性",
     "subtitle": "情熱を持ったチーム",
-    "description": "10年以上の経験を持つ専門家チームが、創造性と技術的な厳密さを組み合わせて、お客様のアイデアを高性能なデジタルソリューションに変えます。",
+    "description": "10年以上の経験を持つ専門家チームが、創造性と技術的厳密性を組み合わせ、お客様のアイデアを高性能なデジタルソリューションへと変革します。",
     "expertise": {
       "1": {
         "title": "フロントエンド開発",
@@ -147,18 +147,18 @@
     "subtitle": "クライアントからの評価",
     "items": {
       "1": {
-        "text": "チームは私たちのビジョンを、期待を超えるデジタルソリューションに変えてくれました。プロフェッショナリズムと技術的な専門性は卓越しています。",
-        "author": "Marie Dupont",
+        "text": "チームは私たちのビジョンを、期待を超えるデジタルソリューションへと変えてくれました。卓越したプロフェッショナリズムと技術力です。",
+        "author": "マリー・デュポン",
         "position": "マーケティングディレクター, TechCorp"
       },
       "2": {
-        "text": "ビジネスニーズを理解し、革新的で効果的なソリューションで応える能力に感銘を受けました。",
-        "author": "Jean Martin",
+        "text": "私たちのビジネスニーズを理解し、革新的で効果的なソリューションで応える能力に感銘を受けました。",
+        "author": "ジャン・マルタン",
         "position": "CEO, InnovSoft"
       },
       "3": {
-        "text": "プロジェクト全体を通じてのサポートは非常に貴重でした。私たちの制約に適応し、適切なソリューションを提案してくれました。",
-        "author": "Sophie Lefebvre",
+        "text": "プロジェクト全体を通じて、彼らのサポートは貴重でした。私たちの制約に適応し、的確なソリューションを提案してくれました。",
+        "author": "ソフィー・ルフェーブル",
         "position": "CTO, DataFuture"
       }
     }
@@ -184,106 +184,135 @@
     }
   },
   "reclamation": {
-    "badge": "苦情申立",
+    "badge": "苦情受付",
     "title": "苦情申立フォーム",
-    "subtitle": "お客様のご懸念を真摯に受け止めます。以下のフォームにご記入いただければ、できるだけ早くご回答いたします。",
+    "subtitle": "お客様の懸念を真摯に受け止めます。以下のフォームにご記入いただければ、迅速に対応いたします。",
     "qualityCommitment": {
       "title": "品質への取り組み",
-      "intro": "DELIVERY Digital Niceは、お客様のニーズと要求に応える研修サービスの提供に努めています。ただし、苦情を申し立てたい場合は以下の方法があります。",
-      "contact": "いつでも、通常のご担当者に質問、疑問、発生した問題をお伝えいただければ、回答を提供するために全力を尽くします。",
-      "formOption": "また、以下の苦情申立フォームを使用してご要望をお送りいただくこともできます。",
-      "processTitle": "処理プロセス",
+      "intro": "DELIVERY Digital Niceは、お客様のニーズと要件に応える研修サービスの提供に努めています。苦情をお申し立ていただく場合:",
+      "contact": "いつでも、通常の担当者にご質問、疑問、問題をお伝えいただければ、回答をご提供するために最善を尽くします。",
+      "formOption": "また、以下の苦情申立フォームをご利用いただくこともできます。",
+      "processTitle": "対応プロセス",
       "steps": {
-        "1": "フォームにご記入いただくと、苦情処理チームに自動的に送信されます",
-        "2": "苦情の受領を確認いたします",
-        "3": "できるだけ早くご要望を分析し、受理可否を評価します",
+        "1": "フォームに記入すると、苦情対応チームに自動送信されます",
+        "2": "苦情の受領確認をお送りします",
+        "3": "迅速にご要望を分析し、受理可能性を評価します",
         "4": "ご要望が受理可能な場合、苦情の原因を分析します",
-        "5": "提示された事実を注意深く検証し、必要に応じて調査を実施します。この場合、進捗状況をお知らせします",
-        "6": "調査結果と問題解決のために提案するソリューションを明記した回答をお知らせします"
+        "5": "提示された事実を慎重に検討し、必要に応じて調査を実施します。その際、進捗状況をお知らせします",
+        "6": "調査結果と問題解決のための提案を含む回答をお知らせします"
       },
-      "directContact": "苦情処理チームに直接連絡する:"
+      "directContact": "苦情対応チームへの直接連絡:"
     },
     "contactCards": {
-      "email": "メール",
-      "phone": "電話",
-      "hours": "営業時間"
+      "email": "メールアドレス",
+      "phone": "電話番号",
+      "hours": "受付時間"
     },
     "form": {
       "firstName": "名",
       "lastName": "姓",
       "email": "メールアドレス",
       "phone": "電話番号",
-      "company": "会社名",
+      "company": "企業名",
       "orderNumber": "注文番号",
-      "category": "苦情カテゴリー",
+      "category": "苦情カテゴリ",
       "categoryOptions": {
         "service": "サービス品質",
-        "product": "製品/成果物",
+        "product": "製品・成果物",
         "billing": "請求",
         "support": "技術サポート",
         "training": "研修",
         "other": "その他"
       },
-      "subject": "苦情の件名",
+      "subject": "苦情件名",
       "subjectPlaceholder": "苦情の概要",
       "description": "詳細説明",
-      "descriptionPlaceholder": "苦情について詳しくご説明ください...",
-      "gdpr": "お客様のデータは、プライバシーポリシーおよびGDPRに従って処理されます。営業日48時間以内にご回答することをお約束します。",
-      "captcha": "セキュリティ認証",
-      "captchaRequired": "セキュリティ認証を完了してください",
+      "descriptionPlaceholder": "苦情の内容を詳しくご記入ください...",
+      "gdpr": "お客様のデータはプライバシーポリシーおよびGDPRに準拠して処理されます。営業日48時間以内に回答いたします。",
+      "captcha": "セキュリティ確認",
+      "captchaRequired": "セキュリティ確認を完了してください",
       "submit": "苦情を送信",
       "submitting": "送信中..."
     },
     "procedure": {
-      "title": "苦情処理手順",
+      "title": "苦情対応手順",
       "steps": {
-        "1": "24時間以内に受領と受信確認",
+        "1": "24時間以内に受領確認",
         "2": "チームによる苦情の分析",
         "3": "営業日48時間以内に詳細な回答",
         "4": "フォローアップと問題解決"
       },
-      "mediator": "当社の回答にご満足いただけない場合は、品質責任者にご連絡いただくか、消費者調停機関に申し立てることができます。"
+      "mediator": "当社の回答にご満足いただけない場合は、品質責任者にご連絡いただくか、消費者調停機関をご利用いただけます。"
     },
     "success": {
       "title": "苦情が正常に送信されました",
-      "message": "苦情を受け付けました。チームができるだけ早くご要望を処理するためにご連絡いたします。",
-      "responseTime": "予想回答時間:営業日24〜48時間",
+      "message": "苦情を受け付けました。チームができるだけ早くご連絡し、対応いたします。",
+      "responseTime": "予想回答時間: 営業日24〜48時間",
       "backHome": "ホームに戻る"
     }
   },
   "invoice": {
-    "title": "前払請求書",
+    "title": "前払い請求書",
     "prefix": "請求書",
     "issuedOn": "発行日",
-    "dueOn": "支払期日",
+    "dueOn": "支払期限",
     "relatedQuote": "関連見積書",
     "for": "宛先",
     "service": "サービス",
     "amountExclTax": "税抜金額",
-    "lineDescription": "{{title}}の{{percent}}%(参照: {{quoteRef}})",
+    "lineDescription": "{{title}}の{{percent}}% (参照: {{quoteRef}})",
     "subtotal": "小計(税抜)",
-    "vat": "消費税({{rate}}%)",
-    "netToPay": "お支払総額",
+    "vat": "付加価値税({{rate}}%)",
+    "netToPay": "お支払い総額",
     "bankDetails": "銀行口座情報",
     "beneficiary": "受取人",
     "bank": "銀行",
     "iban": "IBAN",
     "bicSwift": "BIC / SWIFT",
     "transferRef": "振込時に記載する参照番号",
-    "mailSubject": "前払請求書{{invoiceRef}} - 見積書{{quoteRef}}の{{percent}}%",
+    "mailSubject": "前払い請求書{{invoiceRef}} - 見積書{{quoteRef}}の{{percent}}%",
     "mailThanks": "ご信頼いただきありがとうございます。",
-    "mailBody": "見積書<strong>{{quoteRef}}</strong>の署名に伴い、前払請求書<strong>{{invoiceRef}}</strong>を添付いたします。",
-    "mailAmount": "お支払金額:<strong>{{amount}}</strong>(合計の{{percent}}%)。",
-    "mailRef": "銀行口座情報と振込参照番号は請求書に記載されています。支払期日:<strong>{{dueDate}}</strong>。",
-    "mailStart": "お支払い確認後、プロジェクトを開始いたします。"
+    "mailBody": "見積書<strong>{{quoteRef}}</strong>への署名に伴い、前払い請求書<strong>{{invoiceRef}}</strong>を添付いたします。",
+    "mailAmount": "お支払い金額: <strong>{{amount}}</strong>(総額の{{percent}}%)。",
+    "mailRef": "銀行口座情報と振込参照番号は請求書に記載されています。支払期限: <strong>{{dueDate}}</strong>。",
+    "mailStart": "入金確認後、プロジェクトを開始いたします。"
   },
   "emails": {
-    "acceptedSubject": "[承認]見積書{{quoteRef}}が{{signerName}}様により署名されました",
+    "acceptedSubject": "[承認済] 見積書{{quoteRef}}が{{signerName}}様により署名されました",
     "acceptedBody": "見積書<strong>{{quoteRef}}</strong>が<strong>{{signerName}}</strong>様({{signerEmail}})により承認されました。",
-    "acceptedMeta": "IP: {{ip}} - ユーザーエージェント: {{userAgent}}",
-    "rejectedSubject": "[拒否]見積書{{quoteRef}}",
-    "rejectedBody": "見積書<strong>{{quoteRef}}</strong>が拒否されました。",
-    "rejectedReason": "理由:{{reason}}",
+    "acceptedMeta": "IP: {{ip}} - User Agent: {{userAgent}}",
+    "rejectedSubject": "[却下] 見積書{{quoteRef}}",
+    "rejectedBody": "見積書<strong>{{quoteRef}}</strong>が却下されました。",
+    "rejectedReason": "理由: {{reason}}",
     "rejectedNoReason": "(未記入)"
-  }
+  },
+  "cii": {
+    "title": "イノベーション税額控除",
+    "close": "閉じる",
+    "exampleTitle": "具体例",
+    "exampleBody": "20,000ユーロのプロジェクトの場合: 4,000ユーロ(20%)の還元。実質コスト: 16,000ユーロ。年間上限: 支出400,000ユーロ、控除額最大80,000ユーロ。",
+    "eligibleTitle": "対象プロジェクト",
+    "eligibleBody": "Webおよびモバイルアプリケーション · カスタムソフトウェア · 人工知能 · 企業向け革新的ソリューション。",
+    "benefitTitle": "制度のご利用方法",
+    "benefitBody": "当社へのご投資 · すべての証明書類をご提供 · 控除または還付を受領。",
+    "taxLine": "納税企業の場合: 直接控除。",
+    "refundLine": "それ以外の場合: 国による還付。"
+  },
+  "common": {
+    "discussProject": "プロジェクトについて相談",
+    "discussProjectArrow": "プロジェクトについて相談 ›",
+    "chooseLanguage": "言語を選択",
+    "startConversation": "相談を始める"
+  },
+  "chat": {
+    "typePlaceholder": "メッセージを入力",
+    "typing": "DELIVERY Digitalが入力中...",
+    "describeIdea": "アイデアをお聞かせください。専門家が24時間以内にご連絡します。",
+    "letsTalk": "プロジェクトについてお聞かせください。",
+    "logout": "ログアウト",
+    "confidential": "メッセージは機密情報として扱われ、プロジェクトのためにのみ使用されます。",
+    "noConv": "まだ会話はありません。",
+    "aiUnderstands": "当社のAIエージェントがニーズを理解します。専門家が24時間以内にご連絡します。"
+  },
+  "discuter": "プロジェクトについて相談"
 }

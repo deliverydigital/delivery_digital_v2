@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Loader2, Plus, Menu as MenuIcon, X as XIcon, MessageSquare, Trash2, LogOut } from 'lucide-react';
@@ -55,6 +56,7 @@ function extractListItems(text: string): string[] {
 /* ============== AUTH GATE ============== */
 
 function ChatAuth({ onAuth }: { onAuth: (token: string, user: ChatUser) => void }) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -141,6 +143,7 @@ function ChatAuth({ onAuth }: { onAuth: (token: string, user: ChatUser) => void 
 /* ============== MAIN CHAT ============== */
 
 const ProjectChat = () => {
+  const { t } = useTranslation();
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
   const [user, setUser] = useState<ChatUser | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -320,7 +323,7 @@ const ProjectChat = () => {
 
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
         {conversations.length === 0 ? (
-          <p className="text-[12.5px] text-[#86868B] text-center px-3 py-6">Aucune conversation pour l'instant.</p>
+          <p className="text-[12.5px] text-[#86868B] text-center px-3 py-6">{t("chat.noConv")}</p>
         ) : (
           conversations.map((c) => (
             <div key={c.sessionId} className="group flex items-center">
@@ -433,10 +436,10 @@ const ProjectChat = () => {
                 className="text-[28px] sm:text-[40px] leading-[1.08] text-[#1D1D1F] mb-2"
                 style={{ fontFamily: '"Charter", "Iowan Old Style", Georgia, serif', fontWeight: 700 }}
               >
-                Bonjour {user.name},<br />parlons de votre projet.
+                Bonjour {user.name},<br />{t("chat.letsTalk")}
               </h1>
               <p className="text-[14px] sm:text-[16px] text-[#86868B] max-w-[560px]">
-                Décrivez votre idée. Un expert revient vers vous sous 24h.
+                {t("chat.describeIdea")}
               </p>
             </div>
           )}
@@ -484,7 +487,7 @@ const ProjectChat = () => {
                       />
                     ))}
                   </span>
-                  <span className="text-[13.5px] text-[#1D1D1F]/75">DELIVERY Digital est en train d'écrire...</span>
+                  <span className="text-[13.5px] text-[#1D1D1F]/75">{t("chat.typing")}</span>
                 </div>
               </motion.div>
             )}

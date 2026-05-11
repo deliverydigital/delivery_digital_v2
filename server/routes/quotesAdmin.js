@@ -153,6 +153,18 @@ router.get('/catalog', requireAdmin, (req, res) => {
    =========================================================== */
 const LANG_NAMES = { fr: 'francais', en: 'anglais (English)', es: 'espagnol (Español)', de: 'allemand (Deutsch)', it: 'italien (Italiano)', pt: 'portugais (Português)', ar: 'arabe (العربية)', zh: 'chinois (中文)' };
 
+// Date locale par langue : utilise pour formater dates dans devis et factures.
+// @author Rabah Ziane - 2026-05-11
+const DATE_LOCALES = {
+  fr: 'fr-FR', en: 'en-US', es: 'es-ES', de: 'de-DE', it: 'it-IT', pt: 'pt-PT',
+  nl: 'nl-NL', sv: 'sv-SE', da: 'da-DK', no: 'nb-NO', fi: 'fi-FI',
+  pl: 'pl-PL', cs: 'cs-CZ', hu: 'hu-HU', el: 'el-GR', tr: 'tr-TR',
+  ru: 'ru-RU', ar: 'ar-SA', fa: 'fa-IR', hi: 'hi-IN', zh: 'zh-CN', ja: 'ja-JP', ko: 'ko-KR',
+};
+function getDateLocale(lang) {
+  return DATE_LOCALES[(lang || 'fr').toLowerCase()] || 'fr-FR';
+}
+
 router.post('/:id/translate', requireAdmin, async (req, res) => {
   try {
     if (!anthropic) return res.status(500).json({ error: 'ANTHROPIC_API_KEY missing' });
@@ -354,6 +366,23 @@ const DEFAULT_PAYMENT_SCHEDULE_BY_LANG = {
   de: [{ label: 'Anzahlung bei Unterzeichnung', percent: 50 }, { label: 'Restzahlung bei Lieferung', percent: 50 }],
   it: [{ label: 'Acconto alla firma', percent: 50 }, { label: 'Saldo alla consegna', percent: 50 }],
   pt: [{ label: 'Sinal na assinatura', percent: 50 }, { label: 'Saldo na entrega', percent: 50 }],
+  nl: [{ label: 'Aanbetaling bij ondertekening', percent: 50 }, { label: 'Saldo bij levering', percent: 50 }],
+  sv: [{ label: 'Handpenning vid undertecknande', percent: 50 }, { label: 'Slutbetalning vid leverans', percent: 50 }],
+  da: [{ label: 'Depositum ved underskrift', percent: 50 }, { label: 'Restbeløb ved levering', percent: 50 }],
+  no: [{ label: 'Depositum ved signering', percent: 50 }, { label: 'Sluttbetaling ved levering', percent: 50 }],
+  fi: [{ label: 'Ennakkomaksu allekirjoituksen yhteydessä', percent: 50 }, { label: 'Loppumaksu toimituksen yhteydessä', percent: 50 }],
+  pl: [{ label: 'Zaliczka przy podpisaniu', percent: 50 }, { label: 'Pozostała kwota przy dostawie', percent: 50 }],
+  cs: [{ label: 'Záloha při podpisu', percent: 50 }, { label: 'Doplatek při dodání', percent: 50 }],
+  hu: [{ label: 'Előleg az aláíráskor', percent: 50 }, { label: 'Végösszeg szállításkor', percent: 50 }],
+  el: [{ label: 'Προκαταβολή στην υπογραφή', percent: 50 }, { label: 'Υπόλοιπο κατά την παράδοση', percent: 50 }],
+  tr: [{ label: 'İmza sırasında ön ödeme', percent: 50 }, { label: 'Teslimat sırasında bakiye', percent: 50 }],
+  ru: [{ label: 'Аванс при подписании', percent: 50 }, { label: 'Окончательный расчёт при поставке', percent: 50 }],
+  ar: [{ label: 'دفعة مقدمة عند التوقيع', percent: 50 }, { label: 'الرصيد عند التسليم', percent: 50 }],
+  fa: [{ label: 'پیش‌پرداخت هنگام امضا', percent: 50 }, { label: 'تسویه نهایی هنگام تحویل', percent: 50 }],
+  hi: [{ label: 'हस्ताक्षर पर अग्रिम भुगतान', percent: 50 }, { label: 'डिलीवरी पर शेष भुगतान', percent: 50 }],
+  zh: [{ label: '签约时定金', percent: 50 }, { label: '交付时尾款', percent: 50 }],
+  ja: [{ label: '契約時の前払金', percent: 50 }, { label: '納品時の残金', percent: 50 }],
+  ko: [{ label: '서명 시 선금', percent: 50 }, { label: '납품 시 잔금', percent: 50 }],
 };
 function getPaymentSchedule(quote) {
   const lang = (quote && quote.language || 'fr').toLowerCase();
@@ -369,9 +398,26 @@ const LABELS = {
   fr: { quote: 'Devis', emittedOn: 'Émis le', validUntil: 'Valable jusqu\'au', to: 'À l\'attention de', service: 'Prestation', qty: 'Quantité', unitPrice: 'Prix unitaire', totalHt: 'Total HT', subtotal: 'Sous-total HT', discount: 'Réduction', subtotalAfterDiscount: 'Sous-total après remise', tax: 'TVA', totalTtc: 'Total TTC', cii: '↓ Crédit Impôt Innovation', ciiNet: 'Coût net après CII', paymentTermsTitle: 'Conditions de paiement', replyCta: 'Répondre à ce devis', subject: (ref) => `Votre devis ${ref} - DELIVERY Digital`, ciiBlock: (amount, fmt) => `<strong>Crédit Impôt Innovation (CII)</strong> - DELIVERY Digital est certifié CII. Pour les PME françaises éligibles, ${amount > 0 ? `<strong>${fmt}</strong> seront récupérés` : '20 % des dépenses d\'innovation seront récupérés'} via ce dispositif fiscal (plafond annuel : 400 000 € de dépenses, soit 80 000 € de crédit max).` },
   en: { quote: 'Quote', emittedOn: 'Issued on', validUntil: 'Valid until', to: 'For', service: 'Service', qty: 'Quantity', unitPrice: 'Unit price', totalHt: 'Total (excl. tax)', subtotal: 'Subtotal (excl. tax)', discount: 'Discount', subtotalAfterDiscount: 'Subtotal after discount', tax: 'VAT', totalTtc: 'Total (incl. tax)', cii: '↓ French Innovation Tax Credit (CII)', ciiNet: 'Net cost after tax credit', paymentTermsTitle: 'Payment terms', replyCta: 'Reply to this quote', subject: (ref) => `Your quote ${ref} - DELIVERY Digital`, ciiBlock: (amount, fmt) => `<strong>French Innovation Tax Credit (CII)</strong> - DELIVERY Digital is CII-certified. Eligible French SMEs can recover ${amount > 0 ? `<strong>${fmt}</strong>` : '20 % of innovation expenses'} via this tax mechanism (yearly cap: 400,000 EUR of eligible expenses, max 80,000 EUR credit).` },
   es: { quote: 'Presupuesto', emittedOn: 'Emitido el', validUntil: 'Válido hasta', to: 'Para', service: 'Servicio', qty: 'Cantidad', unitPrice: 'Precio unitario', totalHt: 'Total (sin IVA)', subtotal: 'Subtotal (sin IVA)', discount: 'Descuento', subtotalAfterDiscount: 'Subtotal después del descuento', tax: 'IVA', totalTtc: 'Total (con IVA)', cii: '↓ Crédito fiscal francés CII', ciiNet: 'Coste neto tras crédito', paymentTermsTitle: 'Condiciones de pago', replyCta: 'Responder a esta cotización', subject: (ref) => `Su presupuesto ${ref} - DELIVERY Digital`, ciiBlock: (amount, fmt) => `<strong>Crédito fiscal CII (Francia)</strong> - DELIVERY Digital está certificado CII. Las PYMEs francesas elegibles recuperan ${amount > 0 ? `<strong>${fmt}</strong>` : '20 %'} a través de este dispositivo fiscal (límite anual : 400 000 EUR de gastos elegibles).` },
-  de: { quote: 'Angebot', emittedOn: 'Ausgestellt am', validUntil: 'Gültig bis', to: 'Zu Händen', service: 'Leistung', qty: 'Menge', unitPrice: 'Einzelpreis', totalHt: 'Gesamt (netto)', subtotal: 'Zwischensumme (netto)', discount: 'Rabatt', subtotalAfterDiscount: 'Zwischensumme nach Rabatt', tax: 'MwSt.', totalTtc: 'Gesamt (brutto)', cii: '↓ Franz. Innovations-Steuergutschrift (CII)', ciiNet: 'Nettokosten nach Steuergutschrift', paymentTermsTitle: 'Zahlungsbedingungen', replyCta: 'Auf dieses Angebot antworten', subject: (ref) => `Ihr Angebot ${ref} - DELIVERY Digital`, ciiBlock: (amount, fmt) => `<strong>Französische Innovations-Steuergutschrift (CII)DELIVERY Digital ist CII-zertifiziert. Förderfähige französische KMU erhalten ${amount > 0 ? `<strong>${fmt}</strong>` : '20 %'} der Innovationsausgaben zurück.` },
+  de: { quote: 'Angebot', emittedOn: 'Ausgestellt am', validUntil: 'Gültig bis', to: 'Zu Händen', service: 'Leistung', qty: 'Menge', unitPrice: 'Einzelpreis', totalHt: 'Gesamt (netto)', subtotal: 'Zwischensumme (netto)', discount: 'Rabatt', subtotalAfterDiscount: 'Zwischensumme nach Rabatt', tax: 'MwSt.', totalTtc: 'Gesamt (brutto)', cii: '↓ Franz. Innovations-Steuergutschrift (CII)', ciiNet: 'Nettokosten nach Steuergutschrift', paymentTermsTitle: 'Zahlungsbedingungen', replyCta: 'Auf dieses Angebot antworten', subject: (ref) => `Ihr Angebot ${ref} - DELIVERY Digital`, ciiBlock: (amount, fmt) => `<strong>Französische Innovations-Steuergutschrift (CII)</strong> - DELIVERY Digital ist CII-zertifiziert. Förderfähige französische KMU erhalten ${amount > 0 ? `<strong>${fmt}</strong>` : '20 %'} der Innovationsausgaben zurück.` },
   it: { quote: 'Preventivo', emittedOn: 'Emesso il', validUntil: 'Valido fino al', to: 'Per', service: 'Servizio', qty: 'Quantità', unitPrice: 'Prezzo unitario', totalHt: 'Totale (escl. IVA)', subtotal: 'Subtotale (escl. IVA)', discount: 'Sconto', subtotalAfterDiscount: 'Subtotale dopo sconto', tax: 'IVA', totalTtc: 'Totale (incl. IVA)', cii: '↓ Credito d\'imposta francese CII', ciiNet: 'Costo netto dopo credito', paymentTermsTitle: 'Condizioni di pagamento', replyCta: 'Rispondi a questo preventivo', subject: (ref) => `Il tuo preventivo ${ref} - DELIVERY Digital`, ciiBlock: (amount, fmt) => `<strong>Credito d'imposta CII (Francia)</strong> - DELIVERY Digital è certificata CII.` },
   pt: { quote: 'Orçamento', emittedOn: 'Emitido em', validUntil: 'Válido até', to: 'Para', service: 'Serviço', qty: 'Quantidade', unitPrice: 'Preço unitário', totalHt: 'Total (sem IVA)', subtotal: 'Subtotal (sem IVA)', discount: 'Desconto', subtotalAfterDiscount: 'Subtotal após desconto', tax: 'IVA', totalTtc: 'Total (com IVA)', cii: '↓ Crédito fiscal francês CII', ciiNet: 'Custo líquido após crédito', paymentTermsTitle: 'Condições de pagamento', replyCta: 'Responder a este orçamento', subject: (ref) => `O seu orçamento ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  nl: { quote: 'Offerte', emittedOn: 'Uitgegeven op', validUntil: 'Geldig tot', to: 'T.a.v.', service: 'Dienst', qty: 'Aantal', unitPrice: 'Stukprijs', totalHt: 'Totaal (excl. btw)', subtotal: 'Subtotaal (excl. btw)', discount: 'Korting', subtotalAfterDiscount: 'Subtotaal na korting', tax: 'Btw', totalTtc: 'Totaal (incl. btw)', cii: '↓ Frans innovatiebelastingvoordeel (CII)', ciiNet: 'Nettokosten na belastingvoordeel', paymentTermsTitle: 'Betalingsvoorwaarden', replyCta: 'Antwoord op deze offerte', subject: (ref) => `Uw offerte ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  sv: { quote: 'Offert', emittedOn: 'Utfärdat den', validUntil: 'Giltig till', to: 'Att.', service: 'Tjänst', qty: 'Antal', unitPrice: 'Á-pris', totalHt: 'Totalt (exkl. moms)', subtotal: 'Delsumma (exkl. moms)', discount: 'Rabatt', subtotalAfterDiscount: 'Delsumma efter rabatt', tax: 'Moms', totalTtc: 'Totalt (inkl. moms)', cii: '↓ Franska innovationsskattelättnad (CII)', ciiNet: 'Nettokostnad efter skattelättnad', paymentTermsTitle: 'Betalningsvillkor', replyCta: 'Svara på denna offert', subject: (ref) => `Din offert ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  da: { quote: 'Tilbud', emittedOn: 'Udstedt den', validUntil: 'Gyldig indtil', to: 'Att.', service: 'Ydelse', qty: 'Antal', unitPrice: 'Enhedspris', totalHt: 'I alt (ekskl. moms)', subtotal: 'Subtotal (ekskl. moms)', discount: 'Rabat', subtotalAfterDiscount: 'Subtotal efter rabat', tax: 'Moms', totalTtc: 'I alt (inkl. moms)', cii: '↓ Fransk innovationsskattekredit (CII)', ciiNet: 'Nettoomkostning efter skattekredit', paymentTermsTitle: 'Betalingsbetingelser', replyCta: 'Svar på dette tilbud', subject: (ref) => `Dit tilbud ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  no: { quote: 'Tilbud', emittedOn: 'Utstedt', validUntil: 'Gyldig til', to: 'Att.', service: 'Tjeneste', qty: 'Antall', unitPrice: 'Enhetspris', totalHt: 'Totalt (eks. mva)', subtotal: 'Subtotal (eks. mva)', discount: 'Rabatt', subtotalAfterDiscount: 'Subtotal etter rabatt', tax: 'Mva', totalTtc: 'Totalt (inkl. mva)', cii: '↓ Fransk innovasjonsskattekreditt (CII)', ciiNet: 'Nettokostnad etter skattekreditt', paymentTermsTitle: 'Betalingsbetingelser', replyCta: 'Svar på dette tilbudet', subject: (ref) => `Tilbudet ditt ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  fi: { quote: 'Tarjous', emittedOn: 'Päivätty', validUntil: 'Voimassa', to: 'Vastaanottaja', service: 'Palvelu', qty: 'Määrä', unitPrice: 'Yksikköhinta', totalHt: 'Yhteensä (alv 0%)', subtotal: 'Välisumma (alv 0%)', discount: 'Alennus', subtotalAfterDiscount: 'Välisumma alennuksen jälkeen', tax: 'ALV', totalTtc: 'Yhteensä (alv mukaan luettuna)', cii: '↓ Ranskan innovaatioverohyvitys (CII)', ciiNet: 'Nettokustannus verohyvityksen jälkeen', paymentTermsTitle: 'Maksuehdot', replyCta: 'Vastaa tähän tarjoukseen', subject: (ref) => `Tarjouksesi ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  pl: { quote: 'Wycena', emittedOn: 'Wystawiono dnia', validUntil: 'Ważne do', to: 'Do rąk', service: 'Usługa', qty: 'Ilość', unitPrice: 'Cena jednostkowa', totalHt: 'Razem (netto)', subtotal: 'Suma częściowa (netto)', discount: 'Rabat', subtotalAfterDiscount: 'Suma częściowa po rabacie', tax: 'VAT', totalTtc: 'Razem (brutto)', cii: '↓ Francuska ulga podatkowa na innowacje (CII)', ciiNet: 'Koszt netto po uldze', paymentTermsTitle: 'Warunki płatności', replyCta: 'Odpowiedz na tę wycenę', subject: (ref) => `Twoja wycena ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  cs: { quote: 'Cenová nabídka', emittedOn: 'Vystaveno dne', validUntil: 'Platnost do', to: 'K rukám', service: 'Služba', qty: 'Množství', unitPrice: 'Cena za jednotku', totalHt: 'Celkem (bez DPH)', subtotal: 'Mezisoučet (bez DPH)', discount: 'Sleva', subtotalAfterDiscount: 'Mezisoučet po slevě', tax: 'DPH', totalTtc: 'Celkem (s DPH)', cii: '↓ Francouzský daňový kredit na inovace (CII)', ciiNet: 'Čisté náklady po daňovém kreditu', paymentTermsTitle: 'Platební podmínky', replyCta: 'Odpovědět na tuto nabídku', subject: (ref) => `Vaše cenová nabídka ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  hu: { quote: 'Árajánlat', emittedOn: 'Kiállítva', validUntil: 'Érvényes', to: 'Címzett', service: 'Szolgáltatás', qty: 'Mennyiség', unitPrice: 'Egységár', totalHt: 'Összesen (nettó)', subtotal: 'Részösszeg (nettó)', discount: 'Kedvezmény', subtotalAfterDiscount: 'Részösszeg kedvezmény után', tax: 'ÁFA', totalTtc: 'Összesen (bruttó)', cii: '↓ Francia innovációs adójóváírás (CII)', ciiNet: 'Nettó költség adójóváírás után', paymentTermsTitle: 'Fizetési feltételek', replyCta: 'Válasz erre az ajánlatra', subject: (ref) => `Az árajánlata ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  el: { quote: 'Προσφορά', emittedOn: 'Εκδόθηκε στις', validUntil: 'Ισχύει έως', to: 'Προς', service: 'Υπηρεσία', qty: 'Ποσότητα', unitPrice: 'Τιμή μονάδας', totalHt: 'Σύνολο (χωρίς ΦΠΑ)', subtotal: 'Μερικό σύνολο (χωρίς ΦΠΑ)', discount: 'Έκπτωση', subtotalAfterDiscount: 'Μερικό σύνολο μετά την έκπτωση', tax: 'ΦΠΑ', totalTtc: 'Σύνολο (με ΦΠΑ)', cii: '↓ Γαλλική φορολογική πίστωση καινοτομίας (CII)', ciiNet: 'Καθαρό κόστος μετά την πίστωση', paymentTermsTitle: 'Όροι πληρωμής', replyCta: 'Απάντηση σε αυτή την προσφορά', subject: (ref) => `Η προσφορά σας ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  tr: { quote: 'Teklif', emittedOn: 'Düzenleme tarihi', validUntil: 'Geçerlilik', to: 'Sayın', service: 'Hizmet', qty: 'Miktar', unitPrice: 'Birim fiyat', totalHt: 'Toplam (KDV hariç)', subtotal: 'Ara toplam (KDV hariç)', discount: 'İndirim', subtotalAfterDiscount: 'İndirim sonrası ara toplam', tax: 'KDV', totalTtc: 'Toplam (KDV dahil)', cii: '↓ Fransız inovasyon vergi kredisi (CII)', ciiNet: 'Vergi kredisi sonrası net maliyet', paymentTermsTitle: 'Ödeme koşulları', replyCta: 'Bu teklife yanıt verin', subject: (ref) => `Teklifiniz ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  ru: { quote: 'Коммерческое предложение', emittedOn: 'Выдано', validUntil: 'Действительно до', to: 'Кому', service: 'Услуга', qty: 'Кол-во', unitPrice: 'Цена за ед.', totalHt: 'Итого (без НДС)', subtotal: 'Промежуточный итог (без НДС)', discount: 'Скидка', subtotalAfterDiscount: 'Промежуточный итог после скидки', tax: 'НДС', totalTtc: 'Итого (с НДС)', cii: '↓ Французский налоговый кредит на инновации (CII)', ciiNet: 'Чистая стоимость после налогового кредита', paymentTermsTitle: 'Условия оплаты', replyCta: 'Ответить на это предложение', subject: (ref) => `Ваше предложение ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  ar: { quote: 'عرض سعر', emittedOn: 'تاريخ الإصدار', validUntil: 'صالح حتى', to: 'إلى', service: 'الخدمة', qty: 'الكمية', unitPrice: 'سعر الوحدة', totalHt: 'الإجمالي (بدون ضريبة)', subtotal: 'الإجمالي الفرعي (بدون ضريبة)', discount: 'خصم', subtotalAfterDiscount: 'الإجمالي الفرعي بعد الخصم', tax: 'ضريبة القيمة المضافة', totalTtc: 'الإجمالي (شامل الضريبة)', cii: '↓ الائتمان الضريبي الفرنسي للابتكار (CII)', ciiNet: 'التكلفة الصافية بعد الائتمان الضريبي', paymentTermsTitle: 'شروط الدفع', replyCta: 'الرد على عرض السعر هذا', subject: (ref) => `عرض السعر الخاص بك ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  fa: { quote: 'پیش‌فاکتور', emittedOn: 'تاریخ صدور', validUntil: 'معتبر تا', to: 'به', service: 'خدمت', qty: 'تعداد', unitPrice: 'قیمت واحد', totalHt: 'جمع (بدون مالیات)', subtotal: 'جمع جزئی (بدون مالیات)', discount: 'تخفیف', subtotalAfterDiscount: 'جمع جزئی پس از تخفیف', tax: 'مالیات بر ارزش افزوده', totalTtc: 'جمع (با مالیات)', cii: '↓ اعتبار مالیاتی نوآوری فرانسه (CII)', ciiNet: 'هزینه خالص پس از اعتبار مالیاتی', paymentTermsTitle: 'شرایط پرداخت', replyCta: 'پاسخ به این پیش‌فاکتور', subject: (ref) => `پیش‌فاکتور شما ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  hi: { quote: 'कोटेशन', emittedOn: 'जारी किया गया', validUntil: 'मान्य अंतिम तिथि', to: 'प्रति', service: 'सेवा', qty: 'मात्रा', unitPrice: 'इकाई मूल्य', totalHt: 'कुल (कर रहित)', subtotal: 'उप-योग (कर रहित)', discount: 'छूट', subtotalAfterDiscount: 'छूट के बाद उप-योग', tax: 'वैट', totalTtc: 'कुल (कर सहित)', cii: '↓ फ्रेंच इनोवेशन टैक्स क्रेडिट (CII)', ciiNet: 'टैक्स क्रेडिट के बाद शुद्ध लागत', paymentTermsTitle: 'भुगतान शर्तें', replyCta: 'इस कोटेशन का उत्तर दें', subject: (ref) => `आपका कोटेशन ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  zh: { quote: '报价单', emittedOn: '签发日期', validUntil: '有效期至', to: '收件人', service: '服务项目', qty: '数量', unitPrice: '单价', totalHt: '总计（不含税）', subtotal: '小计（不含税）', discount: '折扣', subtotalAfterDiscount: '折扣后小计', tax: '增值税', totalTtc: '总计（含税）', cii: '↓ 法国创新税收抵免 (CII)', ciiNet: '税收抵免后净成本', paymentTermsTitle: '付款条件', replyCta: '回复此报价单', subject: (ref) => `您的报价单 ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  ja: { quote: '見積書', emittedOn: '発行日', validUntil: '有効期限', to: '宛先', service: 'サービス', qty: '数量', unitPrice: '単価', totalHt: '合計（税抜）', subtotal: '小計（税抜）', discount: '割引', subtotalAfterDiscount: '割引後小計', tax: '消費税', totalTtc: '合計（税込）', cii: '↓ フランスのイノベーション税額控除 (CII)', ciiNet: '税額控除後の正味コスト', paymentTermsTitle: 'お支払い条件', replyCta: 'この見積もりに返信', subject: (ref) => `お見積もり ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
+  ko: { quote: '견적서', emittedOn: '발행일', validUntil: '유효 기한', to: '받는 분', service: '서비스', qty: '수량', unitPrice: '단가', totalHt: '합계 (부가세 별도)', subtotal: '소계 (부가세 별도)', discount: '할인', subtotalAfterDiscount: '할인 후 소계', tax: '부가세', totalTtc: '합계 (부가세 포함)', cii: '↓ 프랑스 혁신 세금 공제 (CII)', ciiNet: '세금 공제 후 순 비용', paymentTermsTitle: '결제 조건', replyCta: '이 견적에 답장하기', subject: (ref) => `귀하의 견적서 ${ref} - DELIVERY Digital`, ciiBlock: () => '' },
 };
 
 function getLabels(lang) {
@@ -383,7 +429,8 @@ function renderHtml(quote, { publicView = false } = {}) {
   const L = getLabels(lang);
   const ISS = getIssuer(quote);
   const PSCH = getPaymentSchedule(quote);
-  const dateLocale = lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : lang === 'de' ? 'de-DE' : lang === 'it' ? 'it-IT' : lang === 'pt' ? 'pt-PT' : 'fr-FR';
+  const dateLocale = getDateLocale(lang);
+  const dir = (['ar','fa'].includes(lang)) ? 'rtl' : 'ltr';
   const validDate = quote.validUntil ? new Date(quote.validUntil).toLocaleDateString(dateLocale) : '';
   const today = new Date().toLocaleDateString(dateLocale);
   const publicLink = `${PUBLIC_BASE}/devis/${quote.publicToken}`;
@@ -393,7 +440,7 @@ function renderHtml(quote, { publicView = false } = {}) {
   const M = (n) => fmtBoth(n, cur, sec, rate);
 
   return `<!doctype html>
-<html lang="${lang}">
+<html lang="${lang}" dir="${dir}">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -558,7 +605,7 @@ function buildDepositInvoiceData(quote) {
   const tvaRate = quote.taxRate || 0;
   const amountHT = tvaRate > 0 ? Math.round(amount / (1 + tvaRate / 100) * 100) / 100 : amount;
   const amountTVA = Math.round((amount - amountHT) * 100) / 100;
-  const dateLocale = lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : lang === 'de' ? 'de-DE' : lang === 'it' ? 'it-IT' : lang === 'pt' ? 'pt-PT' : 'fr-FR';
+  const dateLocale = getDateLocale(lang);
   return {
     lang, ISS, acompte,
     invoiceRef: (quote.ref || '').replace(/^DDQ-/, 'DDF-') || `DDF-${Date.now()}`,
@@ -573,19 +620,31 @@ function buildDepositInvoiceData(quote) {
 // Genere un PDF natif de la facture d'acompte via pdfkit (pas de HTML/puppeteer, leger et stable).
 // Retourne un Buffer prêt a être attache au mail.
 // @author Rabah Ziane - 2026-05-11
+// Polices Helvetica de pdfkit = scripts latins uniquement. Pour ar/fa/hi/zh/ja/ko/ru/el/...
+// on retombe sur EN dans le PDF (mais l'email HTML reste dans la langue du client).
+// @author Rabah Ziane - 2026-05-11
+const LATIN_PDF_LANGS = new Set(['fr','en','es','de','it','pt','nl','sv','da','no','fi','pl','cs','hu','tr']);
+function getPdfLang(lang) {
+  const l = (lang || 'fr').toLowerCase();
+  return LATIN_PDF_LANGS.has(l) ? l : 'en';
+}
+
 function renderDepositInvoicePdf(quote) {
   return new Promise((resolve, reject) => {
     try {
       const D = buildDepositInvoiceData(quote);
+      const pdfLang = getPdfLang(D.lang);
+      const DL = getDepositLabels(pdfLang);
+      const intlLocale = getDateLocale(pdfLang);
       const formatMoney = (n) => {
-        try { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: D.currency, minimumFractionDigits: 2 }).format(n); }
+        try { return new Intl.NumberFormat(intlLocale, { style: 'currency', currency: D.currency, minimumFractionDigits: 2 }).format(n); }
         catch { return `${n.toFixed(2)} ${D.currency}`; }
       };
 
       const doc = new PDFDocument({
         size: 'A4',
         margins: { top: 50, bottom: 50, left: 50, right: 50 },
-        info: { Title: `Facture ${D.invoiceRef}`, Author: 'DELIVERY Digital', Subject: `Facture d'acompte ${D.invoiceRef}` },
+        info: { Title: `${DL.invoice} ${D.invoiceRef}`, Author: 'DELIVERY Digital', Subject: `${DL.invoiceTitle} ${D.invoiceRef}` },
       });
       const chunks = [];
       doc.on('data', (c) => chunks.push(c));
@@ -604,20 +663,20 @@ function renderDepositInvoicePdf(quote) {
         doc.fillColor('#1D1D1F').font('Helvetica-Bold').fontSize(18).text('DELIVERY Digital', left, 50);
       }
       doc.font('Helvetica').fontSize(9).fillColor('#86868B')
-        .text(`FACTURE ${D.invoiceRef}`, right - 200, 52, { width: 200, align: 'right' })
-        .text(`Emise le ${D.today}`, { width: 200, align: 'right' })
-        .text(`Echeance ${D.dueDate}`, { width: 200, align: 'right' })
-        .text(`Devis associe : ${quote.ref || ''}`, { width: 200, align: 'right' });
+        .text(`${DL.invoice.toUpperCase()} ${D.invoiceRef}`, right - 200, 52, { width: 200, align: 'right' })
+        .text(`${DL.issuedOn} ${D.today}`, { width: 200, align: 'right' })
+        .text(`${DL.dueDate} ${D.dueDate}`, { width: 200, align: 'right' })
+        .text(`${DL.relatedQuote} : ${quote.ref || ''}`, { width: 200, align: 'right' });
 
       doc.moveTo(left, 110).lineTo(right, 110).strokeColor('#E5E5EA').lineWidth(0.5).stroke();
 
       // Titre
-      doc.fillColor('#1D1D1F').font('Helvetica-Bold').fontSize(24).text("Facture d'acompte", left, 130);
+      doc.fillColor('#1D1D1F').font('Helvetica-Bold').fontSize(24).text(DL.invoiceTitle, left, 130);
 
       // Bloc client
       const clientY = 175;
       doc.rect(left, clientY, W, 60).fillColor('#F5F5F7').fill();
-      doc.fillColor('#86868B').font('Helvetica-Bold').fontSize(8).text("A L'ATTENTION DE", left + 14, clientY + 12);
+      doc.fillColor('#86868B').font('Helvetica-Bold').fontSize(8).text(DL.to.toUpperCase(), left + 14, clientY + 12);
       doc.fillColor('#1D1D1F').font('Helvetica-Bold').fontSize(13).text(quote.client?.name || '', left + 14, clientY + 26);
       const subline = [quote.client?.company, quote.client?.email, quote.client?.phone].filter(Boolean).join(' · ');
       doc.fillColor('#86868B').font('Helvetica').fontSize(10).text(subline, left + 14, clientY + 45, { width: W - 28 });
@@ -625,15 +684,15 @@ function renderDepositInvoicePdf(quote) {
       // Tableau prestation
       let y = clientY + 90;
       doc.fillColor('#86868B').font('Helvetica-Bold').fontSize(8)
-        .text('PRESTATION', left, y)
-        .text('MONTANT HT', right - 120, y, { width: 120, align: 'right' });
+        .text(DL.service.toUpperCase(), left, y)
+        .text(DL.amountHt.toUpperCase(), right - 120, y, { width: 120, align: 'right' });
       y += 14;
       doc.moveTo(left, y).lineTo(right, y).strokeColor('#E5E5EA').lineWidth(0.5).stroke();
       y += 12;
 
       doc.fillColor('#1D1D1F').font('Helvetica-Bold').fontSize(12).text(D.acompte.label, left, y);
       doc.fillColor('#86868B').font('Helvetica').fontSize(10).text(
-        `${D.acompte.percent} % de ${quote.title || 'Devis'} (ref. ${quote.ref || ''})`,
+        DL.percentOf(D.acompte.percent, quote.title, quote.ref),
         left, y + 16, { width: W - 130 }
       );
       doc.fillColor('#1D1D1F').font('Helvetica-Bold').fontSize(12).text(formatMoney(D.amountHT), right - 120, y, { width: 120, align: 'right' });
@@ -650,29 +709,29 @@ function renderDepositInvoicePdf(quote) {
           .text(value, totalsX, y, { width: totalsW, align: 'right' });
         y += bold ? 20 : 16;
       };
-      drawRow('Sous-total HT', formatMoney(D.amountHT));
-      drawRow(`TVA (${D.tvaRate} %)`, formatMoney(D.amountTVA));
+      drawRow(DL.subtotalHt, formatMoney(D.amountHT));
+      drawRow(`${DL.tax} (${D.tvaRate} %)`, formatMoney(D.amountTVA));
       doc.moveTo(totalsX, y + 2).lineTo(right, y + 2).strokeColor('#1D1D1F').lineWidth(1).stroke();
       y += 10;
-      drawRow('Net a payer', formatMoney(D.amount), true);
+      drawRow(DL.netToPay, formatMoney(D.amount), true);
       y += 10;
 
       // RIB
       if (D.bank.iban) {
         doc.rect(left, y, W, 95).fillColor('#F5F5F7').fill();
-        doc.fillColor('#86868B').font('Helvetica-Bold').fontSize(8).text('COORDONNEES BANCAIRES', left + 14, y + 12);
+        doc.fillColor('#86868B').font('Helvetica-Bold').fontSize(8).text(DL.bankDetails.toUpperCase(), left + 14, y + 12);
         let ry = y + 28;
         const ribRow = (k, v, mono = false) => {
           doc.fillColor('#86868B').font('Helvetica').fontSize(10).text(k, left + 14, ry, { width: 110 });
           doc.fillColor('#1D1D1F').font(mono ? 'Courier' : 'Helvetica-Bold').fontSize(10).text(v, left + 130, ry, { width: W - 144 });
           ry += 14;
         };
-        ribRow('Beneficiaire', D.bank.holderName || '');
-        if (D.bank.bankName) ribRow('Banque', D.bank.bankName);
+        ribRow(DL.beneficiary, D.bank.holderName || '');
+        if (D.bank.bankName) ribRow(DL.bank, D.bank.bankName);
         ribRow('IBAN', D.bank.iban, true);
-        if (D.bank.bic) ribRow('BIC / SWIFT', D.bank.bic, true);
+        if (D.bank.bic) ribRow(DL.bicSwift, D.bank.bic, true);
         doc.fillColor('#86868B').font('Helvetica').fontSize(8.5)
-          .text(`Reference a indiquer dans le virement : ${D.invoiceRef}`, left + 14, y + 80);
+          .text(`${DL.txRef} : ${D.invoiceRef}`, left + 14, y + 80);
         y += 110;
       }
 
@@ -697,13 +756,15 @@ function renderDepositInvoicePdf(quote) {
 function renderDepositInvoiceHtml(quote) {
   const lang = (quote.language || 'fr').toLowerCase();
   const L = getLabels(lang);
+  const DL = getDepositLabels(lang);
   const ISS = getIssuer(quote);
   const PSCH = getPaymentSchedule(quote);
   const cur = (quote.currency || 'EUR').toUpperCase();
   const sec = quote.secondaryCurrency ? quote.secondaryCurrency.toUpperCase() : null;
   const rate = quote.secondaryRate || 1;
   const M = (n) => fmtBoth(n, cur, sec, rate);
-  const dateLocale = lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : lang === 'de' ? 'de-DE' : lang === 'it' ? 'it-IT' : lang === 'pt' ? 'pt-PT' : 'fr-FR';
+  const dateLocale = getDateLocale(lang);
+  const dir = (['ar','fa'].includes(lang)) ? 'rtl' : 'ltr';
 
   const acompte = PSCH[0] || { label: 'Acompte a la signature', percent: 50 };
   const totalTTC = quote.totalTTC || 0;
@@ -718,11 +779,11 @@ function renderDepositInvoiceHtml(quote) {
   const bank = ISS.bank || {};
 
   return `<!doctype html>
-<html lang="${lang}">
+<html lang="${lang}" dir="${dir}">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Facture ${invoiceRef} - DELIVERY Digital</title>
+<title>${DL.invoice} ${invoiceRef} - DELIVERY Digital</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; background: #F2EFE9; color: #1D1D1F; margin: 0; padding: 0; }
   .wrap { max-width: 760px; margin: 0 auto; background: #fff; padding: 40px 48px; box-shadow: 0 8px 30px -8px rgba(0,0,0,0.08); }
@@ -757,17 +818,17 @@ function renderDepositInvoiceHtml(quote) {
   <div class="header">
     <img src="${LOGO_URL}" alt="DELIVERY Digital" />
     <div class="meta">
-      <div class="ref">Facture ${escapeHtml(invoiceRef)}</div>
-      <div>${L.emittedOn} <strong>${today}</strong></div>
-      <div>Echeance <strong>${dueDate}</strong></div>
-      <div style="margin-top:6px;font-size:11.5px;">Devis associe : <strong>${escapeHtml(quote.ref || '')}</strong></div>
+      <div class="ref">${DL.invoice} ${escapeHtml(invoiceRef)}</div>
+      <div>${DL.issuedOn} <strong>${today}</strong></div>
+      <div>${DL.dueDate} <strong>${dueDate}</strong></div>
+      <div style="margin-top:6px;font-size:11.5px;">${DL.relatedQuote} : <strong>${escapeHtml(quote.ref || '')}</strong></div>
     </div>
   </div>
 
-  <h1>Facture d'acompte</h1>
+  <h1>${DL.invoiceTitle}</h1>
 
   <div class="client-block">
-    <div class="label">${L.to}</div>
+    <div class="label">${DL.to}</div>
     <div class="name">${escapeHtml(quote.client?.name || '')}</div>
     <div class="info">
       ${quote.client?.company ? escapeHtml(quote.client.company) + '<br/>' : ''}
@@ -779,15 +840,15 @@ function renderDepositInvoiceHtml(quote) {
   <table>
     <thead>
       <tr>
-        <th style="width:70%">${L.service}</th>
-        <th class="num" style="width:30%">${L.totalHt}</th>
+        <th style="width:70%">${DL.service}</th>
+        <th class="num" style="width:30%">${DL.amountHt}</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td>
           <div class="desc-main">${escapeHtml(acompte.label)}</div>
-          <div class="desc-details">${acompte.percent} % de ${escapeHtml(quote.title || 'Devis')} (ref. ${escapeHtml(quote.ref || '')})</div>
+          <div class="desc-details">${escapeHtml(DL.percentOf(acompte.percent, quote.title, quote.ref))}</div>
         </td>
         <td class="num"><strong>${M(amountHT)}</strong></td>
       </tr>
@@ -795,19 +856,19 @@ function renderDepositInvoiceHtml(quote) {
   </table>
 
   <div class="totals">
-    <div class="row"><span>${L.subtotal}</span><strong>${M(amountHT)}</strong></div>
-    <div class="row"><span>${L.tax} (${tvaRate} %)</span><span>${M(amountTVA)}</span></div>
-    <div class="row big"><span>Net a payer</span><span>${M(amount)}</span></div>
+    <div class="row"><span>${DL.subtotalHt}</span><strong>${M(amountHT)}</strong></div>
+    <div class="row"><span>${DL.tax} (${tvaRate} %)</span><span>${M(amountTVA)}</span></div>
+    <div class="row big"><span>${DL.netToPay}</span><span>${M(amount)}</span></div>
   </div>
 
   ${bank.iban ? `
     <div class="rib">
-      <div class="label">Coordonnees bancaires</div>
-      <div class="row"><span>Beneficiaire</span><span style="font-weight:600;">${escapeHtml(bank.holderName || '')}</span></div>
-      ${bank.bankName ? `<div class="row"><span>Banque</span><span>${escapeHtml(bank.bankName)}</span></div>` : ''}
+      <div class="label">${DL.bankDetails}</div>
+      <div class="row"><span>${DL.beneficiary}</span><span style="font-weight:600;">${escapeHtml(bank.holderName || '')}</span></div>
+      ${bank.bankName ? `<div class="row"><span>${DL.bank}</span><span>${escapeHtml(bank.bankName)}</span></div>` : ''}
       <div class="row"><span>IBAN</span><span style="font-family:monospace;font-size:13px;">${escapeHtml(bank.iban)}</span></div>
-      ${bank.bic ? `<div class="row"><span>BIC / SWIFT</span><span style="font-family:monospace;">${escapeHtml(bank.bic)}</span></div>` : ''}
-      <div style="margin-top:8px;padding-top:8px;border-top:1px solid #E5E5EA;font-size:12px;color:#86868B;">Reference a indiquer dans le virement : <strong style="color:#1D1D1F;">${escapeHtml(invoiceRef)}</strong></div>
+      ${bank.bic ? `<div class="row"><span>${DL.bicSwift}</span><span style="font-family:monospace;">${escapeHtml(bank.bic)}</span></div>` : ''}
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid #E5E5EA;font-size:12px;color:#86868B;">${DL.txRef} : <strong style="color:#1D1D1F;">${escapeHtml(invoiceRef)}</strong></div>
     </div>
   ` : ''}
 
@@ -828,11 +889,59 @@ const ACCEPT_LABELS = {
   de: { accepted: 'Angebot angenommen', acceptedOn: 'Angenommen am', acceptedBy: 'von', rejected: 'Angebot abgelehnt', rejectedOn: 'Abgelehnt am', actionTitle: 'Angebot akzeptieren und unterschreiben', actionHelp: 'Mit der elektronischen Unterschrift bestätigen Sie das Angebot.', signerName: 'Ihr vollständiger Name', signerEmail: 'Ihre E-Mail', accept: 'Akzeptieren', reject: 'Ablehnen', rejectReasonPlaceholder: 'Grund (optional)', terms: 'Ich akzeptiere die Bedingungen dieses Angebots.', thanksTitle: 'Vielen Dank.', thanksBody: 'Ihre Unterschrift wurde erfasst.', errorMissing: 'Bitte Name und E-Mail ausfullen.' },
   it: { accepted: 'Preventivo accettato', acceptedOn: 'Accettato il', acceptedBy: 'da', rejected: 'Preventivo rifiutato', rejectedOn: 'Rifiutato il', actionTitle: 'Accettare e firmare il preventivo', actionHelp: 'Firmando elettronicamente accetti i termini.', signerName: 'Nome completo', signerEmail: 'Email', accept: 'Accettare', reject: 'Rifiutare', rejectReasonPlaceholder: 'Motivo (facoltativo)', terms: 'Accetto i termini di questo preventivo.', thanksTitle: 'Grazie.', thanksBody: 'La tua firma e stata registrata.', errorMissing: 'Compilare nome ed email.' },
   pt: { accepted: 'Orçamento aceito', acceptedOn: 'Aceito em', acceptedBy: 'por', rejected: 'Orçamento recusado', rejectedOn: 'Recusado em', actionTitle: 'Aceitar e assinar o orçamento', actionHelp: 'Ao assinar eletronicamente, você valida este orçamento.', signerName: 'Seu nome completo', signerEmail: 'Seu email', accept: 'Aceitar', reject: 'Recusar', rejectReasonPlaceholder: 'Motivo (opcional)', terms: 'Aceito os termos deste orçamento.', thanksTitle: 'Obrigado.', thanksBody: 'Sua assinatura foi registrada.', errorMissing: 'Preencha nome e email.' },
+  nl: { accepted: 'Offerte geaccepteerd', acceptedOn: 'Geaccepteerd op', acceptedBy: 'door', rejected: 'Offerte afgewezen', rejectedOn: 'Afgewezen op', actionTitle: 'Offerte accepteren en ondertekenen', actionHelp: 'Door elektronisch te ondertekenen valideert u de offerte en geeft u toestemming om het project te starten.', signerName: 'Uw volledige naam', signerEmail: 'Uw e-mailadres', accept: 'Offerte accepteren', reject: 'Afwijzen', rejectReasonPlaceholder: 'Reden (optioneel)', terms: 'Ik accepteer de voorwaarden van deze offerte.', thanksTitle: 'Dank u wel.', thanksBody: 'Uw handtekening is geregistreerd. Ons team neemt zeer binnenkort contact met u op.', errorMissing: 'Vul naam en e-mailadres in.' },
+  sv: { accepted: 'Offert accepterad', acceptedOn: 'Accepterad', acceptedBy: 'av', rejected: 'Offert avvisad', rejectedOn: 'Avvisad', actionTitle: 'Acceptera och signera offerten', actionHelp: 'Genom att signera elektroniskt godkänner du offerten och tillåter projektstart.', signerName: 'Ditt fullständiga namn', signerEmail: 'Din e-post', accept: 'Acceptera offert', reject: 'Avvisa', rejectReasonPlaceholder: 'Anledning (valfritt)', terms: 'Jag accepterar villkoren i denna offert.', thanksTitle: 'Tack.', thanksBody: 'Din signatur har registrerats. Vårt team återkommer snart.', errorMissing: 'Fyll i namn och e-post.' },
+  da: { accepted: 'Tilbud accepteret', acceptedOn: 'Accepteret den', acceptedBy: 'af', rejected: 'Tilbud afvist', rejectedOn: 'Afvist den', actionTitle: 'Accepter og underskriv tilbuddet', actionHelp: 'Ved elektronisk underskrift accepterer du tilbuddet og giver tilladelse til projektstart.', signerName: 'Dit fulde navn', signerEmail: 'Din e-mail', accept: 'Acceptér tilbud', reject: 'Afvis', rejectReasonPlaceholder: 'Årsag (valgfri)', terms: 'Jeg accepterer betingelserne i dette tilbud.', thanksTitle: 'Tak.', thanksBody: 'Din underskrift er registreret. Vores team vender snart tilbage.', errorMissing: 'Udfyld navn og e-mail.' },
+  no: { accepted: 'Tilbud akseptert', acceptedOn: 'Akseptert', acceptedBy: 'av', rejected: 'Tilbud avvist', rejectedOn: 'Avvist', actionTitle: 'Aksepter og signer tilbudet', actionHelp: 'Ved elektronisk signering aksepterer du tilbudet og gir tillatelse til prosjektstart.', signerName: 'Ditt fulle navn', signerEmail: 'Din e-post', accept: 'Aksepter tilbud', reject: 'Avvis', rejectReasonPlaceholder: 'Årsak (valgfritt)', terms: 'Jeg aksepterer vilkårene i dette tilbudet.', thanksTitle: 'Takk.', thanksBody: 'Signaturen din er registrert. Teamet vårt kommer snart tilbake.', errorMissing: 'Fyll inn navn og e-post.' },
+  fi: { accepted: 'Tarjous hyväksytty', acceptedOn: 'Hyväksytty', acceptedBy: 'käyttäjältä', rejected: 'Tarjous hylätty', rejectedOn: 'Hylätty', actionTitle: 'Hyväksy ja allekirjoita tarjous', actionHelp: 'Sähköisellä allekirjoituksella vahvistat tarjouksen ja annat luvan projektin aloittamiseen.', signerName: 'Koko nimesi', signerEmail: 'Sähköpostiosoitteesi', accept: 'Hyväksy tarjous', reject: 'Hylkää', rejectReasonPlaceholder: 'Syy (valinnainen)', terms: 'Hyväksyn tämän tarjouksen ehdot.', thanksTitle: 'Kiitos.', thanksBody: 'Allekirjoituksesi on tallennettu. Tiimimme palaa pian asiaan.', errorMissing: 'Täytä nimi ja sähköpostiosoite.' },
+  pl: { accepted: 'Wycena zaakceptowana', acceptedOn: 'Zaakceptowano dnia', acceptedBy: 'przez', rejected: 'Wycena odrzucona', rejectedOn: 'Odrzucono dnia', actionTitle: 'Zaakceptuj i podpisz wycenę', actionHelp: 'Podpisując elektronicznie, akceptujesz wycenę i pozwalasz na rozpoczęcie projektu.', signerName: 'Twoje pełne imię i nazwisko', signerEmail: 'Twój adres e-mail', accept: 'Zaakceptuj wycenę', reject: 'Odrzuć', rejectReasonPlaceholder: 'Powód (opcjonalnie)', terms: 'Akceptuję warunki tej wyceny.', thanksTitle: 'Dziękujemy.', thanksBody: 'Twój podpis został zarejestrowany. Nasz zespół wkrótce się odezwie.', errorMissing: 'Wypełnij imię i e-mail.' },
+  cs: { accepted: 'Cenová nabídka přijata', acceptedOn: 'Přijato dne', acceptedBy: 'od', rejected: 'Cenová nabídka odmítnuta', rejectedOn: 'Odmítnuto dne', actionTitle: 'Přijmout a podepsat cenovou nabídku', actionHelp: 'Elektronickým podpisem schvalujete cenovou nabídku a povolujete zahájení projektu.', signerName: 'Vaše celé jméno', signerEmail: 'Váš e-mail', accept: 'Přijmout nabídku', reject: 'Odmítnout', rejectReasonPlaceholder: 'Důvod (volitelně)', terms: 'Souhlasím s podmínkami této cenové nabídky.', thanksTitle: 'Děkujeme.', thanksBody: 'Váš podpis byl zaznamenán. Náš tým se brzy ozve.', errorMissing: 'Vyplňte jméno a e-mail.' },
+  hu: { accepted: 'Árajánlat elfogadva', acceptedOn: 'Elfogadva', acceptedBy: 'által', rejected: 'Árajánlat elutasítva', rejectedOn: 'Elutasítva', actionTitle: 'Árajánlat elfogadása és aláírása', actionHelp: 'Az elektronikus aláírással elfogadja az árajánlatot és engedélyezi a projekt indítását.', signerName: 'Teljes neve', signerEmail: 'E-mail címe', accept: 'Árajánlat elfogadása', reject: 'Elutasítás', rejectReasonPlaceholder: 'Indok (opcionális)', terms: 'Elfogadom az árajánlat feltételeit.', thanksTitle: 'Köszönjük.', thanksBody: 'Aláírását rögzítettük. Csapatunk hamarosan jelentkezik.', errorMissing: 'Töltse ki a nevet és az e-mail címet.' },
+  el: { accepted: 'Η προσφορά έγινε αποδεκτή', acceptedOn: 'Έγινε αποδεκτή στις', acceptedBy: 'από', rejected: 'Η προσφορά απορρίφθηκε', rejectedOn: 'Απορρίφθηκε στις', actionTitle: 'Αποδοχή και υπογραφή της προσφοράς', actionHelp: 'Με την ηλεκτρονική υπογραφή αποδέχεστε την προσφορά και επιτρέπετε την έναρξη του έργου.', signerName: 'Το πλήρες όνομά σας', signerEmail: 'Η διεύθυνση email σας', accept: 'Αποδοχή προσφοράς', reject: 'Απόρριψη', rejectReasonPlaceholder: 'Λόγος (προαιρετικό)', terms: 'Αποδέχομαι τους όρους αυτής της προσφοράς.', thanksTitle: 'Ευχαριστούμε.', thanksBody: 'Η υπογραφή σας καταχωρήθηκε. Η ομάδα μας θα επικοινωνήσει σύντομα.', errorMissing: 'Συμπληρώστε όνομα και email.' },
+  tr: { accepted: 'Teklif kabul edildi', acceptedOn: 'Kabul tarihi', acceptedBy: 'tarafından', rejected: 'Teklif reddedildi', rejectedOn: 'Red tarihi', actionTitle: 'Teklifi kabul et ve imzala', actionHelp: 'Elektronik imza ile teklifi onaylar ve projenin başlamasına izin vermiş olursunuz.', signerName: 'Tam adınız', signerEmail: 'E-posta adresiniz', accept: 'Teklifi kabul et', reject: 'Reddet', rejectReasonPlaceholder: 'Sebep (isteğe bağlı)', terms: 'Bu teklifin şartlarını kabul ediyorum.', thanksTitle: 'Teşekkür ederiz.', thanksBody: 'İmzanız kaydedildi. Ekibimiz kısa süre içinde size geri dönecektir.', errorMissing: 'Ad ve e-postayı doldurun.' },
+  ru: { accepted: 'Предложение принято', acceptedOn: 'Принято', acceptedBy: 'кем', rejected: 'Предложение отклонено', rejectedOn: 'Отклонено', actionTitle: 'Принять и подписать предложение', actionHelp: 'Подписывая электронно, вы подтверждаете предложение и разрешаете начало проекта.', signerName: 'Ваше полное имя', signerEmail: 'Ваш email', accept: 'Принять предложение', reject: 'Отклонить', rejectReasonPlaceholder: 'Причина (необязательно)', terms: 'Я принимаю условия этого предложения.', thanksTitle: 'Спасибо.', thanksBody: 'Ваша подпись зарегистрирована. Наша команда скоро свяжется с вами.', errorMissing: 'Заполните имя и email.' },
+  ar: { accepted: 'تم قبول عرض السعر', acceptedOn: 'تم القبول في', acceptedBy: 'بواسطة', rejected: 'تم رفض عرض السعر', rejectedOn: 'تم الرفض في', actionTitle: 'قبول عرض السعر والتوقيع', actionHelp: 'بالتوقيع إلكترونياً، فإنك تصادق على عرض السعر وتسمح ببدء المشروع.', signerName: 'اسمك الكامل', signerEmail: 'بريدك الإلكتروني', accept: 'قبول عرض السعر', reject: 'رفض', rejectReasonPlaceholder: 'السبب (اختياري)', terms: 'أوافق على شروط عرض السعر هذا.', thanksTitle: 'شكراً لكم.', thanksBody: 'تم تسجيل توقيعك. سيتواصل معك فريقنا قريباً.', errorMissing: 'يرجى إدخال الاسم والبريد الإلكتروني.' },
+  fa: { accepted: 'پیش‌فاکتور پذیرفته شد', acceptedOn: 'پذیرفته شده در', acceptedBy: 'توسط', rejected: 'پیش‌فاکتور رد شد', rejectedOn: 'رد شده در', actionTitle: 'پذیرش و امضای پیش‌فاکتور', actionHelp: 'با امضای الکترونیکی، پیش‌فاکتور را تأیید کرده و اجازه شروع پروژه را می‌دهید.', signerName: 'نام کامل شما', signerEmail: 'ایمیل شما', accept: 'پذیرش پیش‌فاکتور', reject: 'رد', rejectReasonPlaceholder: 'دلیل (اختیاری)', terms: 'شرایط این پیش‌فاکتور را می‌پذیرم.', thanksTitle: 'متشکریم.', thanksBody: 'امضای شما ثبت شد. تیم ما به‌زودی با شما تماس می‌گیرد.', errorMissing: 'لطفاً نام و ایمیل را پر کنید.' },
+  hi: { accepted: 'कोटेशन स्वीकृत', acceptedOn: 'स्वीकृत तिथि', acceptedBy: 'द्वारा', rejected: 'कोटेशन अस्वीकृत', rejectedOn: 'अस्वीकृत तिथि', actionTitle: 'कोटेशन स्वीकार करें और हस्ताक्षर करें', actionHelp: 'इलेक्ट्रॉनिक रूप से हस्ताक्षर करके आप कोटेशन की पुष्टि करते हैं और परियोजना शुरू करने की अनुमति देते हैं।', signerName: 'आपका पूरा नाम', signerEmail: 'आपका ईमेल', accept: 'कोटेशन स्वीकार करें', reject: 'अस्वीकार करें', rejectReasonPlaceholder: 'कारण (वैकल्पिक)', terms: 'मैं इस कोटेशन की शर्तों को स्वीकार करता हूं।', thanksTitle: 'धन्यवाद।', thanksBody: 'आपका हस्ताक्षर दर्ज कर लिया गया है। हमारी टीम जल्द ही संपर्क करेगी।', errorMissing: 'कृपया नाम और ईमेल भरें।' },
+  zh: { accepted: '报价单已接受', acceptedOn: '接受日期', acceptedBy: '由', rejected: '报价单已拒绝', rejectedOn: '拒绝日期', actionTitle: '接受并签署报价单', actionHelp: '通过电子签名，您确认本报价单并授权项目开始。', signerName: '您的全名', signerEmail: '您的电子邮箱', accept: '接受报价单', reject: '拒绝', rejectReasonPlaceholder: '原因（可选）', terms: '我接受本报价单的条款。', thanksTitle: '谢谢。', thanksBody: '您的签名已记录。我们的团队将很快与您联系。', errorMissing: '请填写姓名和电子邮箱。' },
+  ja: { accepted: '見積書承諾済み', acceptedOn: '承諾日', acceptedBy: '承諾者', rejected: '見積書拒否', rejectedOn: '拒否日', actionTitle: '見積書を承諾して署名する', actionHelp: '電子署名により、本見積書を承諾し、プロジェクトの開始を許可します。', signerName: 'お名前（フルネーム）', signerEmail: 'メールアドレス', accept: '見積書を承諾', reject: '拒否', rejectReasonPlaceholder: '理由（任意）', terms: '本見積書の条件に同意します。', thanksTitle: 'ありがとうございます。', thanksBody: 'ご署名を記録しました。担当チームより近日中にご連絡いたします。', errorMissing: '名前とメールアドレスをご入力ください。' },
+  ko: { accepted: '견적 수락됨', acceptedOn: '수락일', acceptedBy: '수락자', rejected: '견적 거절됨', rejectedOn: '거절일', actionTitle: '견적 수락 및 서명', actionHelp: '전자 서명을 통해 견적을 승인하고 프로젝트 시작을 허가합니다.', signerName: '성함', signerEmail: '이메일', accept: '견적 수락', reject: '거절', rejectReasonPlaceholder: '사유 (선택)', terms: '이 견적의 조건에 동의합니다.', thanksTitle: '감사합니다.', thanksBody: '서명이 기록되었습니다. 저희 팀이 곧 연락드리겠습니다.', errorMissing: '이름과 이메일을 입력해 주세요.' },
 };
+
+// Labels facture d'acompte (PDF + email) en 23 langues.
+// @author Rabah Ziane - 2026-05-11
+const DEPOSIT_LABELS = {
+  fr: { invoice: 'Facture', invoiceTitle: "Facture d'acompte", issuedOn: 'Émise le', dueDate: 'Échéance', relatedQuote: 'Devis associé', to: "À l'attention de", service: 'Prestation', amountHt: 'Montant HT', subtotalHt: 'Sous-total HT', tax: 'TVA', netToPay: 'Net à payer', bankDetails: 'Coordonnées bancaires', beneficiary: 'Bénéficiaire', bank: 'Banque', bicSwift: 'BIC / SWIFT', txRef: 'Référence à indiquer dans le virement', percentOf: (p, title, ref) => `${p} % de ${title || 'Devis'} (réf. ${ref || ''})`, subject: (ref, p, qref) => `Facture d'acompte ${ref} - ${p} % du devis ${qref}`, mailTitle: 'Merci pour votre confiance.', mailBody1: (qref, ref) => `Suite à la signature du devis <strong>${qref}</strong>, veuillez trouver en pièce jointe la facture d'acompte <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Montant à régler : <strong>${amount}</strong> (${p} % du total).`, mailBody3: (due) => `Coordonnées bancaires et référence de virement dans la facture. Échéance : <strong>${due}</strong>.`, mailFooter: 'À réception du paiement, nous démarrons le projet.' },
+  en: { invoice: 'Invoice', invoiceTitle: 'Deposit invoice', issuedOn: 'Issued on', dueDate: 'Due date', relatedQuote: 'Related quote', to: 'For', service: 'Service', amountHt: 'Amount (excl. tax)', subtotalHt: 'Subtotal (excl. tax)', tax: 'VAT', netToPay: 'Net to pay', bankDetails: 'Bank details', beneficiary: 'Beneficiary', bank: 'Bank', bicSwift: 'BIC / SWIFT', txRef: 'Reference to indicate in the transfer', percentOf: (p, title, ref) => `${p} % of ${title || 'Quote'} (ref. ${ref || ''})`, subject: (ref, p, qref) => `Deposit invoice ${ref} - ${p} % of quote ${qref}`, mailTitle: 'Thank you for your trust.', mailBody1: (qref, ref) => `Following your signature on quote <strong>${qref}</strong>, please find attached the deposit invoice <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Amount to pay: <strong>${amount}</strong> (${p} % of total).`, mailBody3: (due) => `Bank details and transfer reference are in the invoice. Due date: <strong>${due}</strong>.`, mailFooter: 'Once we receive your payment, we kick off the project.' },
+  es: { invoice: 'Factura', invoiceTitle: 'Factura de anticipo', issuedOn: 'Emitida el', dueDate: 'Vencimiento', relatedQuote: 'Presupuesto asociado', to: 'Para', service: 'Servicio', amountHt: 'Importe (sin IVA)', subtotalHt: 'Subtotal (sin IVA)', tax: 'IVA', netToPay: 'Neto a pagar', bankDetails: 'Datos bancarios', beneficiary: 'Beneficiario', bank: 'Banco', bicSwift: 'BIC / SWIFT', txRef: 'Referencia a indicar en la transferencia', percentOf: (p, title, ref) => `${p} % de ${title || 'Presupuesto'} (ref. ${ref || ''})`, subject: (ref, p, qref) => `Factura de anticipo ${ref} - ${p} % del presupuesto ${qref}`, mailTitle: 'Gracias por su confianza.', mailBody1: (qref, ref) => `Tras la firma del presupuesto <strong>${qref}</strong>, adjuntamos la factura de anticipo <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Importe a pagar: <strong>${amount}</strong> (${p} % del total).`, mailBody3: (due) => `Los datos bancarios y la referencia de transferencia están en la factura. Vencimiento: <strong>${due}</strong>.`, mailFooter: 'Al recibir el pago, iniciaremos el proyecto.' },
+  de: { invoice: 'Rechnung', invoiceTitle: 'Anzahlungsrechnung', issuedOn: 'Ausgestellt am', dueDate: 'Fällig am', relatedQuote: 'Zugehöriges Angebot', to: 'Zu Händen', service: 'Leistung', amountHt: 'Betrag (netto)', subtotalHt: 'Zwischensumme (netto)', tax: 'MwSt.', netToPay: 'Zu zahlen', bankDetails: 'Bankverbindung', beneficiary: 'Begünstigter', bank: 'Bank', bicSwift: 'BIC / SWIFT', txRef: 'Verwendungszweck der Überweisung', percentOf: (p, title, ref) => `${p} % von ${title || 'Angebot'} (Ref. ${ref || ''})`, subject: (ref, p, qref) => `Anzahlungsrechnung ${ref} - ${p} % des Angebots ${qref}`, mailTitle: 'Vielen Dank für Ihr Vertrauen.', mailBody1: (qref, ref) => `Im Anschluss an die Unterzeichnung des Angebots <strong>${qref}</strong> finden Sie anbei die Anzahlungsrechnung <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Zu zahlender Betrag: <strong>${amount}</strong> (${p} % der Gesamtsumme).`, mailBody3: (due) => `Bankverbindung und Verwendungszweck stehen in der Rechnung. Fälligkeit: <strong>${due}</strong>.`, mailFooter: 'Nach Zahlungseingang starten wir das Projekt.' },
+  it: { invoice: 'Fattura', invoiceTitle: 'Fattura di acconto', issuedOn: 'Emessa il', dueDate: 'Scadenza', relatedQuote: 'Preventivo associato', to: 'Per', service: 'Servizio', amountHt: 'Importo (escl. IVA)', subtotalHt: 'Subtotale (escl. IVA)', tax: 'IVA', netToPay: 'Netto da pagare', bankDetails: 'Coordinate bancarie', beneficiary: 'Beneficiario', bank: 'Banca', bicSwift: 'BIC / SWIFT', txRef: 'Riferimento da indicare nel bonifico', percentOf: (p, title, ref) => `${p} % di ${title || 'Preventivo'} (rif. ${ref || ''})`, subject: (ref, p, qref) => `Fattura di acconto ${ref} - ${p} % del preventivo ${qref}`, mailTitle: 'Grazie per la fiducia.', mailBody1: (qref, ref) => `A seguito della firma del preventivo <strong>${qref}</strong>, trova in allegato la fattura di acconto <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Importo da pagare: <strong>${amount}</strong> (${p} % del totale).`, mailBody3: (due) => `Le coordinate bancarie e il riferimento del bonifico sono nella fattura. Scadenza: <strong>${due}</strong>.`, mailFooter: 'Al ricevimento del pagamento, avviamo il progetto.' },
+  pt: { invoice: 'Fatura', invoiceTitle: 'Fatura de sinal', issuedOn: 'Emitida em', dueDate: 'Vencimento', relatedQuote: 'Orçamento associado', to: 'Para', service: 'Serviço', amountHt: 'Valor (sem IVA)', subtotalHt: 'Subtotal (sem IVA)', tax: 'IVA', netToPay: 'Líquido a pagar', bankDetails: 'Dados bancários', beneficiary: 'Beneficiário', bank: 'Banco', bicSwift: 'BIC / SWIFT', txRef: 'Referência a indicar na transferência', percentOf: (p, title, ref) => `${p} % de ${title || 'Orçamento'} (ref. ${ref || ''})`, subject: (ref, p, qref) => `Fatura de sinal ${ref} - ${p} % do orçamento ${qref}`, mailTitle: 'Obrigado pela sua confiança.', mailBody1: (qref, ref) => `Após a assinatura do orçamento <strong>${qref}</strong>, segue em anexo a fatura de sinal <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Valor a pagar: <strong>${amount}</strong> (${p} % do total).`, mailBody3: (due) => `Os dados bancários e a referência da transferência estão na fatura. Vencimento: <strong>${due}</strong>.`, mailFooter: 'Ao recebermos o pagamento, iniciamos o projeto.' },
+  nl: { invoice: 'Factuur', invoiceTitle: 'Aanbetalingsfactuur', issuedOn: 'Uitgegeven op', dueDate: 'Vervaldatum', relatedQuote: 'Bijbehorende offerte', to: 'T.a.v.', service: 'Dienst', amountHt: 'Bedrag (excl. btw)', subtotalHt: 'Subtotaal (excl. btw)', tax: 'Btw', netToPay: 'Netto te betalen', bankDetails: 'Bankgegevens', beneficiary: 'Begunstigde', bank: 'Bank', bicSwift: 'BIC / SWIFT', txRef: 'Te vermelden referentie bij overschrijving', percentOf: (p, title, ref) => `${p} % van ${title || 'Offerte'} (ref. ${ref || ''})`, subject: (ref, p, qref) => `Aanbetalingsfactuur ${ref} - ${p} % van offerte ${qref}`, mailTitle: 'Bedankt voor uw vertrouwen.', mailBody1: (qref, ref) => `Na ondertekening van offerte <strong>${qref}</strong> vindt u in de bijlage de aanbetalingsfactuur <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Te betalen bedrag: <strong>${amount}</strong> (${p} % van het totaal).`, mailBody3: (due) => `Bankgegevens en overschrijvingsreferentie staan in de factuur. Vervaldatum: <strong>${due}</strong>.`, mailFooter: 'Na ontvangst van betaling starten we het project.' },
+  sv: { invoice: 'Faktura', invoiceTitle: 'Handpenningfaktura', issuedOn: 'Utfärdat den', dueDate: 'Förfallodag', relatedQuote: 'Tillhörande offert', to: 'Att.', service: 'Tjänst', amountHt: 'Belopp (exkl. moms)', subtotalHt: 'Delsumma (exkl. moms)', tax: 'Moms', netToPay: 'Netto att betala', bankDetails: 'Bankuppgifter', beneficiary: 'Mottagare', bank: 'Bank', bicSwift: 'BIC / SWIFT', txRef: 'Referens att ange i överföringen', percentOf: (p, title, ref) => `${p} % av ${title || 'Offert'} (ref. ${ref || ''})`, subject: (ref, p, qref) => `Handpenningfaktura ${ref} - ${p} % av offerten ${qref}`, mailTitle: 'Tack för ditt förtroende.', mailBody1: (qref, ref) => `Efter signering av offert <strong>${qref}</strong> bifogas handpenningfakturan <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Belopp att betala: <strong>${amount}</strong> (${p} % av totalt).`, mailBody3: (due) => `Bankuppgifter och referens finns i fakturan. Förfallodag: <strong>${due}</strong>.`, mailFooter: 'När vi mottar betalningen startar vi projektet.' },
+  da: { invoice: 'Faktura', invoiceTitle: 'Depositumfaktura', issuedOn: 'Udstedt den', dueDate: 'Forfaldsdato', relatedQuote: 'Tilhørende tilbud', to: 'Att.', service: 'Ydelse', amountHt: 'Beløb (ekskl. moms)', subtotalHt: 'Subtotal (ekskl. moms)', tax: 'Moms', netToPay: 'Netto til betaling', bankDetails: 'Bankoplysninger', beneficiary: 'Modtager', bank: 'Bank', bicSwift: 'BIC / SWIFT', txRef: 'Reference at angive ved overførsel', percentOf: (p, title, ref) => `${p} % af ${title || 'Tilbud'} (ref. ${ref || ''})`, subject: (ref, p, qref) => `Depositumfaktura ${ref} - ${p} % af tilbuddet ${qref}`, mailTitle: 'Tak for din tillid.', mailBody1: (qref, ref) => `Efter underskriften af tilbuddet <strong>${qref}</strong>, finder du vedhæftet depositumfakturaen <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Beløb til betaling: <strong>${amount}</strong> (${p} % af totalen).`, mailBody3: (due) => `Bankoplysninger og overførselsreference findes i fakturaen. Forfaldsdato: <strong>${due}</strong>.`, mailFooter: 'Ved modtagelse af betaling påbegynder vi projektet.' },
+  no: { invoice: 'Faktura', invoiceTitle: 'Depositumfaktura', issuedOn: 'Utstedt', dueDate: 'Forfallsdato', relatedQuote: 'Tilhørende tilbud', to: 'Att.', service: 'Tjeneste', amountHt: 'Beløp (eks. mva)', subtotalHt: 'Subtotal (eks. mva)', tax: 'Mva', netToPay: 'Netto å betale', bankDetails: 'Bankopplysninger', beneficiary: 'Mottaker', bank: 'Bank', bicSwift: 'BIC / SWIFT', txRef: 'Referanse å oppgi ved overføring', percentOf: (p, title, ref) => `${p} % av ${title || 'Tilbud'} (ref. ${ref || ''})`, subject: (ref, p, qref) => `Depositumfaktura ${ref} - ${p} % av tilbudet ${qref}`, mailTitle: 'Takk for tilliten.', mailBody1: (qref, ref) => `Etter signering av tilbudet <strong>${qref}</strong> finner du depositumfakturaen <strong>${ref}</strong> vedlagt.`, mailBody2: (amount, p) => `Beløp å betale: <strong>${amount}</strong> (${p} % av totalen).`, mailBody3: (due) => `Bankopplysninger og overføringsreferanse finnes i fakturaen. Forfallsdato: <strong>${due}</strong>.`, mailFooter: 'Når vi mottar betalingen, starter vi prosjektet.' },
+  fi: { invoice: 'Lasku', invoiceTitle: 'Ennakkomaksulasku', issuedOn: 'Päivätty', dueDate: 'Eräpäivä', relatedQuote: 'Liittyvä tarjous', to: 'Vastaanottaja', service: 'Palvelu', amountHt: 'Määrä (alv 0%)', subtotalHt: 'Välisumma (alv 0%)', tax: 'ALV', netToPay: 'Maksettava netto', bankDetails: 'Pankkitiedot', beneficiary: 'Maksunsaaja', bank: 'Pankki', bicSwift: 'BIC / SWIFT', txRef: 'Tilisiirtoon merkittävä viite', percentOf: (p, title, ref) => `${p} % kohteesta ${title || 'Tarjous'} (viite ${ref || ''})`, subject: (ref, p, qref) => `Ennakkomaksulasku ${ref} - ${p} % tarjouksesta ${qref}`, mailTitle: 'Kiitos luottamuksesta.', mailBody1: (qref, ref) => `Tarjouksen <strong>${qref}</strong> allekirjoituksen jälkeen löydät liitteenä ennakkomaksulaskun <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Maksettava summa: <strong>${amount}</strong> (${p} % kokonaissummasta).`, mailBody3: (due) => `Pankkitiedot ja viite ovat laskussa. Eräpäivä: <strong>${due}</strong>.`, mailFooter: 'Maksun saavuttua aloitamme projektin.' },
+  pl: { invoice: 'Faktura', invoiceTitle: 'Faktura zaliczkowa', issuedOn: 'Wystawiono dnia', dueDate: 'Termin płatności', relatedQuote: 'Powiązana wycena', to: 'Do rąk', service: 'Usługa', amountHt: 'Kwota (netto)', subtotalHt: 'Suma częściowa (netto)', tax: 'VAT', netToPay: 'Do zapłaty netto', bankDetails: 'Dane bankowe', beneficiary: 'Beneficjent', bank: 'Bank', bicSwift: 'BIC / SWIFT', txRef: 'Tytuł przelewu', percentOf: (p, title, ref) => `${p} % z ${title || 'Wycena'} (nr ${ref || ''})`, subject: (ref, p, qref) => `Faktura zaliczkowa ${ref} - ${p} % wyceny ${qref}`, mailTitle: 'Dziękujemy za zaufanie.', mailBody1: (qref, ref) => `Po podpisaniu wyceny <strong>${qref}</strong> w załączeniu przesyłamy fakturę zaliczkową <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Kwota do zapłaty: <strong>${amount}</strong> (${p} % całości).`, mailBody3: (due) => `Dane bankowe i tytuł przelewu znajdują się na fakturze. Termin: <strong>${due}</strong>.`, mailFooter: 'Po otrzymaniu płatności rozpoczynamy projekt.' },
+  cs: { invoice: 'Faktura', invoiceTitle: 'Zálohová faktura', issuedOn: 'Vystaveno dne', dueDate: 'Datum splatnosti', relatedQuote: 'Související nabídka', to: 'K rukám', service: 'Služba', amountHt: 'Částka (bez DPH)', subtotalHt: 'Mezisoučet (bez DPH)', tax: 'DPH', netToPay: 'Netto k úhradě', bankDetails: 'Bankovní spojení', beneficiary: 'Příjemce', bank: 'Banka', bicSwift: 'BIC / SWIFT', txRef: 'Variabilní symbol platby', percentOf: (p, title, ref) => `${p} % z ${title || 'Nabídka'} (ref. ${ref || ''})`, subject: (ref, p, qref) => `Zálohová faktura ${ref} - ${p} % nabídky ${qref}`, mailTitle: 'Děkujeme za důvěru.', mailBody1: (qref, ref) => `Po podpisu nabídky <strong>${qref}</strong> v příloze posíláme zálohovou fakturu <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Částka k úhradě: <strong>${amount}</strong> (${p} % z celku).`, mailBody3: (due) => `Bankovní spojení a variabilní symbol jsou na faktuře. Splatnost: <strong>${due}</strong>.`, mailFooter: 'Po obdržení platby zahájíme projekt.' },
+  hu: { invoice: 'Számla', invoiceTitle: 'Előlegszámla', issuedOn: 'Kiállítva', dueDate: 'Esedékesség', relatedQuote: 'Kapcsolódó árajánlat', to: 'Címzett', service: 'Szolgáltatás', amountHt: 'Összeg (nettó)', subtotalHt: 'Részösszeg (nettó)', tax: 'ÁFA', netToPay: 'Fizetendő nettó', bankDetails: 'Bankszámla adatok', beneficiary: 'Kedvezményezett', bank: 'Bank', bicSwift: 'BIC / SWIFT', txRef: 'Közlemény az utaláshoz', percentOf: (p, title, ref) => `${p} % a következőből: ${title || 'Árajánlat'} (hiv. ${ref || ''})`, subject: (ref, p, qref) => `Előlegszámla ${ref} - az ${qref} árajánlat ${p} %-a`, mailTitle: 'Köszönjük a bizalmát.', mailBody1: (qref, ref) => `Az árajánlat <strong>${qref}</strong> aláírását követően mellékelten küldjük az előlegszámlát <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Fizetendő összeg: <strong>${amount}</strong> (a teljes összeg ${p} %-a).`, mailBody3: (due) => `A bankszámla adatok és a közlemény a számlán találhatók. Esedékesség: <strong>${due}</strong>.`, mailFooter: 'A fizetés beérkezésével elindítjuk a projektet.' },
+  el: { invoice: 'Τιμολόγιο', invoiceTitle: 'Τιμολόγιο προκαταβολής', issuedOn: 'Εκδόθηκε στις', dueDate: 'Ημερομηνία λήξης', relatedQuote: 'Σχετική προσφορά', to: 'Προς', service: 'Υπηρεσία', amountHt: 'Ποσό (χωρίς ΦΠΑ)', subtotalHt: 'Μερικό σύνολο (χωρίς ΦΠΑ)', tax: 'ΦΠΑ', netToPay: 'Καθαρό προς πληρωμή', bankDetails: 'Τραπεζικά στοιχεία', beneficiary: 'Δικαιούχος', bank: 'Τράπεζα', bicSwift: 'BIC / SWIFT', txRef: 'Αιτιολογία εμβάσματος', percentOf: (p, title, ref) => `${p} % του ${title || 'Προσφορά'} (αναφ. ${ref || ''})`, subject: (ref, p, qref) => `Τιμολόγιο προκαταβολής ${ref} - ${p} % της προσφοράς ${qref}`, mailTitle: 'Σας ευχαριστούμε για την εμπιστοσύνη.', mailBody1: (qref, ref) => `Μετά την υπογραφή της προσφοράς <strong>${qref}</strong>, επισυνάπτεται το τιμολόγιο προκαταβολής <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Ποσό προς πληρωμή: <strong>${amount}</strong> (${p} % του συνόλου).`, mailBody3: (due) => `Τα τραπεζικά στοιχεία και η αιτιολογία εμβάσματος αναγράφονται στο τιμολόγιο. Λήξη: <strong>${due}</strong>.`, mailFooter: 'Με τη λήψη της πληρωμής, ξεκινάμε το έργο.' },
+  tr: { invoice: 'Fatura', invoiceTitle: 'Ön ödeme faturası', issuedOn: 'Düzenleme tarihi', dueDate: 'Son ödeme tarihi', relatedQuote: 'İlgili teklif', to: 'Sayın', service: 'Hizmet', amountHt: 'Tutar (KDV hariç)', subtotalHt: 'Ara toplam (KDV hariç)', tax: 'KDV', netToPay: 'Net ödenecek', bankDetails: 'Banka bilgileri', beneficiary: 'Lehdar', bank: 'Banka', bicSwift: 'BIC / SWIFT', txRef: 'Havalede belirtilecek referans', percentOf: (p, title, ref) => `${title || 'Teklif'} (ref. ${ref || ''}) için %${p}`, subject: (ref, p, qref) => `Ön ödeme faturası ${ref} - ${qref} teklifinin %${p}'i`, mailTitle: 'Güveniniz için teşekkür ederiz.', mailBody1: (qref, ref) => `<strong>${qref}</strong> teklifinin imzalanmasının ardından ek olarak ön ödeme faturasını <strong>${ref}</strong> bulabilirsiniz.`, mailBody2: (amount, p) => `Ödenecek tutar: <strong>${amount}</strong> (toplamın %${p}'i).`, mailBody3: (due) => `Banka bilgileri ve havale referansı fatura üzerindedir. Son ödeme: <strong>${due}</strong>.`, mailFooter: 'Ödeme alındığında projeyi başlatırız.' },
+  ru: { invoice: 'Счёт', invoiceTitle: 'Счёт на предоплату', issuedOn: 'Выдан', dueDate: 'Срок оплаты', relatedQuote: 'Связанное предложение', to: 'Кому', service: 'Услуга', amountHt: 'Сумма (без НДС)', subtotalHt: 'Промежуточный итог (без НДС)', tax: 'НДС', netToPay: 'К оплате', bankDetails: 'Банковские реквизиты', beneficiary: 'Получатель', bank: 'Банк', bicSwift: 'BIC / SWIFT', txRef: 'Назначение платежа', percentOf: (p, title, ref) => `${p} % от ${title || 'Предложение'} (реф. ${ref || ''})`, subject: (ref, p, qref) => `Счёт на предоплату ${ref} - ${p} % предложения ${qref}`, mailTitle: 'Спасибо за доверие.', mailBody1: (qref, ref) => `После подписания предложения <strong>${qref}</strong> во вложении счёт на предоплату <strong>${ref}</strong>.`, mailBody2: (amount, p) => `Сумма к оплате: <strong>${amount}</strong> (${p} % от общей суммы).`, mailBody3: (due) => `Банковские реквизиты и назначение платежа указаны в счёте. Срок: <strong>${due}</strong>.`, mailFooter: 'После получения оплаты мы запускаем проект.' },
+  ar: { invoice: 'فاتورة', invoiceTitle: 'فاتورة دفعة مقدمة', issuedOn: 'تاريخ الإصدار', dueDate: 'تاريخ الاستحقاق', relatedQuote: 'عرض السعر المرتبط', to: 'إلى', service: 'الخدمة', amountHt: 'المبلغ (بدون ضريبة)', subtotalHt: 'الإجمالي الفرعي (بدون ضريبة)', tax: 'ضريبة القيمة المضافة', netToPay: 'صافي المستحق', bankDetails: 'المعلومات البنكية', beneficiary: 'المستفيد', bank: 'البنك', bicSwift: 'BIC / SWIFT', txRef: 'المرجع المطلوب ذكره في التحويل', percentOf: (p, title, ref) => `${p} % من ${title || 'عرض السعر'} (مرجع ${ref || ''})`, subject: (ref, p, qref) => `فاتورة دفعة مقدمة ${ref} - ${p} % من عرض السعر ${qref}`, mailTitle: 'شكراً لثقتكم.', mailBody1: (qref, ref) => `بعد توقيع عرض السعر <strong>${qref}</strong>، نرفق لكم فاتورة الدفعة المقدمة <strong>${ref}</strong>.`, mailBody2: (amount, p) => `المبلغ المستحق: <strong>${amount}</strong> (${p} % من الإجمالي).`, mailBody3: (due) => `المعلومات البنكية والمرجع موجودة في الفاتورة. الاستحقاق: <strong>${due}</strong>.`, mailFooter: 'عند استلام الدفعة، نبدأ المشروع.' },
+  fa: { invoice: 'فاکتور', invoiceTitle: 'فاکتور پیش‌پرداخت', issuedOn: 'تاریخ صدور', dueDate: 'تاریخ سررسید', relatedQuote: 'پیش‌فاکتور مرتبط', to: 'به', service: 'خدمت', amountHt: 'مبلغ (بدون مالیات)', subtotalHt: 'جمع جزئی (بدون مالیات)', tax: 'مالیات بر ارزش افزوده', netToPay: 'مبلغ خالص قابل پرداخت', bankDetails: 'اطلاعات بانکی', beneficiary: 'ذی‌نفع', bank: 'بانک', bicSwift: 'BIC / SWIFT', txRef: 'مرجع برای درج در انتقال', percentOf: (p, title, ref) => `${p} % از ${title || 'پیش‌فاکتور'} (مرجع ${ref || ''})`, subject: (ref, p, qref) => `فاکتور پیش‌پرداخت ${ref} - ${p} % از پیش‌فاکتور ${qref}`, mailTitle: 'از اعتماد شما متشکریم.', mailBody1: (qref, ref) => `پس از امضای پیش‌فاکتور <strong>${qref}</strong>، فاکتور پیش‌پرداخت <strong>${ref}</strong> پیوست شده است.`, mailBody2: (amount, p) => `مبلغ قابل پرداخت: <strong>${amount}</strong> (${p} % از کل).`, mailBody3: (due) => `اطلاعات بانکی و مرجع انتقال در فاکتور درج شده است. سررسید: <strong>${due}</strong>.`, mailFooter: 'با دریافت پرداخت، پروژه را آغاز می‌کنیم.' },
+  hi: { invoice: 'चालान', invoiceTitle: 'अग्रिम चालान', issuedOn: 'जारी तिथि', dueDate: 'देय तिथि', relatedQuote: 'संबंधित कोटेशन', to: 'प्रति', service: 'सेवा', amountHt: 'राशि (कर रहित)', subtotalHt: 'उप-योग (कर रहित)', tax: 'वैट', netToPay: 'देय शुद्ध राशि', bankDetails: 'बैंक विवरण', beneficiary: 'लाभार्थी', bank: 'बैंक', bicSwift: 'BIC / SWIFT', txRef: 'स्थानांतरण में दिया जाने वाला संदर्भ', percentOf: (p, title, ref) => `${title || 'कोटेशन'} (संदर्भ ${ref || ''}) का ${p} %`, subject: (ref, p, qref) => `अग्रिम चालान ${ref} - कोटेशन ${qref} का ${p} %`, mailTitle: 'आपके विश्वास के लिए धन्यवाद।', mailBody1: (qref, ref) => `कोटेशन <strong>${qref}</strong> पर हस्ताक्षर के बाद, संलग्न अग्रिम चालान <strong>${ref}</strong> देखें।`, mailBody2: (amount, p) => `देय राशि: <strong>${amount}</strong> (कुल का ${p} %)।`, mailBody3: (due) => `बैंक विवरण और स्थानांतरण संदर्भ चालान में हैं। देय तिथि: <strong>${due}</strong>।`, mailFooter: 'भुगतान प्राप्त होने पर, हम परियोजना शुरू करते हैं।' },
+  zh: { invoice: '发票', invoiceTitle: '预付款发票', issuedOn: '开具日期', dueDate: '到期日', relatedQuote: '关联报价单', to: '收件人', service: '服务项目', amountHt: '金额（不含税）', subtotalHt: '小计（不含税）', tax: '增值税', netToPay: '应付净额', bankDetails: '银行信息', beneficiary: '收款人', bank: '银行', bicSwift: 'BIC / SWIFT', txRef: '汇款时请注明的备注', percentOf: (p, title, ref) => `${title || '报价单'}（编号 ${ref || ''}）的 ${p} %`, subject: (ref, p, qref) => `预付款发票 ${ref} - 报价单 ${qref} 的 ${p} %`, mailTitle: '感谢您的信任。', mailBody1: (qref, ref) => `在签署报价单 <strong>${qref}</strong> 之后，附件为预付款发票 <strong>${ref}</strong>。`, mailBody2: (amount, p) => `应付金额：<strong>${amount}</strong>（总额的 ${p} %）。`, mailBody3: (due) => `银行信息和汇款备注请见发票。到期日：<strong>${due}</strong>。`, mailFooter: '收到付款后，我们将启动项目。' },
+  ja: { invoice: '請求書', invoiceTitle: '前受金請求書', issuedOn: '発行日', dueDate: '支払期日', relatedQuote: '関連見積書', to: '宛先', service: 'サービス', amountHt: '金額（税抜）', subtotalHt: '小計（税抜）', tax: '消費税', netToPay: 'お支払い金額', bankDetails: '振込先', beneficiary: '受取人', bank: '銀行', bicSwift: 'BIC / SWIFT', txRef: 'お振込み時の参照番号', percentOf: (p, title, ref) => `${title || '見積書'}（参照 ${ref || ''}）の ${p} %`, subject: (ref, p, qref) => `前受金請求書 ${ref} - 見積書 ${qref} の ${p} %`, mailTitle: 'ご信頼ありがとうございます。', mailBody1: (qref, ref) => `見積書 <strong>${qref}</strong> へのご署名を受け、前受金請求書 <strong>${ref}</strong> を添付いたします。`, mailBody2: (amount, p) => `お支払い金額：<strong>${amount}</strong>（合計の ${p} %）。`, mailBody3: (due) => `振込先と参照番号は請求書内に記載しております。支払期日：<strong>${due}</strong>。`, mailFooter: 'ご入金確認後、プロジェクトを開始いたします。' },
+  ko: { invoice: '청구서', invoiceTitle: '선급금 청구서', issuedOn: '발행일', dueDate: '결제 기한', relatedQuote: '관련 견적서', to: '받는 분', service: '서비스', amountHt: '금액 (부가세 별도)', subtotalHt: '소계 (부가세 별도)', tax: '부가세', netToPay: '실 결제 금액', bankDetails: '은행 정보', beneficiary: '수령인', bank: '은행', bicSwift: 'BIC / SWIFT', txRef: '송금 시 기재할 참조 번호', percentOf: (p, title, ref) => `${title || '견적서'} (참조 ${ref || ''})의 ${p} %`, subject: (ref, p, qref) => `선급금 청구서 ${ref} - 견적서 ${qref}의 ${p} %`, mailTitle: '신뢰해 주셔서 감사합니다.', mailBody1: (qref, ref) => `견적서 <strong>${qref}</strong> 서명 후, 첨부된 선급금 청구서 <strong>${ref}</strong>를 확인해 주세요.`, mailBody2: (amount, p) => `결제 금액: <strong>${amount}</strong> (총 금액의 ${p} %).`, mailBody3: (due) => `은행 정보와 송금 참조 번호는 청구서에 있습니다. 결제 기한: <strong>${due}</strong>.`, mailFooter: '결제 확인 후 프로젝트를 시작합니다.' },
+};
+function getDepositLabels(lang) {
+  return DEPOSIT_LABELS[(lang || 'fr').toLowerCase()] || DEPOSIT_LABELS.fr;
+}
 
 function renderAcceptanceBlock(quote, L, lang) {
   const A = ACCEPT_LABELS[lang] || ACCEPT_LABELS.fr;
-  const dateLocale = lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : lang === 'de' ? 'de-DE' : lang === 'it' ? 'it-IT' : lang === 'pt' ? 'pt-PT' : 'fr-FR';
+  const dateLocale = getDateLocale(lang);
 
   if (quote.status === 'accepted' && quote.acceptance?.signedAt) {
     const dt = new Date(quote.acceptance.signedAt).toLocaleString(dateLocale);
@@ -1024,20 +1133,27 @@ publicRouter.post('/:token/accept', async (req, res) => {
       const transporter = getTransporter();
       const quoteObj = quote.toObject();
       const D = buildDepositInvoiceData(quoteObj);
+      const DL = getDepositLabels(D.lang);
+      const intlLocale = getDateLocale(D.lang);
+      const dir = (['ar','fa'].includes(D.lang)) ? 'rtl' : 'ltr';
       const pdfBuffer = await renderDepositInvoicePdf(quoteObj);
       const filename = `${D.invoiceRef}.pdf`;
+      const amountFormatted = (() => {
+        try { return new Intl.NumberFormat(intlLocale, { style: 'currency', currency: D.currency }).format(D.amount); }
+        catch { return `${D.amount.toFixed(2)} ${D.currency}`; }
+      })();
       await transporter.sendMail({
         from: process.env.SMTP_FROM || 'contact@deliverydigital.fr',
         to: quote.acceptance.signerEmail,
         bcc: 'contact@deliverydigital.fr',
-        subject: `Facture d'acompte ${D.invoiceRef} - ${D.acompte.percent} % du devis ${quote.ref}`,
+        subject: DL.subject(D.invoiceRef, D.acompte.percent, quote.ref),
         html: `
-          <div style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#1D1D1F;">
-            <h2 style="margin:0 0 12px;font-family:'Charter','Iowan Old Style',Georgia,serif;font-size:22px;">Merci pour votre confiance.</h2>
-            <p style="margin:0 0 14px;font-size:14.5px;line-height:1.55;">Suite a la signature du devis <strong>${quote.ref}</strong>, veuillez trouver en piece jointe la facture d'acompte <strong>${D.invoiceRef}</strong>.</p>
-            <p style="margin:0 0 14px;font-size:14.5px;line-height:1.55;">Montant a regler : <strong>${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: D.currency }).format(D.amount)}</strong> (${D.acompte.percent} % du total).</p>
-            <p style="margin:0 0 14px;font-size:14.5px;line-height:1.55;">Coordonnees bancaires et reference de virement dans la facture. Echeance : <strong>${D.dueDate}</strong>.</p>
-            <p style="margin:24px 0 0;font-size:13px;color:#86868B;">A reception du paiement, nous demarrons le projet.</p>
+          <div dir="${dir}" style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#1D1D1F;">
+            <h2 style="margin:0 0 12px;font-family:'Charter','Iowan Old Style',Georgia,serif;font-size:22px;">${DL.mailTitle}</h2>
+            <p style="margin:0 0 14px;font-size:14.5px;line-height:1.55;">${DL.mailBody1(quote.ref, D.invoiceRef)}</p>
+            <p style="margin:0 0 14px;font-size:14.5px;line-height:1.55;">${DL.mailBody2(amountFormatted, D.acompte.percent)}</p>
+            <p style="margin:0 0 14px;font-size:14.5px;line-height:1.55;">${DL.mailBody3(D.dueDate)}</p>
+            <p style="margin:24px 0 0;font-size:13px;color:#86868B;">${DL.mailFooter}</p>
           </div>
         `,
         attachments: [{ filename, content: pdfBuffer, contentType: 'application/pdf' }],

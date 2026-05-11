@@ -23,22 +23,22 @@
     "web": {
       "title": "Web",
       "accent": "解决方案",
-      "subhead": "SaaS、仪表板和定制化 Web 应用，采用顶尖技术驱动。"
+      "subhead": "SaaS、仪表板和定制 Web 应用，采用最优技术驱动。"
     },
     "mobile": {
       "title": "原生",
       "accent": "应用",
-      "subhead": "iOS 和 Android。原生性能，精致设计，App Store 和 Play Store 一站式部署。"
+      "subhead": "iOS 和 Android。原生性能、精致设计、App Store 和 Play Store 一站式部署。"
     },
     "enterprise": {
       "title": "企业",
       "accent": "软件",
-      "subhead": "CRM、ERP、B2B 平台。流程自动化，生产力倍增。"
+      "subhead": "CRM、ERP、B2B 平台。自动化流程，提升生产力。"
     },
     "cloud": {
       "title": "云服务",
-      "accent": "& DevOps",
-      "subhead": "托管、监控、自动扩展。全天候承载高负荷的基础设施。"
+      "accent": "与 DevOps",
+      "subhead": "托管、监控、自动扩展。全天候稳定运行的基础设施。"
     },
     "training": {
       "title": "专业",
@@ -58,9 +58,9 @@
   },
   "hero": {
     "title": "驱动您雄心的代码，通过 CII 报销 20%",
-    "subtitle": "定制化网站、移动应用、SaaS、CRM、ERP。CII 创新税收抵免认证机构 - 符合条件的中小企业每年最高可获 80,000 欧元税收抵免。",
-    "titleIntl": "打造您的下一代数字产品",
-    "subtitleIntl": "网站、移动应用、SaaS、CRM、ERP。定制代码，数周交付。",
+    "subtitle": "定制网站、移动应用、SaaS、CRM、ERP。获 CII 创新税收抵免认证的机构——符合条件的中小企业每年最高可获 80,000 欧元抵免。",
+    "titleIntl": "共同打造您的下一个数字产品",
+    "subtitleIntl": "网站、移动应用、SaaS、CRM、ERP。定制代码，数周内交付。",
     "cta": {
       "project": "洽谈项目"
     },
@@ -73,23 +73,23 @@
     "subtitle": "量身定制的解决方案",
     "web": {
       "title": "Web 开发",
-      "description": "展示网站、电商平台及渐进式 Web 应用，采用最新技术。"
+      "description": "展示型网站、电商平台和渐进式 Web 应用，采用最新技术。"
     },
     "mobile": {
       "title": "移动应用",
-      "description": "iOS 和 Android 原生及跨平台应用，提供最佳用户体验。"
+      "description": "iOS 和 Android 原生及跨平台应用，提供卓越用户体验。"
     },
     "enterprise": {
       "title": "企业解决方案",
-      "description": "定制软件、流程自动化及系统集成。"
+      "description": "定制软件、流程自动化和系统集成。"
     },
     "cloud": {
       "title": "云服务",
-      "description": "云端应用迁移、架构设计和部署，兼具安全性与性能。"
+      "description": "云端应用的迁移、架构和部署，确保安全与性能。"
     },
     "training": {
       "title": "专业培训",
-      "description": "Qualiopi 认证机构。提供 Web 开发、移动端和 DevOps 课程，可通过 OPCO 融资。"
+      "description": "Qualiopi 认证机构。提供 Web 开发、移动端和 DevOps 培训课程，可通过 OPCO 资助。"
     }
   },
   "portfolio": {
@@ -99,30 +99,30 @@
     "projects": {
       "1": {
         "title": "电商平台",
-        "description": "包含库存管理、安全支付和优化客户体验的完整解决方案。",
+        "description": "完整解决方案，包含库存管理、安全支付和优化的客户体验。",
         "tag": "Web"
       },
       "2": {
         "title": "管理应用",
-        "description": "定制化 ERP 系统，优化企业流程，提升生产力。",
+        "description": "定制 ERP 系统，优化企业流程，提升生产力。",
         "tag": "企业"
       },
       "3": {
         "title": "移动应用",
-        "description": "带地理定位和集成支付系统的配送应用。",
+        "description": "配送应用，集成地理定位和支付系统。",
         "tag": "移动"
       },
       "4": {
         "title": "云基础设施",
-        "description": "基础设施迁移与优化，实现最大可扩展性和降低成本。",
+        "description": "基础设施迁移和优化，实现最大可扩展性并降低成本。",
         "tag": "云服务"
       }
     }
   },
   "about": {
     "title": "我们的专业能力",
-    "subtitle": "充满激情的团队",
-    "description": "拥有超过 10 年经验，我们的专家团队融合创造力与技术严谨，将您的创意转化为高性能数字解决方案。",
+    "subtitle": "充满热情的团队",
+    "description": "凭借超过 10 年的经验，我们的专家团队将创意与技术严谨性相结合，将您的想法转化为高性能的数字解决方案。",
     "expertise": {
       "1": {
         "title": "前端开发",
@@ -137,27 +137,27 @@
         "value": "85%"
       },
       "4": {
-        "title": "DevOps & 云服务",
+        "title": "DevOps 与云服务",
         "value": "90%"
       }
     }
   },
   "testimonials": {
     "title": "客户评价",
-    "subtitle": "客户的真实反馈",
+    "subtitle": "客户的声音",
     "items": {
       "1": {
-        "text": "团队将我们的愿景转化为超出所有预期的数字解决方案。专业精神和技术实力卓越。",
+        "text": "团队将我们的愿景转化为超出所有预期的数字解决方案。专业精神和技术实力令人赞叹。",
         "author": "Marie Dupont",
         "position": "营销总监，TechCorp"
       },
       "2": {
-        "text": "他们理解我们业务需求并以创新高效的解决方案回应的能力令我们印象深刻。",
+        "text": "他们理解我们业务需求并提供创新高效解决方案的能力令我们印象深刻。",
         "author": "Jean Martin",
         "position": "首席执行官，InnovSoft"
       },
       "3": {
-        "text": "他们在整个项目中的支持非常宝贵。能够适应我们的限制并提供相关解决方案。",
+        "text": "他们在整个项目中提供了宝贵的支持。能够适应我们的限制并提出切实可行的解决方案。",
         "author": "Sophie Lefebvre",
         "position": "首席技术官，DataFuture"
       }
@@ -165,18 +165,18 @@
   },
   "contact": {
     "title": "联系我们",
-    "subtitle": "让我们谈谈您的项目",
+    "subtitle": "聊聊您的项目",
     "name": "姓名",
     "email": "邮箱",
     "phone": "电话",
     "message": "留言",
     "subject": "主题",
     "submit": "发送",
-    "success": "消息发送成功！我们会尽快与您联系。",
+    "success": "消息发送成功！我们将尽快与您联系。",
     "error": "发生错误，请重试。"
   },
   "footer": {
-    "company": "© 2025 DELIVERY Digital Technology. 版权所有。",
+    "company": "© 2025 DELIVERY Digital Technology. 保留所有权利。",
     "links": {
       "privacy": "隐私政策",
       "terms": "使用条款",
@@ -186,20 +186,20 @@
   "reclamation": {
     "badge": "投诉",
     "title": "投诉表单",
-    "subtitle": "我们认真对待您的关切。请填写以下表单，我们将尽快回复您。",
+    "subtitle": "我们认真对待您的关切。请填写下方表单，我们将尽快回复。",
     "qualityCommitment": {
       "title": "我们的质量承诺",
-      "intro": "DELIVERY Digital Nice 致力于提供满足客户需求和要求的培训服务。但是，如果您希望向我们提交投诉：",
-      "contact": "您可以随时向您的常规联系人提出问题、疑虑和遇到的问题，他们将尽一切可能为您提供答复。",
-      "formOption": "您也可以使用以下投诉表单发送您的请求。",
+      "intro": "DELIVERY Digital Nice 致力于提供满足客户需求和要求的培训服务。但是，如果您希望向我们提出投诉：",
+      "contact": "您可以随时向您的常规联系人提出您的问题、疑虑和遇到的问题，他们将尽力为您提供答复。",
+      "formOption": "您也可以使用下方的投诉表单发送您的请求。",
       "processTitle": "我们的处理流程",
       "steps": {
         "1": "您填写表单，系统自动发送至投诉处理团队",
         "2": "我们确认收到您的投诉",
         "3": "我们尽快分析您的请求并评估其可受理性",
-        "4": "如果您的请求可受理，我们分析投诉原因",
-        "5": "我们仔细审查提交的事实，必要时进行调查。在此情况下，我们会及时告知您案件进展",
-        "6": "我们将告知您我们的答复，说明调查结果以及我们提出的解决方案"
+        "4": "如您的请求可受理，我们分析投诉原因",
+        "5": "我们仔细审查所呈现的事实，并在必要时进行调查。在此期间，我们将向您通报案件进展",
+        "6": "我们将告知您我们的答复，说明调查结果以及我们提出的解决问题的方案"
       },
       "directContact": "直接联系投诉处理团队："
     },
@@ -219,34 +219,34 @@
       "categoryOptions": {
         "service": "服务质量",
         "product": "产品/交付物",
-        "billing": "计费",
+        "billing": "账单",
         "support": "技术支持",
         "training": "培训",
         "other": "其他"
       },
       "subject": "投诉主题",
-      "subjectPlaceholder": "您的投诉摘要",
-      "description": "详细描述",
+      "subjectPlaceholder": "投诉摘要",
+      "description": "详细说明",
       "descriptionPlaceholder": "请详细描述您的投诉...",
-      "gdpr": "您的数据按照我们的隐私政策和 GDPR 处理。我们承诺在 48 个工作小时内回复您。",
+      "gdpr": "您的数据将根据我们的隐私政策和 GDPR 进行处理。我们承诺在 48 个工作小时内回复您。",
       "captcha": "安全验证",
       "captchaRequired": "请完成安全验证",
       "submit": "提交投诉",
-      "submitting": "正在发送..."
+      "submitting": "正在提交..."
     },
     "procedure": {
-      "title": "投诉处理程序",
+      "title": "投诉处理流程",
       "steps": {
         "1": "24 小时内接收并确认",
         "2": "我们的团队分析您的投诉",
         "3": "48 个工作小时内提供详细答复",
         "4": "跟进并解决问题"
       },
-      "mediator": "如果您对我们的答复不满意，可以联系我们的质量负责人或诉诸消费者调解员。"
+      "mediator": "如果您对我们的答复不满意，可以联系我们的质量负责人或求助于消费者调解员。"
     },
     "success": {
       "title": "投诉提交成功",
-      "message": "我们已收到您的投诉。我们的团队将尽快与您联系以处理您的请求。",
+      "message": "我们已收到您的投诉。我们的团队将尽快与您联系处理您的请求。",
       "responseTime": "预计响应时间：24-48 个工作小时",
       "backHome": "返回首页"
     }
@@ -260,30 +260,59 @@
     "for": "收件人",
     "service": "服务",
     "amountExclTax": "不含税金额",
-    "lineDescription": "{{title}} 的 {{percent}}%（编号 {{quoteRef}}）",
+    "lineDescription": "{{title}} 的 {{percent}}%（参考号 {{quoteRef}}）",
     "subtotal": "不含税小计",
-    "vat": "增值税（{{rate}}%）",
-    "netToPay": "应付金额",
+    "vat": "增值税 ({{rate}}%)",
+    "netToPay": "应付净额",
     "bankDetails": "银行信息",
     "beneficiary": "收款人",
     "bank": "银行",
     "iban": "IBAN",
     "bicSwift": "BIC / SWIFT",
-    "transferRef": "转账备注",
+    "transferRef": "转账时请注明参考号",
     "mailSubject": "预付款发票 {{invoiceRef}} - 报价单 {{quoteRef}} 的 {{percent}}%",
     "mailThanks": "感谢您的信任。",
-    "mailBody": "根据报价单 <strong>{{quoteRef}}</strong> 的签署，请查收附件中的预付款发票 <strong>{{invoiceRef}}</strong>。",
+    "mailBody": "根据已签署的报价单 <strong>{{quoteRef}}</strong>，请查收附件中的预付款发票 <strong>{{invoiceRef}}</strong>。",
     "mailAmount": "应付金额：<strong>{{amount}}</strong>（总额的 {{percent}}%）。",
-    "mailRef": "银行信息和转账备注见发票。到期日：<strong>{{dueDate}}</strong>。",
+    "mailRef": "银行信息和转账参考号详见发票。到期日：<strong>{{dueDate}}</strong>。",
     "mailStart": "收到付款后，我们将启动项目。"
   },
   "emails": {
     "acceptedSubject": "[已接受] 报价单 {{quoteRef}} 由 {{signerName}} 签署",
-    "acceptedBody": "报价单 <strong>{{quoteRef}}</strong> 已被 <strong>{{signerName}}</strong>（{{signerEmail}}）接受。",
+    "acceptedBody": "报价单 <strong>{{quoteRef}}</strong> 已被 <strong>{{signerName}}</strong> ({{signerEmail}}) 接受。",
     "acceptedMeta": "IP：{{ip}} - User Agent：{{userAgent}}",
     "rejectedSubject": "[已拒绝] 报价单 {{quoteRef}}",
     "rejectedBody": "报价单 <strong>{{quoteRef}}</strong> 已被拒绝。",
     "rejectedReason": "原因：{{reason}}",
     "rejectedNoReason": "（未说明）"
-  }
+  },
+  "cii": {
+    "title": "创新税收抵免",
+    "close": "关闭",
+    "exampleTitle": "实际案例",
+    "exampleBody": "对于 20,000 欧元的项目：您可获得 4,000 欧元（20%）退款。最终成本：16,000 欧元。年度上限：400,000 欧元支出，即最高 80,000 欧元抵免。",
+    "eligibleTitle": "符合条件的项目",
+    "eligibleBody": "Web 和移动应用 · 定制软件 · 人工智能 · 企业创新解决方案。",
+    "benefitTitle": "如何享受",
+    "benefitBody": "您与我们合作投资 · 我们提供所有凭证 · 您获得抵免或退款。",
+    "taxLine": "如您缴纳税款：直接抵扣。",
+    "refundLine": "否则：国家退款。"
+  },
+  "common": {
+    "discussProject": "洽谈您的项目",
+    "discussProjectArrow": "洽谈您的项目 ›",
+    "chooseLanguage": "选择语言",
+    "startConversation": "开始对话"
+  },
+  "chat": {
+    "typePlaceholder": "输入您的消息",
+    "typing": "DELIVERY Digital 正在输入...",
+    "describeIdea": "描述您的想法。专家将在 24 小时内回复您。",
+    "letsTalk": "聊聊您的项目。",
+    "logout": "登出",
+    "confidential": "您的消息保密，仅用于您的项目。",
+    "noConv": "暂无对话。",
+    "aiUnderstands": "我们的 AI 智能体理解您的需求。专家将在 24 小时内回复您。"
+  },
+  "discuter": "洽谈项目"
 }

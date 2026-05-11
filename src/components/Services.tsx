@@ -822,8 +822,9 @@ function PhoneScreenDriver({ inView }: { inView: boolean }) {
               <img
                 src="/livreur.gif"
                 alt="Livreur"
-                style={{ width: 58, height: 58, objectFit: 'contain' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 draggable={false}
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
               />
             </div>
           </div>
@@ -1033,14 +1034,6 @@ function PhoneScreenProfile({ inView }: { inView: boolean }) {
 function EnterpriseMock() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useFmInView(ref, { once: false, amount: 0.3 });
-  const [movingCardCol, setMovingCardCol] = useState(0); // 0=qualif, 1=devis, 2=négo, 3=closing
-
-  // Cycle the moving card through columns every 2.5s while in view
-  useEffect(() => {
-    if (!inView) return;
-    const id = setInterval(() => setMovingCardCol((c) => (c + 1) % 4), 2500);
-    return () => clearInterval(id);
-  }, [inView]);
 
   // Trello-style: cards with labels, members initials, due indicator, comment count
   type Card = { n: string; I: any; tag: string; tagColor: string; amt?: string; due?: string; members: { i: string; c: string }[]; comments?: number; checklist?: { done: number; total: number } };
@@ -1049,21 +1042,21 @@ function EnterpriseMock() {
       stage: 'À qualifier',
       cards: [
         { n: 'Garage Auto+', I: Briefcase, tag: 'Lead', tagColor: '#6B7280', amt: '12K€', due: '8 mai', members: [{ i: 'M', c: '#0EA5E9' }] },
-        { n: 'TPE Méditerranée', I: Building2, tag: 'Lead', tagColor: '#6B7280', amt: '8K€', members: [{ i: 'A', c: '#10B981' }, { i: 'L', c: '#F59E0B' }] },
+        { n: 'TPE', I: Building2, tag: 'Lead', tagColor: '#6B7280', amt: '8K€', members: [{ i: 'A', c: '#10B981' }, { i: 'L', c: '#F59E0B' }] },
       ],
     },
     {
       stage: 'Devis',
       cards: [
-        { n: 'Restaurant Bella', I: Store, tag: 'Devis envoyé', tagColor: '#3B82F6', amt: '18K€', due: '12 mai', members: [{ i: 'M', c: '#0EA5E9' }, { i: 'T', c: '#8B5CF6' }], comments: 3, checklist: { done: 2, total: 5 } },
-        { n: 'Pharma Saint-Roch', I: Stethoscope, tag: 'Devis envoyé', tagColor: '#3B82F6', amt: '32K€', members: [{ i: 'A', c: '#10B981' }, { i: 'L', c: '#F59E0B' }, { i: 'T', c: '#8B5CF6' }] },
+        { n: 'Restaurant', I: Store, tag: 'Devis envoyé', tagColor: '#3B82F6', amt: '18K€', due: '12 mai', members: [{ i: 'M', c: '#0EA5E9' }, { i: 'T', c: '#8B5CF6' }], comments: 3, checklist: { done: 2, total: 5 } },
+        { n: 'Pharma', I: Stethoscope, tag: 'Devis envoyé', tagColor: '#3B82F6', amt: '32K€', members: [{ i: 'A', c: '#10B981' }, { i: 'L', c: '#F59E0B' }, { i: 'T', c: '#8B5CF6' }] },
         { n: 'Coiffeur Mireille', I: Store, tag: 'Devis envoyé', tagColor: '#3B82F6', amt: '6K€', members: [{ i: 'L', c: '#F59E0B' }] },
       ],
     },
     {
       stage: 'Négociation',
       cards: [
-        { n: 'Boulangerie Dupont', I: Store, tag: 'Chaud', tagColor: '#F59E0B', amt: '24K€', due: '15 mai', members: [{ i: 'M', c: '#0EA5E9' }, { i: 'A', c: '#10B981' }, { i: 'T', c: '#8B5CF6' }], comments: 7, checklist: { done: 4, total: 8 } },
+        { n: 'Boulangerie', I: Store, tag: 'Chaud', tagColor: '#F59E0B', amt: '24K€', due: '15 mai', members: [{ i: 'M', c: '#0EA5E9' }, { i: 'A', c: '#10B981' }, { i: 'T', c: '#8B5CF6' }], comments: 7, checklist: { done: 4, total: 8 } },
         { n: 'Boutique Vintage', I: ShoppingBag, tag: 'Chaud', tagColor: '#F59E0B', amt: '14K€', members: [{ i: 'L', c: '#F59E0B' }, { i: 'T', c: '#8B5CF6' }] },
       ],
     },
@@ -1077,195 +1070,336 @@ function EnterpriseMock() {
 
   return (
     <div ref={ref} className="relative w-full max-w-[760px] mx-auto pb-2">
-      {/* Cadre iPad TOUJOURS visible (desktop + mobile) : bezel sombre + camera notch. */}
+      {/* === MOBILE : iPhone 17 Pro avec liste deals verticale === */}
+      <div className="md:hidden">
+        <EnterpriseIphoneMockup inView={inView} columns={columns} />
+      </div>
+
+      {/* === DESKTOP : iPad-style Kanban === */}
+      <div className="hidden md:block relative">
       <div
-        className="absolute inset-0 -m-[8px] sm:-m-[12px] md:-m-[14px] rounded-[24px] sm:rounded-[30px] md:rounded-[34px] pointer-events-none"
+        className="absolute inset-0 -m-[12px] md:-m-[14px] rounded-[30px] md:rounded-[34px] pointer-events-none"
         style={{
           background: 'linear-gradient(180deg, #1F2937 0%, #111827 100%)',
           boxShadow: '0 30px 60px -20px rgba(0,0,0,0.35), inset 0 0 0 1.5px rgba(255,255,255,0.06)',
         }}
         aria-hidden
       >
-        <div className="absolute top-1 sm:top-1.5 left-1/2 -translate-x-1/2 w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-[#0B0E14] ring-1 ring-white/8" />
+        <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#0B0E14] ring-1 ring-white/8" />
       </div>
     <div
-      className="relative w-full aspect-[16/10] rounded-[18px] sm:rounded-[22px] mx-auto overflow-x-auto overflow-y-hidden sm:overflow-hidden"
+      className="relative w-full aspect-[16/10] rounded-[22px] mx-auto overflow-hidden flex flex-col"
       style={{
-        background: '#F1F2F4',
+        background: '#FFFFFF',
         boxShadow: '0 40px 80px -25px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.05)',
       }}
     >
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-[#E4E6EA]">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-5 h-5 rounded-md bg-gradient-to-br from-[#0EA5E9] to-[#3B82F6] flex items-center justify-center flex-shrink-0">
-            <Database className="h-2.5 w-2.5 text-white" strokeWidth={2} />
-          </div>
-          <span className="text-[11.5px] font-bold text-[#172B4D] tracking-tight">Pipeline ventes</span>
-          <span className="text-[10px] text-[#6B778C]">·</span>
-          <span className="text-[10px] text-[#6B778C]">Q2 - <Counter to={24} duration={1} /> deals</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Member avatars in header */}
+      {/* Trello top header */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-black/5 flex-shrink-0">
+        <span className="w-7 h-7 rounded-md bg-[#172B4D] flex items-center justify-center">
+          <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="currentColor"><rect x="3" y="3" width="8" height="13" rx="1"/><rect x="13" y="3" width="8" height="9" rx="1"/></svg>
+        </span>
+        <div className="flex items-center gap-3 text-[#172B4D]">
+          <Search className="w-4 h-4" strokeWidth={2} />
+          <span className="px-3 py-1 rounded bg-[#EBECF0] text-[11.5px] font-semibold">Créer</span>
           <div className="flex -space-x-1.5">
-            {[
-              { i: 'M', c: '#0EA5E9' }, { i: 'A', c: '#10B981' }, { i: 'L', c: '#F59E0B' }, { i: 'T', c: '#8B5CF6' },
-            ].map((m, k) => (
-              <span key={k} className="rounded-full ring-2 ring-white flex items-center justify-center text-white font-bold" style={{ width: 16, height: 16, background: m.c, fontSize: 7.5 }}>{m.i}</span>
+            {[{ i: 'R', c: '#0EA5E9' }, { i: 'Z', c: '#10B981' }, { i: 'M', c: '#F59E0B' }].map((m, k) => (
+              <span key={k} className="rounded-full ring-2 ring-white flex items-center justify-center text-white font-bold" style={{ width: 22, height: 22, background: m.c, fontSize: 9 }}>{m.i}</span>
             ))}
           </div>
-          <div className="flex items-center gap-1 ml-1">
-            <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#172B4D] text-white font-semibold">Tous</span>
-            <span className="text-[10px] px-2 py-0.5 rounded-md bg-white text-[#374151] ring-1 ring-black/8 font-medium">Chaud</span>
-          </div>
+          <span className="text-[15px] leading-none tracking-wider">⋯</span>
         </div>
       </div>
 
-      {/* Board */}
-      <div className="grid grid-cols-4 gap-2.5 px-3 pt-3 pb-3 relative min-w-[520px] sm:min-w-0" style={{ height: 'calc(100% - 45px)' }}>
-        {columns.map((col, i) => {
-          const showMover = i === movingCardCol;
-          return (
+      {/* Board title bar */}
+      <div className="flex items-center justify-between px-4 py-2 flex-shrink-0 border-b border-black/5">
+        <p className="text-[13.5px] font-bold text-[#172B4D] tracking-tight truncate">DELIVERY Digital Nice</p>
+        <div className="flex items-center gap-2 text-[#172B4D] ml-2">
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="16" rx="1"/><rect x="17" y="4" width="5" height="16" rx="1"/></svg>
+          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M6 12h12M9 18h6" strokeLinecap="round"/></svg>
+          <span className="text-[15px] leading-none tracking-wider">⋯</span>
+        </div>
+      </div>
+
+      {/* Board area (4 colonnes Trello reelles) */}
+      <div className="flex-1 overflow-x-auto overflow-y-hidden bg-white">
+        <div className="flex gap-3 px-3 py-3 h-full" style={{ minWidth: 'fit-content' }}>
+          {[
+            {
+              title: 'Outil',
+              cards: [
+                { labels: ['#F2D600'], title: 'Message pro - Maçonnerie & Gros Œuvre', icons: ['eye', 'desc', 'attach:1'] },
+                { labels: ['#F2D600'], title: 'Message pro - Construction de maisons individuelles', icons: ['eye', 'desc'] },
+                { labels: ['#F2D600'], title: "Message pro - Installation d'eau et de gaz", icons: ['eye', 'desc'] },
+                { labels: ['#F2D600'], title: 'Objet : Planification formation Hygiène & DD', icons: ['eye', 'desc', 'attach:2'] },
+              ],
+            },
+            {
+              title: 'Prospects',
+              cards: [
+                { labels: [], title: 'Société de développement informatique', icons: ['eye', 'desc', 'comments:1'] },
+                { labels: [], title: 'Sophie M.', icons: ['eye', 'desc', 'comments:1'] },
+                { labels: [], title: 'Contact chez Cabinet Médical', icons: ['eye', 'desc', 'comments:1'] },
+                { labels: [], title: 'Comptable régional Nice', icons: ['eye', 'desc', 'comments:1'] },
+                { labels: ['#61BD4F', '#FF9F1A'], title: 'Promoteur immobilier', icons: ['eye', 'desc'] },
+              ],
+            },
+            {
+              title: 'En cours',
+              cards: [
+                { labels: ['#0079BF'], title: 'Refonte site Boulangerie', icons: ['eye', 'desc', 'check:4/8', 'comments:7'] },
+                { labels: ['#0079BF'], title: 'App mobile Pharma', icons: ['eye', 'desc', 'check:2/5', 'comments:3'] },
+                { labels: ['#0079BF', '#F2D600'], title: 'Dashboard CRM Restaurant', icons: ['eye', 'desc', 'attach:3'] },
+              ],
+            },
+            {
+              title: 'Gagné',
+              cards: [
+                { labels: ['#61BD4F'], title: 'Cabinet Médical - signature contrat', icons: ['eye', 'desc', 'check:7/8', 'comments:12'] },
+                { labels: ['#61BD4F'], title: 'TPE - facturé', icons: ['eye', 'desc'] },
+              ],
+            },
+          ].map((col, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 10 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.45, delay: 0.1 + i * 0.08 }}
-              className="flex flex-col rounded-[10px] overflow-hidden"
-              style={{
-                background: '#EBECF0',
-                boxShadow: '0 1px 0 rgba(9,30,66,0.05)',
-              }}
+              className="w-[210px] flex-shrink-0 rounded-xl bg-[#EBECF0] flex flex-col"
             >
-              {/* Column header */}
-              <div className="flex items-center justify-between px-2.5 py-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold text-[#172B4D] tracking-tight">{col.stage}</span>
-                  <span
-                    className="rounded-full text-[8.5px] font-semibold flex items-center justify-center px-1.5"
-                    style={{ background: '#DFE1E6', color: '#5E6C84', minWidth: 14, height: 14 }}
-                  >
-                    {col.cards.length + (showMover ? 1 : 0)}
-                  </span>
-                </div>
-                <span className="text-[10px] text-[#6B778C] leading-none" style={{ letterSpacing: 1 }}>•••</span>
+              <div className="flex items-center justify-between px-3 py-2.5">
+                <span className="text-[12.5px] font-bold text-[#172B4D]">{col.title}</span>
+                <span className="text-[#172B4D] text-[14px] leading-none tracking-wider">⋯</span>
               </div>
-
-              {/* Cards */}
-              <div className="flex-1 px-1.5 pb-1.5 space-y-1.5 overflow-y-auto">
-                {/* Mover card always rendered with layoutId so framer animates between columns */}
-                {showMover && (
-                  <motion.div
-                    layoutId="mover-card"
-                    className="rounded-[6px] bg-white overflow-hidden"
-                    style={{ boxShadow: '0 8px 18px -6px rgba(9,30,66,0.28), 0 0 0 2px #172B4D' }}
-                    transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-                  >
-                    <div className="px-2 py-1.5 space-y-1">
-                      <span
-                        className="inline-block rounded-[3px] px-1.5 font-semibold"
-                        style={{ background: '#172B4D22', color: '#172B4D', fontSize: 7.5, lineHeight: '12px', letterSpacing: 0.1 }}
-                      >
-                        Nouveau
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <ShoppingBag className="text-[#5E6C84] flex-shrink-0" style={{ width: 9, height: 9 }} strokeWidth={1.7} />
-                        <div className="text-[10px] font-semibold text-[#172B4D] truncate flex-1 leading-tight">Nouvelle Boutique</div>
-                      </div>
-                      <div className="text-[11px] font-bold text-[#172B4D] tabular-nums">36K€</div>
-                      {/* Meta cachee sur mobile pour densite reduite */}
-                      <div className="hidden sm:flex items-center justify-between pt-0.5">
-                        <span className="inline-flex items-center gap-0.5 text-[#5E6C84]" style={{ fontSize: 8 }}>
-                          <CalendarDays style={{ width: 8, height: 8 }} strokeWidth={1.8} />
-                          10 mai
-                        </span>
-                        <div className="flex -space-x-[3px]">
-                          <span className="rounded-full ring-[1.5px] ring-white flex items-center justify-center text-white font-bold" style={{ width: 13, height: 13, background: '#0EA5E9', fontSize: 6.5 }}>R</span>
-                          <span className="rounded-full ring-[1.5px] ring-white flex items-center justify-center text-white font-bold" style={{ width: 13, height: 13, background: '#10B981', fontSize: 6.5 }}>Z</span>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
+              <div className="px-2 pb-2 space-y-2 overflow-y-auto">
                 {col.cards.map((c, j) => (
                   <motion.div
-                    key={`${i}-${j}`}
-                    initial={{ opacity: 0, x: -6 }}
-                    animate={inView ? { opacity: 1, x: 0 } : {}}
-                    transition={{ duration: 0.35, delay: 0.3 + i * 0.08 + j * 0.05 }}
+                    key={j}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={inView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.3, delay: 0.15 + i * 0.06 + j * 0.04 }}
                     whileHover={{ y: -1 }}
-                    className="rounded-[6px] bg-white overflow-hidden cursor-default"
-                    style={{ boxShadow: '0 1px 0 rgba(9,30,66,0.18), 0 0 0 1px rgba(9,30,66,0.04)' }}
+                    className="rounded-lg bg-white px-2.5 py-2 cursor-default"
+                    style={{ boxShadow: '0 1px 0 rgba(9,30,66,0.13)' }}
                   >
-                    <div className="px-2 py-1.5 space-y-1">
-                      <span
-                        className="inline-block rounded-[3px] px-1.5 font-semibold"
-                        style={{
-                          background: c.tagColor + '22',
-                          color: c.tagColor,
-                          fontSize: 7.5,
-                          lineHeight: '12px',
-                          letterSpacing: 0.1,
-                        }}
-                      >
-                        {c.tag}
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <c.I className="text-[#5E6C84] flex-shrink-0" style={{ width: 9, height: 9 }} strokeWidth={1.7} />
-                        <div className="text-[10px] font-semibold text-[#172B4D] truncate flex-1 leading-tight">{c.n}</div>
+                    {c.labels.length > 0 && (
+                      <div className="flex gap-1 mb-1.5">
+                        {c.labels.map((lbl, k) => (
+                          <span key={k} className="h-[5px] w-9 rounded-full" style={{ background: lbl }} />
+                        ))}
                       </div>
-                      {c.amt && (
-                        <div className="text-[11px] font-bold text-[#172B4D] tabular-nums tracking-tight">{c.amt}</div>
-                      )}
-                      {/* Meta + avatars caches sur mobile pour densite reduite (tag + nom + montant uniquement) */}
-                      <div className="hidden sm:flex items-center justify-between pt-0.5">
-                        <div className="flex items-center gap-1.5 text-[#5E6C84]">
-                          {c.due && (
-                            <span className="inline-flex items-center gap-0.5" style={{ fontSize: 8 }}>
-                              <CalendarDays style={{ width: 8, height: 8 }} strokeWidth={1.8} />
-                              {c.due}
-                            </span>
-                          )}
-                          {c.comments !== undefined && c.comments > 0 && (
-                            <span className="inline-flex items-center gap-0.5" style={{ fontSize: 8 }}>
-                              <MessageSquare style={{ width: 8, height: 8 }} strokeWidth={1.8} />
-                              {c.comments}
-                            </span>
-                          )}
-                          {c.checklist && (
-                            <span className="inline-flex items-center gap-0.5" style={{ fontSize: 8 }}>
-                              <CheckIcon style={{ width: 8, height: 8 }} strokeWidth={1.8} />
-                              {c.checklist.done}/{c.checklist.total}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex -space-x-[3px]">
-                          {c.members.slice(0, 3).map((m, k) => (
-                            <span
-                              key={k}
-                              className="rounded-full ring-[1.5px] ring-white flex items-center justify-center text-white font-bold"
-                              style={{ width: 13, height: 13, background: m.c, fontSize: 6.5 }}
-                            >
-                              {m.i}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                    )}
+                    <p className="text-[10.5px] text-[#172B4D] leading-snug mb-1.5">{c.title}</p>
+                    <div className="flex items-center gap-2 text-[#5E6C84]">
+                      {c.icons.map((ic, k) => {
+                        if (ic === 'eye') return <Eye key={k} style={{ width: 11, height: 11 }} strokeWidth={1.8} />;
+                        if (ic === 'desc') return <svg key={k} viewBox="0 0 24 24" style={{ width: 11, height: 11 }} fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>;
+                        if (ic.startsWith('attach:')) return (
+                          <span key={k} className="inline-flex items-center gap-0.5 text-[9px]">
+                            <svg viewBox="0 0 24 24" style={{ width: 10, height: 10 }} fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.4 11l-9.2 9.2a6 6 0 0 1-8.5-8.5L13 2.5a4 4 0 0 1 5.7 5.6L9.4 17.5a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>
+                            {ic.split(':')[1]}
+                          </span>
+                        );
+                        if (ic.startsWith('comments:')) return (
+                          <span key={k} className="inline-flex items-center gap-0.5 text-[9px]">
+                            <MessageSquare style={{ width: 10, height: 10 }} strokeWidth={1.8} />{ic.split(':')[1]}
+                          </span>
+                        );
+                        if (ic.startsWith('check:')) return (
+                          <span key={k} className="inline-flex items-center gap-0.5 text-[9px]">
+                            <CheckIcon style={{ width: 10, height: 10 }} strokeWidth={1.8} />{ic.split(':')[1]}
+                          </span>
+                        );
+                        return null;
+                      })}
                     </div>
                   </motion.div>
                 ))}
-              </div>
-
-              {/* + Ajouter footer */}
-              <div className="px-2 py-1 mx-1.5 mb-1.5 rounded text-[#5E6C84] hover:bg-black/5 cursor-default flex items-center gap-1" style={{ fontSize: 9 }}>
-                <span style={{ fontSize: 11 }}>+</span> Ajouter une carte
+                <div className="px-1 py-1.5 text-[#5E6C84] text-[10.5px] flex items-center gap-1">
+                  <span className="text-[13px] leading-none">+</span> Ajouter une carte
+                </div>
               </div>
             </motion.div>
-          );
-        })}
+          ))}
+        </div>
       </div>
     </div>
+    </div>
+    </div>
+  );
+}
+
+/* iPhone 17 Pro frame avec board Trello mobile reel (DELIVERY Digital Nice) */
+type EntCard = { n: string; I: any; tag: string; tagColor: string; amt?: string; due?: string; members: { i: string; c: string }[]; comments?: number; checklist?: { done: number; total: number } };
+function EnterpriseIphoneMockup({ inView, columns: _columns }: { inView: boolean; columns: { stage: string; cards: EntCard[] }[] }) {
+  const outilCards = [
+    { label: '#F2D600', title: 'Message pro - Maçonnerie & Gros Œuvre', attachments: 1 },
+    { label: '#F2D600', title: 'Message pro - Construction de maisons individuelles' },
+    { label: '#F2D600', title: "Message pro - Installation d'eau et de gaz" },
+    { label: '#F2D600', title: 'Objet : Planification de la formation Hygiène et Développement Durable' },
+  ];
+  const prospectCards = [
+    { labels: [] as string[], title: 'Société de développement informatique', comments: 1 },
+    { labels: [] as string[], title: 'Sophie M.', comments: 1 },
+    { labels: [] as string[], title: 'Contact chez Cabinet Médical', comments: 1 },
+    { labels: [] as string[], title: 'Comptable régional', comments: 1 },
+    { labels: ['#61BD4F', '#FF9F1A'], title: 'Promoteur immobilier' },
+  ];
+  return (
+    <div className="relative mx-auto" style={{ filter: 'drop-shadow(0 30px 40px rgba(0,0,0,0.45))' }}>
+      {/* Camera Control + Action + Volume (iPhone 17 Pro signatures) */}
+      <span aria-hidden className="absolute right-[-3px] top-[180px] w-[3px] h-[42px] rounded-r-sm bg-[#3a3a3c] z-30" />
+      <span aria-hidden className="absolute left-[-3px] top-[122px] w-[3px] h-[28px] rounded-l-sm bg-[#2a2a2c] z-30" />
+      <span aria-hidden className="absolute left-[-3px] top-[170px] w-[3px] h-[44px] rounded-l-sm bg-[#2a2a2c] z-30" />
+      <span aria-hidden className="absolute left-[-3px] top-[226px] w-[3px] h-[44px] rounded-l-sm bg-[#2a2a2c] z-30" />
+
+      {/* Matte black frame */}
+      <div
+        className="relative w-[300px] mx-auto rounded-[54px] p-[5px]"
+        style={{
+          background: 'linear-gradient(155deg,#2a2a2c 0%,#1a1a1c 30%,#0c0c0e 55%,#1a1a1c 80%,#2a2a2c 100%)',
+          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 1px rgba(255,255,255,0.04)',
+        }}
+      >
+        <div className="rounded-[50px] p-[3px] bg-[#050507]">
+          <div className="relative rounded-[46px] overflow-hidden bg-white h-[600px] flex flex-col">
+            {/* Status bar */}
+            <div className="flex justify-between items-center px-7 pt-3 text-[11px] font-semibold text-[#172B4D] h-[34px] flex-shrink-0">
+              <span>9:41</span>
+              <div className="flex items-center gap-1.5">
+                <svg viewBox="0 0 16 10" className="w-3.5 h-2.5" fill="currentColor"><rect x="0" y="6" width="2" height="3" rx="0.5"/><rect x="3" y="4" width="2" height="5" rx="0.5"/><rect x="6" y="2" width="2" height="7" rx="0.5"/><rect x="9" y="0" width="2" height="9" rx="0.5"/></svg>
+                <svg viewBox="0 0 14 10" className="w-3 h-2.5" fill="currentColor"><path d="M7 9.5c.6 0 1-.4 1-1s-.4-1-1-1-1 .4-1 1 .4 1 1 1zM4 6.5c.8-.7 1.9-1 3-1s2.2.3 3 1l.7-.7C9.8 5 8.5 4.5 7 4.5s-2.8.5-3.7 1.3L4 6.5zM1 3.5C2.5 2 4.7 1 7 1s4.5 1 6 2.5l.7-.7C12.1 1.2 9.6 0 7 0S1.9 1.2.3 2.8L1 3.5z"/></svg>
+                <svg viewBox="0 0 22 9" className="w-4 h-2.5" fill="none" stroke="currentColor"><rect x="0.5" y="0.5" width="18" height="8" rx="1.5"/><rect x="2" y="2" width="13" height="5" rx="0.5" fill="currentColor"/><rect x="19.5" y="3" width="1.5" height="3" rx="0.5" fill="currentColor"/></svg>
+              </div>
+            </div>
+
+            {/* Dynamic Island */}
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[88px] h-[26px] rounded-full bg-black z-20" />
+
+            {/* Trello top header */}
+            <div className="flex items-center justify-between px-4 py-2 border-b border-black/5 flex-shrink-0">
+              <span className="w-7 h-7 rounded-md bg-[#172B4D] flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="currentColor"><rect x="3" y="3" width="8" height="13" rx="1"/><rect x="13" y="3" width="8" height="9" rx="1"/></svg>
+              </span>
+              <div className="flex items-center gap-2">
+                <Search className="w-4 h-4 text-[#172B4D]" strokeWidth={2} />
+                <span className="px-2.5 py-1 rounded bg-[#EBECF0] text-[10.5px] font-semibold text-[#172B4D]">Créer</span>
+                <span className="text-[#172B4D] text-[14px] leading-none tracking-wider">⋯</span>
+              </div>
+            </div>
+
+            {/* Board title */}
+            <div className="flex items-center justify-between px-3 py-2.5 flex-shrink-0">
+              <p className="text-[13px] font-bold text-[#172B4D] tracking-tight truncate">DELIVERY Digital Nice</p>
+              <div className="flex items-center gap-1.5 ml-2 text-[#172B4D]">
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="16" rx="1"/><rect x="17" y="4" width="5" height="16" rx="1"/></svg>
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span className="ml-1 text-[14px] leading-none tracking-wider">⋯</span>
+              </div>
+            </div>
+
+            {/* Board area (columns scroll horizontalement) */}
+            <div className="flex-1 overflow-x-auto overflow-y-hidden bg-white">
+              <div className="flex gap-2.5 px-3 pb-3 h-full" style={{ minWidth: 'fit-content' }}>
+                {/* Column Outil */}
+                <div className="w-[230px] flex-shrink-0 rounded-xl bg-[#EBECF0] flex flex-col">
+                  <div className="flex items-center justify-between px-3 py-2.5">
+                    <span className="text-[12.5px] font-bold text-[#172B4D]">Outil</span>
+                    <span className="text-[#172B4D] text-[14px] leading-none tracking-wider">⋯</span>
+                  </div>
+                  <div className="px-2 pb-2 space-y-2 overflow-y-auto">
+                    {outilCards.map((c, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={inView ? { opacity: 1, y: 0 } : {}}
+                        transition={{ duration: 0.3, delay: 0.15 + i * 0.05 }}
+                        className="rounded-lg bg-white px-2.5 py-2"
+                        style={{ boxShadow: '0 1px 0 rgba(9,30,66,0.13)' }}
+                      >
+                        <div className="h-[5px] w-10 rounded-full mb-1.5" style={{ background: c.label }} />
+                        <p className="text-[10.5px] text-[#172B4D] leading-snug mb-1.5">{c.title}</p>
+                        <div className="flex items-center gap-2 text-[#5E6C84]">
+                          <Eye style={{ width: 11, height: 11 }} strokeWidth={1.8} />
+                          <svg viewBox="0 0 24 24" style={{ width: 11, height: 11 }} fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>
+                          {c.attachments && (
+                            <span className="inline-flex items-center gap-0.5 text-[9px]">
+                              <svg viewBox="0 0 24 24" style={{ width: 10, height: 10 }} fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.4 11l-9.2 9.2a6 6 0 0 1-8.5-8.5L13 2.5a4 4 0 0 1 5.7 5.6L9.4 17.5a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>
+                              {c.attachments}
+                            </span>
+                          )}
+                          <span className="ml-auto w-4 h-4 rounded-full bg-gradient-to-br from-[#0EA5E9] via-[#10B981] to-[#F59E0B]" />
+                        </div>
+                      </motion.div>
+                    ))}
+                    <div className="px-1 py-1.5 text-[#5E6C84] text-[10.5px] flex items-center gap-1">
+                      <span className="text-[13px] leading-none">+</span> Ajouter une carte
+                    </div>
+                  </div>
+                </div>
+
+                {/* Column Prospects */}
+                <div className="w-[230px] flex-shrink-0 rounded-xl bg-[#EBECF0] flex flex-col">
+                  <div className="flex items-center justify-between px-3 py-2.5">
+                    <span className="text-[12.5px] font-bold text-[#172B4D]">Prospects</span>
+                    <span className="text-[#172B4D] text-[14px] leading-none tracking-wider">⋯</span>
+                  </div>
+                  <div className="px-2 pb-2 space-y-2 overflow-y-auto">
+                    {prospectCards.map((c, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={inView ? { opacity: 1, y: 0 } : {}}
+                        transition={{ duration: 0.3, delay: 0.2 + i * 0.05 }}
+                        className="rounded-lg bg-white px-2.5 py-2"
+                        style={{ boxShadow: '0 1px 0 rgba(9,30,66,0.13)' }}
+                      >
+                        {c.labels.length > 0 && (
+                          <div className="flex gap-1 mb-1.5">
+                            {c.labels.map((lbl, k) => (
+                              <span key={k} className="h-[5px] w-9 rounded-full" style={{ background: lbl }} />
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-[10.5px] text-[#172B4D] leading-snug mb-1.5">{c.title}</p>
+                        <div className="flex items-center gap-2 text-[#5E6C84]">
+                          <Eye style={{ width: 11, height: 11 }} strokeWidth={1.8} />
+                          <svg viewBox="0 0 24 24" style={{ width: 11, height: 11 }} fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>
+                          {c.comments && (
+                            <span className="inline-flex items-center gap-0.5 text-[9px]">
+                              <MessageSquare style={{ width: 10, height: 10 }} strokeWidth={1.8} />
+                              {c.comments}
+                            </span>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                    <div className="px-1 py-1.5 text-[#5E6C84] text-[10.5px] flex items-center gap-1">
+                      <span className="text-[13px] leading-none">+</span> Ajouter une carte
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Trello bottom tabs */}
+            <div className="flex items-center justify-around border-t border-black/5 py-2 bg-white flex-shrink-0">
+              <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#5E6C84]" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 13l6-6 4 4 5-5 3 3" strokeLinecap="round"/></svg>
+              <CalendarDays className="w-4 h-4 text-[#5E6C84]" strokeWidth={2} />
+              <span className="inline-flex items-center justify-center w-12 h-6 rounded-md bg-[#E7F0FF]">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#0079BF]" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="4" y="3" width="5" height="18" rx="1"/><rect x="11" y="3" width="5" height="18" rx="1"/><rect x="18" y="3" width="2" height="14" rx="1"/></svg>
+              </span>
+              <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#5E6C84]" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="6" height="18" rx="1"/><rect x="11" y="3" width="6" height="18" rx="1"/></svg>
+            </div>
+
+            {/* Home indicator */}
+            <div className="flex justify-center py-2 flex-shrink-0">
+              <span className="w-[110px] h-[4px] rounded-full bg-[#172B4D]/80" />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1326,29 +1460,51 @@ function CloudMock() {
         border: '1px solid rgba(255,255,255,0.10)',
       }}
     >
+      {/* AWS Console top bar */}
       <div className="flex items-center justify-between mb-3 sm:mb-4">
-        <div>
-          <div className="text-[9px] sm:text-[10px] text-white/55 font-medium">Production · eu-west-3</div>
-          <div className="text-[15px] sm:text-[18px] font-bold tracking-tight text-white">État serveurs</div>
+        <div className="flex items-center gap-2.5">
+          {/* AWS cube logo */}
+          <svg viewBox="0 0 24 24" className="w-6 h-6 flex-shrink-0" aria-hidden>
+            <path d="M12 2 L21 7 L21 17 L12 22 L3 17 L3 7 Z" fill="none" stroke="#FF9900" strokeWidth="1.5" strokeLinejoin="round"/>
+            <path d="M12 2 L12 12 L3 7" fill="none" stroke="#FF9900" strokeWidth="1.5"/>
+            <path d="M12 12 L21 7" fill="none" stroke="#FF9900" strokeWidth="1.5"/>
+            <path d="M12 12 L12 22" fill="none" stroke="#FF9900" strokeWidth="1.5"/>
+          </svg>
+          <div>
+            <div className="text-[9px] sm:text-[10px] text-white/55 font-medium">AWS Console · Production</div>
+            <div className="text-[15px] sm:text-[18px] font-bold tracking-tight text-white">Tableau de bord AWS</div>
+          </div>
         </div>
-        <motion.div
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 ring-1 ring-white/15"
-          animate={{ boxShadow: ['0 0 0 0 rgba(255,255,255,0.2)', '0 0 0 6px rgba(255,255,255,0)', '0 0 0 0 rgba(255,255,255,0)'] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <motion.span className="w-2 h-2 rounded-full bg-white" animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1.4, repeat: Infinity }} />
-          <span className="text-[10px] font-semibold text-white">Live</span>
-        </motion.div>
+        <div className="flex items-center gap-2">
+          <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold text-white/85 bg-white/8 ring-1 ring-white/15">eu-west-3</span>
+          <motion.div
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FF9900]/12 ring-1 ring-[#FF9900]/35"
+            animate={{ boxShadow: ['0 0 0 0 rgba(255,153,0,0.3)', '0 0 0 6px rgba(255,153,0,0)', '0 0 0 0 rgba(255,153,0,0)'] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <motion.span className="w-2 h-2 rounded-full bg-[#FF9900]" animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1.4, repeat: Infinity }} />
+            <span className="text-[10px] font-semibold text-[#FF9900]">Live</span>
+          </motion.div>
+        </div>
       </div>
 
+      {/* CloudWatch metrics row */}
       <div className="grid grid-cols-4 gap-2.5 mb-3">
-        <LiveMetricTile Icon={Cpu} label="CPU" value={cpu} suffix="%" inView={inView} delay={0.1} />
-        <LiveMetricTile Icon={MemoryStick} label="RAM" value={ram} suffix="%" inView={inView} delay={0.2} />
-        <LiveMetricTile Icon={Activity} label="Latence" value={latency} suffix="ms" inView={inView} delay={0.3} />
+        <LiveMetricTile Icon={Cpu} label="EC2 · CPU" value={cpu} suffix="%" inView={inView} delay={0.1} />
+        <LiveMetricTile Icon={MemoryStick} label="RDS · RAM" value={ram} suffix="%" inView={inView} delay={0.2} />
+        <LiveMetricTile Icon={Activity} label="ALB · Latence" value={latency} suffix="ms" inView={inView} delay={0.3} />
         <UptimeTile Icon={Shield} inView={inView} />
       </div>
 
+      {/* EC2 instances list */}
       <div className="rounded-[10px] bg-white/5 ring-1 ring-white/10 p-3 space-y-1.5 h-[40%]">
+        <div className="flex items-center justify-between mb-1 px-0.5">
+          <div className="flex items-center gap-1.5">
+            <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="#FF9900" strokeWidth="1.7" aria-hidden><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+            <span className="text-[10px] font-semibold text-white/75">EC2 Instances</span>
+          </div>
+          <span className="text-[9px] text-white/45">4 running</span>
+        </div>
         {servers.map((srv, i) => (
           <motion.div
             key={i}
@@ -1358,14 +1514,14 @@ function CloudMock() {
             className="flex items-center justify-between text-[10px]"
           >
             <div className="flex items-center gap-2">
-              <motion.span className="w-1.5 h-1.5 rounded-full bg-white" animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1.5 + i * 0.3, repeat: Infinity }} />
-              <span className="font-semibold text-white">{srv.n}</span>
-              <span className="text-white/45">{srv.region}</span>
+              <motion.span className="w-1.5 h-1.5 rounded-full bg-[#1FB54E]" animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1.5 + i * 0.3, repeat: Infinity }} />
+              <span className="font-mono text-white/85 tracking-tight">i-{(0xabc1234 + i * 0x117).toString(16).slice(0, 8)}</span>
+              <span className="hidden sm:inline text-white/45 text-[9.5px]">{srv.n}</span>
+              <span className="text-white/35 text-[9.5px]">{srv.region}</span>
             </div>
             <div className="flex items-center gap-2">
-              {/* Barre de charge cachee sur mobile (pour densite), pourcentage seul */}
               <div className="hidden sm:block w-16 h-1 rounded-full bg-white/10 overflow-hidden">
-                <motion.div className="h-full rounded-full bg-white" initial={{ width: 0 }} animate={inView ? { width: `${srv.baseLoad}%` } : {}} transition={{ duration: 1.2, delay: 0.6 + i * 0.1 }} />
+                <motion.div className="h-full rounded-full bg-[#FF9900]" initial={{ width: 0 }} animate={inView ? { width: `${srv.baseLoad}%` } : {}} transition={{ duration: 1.2, delay: 0.6 + i * 0.1 }} />
               </div>
               <span className="text-white/65 tabular-nums w-9 text-right">{srv.baseLoad}%</span>
             </div>
@@ -1701,18 +1857,12 @@ const Services = () => {
       <ServiceTile
         id="service-web"
         tone="sky"
-        title="Solutions"
-        accent="web"
-        subhead="SaaS, dashboards et applications web sur mesure, propulsées par les meilleures technos."
+        title={t('tiles.web.title')}
+        accent={t('tiles.web.accent')}
+        subhead={t('tiles.web.subhead')}
         illustration={<WebMock />}
-        primary={{ label: "Discuter d'un projet", onClick: triggerOpenDigital }}
-        secondary={{ label: 'En savoir plus', onClick: triggerOpenDigital }}
-        badge={
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[12.5px] font-semibold text-[var(--ink-900)] ring-1 ring-[var(--ink-100)]">
-            <Award className="h-3.5 w-3.5" strokeWidth={1.7} />
-            Certifié CII · jusqu'à 20 % remboursé
-          </div>
-        }
+        primary={{ label: t('tiles.cta.start'), onClick: triggerOpenDigital }}
+        secondary={{ label: t('tiles.cta.learn'), onClick: triggerOpenDigital }}
         chips={
           <>
             <TechChip Logo={ReactLogo} label="React" />
@@ -1728,12 +1878,12 @@ const Services = () => {
       <ServiceTile
         id="service-mobile"
         tone="plum"
-        title="Apps"
-        accent="natives"
-        subhead="iOS et Android. Performance native, design soigné, déploiement App Store et Play Store clé en main."
+        title={t('tiles.mobile.title')}
+        accent={t('tiles.mobile.accent')}
+        subhead={t('tiles.mobile.subhead')}
         illustration={<MobileMock />}
-        primary={{ label: "Discuter d'un projet", onClick: triggerOpenDigital }}
-        secondary={{ label: 'En savoir plus', onClick: triggerOpenDigital }}
+        primary={{ label: t('tiles.cta.start'), onClick: triggerOpenDigital }}
+        secondary={{ label: t('tiles.cta.learn'), onClick: triggerOpenDigital }}
         chips={
           <>
             <TechChip Logo={ReactNativeLogo} label="React Native" dark />
@@ -1747,12 +1897,12 @@ const Services = () => {
       <ServiceTile
         id="service-enterprise"
         tone="mint"
-        title="Logiciels"
-        accent="métier"
-        subhead="CRM, ERP, plateformes B2B. Vos process automatisés, votre productivité boostée."
+        title={t('tiles.enterprise.title')}
+        accent={t('tiles.enterprise.accent')}
+        subhead={t('tiles.enterprise.subhead')}
         illustration={<EnterpriseMock />}
-        primary={{ label: "Discuter d'un projet", onClick: triggerOpenDigital }}
-        secondary={{ label: 'En savoir plus', onClick: triggerOpenDigital }}
+        primary={{ label: t('tiles.cta.start'), onClick: triggerOpenDigital }}
+        secondary={{ label: t('tiles.cta.learn'), onClick: triggerOpenDigital }}
         chips={
           <>
             <TechChip Logo={NodeLogo} label="Node.js" />
@@ -1766,12 +1916,12 @@ const Services = () => {
       <ServiceTile
         id="service-cloud"
         tone="dark"
-        title="Cloud"
-        accent="& DevOps"
-        subhead="Hébergement, monitoring, scale automatique. Une infrastructure qui tient la charge, jour et nuit."
+        title={t('tiles.cloud.title')}
+        accent={t('tiles.cloud.accent')}
+        subhead={t('tiles.cloud.subhead')}
         illustration={<CloudMock />}
-        primary={{ label: "Discuter d'un projet", onClick: triggerOpenDigital }}
-        secondary={{ label: 'En savoir plus', onClick: triggerOpenDigital }}
+        primary={{ label: t('tiles.cta.start'), onClick: triggerOpenDigital }}
+        secondary={{ label: t('tiles.cta.learn'), onClick: triggerOpenDigital }}
         chips={
           <>
             <TechChip Logo={AWSLogo} label="AWS" dark />

@@ -11,14 +11,14 @@
     "solutionsBtn": "Løsninger"
   },
   "tiles": {
-    "eyebrow": "Vår kompetanse",
-    "ciiBadge": "CII-sertifisert · opptil 20% refundert",
+    "eyebrow": "Vår ekspertise",
+    "ciiBadge": "CII-sertifisert · opptil 20 % refundert",
     "stack": "Stack",
     "cta": {
       "start": "Diskuter et prosjekt",
       "learn": "Les mer",
       "trainings": "Se alle opplæringer",
-      "learner": "Deltagerområde"
+      "learner": "Kursområde"
     },
     "web": {
       "title": "Web",
@@ -28,17 +28,17 @@
     "mobile": {
       "title": "Native",
       "accent": "apper",
-      "subhead": "iOS og Android. Native ytelse, polert design, App Store og Play Store distribusjon nøkkelferdig."
+      "subhead": "iOS og Android. Native ytelse, polert design, nøkkelferdig utrulling til App Store og Play Store."
     },
     "enterprise": {
       "title": "Forretnings",
       "accent": "programvare",
-      "subhead": "CRM, ERP, B2B-plattformer. Dine prosesser automatisert, din produktivitet økt."
+      "subhead": "CRM, ERP, B2B-plattformer. Automatiserte prosesser, økt produktivitet."
     },
     "cloud": {
       "title": "Cloud",
       "accent": "& DevOps",
-      "subhead": "Hosting, overvåking, automatisk skalering. Infrastruktur som tåler belastningen, dag og natt."
+      "subhead": "Hosting, overvåking, automatisk skalering. Infrastruktur som håndterer belastningen, døgnet rundt."
     },
     "training": {
       "title": "Profesjonell",
@@ -57,10 +57,10 @@
     "trainingPro": "Profesjonell opplæring"
   },
   "hero": {
-    "title": "Koden som driver dine ambisjoner, 20% refundert via CII",
-    "subtitle": "Nettsider, mobilapper, SaaS, CRM, ERP på mål. Byrå sertifisert Skattefradrag for Innovasjon - opptil 80 000 € i årlig kreditt for kvalifiserte SMB.",
+    "title": "Koden som driver ambisjonene dine, 20 % refundert via CII",
+    "subtitle": "Nettsteder, mobilapper, SaaS, CRM, ERP skreddersydd. Byrå sertifisert for innovasjonsskattefradrag – opptil 80 000 € årlig kreditt for kvalifiserte SMB.",
     "titleIntl": "La oss bygge ditt neste digitale produkt",
-    "subtitleIntl": "Nettsider, mobilapper, SaaS, CRM, ERP. Skreddersydd kode, levert på uker.",
+    "subtitleIntl": "Nettsteder, mobilapper, SaaS, CRM, ERP. Skreddersydd kode, levert på få uker.",
     "cta": {
       "project": "Diskuter et prosjekt"
     },
@@ -73,11 +73,11 @@
     "subtitle": "Løsninger tilpasset dine behov",
     "web": {
       "title": "Webutvikling",
-      "description": "Nettsider, e-handel og progressive webapplikasjoner med de nyeste teknologiene."
+      "description": "Nettsteder, e-handel og progressive webapplikasjoner med de nyeste teknologiene."
     },
     "mobile": {
       "title": "Mobilapplikasjoner",
-      "description": "Native og kryssplattform applikasjoner for iOS og Android med optimal brukeropplevelse."
+      "description": "Native og cross-platform applikasjoner for iOS og Android med optimal brukeropplevelse."
     },
     "enterprise": {
       "title": "Bedriftsløsninger",
@@ -85,17 +85,17 @@
     },
     "cloud": {
       "title": "Cloud-tjenester",
-      "description": "Migrering, arkitektur og distribusjon av applikasjoner i skyen med sikkerhet og ytelse."
+      "description": "Migrering, arkitektur og utrulling av applikasjoner i skyen med sikkerhet og ytelse."
     },
     "training": {
       "title": "Profesjonell opplæring",
-      "description": "Qualiopi-sertifisert organisasjon. Programmer innen webutvikling, mobil og DevOps, finansierbare via din OPCO."
+      "description": "Qualiopi-sertifisert organisasjon. Programmer innen webutvikling, mobil og DevOps, finansierbart via din OPCO."
     }
   },
   "portfolio": {
     "title": "Våre prosjekter",
-    "subtitle": "Oppdag våre resultater",
-    "viewProject": "Se prosjektet",
+    "subtitle": "Oppdag våre gjennomføringer",
+    "viewProject": "Se prosjekt",
     "projects": {
       "1": {
         "title": "E-handelsplattform",
@@ -103,13 +103,13 @@
         "tag": "Web"
       },
       "2": {
-        "title": "Styringsapplikasjon",
+        "title": "Styringssystem",
         "description": "Tilpasset ERP-system for å optimalisere forretningsprosesser og forbedre produktiviteten.",
         "tag": "Bedrift"
       },
       "3": {
         "title": "Mobilapplikasjon",
-        "description": "Leveringsapplikasjon med geolokalisering og integrert betalingssystem.",
+        "description": "Leveringsapp med geolokalisering og integrert betalingssystem.",
         "tag": "Mobil"
       },
       "4": {
@@ -121,8 +121,8 @@
   },
   "about": {
     "title": "Vår ekspertise",
-    "subtitle": "Et lidenskap lig team",
-    "description": "Med over 10 års erfaring kombinerer vårt team av eksperter kreativitet og teknisk presisjon for å forvandle ideene dine til effektive digitale løsninger.",
+    "subtitle": "Et lidenskapelig team",
+    "description": "Med over 10 års erfaring kombinerer vårt team av eksperter kreativitet og teknisk presisjon for å transformere ideene dine til effektive digitale løsninger.",
     "expertise": {
       "1": {
         "title": "Front-End utvikling",
@@ -133,7 +133,7 @@
         "value": "95%"
       },
       "3": {
-        "title": "UX/UI Design",
+        "title": "UX/UI-design",
         "value": "85%"
       },
       "4": {
@@ -144,10 +144,10 @@
   },
   "testimonials": {
     "title": "Anbefalinger",
-    "subtitle": "Hva kundene våre sier",
+    "subtitle": "Hva våre kunder sier",
     "items": {
       "1": {
-        "text": "Teamet forvandlet visjonen vår til en digital løsning som overgikk alle forventningene våre. Eksepsjonell profesjonalitet og teknisk ekspertise.",
+        "text": "Teamet forvandlet visjonen vår til en digital løsning som overgikk alle forventninger. Eksepsjonell profesjonalitet og teknisk ekspertise.",
         "author": "Marie Dupont",
         "position": "Markedsdirektør, TechCorp"
       },
@@ -157,7 +157,7 @@
         "position": "CEO, InnovSoft"
       },
       "3": {
-        "text": "Deres oppfølging var verdifull gjennom hele prosjektet. De klarte å tilpasse seg våre begrensninger og foreslå relevante løsninger.",
+        "text": "Deres oppfølging har vært verdifull gjennom hele prosjektet. De klarte å tilpasse seg våre begrensninger og foreslå relevante løsninger.",
         "author": "Sophie Lefebvre",
         "position": "CTO, DataFuture"
       }
@@ -176,9 +176,9 @@
     "error": "En feil oppstod. Vennligst prøv igjen."
   },
   "footer": {
-    "company": "© 2025 DELIVERY Digital Technology. Alle rettigheter reservert.",
+    "company": "© 2025 DELIVERY Digital Technology. Alle rettigheter forbeholdt.",
     "links": {
-      "privacy": "Personvernerklæring",
+      "privacy": "Personvernpolicy",
       "terms": "Bruksvilkår",
       "sitemap": "Nettstedskart"
     }
@@ -186,22 +186,22 @@
   "reclamation": {
     "badge": "Klage",
     "title": "Klageskjema",
-    "subtitle": "Vi tar bekymringene dine på alvor. Vennligst fyll ut skjemaet nedenfor, så vil vi svare deg så snart som mulig.",
+    "subtitle": "Vi tar dine bekymringer på alvor. Vennligst fyll ut skjemaet nedenfor, så svarer vi deg så snart som mulig.",
     "qualityCommitment": {
-      "title": "Vårt kvalitetsengasjement",
-      "intro": "DELIVERY Digital Nice streber etter å levere opplæringstjenester som møter behovene og kravene til våre kunder. Men hvis du ønsker å sende inn en klage:",
+      "title": "Vår kvalitetsforpliktelse",
+      "intro": "DELIVERY Digital Nice streber etter å tilby opplæringstjenester som møter kundenes behov og krav. Hvis du ønsker å sende oss en klage:",
       "contact": "Du kan når som helst rette spørsmål, tvil og problemer til dine vanlige kontakter, som vil gjøre sitt beste for å gi deg et svar.",
-      "formOption": "Du har også muligheten til å sende inn forespørselen din ved hjelp av klageskjemaet nedenfor.",
-      "processTitle": "Vår behandlingsprosedyre",
+      "formOption": "Du har også mulighet til å sende din forespørsel ved å bruke klageskjemaet nedenfor.",
+      "processTitle": "Vår behandlingsprosess",
       "steps": {
-        "1": "Du fyller ut skjemaet som automatisk sendes til teamet som håndterer klager",
-        "2": "Vi bekrefter mottak av klagen din",
-        "3": "Vi analyserer forespørselen din så raskt som mulig og vurderer om den kan behandles",
-        "4": "Hvis forespørselen din kan behandles, analyserer vi årsakene til klagen",
-        "5": "Vi undersøker nøye de presenterte faktaene og utfører om nødvendig nødvendige undersøkelser. I dette tilfellet holder vi deg informert om fremdriften i saken",
-        "6": "Vi informerer deg om vårt svar, og spesifiserer resultatene av undersøkelsen vår og løsningene vi foreslår for å løse problemet"
+        "1": "Du fyller ut skjemaet som automatisk sendes til teamet som behandler klager",
+        "2": "Vi bekrefter mottak av din klage",
+        "3": "Vi analyserer forespørselen din så raskt som mulig og vurderer dens gyldighet",
+        "4": "Hvis forespørselen din er gyldig, analyserer vi årsakene til klagen",
+        "5": "Vi undersøker nøye de presenterte fakta og utfører, om nødvendig, nødvendig research. I så fall holder vi deg informert om fremdriften i saken",
+        "6": "Vi informerer deg om vårt svar, med resultatene av undersøkelsen vår og eventuelle løsninger vi foreslår for å løse problemet"
       },
-      "directContact": "For å kontakte klageteamet direkte:"
+      "directContact": "For å kontakte klagebehandlingsteamet direkte:"
     },
     "contactCards": {
       "email": "E-post",
@@ -213,7 +213,7 @@
       "lastName": "Etternavn",
       "email": "E-post",
       "phone": "Telefon",
-      "company": "Bedrift",
+      "company": "Selskap",
       "orderNumber": "Ordrenummer",
       "category": "Klagekategori",
       "categoryOptions": {
@@ -224,55 +224,55 @@
         "training": "Opplæring",
         "other": "Annet"
       },
-      "subject": "Klagetema",
-      "subjectPlaceholder": "Sammendrag av klagen din",
+      "subject": "Klageemne",
+      "subjectPlaceholder": "Sammendrag av din klage",
       "description": "Detaljert beskrivelse",
-      "descriptionPlaceholder": "Vennligst beskriv klagen din i detalj...",
-      "gdpr": "Dataene dine behandles i henhold til vår personvernerklæring og GDPR. Vi forplikter oss til å svare deg innen 48 virketimer.",
-      "captcha": "Sikkerhetsbekreftelse",
-      "captchaRequired": "Vennligst fullfør sikkerhetsbekreftelsen",
-      "submit": "Send inn klage",
-      "submitting": "Sender inn..."
+      "descriptionPlaceholder": "Vennligst beskriv din klage i detalj...",
+      "gdpr": "Dine data behandles i henhold til vår personvernpolicy og GDPR. Vi forplikter oss til å svare deg innen 48 arbeidstimer.",
+      "captcha": "Sikkerhetsverifisering",
+      "captchaRequired": "Vennligst fullfør sikkerhetsverifiseringen",
+      "submit": "Send klage",
+      "submitting": "Sender..."
     },
     "procedure": {
-      "title": "Klagebehandlingsprosedyre",
+      "title": "Prosedyre for klagebehandling",
       "steps": {
         "1": "Mottak og bekreftelse innen 24 timer",
-        "2": "Analyse av klagen din av vårt team",
-        "3": "Detaljert svar innen 48 virketimer",
+        "2": "Analyse av din klage av vårt team",
+        "3": "Detaljert svar innen 48 arbeidstimer",
         "4": "Oppfølging og problemløsning"
       },
-      "mediator": "Hvis du ikke er fornøyd med vårt svar, kan du kontakte vår kvalitetsleder eller henvende deg til en forbrukermekler."
+      "mediator": "Hvis du ikke er fornøyd med vårt svar, kan du kontakte vår kvalitetsansvarlig eller ta kontakt med en forbrukermekler."
     },
     "success": {
-      "title": "Klage sendt inn",
-      "message": "Vi har mottatt klagen din. Vårt team vil kontakte deg så snart som mulig for å behandle forespørselen din.",
-      "responseTime": "Estimert svartid: 24-48 virketimer",
-      "backHome": "Tilbake til forsiden"
+      "title": "Klage sendt",
+      "message": "Vi har mottatt din klage. Vårt team vil kontakte deg så snart som mulig for å behandle din forespørsel.",
+      "responseTime": "Estimert svartid: 24-48 arbeidstimer",
+      "backHome": "Tilbake til hjemmesiden"
     }
   },
   "invoice": {
     "title": "Forskuddsfaktura",
     "prefix": "FAKTURA",
-    "issuedOn": "Utstedt",
+    "issuedOn": "Utstedt den",
     "dueOn": "Forfallsdato",
-    "relatedQuote": "Relatert tilbud",
+    "relatedQuote": "Tilhørende tilbud",
     "for": "Til",
     "service": "Tjeneste",
-    "amountExclTax": "Beløp eks. mva",
+    "amountExclTax": "Beløp eks. mva.",
     "lineDescription": "{{percent}} % av {{title}} (ref. {{quoteRef}})",
-    "subtotal": "Delsum eks. mva",
+    "subtotal": "Subtotal eks. mva.",
     "vat": "MVA ({{rate}} %)",
-    "netToPay": "Netto å betale",
+    "netToPay": "Netto til betaling",
     "bankDetails": "Bankopplysninger",
     "beneficiary": "Mottaker",
     "bank": "Bank",
     "iban": "IBAN",
     "bicSwift": "BIC / SWIFT",
-    "transferRef": "Referanse som skal angis i overføringen",
+    "transferRef": "Referanse å oppgi i overføringen",
     "mailSubject": "Forskuddsfaktura {{invoiceRef}} - {{percent}} % av tilbud {{quoteRef}}",
-    "mailThanks": "Takk for din tillit.",
-    "mailBody": "Etter signering av tilbud <strong>{{quoteRef}}</strong>, vennligst finn vedlagt forskuddsfaktura <strong>{{invoiceRef}}</strong>.",
+    "mailThanks": "Takk for tilliten.",
+    "mailBody": "Etter signering av tilbud <strong>{{quoteRef}}</strong>, vedlegges forskuddsfaktura <strong>{{invoiceRef}}</strong>.",
     "mailAmount": "Beløp å betale: <strong>{{amount}}</strong> ({{percent}} % av total).",
     "mailRef": "Bankopplysninger og overføringsreferanse i fakturaen. Forfallsdato: <strong>{{dueDate}}</strong>.",
     "mailStart": "Ved mottak av betaling starter vi prosjektet."
@@ -285,5 +285,34 @@
     "rejectedBody": "Tilbud <strong>{{quoteRef}}</strong> har blitt avvist.",
     "rejectedReason": "Årsak: {{reason}}",
     "rejectedNoReason": "(ikke spesifisert)"
-  }
+  },
+  "cii": {
+    "title": "Innovasjonsskattefradrag",
+    "close": "Lukk",
+    "exampleTitle": "Konkret eksempel",
+    "exampleBody": "For et prosjekt på 20 000 €: du får tilbake 4 000 € (20 %). Endelig kostnad: 16 000 €. Årlig tak: 400 000 € i utgifter, dvs. opptil 80 000 € i kreditt.",
+    "eligibleTitle": "Kvalifiserte prosjekter",
+    "eligibleBody": "Web- og mobilapplikasjoner · skreddersydd programvare · kunstig intelligens · innovative løsninger for virksomheten din.",
+    "benefitTitle": "Hvordan dra nytte",
+    "benefitBody": "Du investerer med oss · vi leverer all dokumentasjon · du mottar din kreditt eller refusjon.",
+    "taxLine": "Hvis du betaler skatt: direkte fradrag.",
+    "refundLine": "Ellers: refusjon fra staten."
+  },
+  "common": {
+    "discussProject": "La oss diskutere prosjektet ditt",
+    "discussProjectArrow": "La oss diskutere prosjektet ditt ›",
+    "chooseLanguage": "Velg språk",
+    "startConversation": "Start samtalen"
+  },
+  "chat": {
+    "typePlaceholder": "Skriv din melding",
+    "typing": "DELIVERY Digital skriver...",
+    "describeIdea": "Beskriv ideen din. En ekspert svarer innen 24 timer.",
+    "letsTalk": "La oss snakke om prosjektet ditt.",
+    "logout": "Logg ut",
+    "confidential": "Meldingene dine forblir konfidensielle og brukes kun for prosjektet ditt.",
+    "noConv": "Ingen samtale ennå.",
+    "aiUnderstands": "Vår AI-agent forstår behovet ditt. En ekspert svarer innen 24 timer."
+  },
+  "discuter": "Diskuter et prosjekt"
 }

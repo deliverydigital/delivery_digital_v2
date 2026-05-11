@@ -5,9 +5,9 @@
     "portfolio": "Projecten",
     "about": "Over ons",
     "contact": "Contact",
-    "training": "Opleiding",
+    "training": "Training",
     "quote": "Offerte",
-    "formationBtn": "Opleiding",
+    "formationBtn": "Training",
     "solutionsBtn": "Oplossingen"
   },
   "tiles": {
@@ -16,9 +16,9 @@
     "stack": "Stack",
     "cta": {
       "start": "Bespreek een project",
-      "learn": "Meer informatie",
-      "trainings": "Alle opleidingen bekijken",
-      "learner": "Leerlingenportaal"
+      "learn": "Meer weten",
+      "trainings": "Alle trainingen bekijken",
+      "learner": "Cursistenruimte"
     },
     "web": {
       "title": "Web",
@@ -28,39 +28,39 @@
     "mobile": {
       "title": "Native",
       "accent": "apps",
-      "subhead": "iOS en Android. Native prestaties, verzorgd ontwerp, kant-en-klare implementatie op App Store en Play Store."
+      "subhead": "iOS en Android. Native performance, verzorgd design, turnkey deployment op App Store en Play Store."
     },
     "enterprise": {
-      "title": "Business",
+      "title": "Bedrijfs",
       "accent": "software",
-      "subhead": "CRM, ERP, B2B-platforms. Uw processen geautomatiseerd, uw productiviteit versterkt."
+      "subhead": "CRM, ERP, B2B-platformen. Uw processen geautomatiseerd, uw productiviteit geboost."
     },
     "cloud": {
       "title": "Cloud",
       "accent": "& DevOps",
-      "subhead": "Hosting, monitoring, automatische schaalbaarheid. Infrastructuur die de belasting aankan, dag en nacht."
+      "subhead": "Hosting, monitoring, automatische schaling. Infrastructuur die de belasting aankan, dag en nacht."
     },
     "training": {
       "title": "Professionele",
-      "accent": "opleiding.",
+      "accent": "training.",
       "subhead": "Qualiopi-gecertificeerde organisatie. Profiteer van OPCO-financiering."
     }
   },
   "formationPage": {
     "eyebrow": "Qualiopi-gecertificeerd centrum",
     "title": "Professionele",
-    "accent": "opleiding.",
+    "accent": "training.",
     "subhead": "Qualiopi-gecertificeerde organisatie. Profiteer van OPCO-financiering."
   },
   "heroDark": {
     "viewServices": "Bekijk onze diensten",
-    "trainingPro": "Professionele opleiding"
+    "trainingPro": "Professionele training"
   },
   "hero": {
-    "title": "De code die uw ambities voortstuwt, 20% terugbetaald via CII",
-    "subtitle": "Websites, mobiele applicaties, SaaS, CRM, ERP op maat. CII-gecertificeerd bureau (Crédit Impôt Innovation) - tot € 80.000 jaarlijkse belastingvermindering voor in aanmerking komende KMO's.",
+    "title": "De code die uw ambities voortstuwt, 20% terugbetaald via het CII",
+    "subtitle": "Websites, mobiele apps, SaaS, CRM, ERP op maat. Agentschap gecertificeerd voor Innovatiebelastingkrediet - tot € 80.000 jaarlijks krediet voor in aanmerking komende kmo's.",
     "titleIntl": "Laten we uw volgende digitale product bouwen",
-    "subtitleIntl": "Websites, mobiele apps, SaaS, CRM, ERP. Maatwerk code, geleverd in enkele weken.",
+    "subtitleIntl": "Websites, mobiele apps, SaaS, CRM, ERP. Maatwerk code, geleverd binnen enkele weken.",
     "cta": {
       "project": "Bespreek een project"
     },
@@ -73,48 +73,48 @@
     "subtitle": "Oplossingen op maat van uw behoeften",
     "web": {
       "title": "Webontwikkeling",
-      "description": "Showcase websites, e-commerceplatforms en progressieve webapplicaties met de nieuwste technologieën."
+      "description": "Showcase-websites, e-commerce en progressive web applicaties met de nieuwste technologieën."
     },
     "mobile": {
       "title": "Mobiele Applicaties",
-      "description": "Native en cross-platform applicaties voor iOS en Android met een optimale gebruikerservaring."
+      "description": "Native en cross-platform applicaties voor iOS en Android met optimale gebruikerservaring."
     },
     "enterprise": {
-      "title": "Enterprise Oplossingen",
-      "description": "Maatwerk software, procesautomatisering en systeemintegraties."
+      "title": "Bedrijfsoplossingen",
+      "description": "Software op maat, procesautomatisering en systeemintegraties."
     },
     "cloud": {
-      "title": "Cloud Diensten",
-      "description": "Migratie, architectuur en implementatie van applicaties in de cloud met beveiliging en prestaties."
+      "title": "Cloud Services",
+      "description": "Migratie, architectuur en deployment van applicaties in de cloud met veiligheid en performance."
     },
     "training": {
-      "title": "Professionele Opleiding",
+      "title": "Professionele Training",
       "description": "Qualiopi-gecertificeerde organisatie. Programma's in webontwikkeling, mobile en DevOps, financierbaar via uw OPCO."
     }
   },
   "portfolio": {
     "title": "Onze Projecten",
     "subtitle": "Ontdek onze realisaties",
-    "viewProject": "Bekijk project",
+    "viewProject": "Project bekijken",
     "projects": {
       "1": {
         "title": "E-commerce Platform",
-        "description": "Volledige oplossing met voorraadbeheer, veilige betalingen en geoptimaliseerde klantervaring.",
+        "description": "Complete oplossing met voorraadbeheer, beveiligde betalingen en geoptimaliseerde klantervaring.",
         "tag": "Web"
       },
       "2": {
         "title": "Beheer Applicatie",
-        "description": "Op maat gemaakt ERP-systeem om bedrijfsprocessen te optimaliseren en productiviteit te verbeteren.",
-        "tag": "Enterprise"
+        "description": "Gepersonaliseerd ERP-systeem om bedrijfsprocessen te optimaliseren en productiviteit te verbeteren.",
+        "tag": "Bedrijf"
       },
       "3": {
         "title": "Mobiele Applicatie",
-        "description": "Bezorgapplicatie met geolocatie en geïntegreerd betalingssysteem.",
+        "description": "Bezorg-app met geolocatie en geïntegreerd betalingssysteem.",
         "tag": "Mobile"
       },
       "4": {
         "title": "Cloud Infrastructuur",
-        "description": "Migratie en optimalisatie van infrastructuur voor maximale schaalbaarheid en lagere kosten.",
+        "description": "Migratie en optimalisatie van infrastructuur voor maximale schaalbaarheid en verlaagde kosten.",
         "tag": "Cloud"
       }
     }
@@ -122,7 +122,7 @@
   "about": {
     "title": "Onze Expertise",
     "subtitle": "Een gepassioneerd team",
-    "description": "Met meer dan 10 jaar ervaring combineert ons team van experts creativiteit en technische precisie om uw ideeën om te zetten in krachtige digitale oplossingen.",
+    "description": "Met meer dan 10 jaar ervaring combineert ons team van experts creativiteit en technische nauwkeurigheid om uw ideeën te transformeren in performante digitale oplossingen.",
     "expertise": {
       "1": {
         "title": "Front-End Ontwikkeling",
@@ -147,17 +147,17 @@
     "subtitle": "Wat onze klanten zeggen",
     "items": {
       "1": {
-        "text": "Het team heeft onze visie omgezet in een digitale oplossing die al onze verwachtingen overtrof. Uitzonderlijk professionalisme en technische expertise.",
+        "text": "Het team heeft onze visie getransformeerd in een digitale oplossing die al onze verwachtingen overtrof. Uitzonderlijk professionalisme en technische expertise.",
         "author": "Marie Dupont",
-        "position": "Marketing Director, TechCorp"
+        "position": "Marketingdirecteur, TechCorp"
       },
       "2": {
-        "text": "We waren onder de indruk van hun vermogen om onze zakelijke behoeften te begrijpen en daarop te reageren met innovatieve en effectieve oplossingen.",
+        "text": "We waren onder de indruk van hun vermogen om onze bedrijfsbehoeften te begrijpen en hierop te reageren met innovatieve en effectieve oplossingen.",
         "author": "Jean Martin",
         "position": "CEO, InnovSoft"
       },
       "3": {
-        "text": "Hun begeleiding was waardevol gedurende het hele project. Ze wisten zich aan te passen aan onze beperkingen en relevante oplossingen voor te stellen.",
+        "text": "Hun begeleiding was waardevol tijdens het hele project. Ze wisten zich aan te passen aan onze beperkingen en relevante oplossingen voor te stellen.",
         "author": "Sophie Lefebvre",
         "position": "CTO, DataFuture"
       }
@@ -165,7 +165,7 @@
   },
   "contact": {
     "title": "Neem contact op",
-    "subtitle": "Laten we over uw project praten",
+    "subtitle": "Laten we praten over uw project",
     "name": "Naam",
     "email": "E-mail",
     "phone": "Telefoon",
@@ -186,20 +186,20 @@
   "reclamation": {
     "badge": "Klacht",
     "title": "Klachtenformulier",
-    "subtitle": "We nemen uw zorgen serieus. Vul het onderstaande formulier in en we nemen zo snel mogelijk contact met u op.",
+    "subtitle": "We nemen uw zorgen serieus. Vul het onderstaande formulier in en we reageren zo spoedig mogelijk.",
     "qualityCommitment": {
-      "title": "Onze kwaliteitstoezegging",
-      "intro": "DELIVERY Digital Nice streeft ernaar opleidingsdiensten te leveren die voldoen aan de behoeften en eisen van haar klanten. Indien u echter een klacht bij ons wilt indienen:",
-      "contact": "U kunt te allen tijde uw vragen, twijfels en ondervonden problemen richten aan uw gebruikelijke contactpersonen, die er alles aan zullen doen om u een antwoord te geven.",
-      "formOption": "U heeft ook de mogelijkheid om uw verzoek te verzenden via onderstaand klachtenformulier.",
-      "processTitle": "Ons verwerkingsproces",
+      "title": "Onze kwaliteitsverbintenis",
+      "intro": "DELIVERY Digital Nice streeft ernaar trainingsdiensten te leveren die voldoen aan de behoeften en vereisten van onze klanten. Als u echter een klacht bij ons wilt indienen:",
+      "contact": "U kunt te allen tijde uw vragen, twijfels en problemen voorleggen aan uw gebruikelijke contactpersonen, die er alles aan zullen doen om u een antwoord te geven.",
+      "formOption": "U heeft ook de mogelijkheid om uw verzoek in te dienen via het onderstaande klachtenformulier.",
+      "processTitle": "Ons behandelingsproces",
       "steps": {
         "1": "U vult het formulier in dat automatisch wordt verzonden naar het team dat verantwoordelijk is voor de behandeling van klachten",
         "2": "We bevestigen de ontvangst van uw klacht",
-        "3": "We analyseren uw verzoek zo snel mogelijk en beoordelen de ontvankelijkheid ervan",
+        "3": "We analyseren uw verzoek zo snel mogelijk en beoordelen de ontvankelijkheid",
         "4": "Als uw verzoek ontvankelijk is, analyseren we de oorzaken van de klacht",
-        "5": "We onderzoeken de gepresenteerde feiten zorgvuldig en voeren indien nodig het nodige onderzoek uit. In dat geval houden we u op de hoogte van de voortgang van het dossier",
-        "6": "We informeren u over ons antwoord, met vermelding van de resultaten van ons onderzoek en de oplossingen die we voorstellen om het probleem op te lossen"
+        "5": "We onderzoeken de gepresenteerde feiten zorgvuldig en voeren indien nodig het nodige onderzoek uit. In dat geval houden we u op de hoogte van de voortgang",
+        "6": "We informeren u over ons antwoord, met vermelding van de resultaten van ons onderzoek en eventuele oplossingen die we voorstellen om het probleem op te lossen"
       },
       "directContact": "Om rechtstreeks contact op te nemen met het klachtenbehandelingsteam:"
     },
@@ -215,29 +215,29 @@
       "phone": "Telefoon",
       "company": "Bedrijf",
       "orderNumber": "Bestelnummer",
-      "category": "Klachtcategorie",
+      "category": "Klachtencategorie",
       "categoryOptions": {
         "service": "Kwaliteit van dienstverlening",
         "product": "Product/Deliverable",
-        "billing": "Facturering",
+        "billing": "Facturatie",
         "support": "Technische ondersteuning",
-        "training": "Opleiding",
+        "training": "Training",
         "other": "Andere"
       },
       "subject": "Onderwerp van de klacht",
       "subjectPlaceholder": "Samenvatting van uw klacht",
       "description": "Gedetailleerde beschrijving",
-      "descriptionPlaceholder": "Beschrijf uw klacht gedetailleerd...",
+      "descriptionPlaceholder": "Beschrijf uw klacht in detail...",
       "gdpr": "Uw gegevens worden verwerkt in overeenstemming met ons privacybeleid en de AVG. We verbinden ons ertoe u binnen 48 werkuren te antwoorden.",
       "captcha": "Beveiligingsverificatie",
       "captchaRequired": "Voltooi de beveiligingsverificatie",
       "submit": "Klacht indienen",
-      "submitting": "Bezig met verzenden..."
+      "submitting": "Verzenden..."
     },
     "procedure": {
       "title": "Klachtenbehandelingsprocedure",
       "steps": {
-        "1": "Ontvangst en bevestiging binnen 24 uur",
+        "1": "Ontvangst en ontvangstbevestiging binnen 24u",
         "2": "Analyse van uw klacht door ons team",
         "3": "Gedetailleerd antwoord binnen 48 werkuren",
         "4": "Opvolging en oplossing van het probleem"
@@ -246,7 +246,7 @@
     },
     "success": {
       "title": "Klacht succesvol ingediend",
-      "message": "We hebben uw klacht goed ontvangen. Ons team neemt zo snel mogelijk contact met u op om uw verzoek te behandelen.",
+      "message": "We hebben uw klacht ontvangen. Ons team neemt zo spoedig mogelijk contact met u op om uw verzoek te behandelen.",
       "responseTime": "Geschatte reactietijd: 24-48 werkuren",
       "backHome": "Terug naar home"
     }
@@ -257,11 +257,11 @@
     "issuedOn": "Uitgegeven op",
     "dueOn": "Vervaldatum",
     "relatedQuote": "Gerelateerde offerte",
-    "for": "T.a.v.",
+    "for": "Ter attentie van",
     "service": "Dienst",
-    "amountExclTax": "Bedrag excl. btw",
+    "amountExclTax": "Bedrag excl. BTW",
     "lineDescription": "{{percent}}% van {{title}} (ref. {{quoteRef}})",
-    "subtotal": "Subtotaal excl. btw",
+    "subtotal": "Subtotaal excl. BTW",
     "vat": "BTW ({{rate}}%)",
     "netToPay": "Te betalen",
     "bankDetails": "Bankgegevens",
@@ -284,6 +284,35 @@
     "rejectedSubject": "[GEWEIGERD] Offerte {{quoteRef}}",
     "rejectedBody": "Offerte <strong>{{quoteRef}}</strong> is geweigerd.",
     "rejectedReason": "Reden: {{reason}}",
-    "rejectedNoReason": "(niet gespecificeerd)"
-  }
+    "rejectedNoReason": "(niet vermeld)"
+  },
+  "cii": {
+    "title": "Innovatiebelastingkrediet",
+    "close": "Sluiten",
+    "exampleTitle": "Concreet voorbeeld",
+    "exampleBody": "Voor een project van € 20.000: u recupereert € 4.000 (20%). Eindkost: € 16.000. Jaarlijks plafond: € 400.000 aan uitgaven, dus maximaal € 80.000 krediet.",
+    "eligibleTitle": "In aanmerking komende projecten",
+    "eligibleBody": "Web- en mobiele applicaties · software op maat · kunstmatige intelligentie · innovatieve oplossingen voor uw bedrijf.",
+    "benefitTitle": "Hoe profiteren",
+    "benefitBody": "U investeert met ons · wij leveren alle bewijsstukken · u ontvangt uw krediet of terugbetaling.",
+    "taxLine": "Als u belasting betaalt: directe aftrek.",
+    "refundLine": "Zo niet: terugbetaling door de staat."
+  },
+  "common": {
+    "discussProject": "Laten we uw project bespreken",
+    "discussProjectArrow": "Laten we uw project bespreken ›",
+    "chooseLanguage": "Kies taal",
+    "startConversation": "Start het gesprek"
+  },
+  "chat": {
+    "typePlaceholder": "Typ uw bericht",
+    "typing": "DELIVERY Digital is aan het typen...",
+    "describeIdea": "Beschrijf uw idee. Een expert neemt binnen 24u contact met u op.",
+    "letsTalk": "Laten we praten over uw project.",
+    "logout": "Uitloggen",
+    "confidential": "Uw berichten blijven vertrouwelijk en worden alleen gebruikt voor uw project.",
+    "noConv": "Nog geen gesprek.",
+    "aiUnderstands": "Onze AI-agent begrijpt uw behoefte. Een expert neemt binnen 24u contact met u op."
+  },
+  "discuter": "Bespreek een project"
 }

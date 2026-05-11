@@ -11,34 +11,34 @@
     "solutionsBtn": "Çözümler"
   },
   "tiles": {
-    "eyebrow": "Uzmanlık alanlarımız",
+    "eyebrow": "Uzmanlık Alanlarımız",
     "ciiBadge": "CII sertifikalı · %20'ye kadar geri ödeme",
     "stack": "Stack",
     "cta": {
       "start": "Proje görüşmesi",
-      "learn": "Detaylı bilgi",
+      "learn": "Daha fazla bilgi",
       "trainings": "Tüm eğitimleri görüntüle",
       "learner": "Öğrenci alanı"
     },
     "web": {
       "title": "Web",
       "accent": "çözümleri",
-      "subhead": "SaaS, kontrol panelleri ve özel web uygulamaları, en iyi teknolojilerle destekleniyor."
+      "subhead": "SaaS, kontrol panelleri ve özel web uygulamaları, en iyi teknolojilerle desteklenir."
     },
     "mobile": {
       "title": "Native",
       "accent": "uygulamalar",
-      "subhead": "iOS ve Android. Native performans, özenli tasarım, App Store ve Play Store yayını anahtar teslim."
+      "subhead": "iOS ve Android. Native performans, özenli tasarım, App Store ve Play Store dağıtımı anahtar teslim."
     },
     "enterprise": {
       "title": "Kurumsal",
       "accent": "yazılım",
-      "subhead": "CRM, ERP, B2B platformları. Süreçleriniz otomatik, verimliliğiniz artırılmış."
+      "subhead": "CRM, ERP, B2B platformlar. Süreçleriniz otomatize, verimliliğiniz artırıldı."
     },
     "cloud": {
       "title": "Cloud",
       "accent": "& DevOps",
-      "subhead": "Hosting, izleme, otomatik ölçeklendirme. Gece gündüz yükü kaldıran altyapı."
+      "subhead": "Barındırma, izleme, otomatik ölçeklendirme. Gece gündüz yükü kaldıran altyapı."
     },
     "training": {
       "title": "Profesyonel",
@@ -53,14 +53,14 @@
     "subhead": "Qualiopi sertifikalı kuruluş. OPCO finansmanından yararlanın."
   },
   "heroDark": {
-    "viewServices": "Hizmetlerimizi görün",
+    "viewServices": "Hizmetlerimizi görüntüle",
     "trainingPro": "Profesyonel eğitim"
   },
   "hero": {
     "title": "Hedeflerinizi güçlendiren kod, CII ile %20 geri ödeme",
-    "subtitle": "Web siteleri, mobil uygulamalar, SaaS, CRM, özel ERP. Crédit Impôt Innovation sertifikalı ajans - uygun KOBİ'ler için yıllık 80.000 €'ya kadar vergi kredisi.",
-    "titleIntl": "Bir sonraki dijital ürününüzü birlikte inşa edelim",
-    "subtitleIntl": "Web siteleri, mobil uygulamalar, SaaS, CRM, ERP. Özel kod, haftalar içinde teslim.",
+    "subtitle": "Web siteleri, mobil uygulamalar, özel SaaS, CRM, ERP. Yenilik Vergi Kredisi sertifikalı ajans - uygun KOBİ'ler için yılda 80.000 €'ya kadar kredi.",
+    "titleIntl": "Bir sonraki dijital ürününüzü birlikte geliştirelim",
+    "subtitleIntl": "Web siteleri, mobil uygulamalar, SaaS, CRM, ERP. Özel kod, birkaç haftada teslim.",
     "cta": {
       "project": "Proje görüşmesi"
     },
@@ -70,10 +70,10 @@
   },
   "services": {
     "title": "Hizmetlerimiz",
-    "subtitle": "İhtiyaçlarınıza uyarlanmış çözümler",
+    "subtitle": "İhtiyaçlarınıza uygun çözümler",
     "web": {
       "title": "Web Geliştirme",
-      "description": "En güncel teknolojilerle vitrin siteleri, e-ticaret ve progressive web uygulamaları."
+      "description": "En son teknolojilerle tanıtım siteleri, e-ticaret ve ilerici web uygulamaları."
     },
     "mobile": {
       "title": "Mobil Uygulamalar",
@@ -85,11 +85,11 @@
     },
     "cloud": {
       "title": "Cloud Hizmetleri",
-      "description": "Güvenlik ve performansla bulut ortamında uygulama taşıma, mimari ve dağıtım."
+      "description": "Güvenlik ve performansla buluta uygulama geçişi, mimarisi ve dağıtımı."
     },
     "training": {
       "title": "Profesyonel Eğitim",
-      "description": "Qualiopi sertifikalı kuruluş. Web geliştirme, mobil ve DevOps alanında OPCO finanse edilebilir programlar."
+      "description": "Qualiopi sertifikalı kuruluş. Web geliştirme, mobil ve DevOps programları, OPCO üzerinden finanse edilebilir."
     }
   },
   "portfolio": {
@@ -98,8 +98,8 @@
     "viewProject": "Projeyi görüntüle",
     "projects": {
       "1": {
-        "title": "E-ticaret Platformu",
-        "description": "Stok yönetimi, güvenli ödemeler ve optimize edilmiş müşteri deneyimi ile eksiksiz çözüm.",
+        "title": "E-Ticaret Platformu",
+        "description": "Stok yönetimi, güvenli ödemeler ve optimize edilmiş müşteri deneyimiyle eksiksiz çözüm.",
         "tag": "Web"
       },
       "2": {
@@ -109,12 +109,12 @@
       },
       "3": {
         "title": "Mobil Uygulama",
-        "description": "Konum takibi ve entegre ödeme sistemi ile teslimat uygulaması.",
+        "description": "Coğrafi konum ve entegre ödeme sistemi ile teslimat uygulaması.",
         "tag": "Mobil"
       },
       "4": {
-        "title": "Cloud Altyapı",
-        "description": "Maksimum ölçeklenebilirlik ve düşük maliyetler için altyapı taşıma ve optimizasyonu.",
+        "title": "Cloud Altyapısı",
+        "description": "Maksimum ölçeklenebilirlik ve düşük maliyetler için altyapı geçişi ve optimizasyonu.",
         "tag": "Cloud"
       }
     }
@@ -122,7 +122,7 @@
   "about": {
     "title": "Uzmanlığımız",
     "subtitle": "Tutkulu bir ekip",
-    "description": "10 yılı aşkın deneyimimizle uzman ekibimiz, fikirlerinizi yüksek performanslı dijital çözümlere dönüştürmek için yaratıcılığı teknik titizlikle birleştiriyor.",
+    "description": "10 yılı aşkın deneyimimizle, uzman ekibimiz yaratıcılığı ve teknik titizliği birleştirerek fikirlerinizi yüksek performanslı dijital çözümlere dönüştürür.",
     "expertise": {
       "1": {
         "title": "Front-End Geliştirme",
@@ -149,7 +149,7 @@
       "1": {
         "text": "Ekip, vizyonumuzu tüm beklentilerimizi aşan bir dijital çözüme dönüştürdü. Olağanüstü profesyonellik ve teknik uzmanlık.",
         "author": "Marie Dupont",
-        "position": "Pazarlama Direktörü, TechCorp"
+        "position": "Pazarlama Müdürü, TechCorp"
       },
       "2": {
         "text": "İş ihtiyaçlarımızı anlama ve yenilikçi ve etkili çözümlerle yanıt verme yetenekleri bizi etkiledi.",
@@ -157,22 +157,22 @@
         "position": "CEO, InnovSoft"
       },
       "3": {
-        "text": "Proje boyunca destekleri çok değerliydi. Kısıtlarımıza uyum sağlamayı ve uygun çözümler sunmayı bildiler.",
+        "text": "Proje boyunca destekleri çok değerliydi. Kısıtlamalarımıza uyum sağladılar ve uygun çözümler sundular.",
         "author": "Sophie Lefebvre",
         "position": "CTO, DataFuture"
       }
     }
   },
   "contact": {
-    "title": "Bize ulaşın",
+    "title": "Bize Ulaşın",
     "subtitle": "Projeniz hakkında konuşalım",
-    "name": "Ad Soyad",
+    "name": "Ad",
     "email": "E-posta",
     "phone": "Telefon",
     "message": "Mesaj",
     "subject": "Konu",
     "submit": "Gönder",
-    "success": "Mesajınız başarıyla gönderildi! En kısa sürede sizinle iletişime geçeceğiz.",
+    "success": "Mesaj başarıyla gönderildi! En kısa sürede sizinle iletişime geçeceğiz.",
     "error": "Bir hata oluştu. Lütfen tekrar deneyin."
   },
   "footer": {
@@ -188,17 +188,17 @@
     "title": "Şikayet Formu",
     "subtitle": "Endişelerinizi ciddiye alıyoruz. Lütfen aşağıdaki formu doldurun, en kısa sürede size yanıt vereceğiz.",
     "qualityCommitment": {
-      "title": "Kalite taahhüdümüz",
-      "intro": "DELIVERY Digital Nice, müşterilerinin ihtiyaç ve gereksinimlerini karşılayan eğitim hizmetleri sunmak için çaba göstermektedir. Ancak bize şikayet göndermek isterseniz:",
-      "contact": "Her zaman sorularınızı, şüphelerinizi ve karşılaştığınız sorunları size yanıt vermek için ellerinden geleni yapacak olan alışılagelmiş iletişim kişilerinize iletebilirsiniz.",
+      "title": "Kalite Taahhüdümüz",
+      "intro": "DELIVERY Digital Nice, müşterilerinin ihtiyaç ve gereksinimlerini karşılayan eğitim hizmetleri sunmaya çalışır. Ancak, bize bir şikayet iletmek isterseniz:",
+      "contact": "Her zaman sorularınızı, şüphelerinizi ve karşılaştığınız sorunları size yanıt vermek için ellerinden geleni yapacak olan olağan iletişim kişilerinize iletebilirsiniz.",
       "formOption": "Ayrıca aşağıdaki şikayet formunu kullanarak talebinizi gönderme seçeneğiniz de bulunmaktadır.",
-      "processTitle": "İşlem sürecimiz",
+      "processTitle": "İşleme Sürecimiz",
       "steps": {
         "1": "Formu doldurursunuz ve otomatik olarak şikayet işleme ekibine gönderilir",
-        "2": "Şikayetinizin alındığını onaylarız",
+        "2": "Şikayetinizin alındığına dair onay veririz",
         "3": "Talebinizi en kısa sürede analiz eder ve kabul edilebilirliğini değerlendiririz",
-        "4": "Talebiniz kabul edilebilir ise şikayetin nedenlerini analiz ederiz",
-        "5": "Sunulan olguları dikkatlice inceleriz ve gerekirse gerekli araştırmaları yaparız. Bu durumda sizi dosyanın ilerleyişi hakkında bilgilendiririz",
+        "4": "Talebiniz kabul edilebilirse, şikayetin nedenlerini analiz ederiz",
+        "5": "Sunulan olguları dikkatlice inceler ve gerekirse gerekli araştırmaları yaparız. Bu durumda sizi dosyanın ilerleyişi hakkında bilgilendiririz",
         "6": "Araştırmamızın sonuçlarını ve sorunu çözmek için önerdiğimiz çözümleri belirterek yanıtımızı size bildiririz"
       },
       "directContact": "Şikayet işleme ekibiyle doğrudan iletişim kurmak için:"
@@ -206,7 +206,7 @@
     "contactCards": {
       "email": "E-posta",
       "phone": "Telefon",
-      "hours": "Çalışma saatleri"
+      "hours": "Çalışma Saatleri"
     },
     "form": {
       "firstName": "Ad",
@@ -214,76 +214,105 @@
       "email": "E-posta",
       "phone": "Telefon",
       "company": "Şirket",
-      "orderNumber": "Sipariş numarası",
-      "category": "Şikayet kategorisi",
+      "orderNumber": "Sipariş Numarası",
+      "category": "Şikayet Kategorisi",
       "categoryOptions": {
-        "service": "Hizmet kalitesi",
+        "service": "Hizmet Kalitesi",
         "product": "Ürün/Teslimat",
         "billing": "Faturalandırma",
-        "support": "Teknik destek",
+        "support": "Teknik Destek",
         "training": "Eğitim",
         "other": "Diğer"
       },
-      "subject": "Şikayet konusu",
+      "subject": "Şikayet Konusu",
       "subjectPlaceholder": "Şikayetinizin özeti",
-      "description": "Detaylı açıklama",
+      "description": "Detaylı Açıklama",
       "descriptionPlaceholder": "Lütfen şikayetinizi detaylı olarak açıklayın...",
-      "gdpr": "Verileriniz gizlilik politikamıza ve GDPR'ye uygun olarak işlenmektedir. 48 iş saati içinde size yanıt vermeyi taahhüt ediyoruz.",
-      "captcha": "Güvenlik doğrulaması",
+      "gdpr": "Verileriniz gizlilik politikamıza ve GDPR'ye uygun olarak işlenir. 48 iş saati içinde size yanıt vermeyi taahhüt ediyoruz.",
+      "captcha": "Güvenlik Doğrulaması",
       "captchaRequired": "Lütfen güvenlik doğrulamasını tamamlayın",
-      "submit": "Şikayeti gönder",
+      "submit": "Şikayeti Gönder",
       "submitting": "Gönderiliyor..."
     },
     "procedure": {
-      "title": "Şikayet işleme prosedürü",
+      "title": "Şikayet İşleme Prosedürü",
       "steps": {
         "1": "24 saat içinde alındı onayı",
         "2": "Ekibimiz tarafından şikayetinizin analizi",
         "3": "48 iş saati içinde detaylı yanıt",
-        "4": "Takip ve sorun çözümü"
+        "4": "Takip ve sorunun çözümü"
       },
-      "mediator": "Yanıtımızdan memnun kalmazsanız, kalite sorumlumuza başvurabilir veya tüketici arabulucusuna başvurabilirsiniz."
+      "mediator": "Yanıtımızdan memnun kalmazsanız, kalite sorumlumuza başvurabilir veya bir tüketici arabulucusuna başvurabilirsiniz."
     },
     "success": {
-      "title": "Şikayet başarıyla gönderildi",
+      "title": "Şikayet Başarıyla Gönderildi",
       "message": "Şikayetinizi aldık. Ekibimiz talebinizi işleme almak için en kısa sürede sizinle iletişime geçecektir.",
       "responseTime": "Tahmini yanıt süresi: 24-48 iş saati",
-      "backHome": "Ana sayfaya dön"
+      "backHome": "Ana Sayfaya Dön"
     }
   },
   "invoice": {
-    "title": "Avans faturası",
+    "title": "Avans Faturası",
     "prefix": "FATURA",
-    "issuedOn": "Düzenleme tarihi",
-    "dueOn": "Vade",
+    "issuedOn": "Düzenlenme tarihi",
+    "dueOn": "Vade tarihi",
     "relatedQuote": "İlgili teklif",
     "for": "Sayın",
     "service": "Hizmet",
     "amountExclTax": "KDV hariç tutar",
     "lineDescription": "{{title}} için %{{percent}} (ref. {{quoteRef}})",
-    "subtotal": "Ara toplam (KDV hariç)",
+    "subtotal": "KDV hariç ara toplam",
     "vat": "KDV (%{{rate}})",
-    "netToPay": "Ödenecek tutar",
-    "bankDetails": "Banka bilgileri",
-    "beneficiary": "Alıcı",
+    "netToPay": "Ödenecek net tutar",
+    "bankDetails": "Banka Bilgileri",
+    "beneficiary": "Lehtar",
     "bank": "Banka",
     "iban": "IBAN",
     "bicSwift": "BIC / SWIFT",
     "transferRef": "Havalede belirtilecek referans",
-    "mailSubject": "Avans faturası {{invoiceRef}} - {{quoteRef}} teklifinin %{{percent}}'i",
+    "mailSubject": "Avans faturası {{invoiceRef}} - {{quoteRef}} teklifinin %{{percent}}",
     "mailThanks": "Güveniniz için teşekkür ederiz.",
-    "mailBody": "<strong>{{quoteRef}}</strong> teklifinin imzalanmasının ardından, ekte <strong>{{invoiceRef}}</strong> avans faturasını bulabilirsiniz.",
-    "mailAmount": "Ödenecek tutar: <strong>{{amount}}</strong> (toplamın %{{percent}}'i).",
-    "mailRef": "Banka bilgileri ve havale referansı faturadadır. Vade: <strong>{{dueDate}}</strong>.",
-    "mailStart": "Ödemenin alınmasının ardından projeye başlıyoruz."
+    "mailBody": "{{quoteRef}} teklifinin imzalanmasının ardından, ekte {{invoiceRef}} avans faturasını bulabilirsiniz.",
+    "mailAmount": "Ödenecek tutar: <strong>{{amount}}</strong> (toplam tutarın %{{percent}}).",
+    "mailRef": "Banka bilgileri ve havale referansı faturada. Vade: <strong>{{dueDate}}</strong>.",
+    "mailStart": "Ödemenin alınması üzerine projeye başlıyoruz."
   },
   "emails": {
     "acceptedSubject": "[KABUL EDİLDİ] {{quoteRef}} teklifi {{signerName}} tarafından imzalandı",
     "acceptedBody": "<strong>{{quoteRef}}</strong> teklifi <strong>{{signerName}}</strong> ({{signerEmail}}) tarafından kabul edildi.",
-    "acceptedMeta": "IP: {{ip}} - User Agent: {{userAgent}}",
+    "acceptedMeta": "IP: {{ip}} - Kullanıcı Ajanı: {{userAgent}}",
     "rejectedSubject": "[REDDEDİLDİ] {{quoteRef}} teklifi",
     "rejectedBody": "<strong>{{quoteRef}}</strong> teklifi reddedildi.",
     "rejectedReason": "Sebep: {{reason}}",
     "rejectedNoReason": "(belirtilmedi)"
-  }
+  },
+  "cii": {
+    "title": "Yenilik Vergi Kredisi",
+    "close": "Kapat",
+    "exampleTitle": "Somut örnek",
+    "exampleBody": "20.000 €'luk bir proje için: 4.000 € (% 20) geri alırsınız. Nihai maliyet: 16.000 €. Yıllık tavan: 400.000 € harcama, yani maksimum 80.000 € kredi.",
+    "eligibleTitle": "Uygun projeler",
+    "eligibleBody": "Web ve mobil uygulamalar · özel yazılımlar · yapay zeka · işletmeniz için yenilikçi çözümler.",
+    "benefitTitle": "Nasıl yararlanılır",
+    "benefitBody": "Bizimle yatırım yaparsınız · tüm belgeler biz tarafından sağlanır · kredinizi veya geri ödemenizi alırsınız.",
+    "taxLine": "Vergi ödüyorsanız: doğrudan kesinti.",
+    "refundLine": "Aksi takdirde: Devlet tarafından geri ödeme."
+  },
+  "common": {
+    "discussProject": "Projeniz hakkında konuşalım",
+    "discussProjectArrow": "Projeniz hakkında konuşalım ›",
+    "chooseLanguage": "Dil seçin",
+    "startConversation": "Görüşmeyi başlat"
+  },
+  "chat": {
+    "typePlaceholder": "Mesajınızı yazın",
+    "typing": "DELIVERY Digital yazıyor...",
+    "describeIdea": "Fikrinizi açıklayın. Bir uzman 24 saat içinde size geri dönecektir.",
+    "letsTalk": "Projeniz hakkında konuşalım.",
+    "logout": "Çıkış yap",
+    "confidential": "Mesajlarınız gizli kalır ve yalnızca projeniz için kullanılır.",
+    "noConv": "Henüz görüşme yok.",
+    "aiUnderstands": "Yapay zeka ajanımız ihtiyacınızı anlıyor. Bir uzman 24 saat içinde size geri dönecektir."
+  },
+  "discuter": "Proje görüşmesi"
 }
