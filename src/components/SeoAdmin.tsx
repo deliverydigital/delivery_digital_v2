@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2, FileText, Sparkles, Check, X as XIcon, Edit3, Trash2,
-  ChevronRight, RefreshCw, Plus, Send, Globe, MapPin, FileQuestion, Copy, Zap,
+  ChevronRight, RefreshCw, Plus, Send, Globe, MapPin, FileQuestion, Copy, Zap, Eye,
 } from 'lucide-react';
 import AIOrb from './AIOrb';
 
@@ -619,6 +619,18 @@ function ItemCard({
         >
           <Edit3 className="h-3.5 w-3.5" />
           Editer
+        </button>
+        <button
+          onClick={() => {
+            const path = item.type === 'article' ? `/blog/${item.slug}` : `/services/${item.slug}`;
+            const url = item.status === 'published' ? path : `${path}?preview=${item._id}`;
+            window.open(url, '_blank', 'noopener');
+          }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white ring-1 ring-black/8 text-[12.5px] text-[#1D1D1F] hover:ring-black/20"
+          title="Voir la page comme un visiteur"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          Voir comme client
         </button>
         {item.status === 'draft' && (
           <>

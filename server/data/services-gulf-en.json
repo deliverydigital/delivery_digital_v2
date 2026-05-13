@@ -1,0 +1,152 @@
+[
+  {
+    "key": "web-agency",
+    "label": "Web agency",
+    "labels_alt": ["Website development", "Custom web development", "Digital agency"],
+    "h1_variants": [
+      "Web agency in {city}: custom website development",
+      "Website development for businesses in {city}",
+      "{city}: your partner for a professional website",
+      "Custom web development for companies in {city}"
+    ],
+    "meta_title_variants": [
+      "Web agency in {city} - Custom websites | DELIVERY Digital",
+      "Website development {city} | DELIVERY Digital",
+      "Custom web development in {city} | DELIVERY Digital"
+    ],
+    "meta_desc_variants": [
+      "Custom website development for businesses in {city}, {country_label}. AI agent to scope your project. European engineering, GDPR-grade security.",
+      "Web agency serving {city} and the wider {country_label} market. SaaS, e-commerce, dashboards. Talk to our AI agent on /discutons.",
+      "Professional web development in {city}. Modern stack, remote delivery, multilingual sites. Aligned with Vision 2030 digital priorities."
+    ],
+    "keywords_target": ["web agency", "website development", "custom web development", "digital agency"],
+    "stack": ["React", "Next.js", "TypeScript", "Node.js", "PostgreSQL", "Tailwind CSS"],
+    "deliverables": ["High-performance corporate website", "E-commerce platform", "B2B customer portal", "Multilingual site (Arabic + English)", "Website redesign and migration"],
+    "problems": ["slow or outdated website", "no customer area", "poor mobile experience", "weak SEO and Google visibility", "manual operations behind the website"]
+  },
+  {
+    "key": "mobile-app-development",
+    "label": "Mobile app development",
+    "labels_alt": ["iOS and Android app development", "Custom mobile apps", "Mobile agency"],
+    "h1_variants": [
+      "Mobile app development in {city}",
+      "Custom iOS and Android apps for {city} businesses",
+      "{city}: your partner for a tailor-made mobile app",
+      "Mobile agency for companies in {city}"
+    ],
+    "meta_title_variants": [
+      "Mobile app development {city} - iOS Android | DELIVERY Digital",
+      "Custom mobile app {city} | DELIVERY Digital",
+      "Mobile agency {city} - iOS and Android | DELIVERY Digital"
+    ],
+    "meta_desc_variants": [
+      "Custom iOS and Android app development for {city}, {country_label}. React Native or native. European engineering, App Store and Google Play delivery.",
+      "Mobile app development for {city} and the {country_label} market. Modern stack, MVPs, B2B and consumer apps. Talk to our AI agent.",
+      "Mobile agency serving {city}. Native or cross-platform apps, maintenance included, multilingual ready."
+    ],
+    "keywords_target": ["mobile app development", "iOS app", "Android app", "mobile agency"],
+    "stack": ["React Native", "Swift", "Kotlin", "TypeScript", "Firebase", "Node.js"],
+    "deliverables": ["Native iOS app", "Native Android app", "Cross-platform React Native app", "Existing app rebuild", "App Store and Play Store release"],
+    "problems": ["no mobile app yet", "outdated app with crashes", "weak user experience", "App Store rejection", "no push notifications or offline mode"]
+  },
+  {
+    "key": "custom-software",
+    "label": "Custom software development",
+    "labels_alt": ["Bespoke software", "Custom ERP and CRM", "Business application development"],
+    "h1_variants": [
+      "Custom software development for {city} businesses",
+      "Bespoke business software in {city}",
+      "{city}: your partner for a tailored ERP or CRM",
+      "Custom business applications for companies in {city}"
+    ],
+    "meta_title_variants": [
+      "Custom software {city} - ERP CRM | DELIVERY Digital",
+      "Bespoke business software {city} | DELIVERY Digital",
+      "Custom ERP CRM {city} | DELIVERY Digital"
+    ],
+    "meta_desc_variants": [
+      "Custom business software for {city}, {country_label}. ERP, CRM, B2B platforms. European engineering, scalable architecture.",
+      "Tailored business applications for {city} companies. Automate processes, dashboards, API integrations. Talk to our AI agent.",
+      "Custom ERP, CRM and B2B platforms for {city} and the {country_label} market. Modern stack, ongoing maintenance."
+    ],
+    "keywords_target": ["custom software", "custom ERP", "custom CRM", "business application development"],
+    "stack": ["Node.js", "PostgreSQL", "React", "TypeScript", "Docker", "AWS"],
+    "deliverables": ["Custom CRM", "Lightweight industry-specific ERP", "B2B portal", "Analytics dashboards", "Process automation system"],
+    "problems": ["manual Excel processes", "off-the-shelf SaaS that does not fit", "data silos between tools", "no real-time visibility", "missing API integrations"]
+  },
+  {
+    "key": "saas-development",
+    "label": "SaaS development",
+    "labels_alt": ["SaaS platform development", "MVP SaaS", "Startup software"],
+    "h1_variants": [
+      "SaaS development for {city} founders and startups",
+      "Building a SaaS platform in {city}",
+      "{city}: your partner to launch a SaaS product",
+      "MVP SaaS development for {city} startups"
+    ],
+    "meta_title_variants": [
+      "SaaS development {city} - MVP startup | DELIVERY Digital",
+      "Launch your SaaS in {city} | DELIVERY Digital",
+      "SaaS agency {city} | DELIVERY Digital"
+    ],
+    "meta_desc_variants": [
+      "SaaS platform development for founders in {city}, {country_label}. MVP in 3 months, then scale. European engineering, modern stack.",
+      "Build your SaaS in {city}. Multi-tenant architecture, Stripe billing, dashboards. Talk to our AI agent on /discutons.",
+      "SaaS agency for {city} and the {country_label} startup market. MVPs, scaling, technical rebuild."
+    ],
+    "keywords_target": ["SaaS development", "build SaaS", "SaaS agency", "MVP development"],
+    "stack": ["Next.js", "Node.js", "PostgreSQL", "Stripe", "AWS", "Docker"],
+    "deliverables": ["Multi-tenant SaaS MVP", "Stripe subscription billing integration", "Admin dashboard", "B2B SaaS application", "Technical rebuild of existing SaaS"],
+    "problems": ["no MVP launched yet", "technical debt slowing growth", "billing not wired up", "current architecture cannot scale", "missing API integrations"]
+  },
+  {
+    "key": "ai-integration",
+    "label": "AI integration and agents",
+    "labels_alt": ["AI for business", "AI agents", "Generative AI integration"],
+    "h1_variants": [
+      "AI integration and agents for {city} businesses",
+      "Bringing AI into your business tools in {city}",
+      "{city}: your partner for AI agents and automation",
+      "Generative AI agents for {city} companies"
+    ],
+    "meta_title_variants": [
+      "AI integration {city} - Agents and automation | DELIVERY Digital",
+      "AI for business in {city} | DELIVERY Digital",
+      "AI agents {city} | DELIVERY Digital"
+    ],
+    "meta_desc_variants": [
+      "AI integration and custom agents for businesses in {city}, {country_label}. Claude, GPT, RAG on your data. Aligned with Vision 2030 priorities.",
+      "Bring generative AI into your tools in {city}. Chatbots, RAG, document automation. Talk to our AI agent on /discutons.",
+      "AI agents and automation for {city} companies. Multilingual (Arabic + English), measurable ROI."
+    ],
+    "keywords_target": ["AI integration", "AI for business", "AI agents", "generative AI"],
+    "stack": ["Anthropic Claude API", "OpenAI", "LangChain", "Node.js", "Python", "Pinecone"],
+    "deliverables": ["Custom conversational AI agent", "AI-powered process automation", "RAG system on your internal data", "AI inside an existing business tool", "AI-augmented analytics dashboard"],
+    "problems": ["slow customer response times", "repetitive manual tasks", "untapped internal data", "AI ROI hard to measure", "AI tools not integrated into the IT stack"]
+  },
+  {
+    "key": "cloud-devops",
+    "label": "Cloud and DevOps",
+    "labels_alt": ["Cloud migration", "AWS DevOps", "Cloud infrastructure management"],
+    "h1_variants": [
+      "Cloud and DevOps for {city} companies",
+      "Cloud migration and infrastructure for {city}",
+      "{city}: your partner for AWS and DevOps",
+      "Managed cloud and CI/CD for businesses in {city}"
+    ],
+    "meta_title_variants": [
+      "Cloud DevOps {city} - AWS managed | DELIVERY Digital",
+      "Cloud migration {city} - AWS GCP | DELIVERY Digital",
+      "DevOps AWS {city} | DELIVERY Digital"
+    ],
+    "meta_desc_variants": [
+      "Managed cloud and DevOps for businesses in {city}, {country_label}. AWS, Docker, CI/CD, infrastructure-as-code.",
+      "Cloud migration and managed infrastructure for {city}. AWS, GCP, Kubernetes. Talk to our AI agent on /discutons.",
+      "Cloud and DevOps for {city} and the {country_label} market. Cloud cost optimization, CI/CD automation."
+    ],
+    "keywords_target": ["cloud for business", "AWS managed services", "DevOps", "cloud migration"],
+    "stack": ["AWS", "Docker", "Kubernetes", "Terraform", "GitHub Actions", "GitLab CI"],
+    "deliverables": ["Migration to AWS or GCP", "CI/CD pipeline setup", "Docker containerization", "Cloud cost audit and reduction", "Terraform infrastructure-as-code"],
+    "problems": ["uncontrolled cloud bill", "risky manual deployments", "no monitoring", "undocumented infrastructure", "frequent outages"]
+  }
+]

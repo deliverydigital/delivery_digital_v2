@@ -12,6 +12,8 @@ const proxyConfig = {
     changeOrigin: true,
     secure: false,
   },
+  '/llms.txt': { target: 'http://127.0.0.1:3008', changeOrigin: true, secure: false },
+  '/llms-full.txt': { target: 'http://127.0.0.1:3008', changeOrigin: true, secure: false },
   '/robots.txt': {
     target: 'http://127.0.0.1:3008',
     changeOrigin: true,

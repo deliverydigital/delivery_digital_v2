@@ -33,9 +33,24 @@ export default function PublicSeoPage({ slug }: { slug: string }) {
     setLoading(true);
     setNotFound(false);
 
+    // Preview mode : si ?preview=<id> en URL + admin secret en localStorage, on fetch via /api/admin/seo
+    // pour rendre les drafts comme un visiteur les verrait apres publication.
+    // @author Rabah Ziane - 2026-05-13
+    const urlParams = new URLSearchParams(window.location.search);
+    const previewId = urlParams.get('preview');
+    const adminSecret = (typeof window !== 'undefined' && window.localStorage)
+      ? window.localStorage.getItem('dd_seo_admin_secret')
+      : null;
+    const isPreview = Boolean(previewId && adminSecret);
+
+    const detailFetch = isPreview
+      ? fetch(`/api/admin/seo/${previewId}`, { headers: { 'x-admin-secret': adminSecret as string } })
+          .then((r) => (r.status === 404 ? null : r.json()))
+      : fetch(`/api/seo/${encodeURIComponent(slug)}`).then((r) => (r.status === 404 ? null : r.json()));
+
     Promise.all([
-      fetch(`/api/seo/${encodeURIComponent(slug)}`).then((r) => r.status === 404 ? null : r.json()),
-      fetch('/api/seo').then((r) => r.ok ? r.json() : { items: [] }),
+      detailFetch,
+      fetch('/api/seo').then((r) => (r.ok ? r.json() : { items: [] })),
     ])
       .then(([detail, list]) => {
         if (cancelled) return;

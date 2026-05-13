@@ -1,6 +1,8 @@
 import express from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import { SeoContent } from '../models/index.js';
+// Indexation Google via API officielle (remplace l'ancien ping deprecie). @author Rabah Ziane 2026-05-13
+import { notifyGoogle, notifyGoogleBatch, isIndexingConfigured } from '../seo/googleIndexing.js';
 
 const INDEXNOW_KEY = '5287ee2987247abdbf235b0ed464ed74';
 const SITE_HOST = 'deliverydigital.fr';
@@ -25,13 +27,14 @@ async function pingIndexNow(urls) {
   }
 }
 
+/**
+ * @deprecated L'endpoint Google /ping a ete supprime en 2023.
+ * On garde la fonction pour compat mais elle ne fait plus rien :
+ * la vraie indexation passe maintenant par notifyGoogle / notifyGoogleBatch
+ * (Google Indexing API + service account).
+ */
 async function pingGoogleSitemap() {
-  try {
-    const r = await fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(SITE_BASE + '/sitemap.xml')}`);
-    return { ok: r.ok, status: r.status };
-  } catch (e) {
-    return { ok: false, error: e.message };
-  }
+  return { ok: false, deprecated: true };
 }
 
 function publicUrlForItem(item) {
@@ -332,12 +335,12 @@ router.post('/:id/submit', requireAdmin, async (req, res) => {
     );
     if (!item) return res.status(404).json({ error: 'not found' });
 
-    // Fire-and-forget pings (n'attend pas la réponse pour répondre)
+    // Fire-and-forget pings (n'attend pas la reponse). @author Rabah Ziane 2026-05-13
     const url = publicUrlForItem(item);
     pingIndexNow([url]).catch(() => {});
-    pingGoogleSitemap().catch(() => {});
+    if (isIndexingConfigured()) notifyGoogle(url).catch(() => {});
 
-    res.json({ item, pinged: { indexnow: true, googleSitemap: true } });
+    res.json({ item, pinged: { indexnow: true, googleIndexing: isIndexingConfigured() } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -348,8 +351,11 @@ router.post('/ping-all-published', requireAdmin, async (req, res) => {
   try {
     const items = await SeoContent.find({ status: 'published' }).select('slug type').lean();
     const urls = [SITE_BASE + '/', SITE_BASE + '/discutons', ...items.map(publicUrlForItem)];
-    const [indexnow, google] = await Promise.all([pingIndexNow(urls), pingGoogleSitemap()]);
-    res.json({ count: urls.length, indexnow, google });
+    const [indexnow, googleIndexing] = await Promise.all([
+      pingIndexNow(urls),
+      isIndexingConfigured() ? notifyGoogleBatch(urls) : Promise.resolve({ skipped: true, reason: 'GOOGLE_INDEXING_SA_KEY missing' }),
+    ]);
+    res.json({ count: urls.length, indexnow, googleIndexing });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -364,8 +370,8 @@ router.post('/bulk-submit', requireAdmin, async (req, res) => {
     const items = await SeoContent.find({ _id: { $in: ids } }).select('slug type').lean();
     const urls = items.map(publicUrlForItem);
     pingIndexNow(urls).catch(() => {});
-    pingGoogleSitemap().catch(() => {});
-    res.json({ published: items.length, urls });
+    if (isIndexingConfigured()) notifyGoogleBatch(urls).catch(() => {});
+    res.json({ published: items.length, urls, googleIndexing: isIndexingConfigured() });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

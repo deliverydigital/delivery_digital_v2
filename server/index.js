@@ -38,6 +38,9 @@ import prospectsAdminRoutes from './routes/prospectsAdmin.js';
 import conversationsAdminRoutes from './routes/conversationsAdmin.js';
 import quotesAdminRoutes, { publicQuotesRouter } from './routes/quotesAdmin.js';
 import { publicRouter as conversionsPublicRouter, adminRouter as conversionsAdminRouter } from './routes/conversions.js';
+// SEO agent autonome (drafts dans /admin/seo) - @author Rabah Ziane 2026-05-13
+import { startSeoAgent } from './jobs/seoAgent.js';
+import { llmsRouter } from './seo/llmsTxt.js';
 import {createDummyUsers} from './scripts/createUsers.js';
 import {createDummyTrainingDocuments} from './scripts/createTrainingDocuments.js';
 import {seedTrainingPrograms} from './scripts/seedTrainingPrograms.js';
@@ -136,6 +139,8 @@ app.use('/api/project-types', projectTypesRoutes);
 app.use('/api/project-chat', projectChatRoutes);
 app.use('/api/admin/seo', seoAdminRoutes);
 app.use('/api/seo', publicSeoRouter);
+appendLlmsRouter();
+function appendLlmsRouter(){ app.use('/', llmsRouter); }
 app.use('/api/admin/prospects', prospectsAdminRoutes);
 app.use('/api/admin/conversations', conversationsAdminRoutes);
 app.use('/api/admin/quotes-quick', quotesAdminRoutes);
@@ -356,6 +361,7 @@ const startServer = async () => {
             }
 
             console.log('✅ Server startup completed successfully');
+            try { startSeoAgent(); } catch (e) { console.error('seo-agent boot failed:', e.message); }
         });
     } catch (error) {
         console.error('❌ Failed to start server:', error);

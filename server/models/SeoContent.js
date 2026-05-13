@@ -31,6 +31,11 @@ const seoContentSchema = new Schema(
     city: { type: String, index: true },
     service: { type: String, index: true },
 
+    // Multi-country / multi-language (ajoute pour SEO Golfe + futur)
+    // @author Rabah Ziane - 2026-05-13
+    country: { type: String, index: true }, // ISO code: FR, QA, SA, AE...
+    lang: { type: String, default: 'fr', index: true }, // fr, en, ar...
+
     // FAQ items (for faq type)
     faqItems: [
       {
@@ -54,5 +59,6 @@ const seoContentSchema = new Schema(
 );
 
 seoContentSchema.index({ status: 1, type: 1, createdAt: -1 });
+seoContentSchema.index({ country: 1, status: 1 });
 
 export default mongoose.models.SeoContent || mongoose.model('SeoContent', seoContentSchema);
