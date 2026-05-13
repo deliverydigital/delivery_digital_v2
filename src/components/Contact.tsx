@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Mail, Phone, Send, CheckCircle, AlertCircle, Building2, Clock, Shield, ArrowRight, Download, Map, Loader, X } from 'lucide-react';
 import { contactApi } from '../services/contactApi';
+import { trackContactSubmit } from '../lib/analytics';
 
 const generateConfidentialityAgreement = (formData: any) => {
   const date = new Date().toLocaleDateString('fr-FR');
@@ -382,6 +383,8 @@ const Contact = () => {
 
                     const result = await contactApi.submitContact(formState);
                     if (result.success) {
+                      // Conversion : formulaire contact envoye avec succes
+                      trackContactSubmit({ subject: formState.subject, budget: formState.budget });
                       setFormStatus('success');
                       setShowConfidentialityModal(false);
                       setFormState({

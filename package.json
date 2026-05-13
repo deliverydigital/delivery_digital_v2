@@ -47,6 +47,7 @@
     "react-i18next": "^14.0.5",
     "react-intersection-observer": "^9.8.0",
     "react-whatsapp-chat-widget": "^1.1.6",
+    "recharts": "^3.8.1",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

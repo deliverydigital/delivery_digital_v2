@@ -12,6 +12,8 @@ import AdminPanel from './components/AdminPanel';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
+import ConsentBanner from './components/ConsentBanner';
+import { initAnalytics } from './lib/analytics';
 import TechnologyGuide from './components/TechnologyGuide';
 import Training from './components/Training';
 import ProjectSubmission from './components/ProjectSubmission';
@@ -35,6 +37,10 @@ function App() {
       ? 'DELIVERY Digital Technology | Expertise Informatique'
       : 'DELIVERY Digital Technology | IT Expertise';
   }, [i18n.language]);
+
+  // Init analytics au boot (auto-trackers pour tel:/mailto: + chargement gtag si deja consent).
+  // @author Rabah Ziane - 2026-05-13
+  useEffect(() => { initAnalytics(); }, []);
 
   // Check for admin access or page route from URL
   useEffect(() => {
@@ -120,6 +126,7 @@ function App() {
           <Reclamation />
         </main>
         <Footer />
+      <ConsentBanner />
         <ScrollToTop />
       </div>
     );
@@ -135,6 +142,7 @@ function App() {
           <Training />
         </main>
         <Footer />
+      <ConsentBanner />
         <ScrollToTop />
         <LegalModals />
       </div>
@@ -150,6 +158,7 @@ function App() {
           <Simulator />
         </main>
         <Footer />
+      <ConsentBanner />
         <ScrollToTop />
         <ProjectSubmission />
         <LegalModals />
@@ -171,6 +180,7 @@ function App() {
           <PublicSeoPage slug={seoSlug.slug} />
         </main>
         <Footer />
+      <ConsentBanner />
         <ScrollToTop />
         <LegalModals />
       </div>
@@ -198,9 +208,11 @@ function App() {
         <Services />
       </main>
       <Footer />
+      <ConsentBanner />
       <ScrollToTop />
       <ProjectSubmission />
       <LegalModals />
+      <ConsentBanner />
     </div>
   );
 }

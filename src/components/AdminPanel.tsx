@@ -1,14 +1,15 @@
 import { useEffect, useState, useCallback } from 'react';
-import { LayoutDashboard, Users, Sparkles, LogOut, MessageSquare, Loader2, FileText } from 'lucide-react';
+import { LayoutDashboard, Users, Sparkles, LogOut, MessageSquare, Loader2, FileText, BarChart3 } from 'lucide-react';
 import AIOrb from './AIOrb';
 import SeoAdmin from './SeoAdmin';
 import ProspectAdmin from './ProspectAdmin';
 import LiveConversations from './LiveConversations';
 import QuoteAdmin from './QuoteAdmin';
+import AdminConversionsDashboard from '../pages/admin/AdminConversionsDashboard';
 
 const SECRET_KEY = 'dd_seo_admin_secret';
 
-type Section = 'overview' | 'conversations' | 'prospects' | 'quotes' | 'seo';
+type Section = 'overview' | 'conversations' | 'prospects' | 'quotes' | 'seo' | 'dashboard';
 
 export default function AdminPanel() {
   const [secret, setSecret] = useState<string | null>(() => localStorage.getItem(SECRET_KEY));
@@ -18,6 +19,7 @@ export default function AdminPanel() {
     if (p.startsWith('/admin/prospects')) return 'prospects';
     if (p.startsWith('/admin/conversations')) return 'conversations';
     if (p.startsWith('/admin/devis') || p.startsWith('/admin/quotes')) return 'quotes';
+    if (p.startsWith('/admin/dashboard') || p.startsWith('/admin/conversions')) return 'dashboard';
     return 'overview';
   });
   const [stats, setStats] = useState<{ prospects: number; conversations: number; activeConv: number; published: number } | null>(null);
@@ -94,6 +96,7 @@ export default function AdminPanel() {
           />
           <SideBtn active={section === 'prospects'} icon={<Users className="h-4 w-4" />} label="Prospects" onClick={() => setSection('prospects')} />
           <SideBtn active={section === 'quotes'} icon={<FileText className="h-4 w-4" />} label="Devis" onClick={() => setSection('quotes')} />
+          <SideBtn active={section === 'dashboard'} icon={<BarChart3 className="h-4 w-4" />} label="Dashboard" onClick={() => setSection('dashboard')} />
           <SideBtn active={section === 'seo'} icon={<Sparkles className="h-4 w-4" />} label="SEO Content" onClick={() => setSection('seo')} />
         </nav>
 
@@ -114,6 +117,7 @@ export default function AdminPanel() {
         <MobileBtn active={section === 'conversations'} icon={<MessageSquare className="h-4 w-4" />} label="Chats" onClick={() => setSection('conversations')} />
         <MobileBtn active={section === 'prospects'} icon={<Users className="h-4 w-4" />} label="Prospects" onClick={() => setSection('prospects')} />
         <MobileBtn active={section === 'quotes'} icon={<FileText className="h-4 w-4" />} label="Devis" onClick={() => setSection('quotes')} />
+        <MobileBtn active={section === 'dashboard'} icon={<BarChart3 className="h-4 w-4" />} label="Stats" onClick={() => setSection('dashboard')} />
         <MobileBtn active={section === 'seo'} icon={<Sparkles className="h-4 w-4" />} label="SEO" onClick={() => setSection('seo')} />
       </div>
 
@@ -123,6 +127,7 @@ export default function AdminPanel() {
         {section === 'conversations' && <LiveConversations secret={secret} />}
         {section === 'prospects' && <ProspectAdmin embedded sharedSecret={secret} />}
         {section === 'quotes' && <QuoteAdmin secret={secret} />}
+        {section === 'dashboard' && <AdminConversionsDashboard secret={secret} />}
         {section === 'seo' && <SeoAdmin embedded sharedSecret={secret} />}
       </main>
     </div>

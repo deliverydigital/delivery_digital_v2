@@ -37,6 +37,7 @@ import seoAdminRoutes, { publicSeoRouter } from './routes/seoAdmin.js';
 import prospectsAdminRoutes from './routes/prospectsAdmin.js';
 import conversationsAdminRoutes from './routes/conversationsAdmin.js';
 import quotesAdminRoutes, { publicQuotesRouter } from './routes/quotesAdmin.js';
+import { publicRouter as conversionsPublicRouter, adminRouter as conversionsAdminRouter } from './routes/conversions.js';
 import {createDummyUsers} from './scripts/createUsers.js';
 import {createDummyTrainingDocuments} from './scripts/createTrainingDocuments.js';
 import {seedTrainingPrograms} from './scripts/seedTrainingPrograms.js';
@@ -138,6 +139,8 @@ app.use('/api/seo', publicSeoRouter);
 app.use('/api/admin/prospects', prospectsAdminRoutes);
 app.use('/api/admin/conversations', conversationsAdminRoutes);
 app.use('/api/admin/quotes-quick', quotesAdminRoutes);
+app.use('/api/conversions', conversionsPublicRouter);
+app.use('/api/admin/conversions', conversionsAdminRouter);
 app.use('/devis', publicQuotesRouter);
 
 // Robots.txt (servi par express pour cohérence avec sitemap dynamique)
