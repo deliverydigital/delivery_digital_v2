@@ -11,12 +11,14 @@ type ConvSummary = { sessionId: string; title: string; status: string; messageCo
 const TOKEN_KEY = 'dd_chat_token';
 const ACTIVE_CONV_KEY = 'dd_active_conv';
 
-const STARTER_SUGGESTIONS = [
-  "Je veux un site vitrine pour mon entreprise",
-  "J'ai besoin d'une app mobile iOS et Android",
-  "Je cherche à automatiser mes processus internes",
-  "Je veux un CRM ou un ERP sur mesure",
-  "Je veux refondre mon site existant",
+// Les suggestions sont resolues via t() dans le composant pour suivre la langue active.
+// @author Rabah Ziane - 2026-05-11
+const STARTER_SUGGESTION_KEYS = [
+  'chat.suggest1',
+  'chat.suggest2',
+  'chat.suggest3',
+  'chat.suggest4',
+  'chat.suggest5',
 ];
 
 /* Strip markdown bold (**...**) for plain-text contexts (chips, single-line previews). */
@@ -56,7 +58,7 @@ function extractListItems(text: string): string[] {
 /* ============== AUTH GATE ============== */
 
 function ChatAuth({ onAuth }: { onAuth: (token: string, user: ChatUser) => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +66,7 @@ function ChatAuth({ onAuth }: { onAuth: (token: string, user: ChatUser) => void 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!/^\S+@\S+\.\S+$/.test(email)) { setError('Email invalide.'); return; }
+    if (!/^\S+@\S+\.\S+$/.test(email)) { setError(t('chat.emailInvalid')); return; }
     setBusy(true);
     try {
       const res = await fetch('/api/project-chat/auth', {
@@ -98,10 +100,10 @@ function ChatAuth({ onAuth }: { onAuth: (token: string, user: ChatUser) => void 
             className="mt-5 text-[28px] sm:text-[34px] leading-[1.1] text-[#1D1D1F] text-center"
             style={{ fontFamily: '"Charter", "Iowan Old Style", Georgia, serif', fontWeight: 700 }}
           >
-            Parlons de votre projet.
+            {t('chat.letsTalk')}
           </h1>
           <p className="mt-2 text-[15px] text-[#86868B] text-center max-w-[360px]">
-            Entrez votre email pour démarrer. Vous retrouverez vos discussions à tout moment.
+            {t('chat.emailEntry')}
           </p>
         </div>
 
@@ -111,7 +113,7 @@ function ChatAuth({ onAuth }: { onAuth: (token: string, user: ChatUser) => void 
           style={{ boxShadow: '0 12px 30px -12px rgba(0,0,0,0.10)' }}
         >
           <div>
-            <label className="block text-[12px] font-semibold text-[#1D1D1F] mb-1">Email</label>
+            <label className="block text-[12px] font-semibold text-[#1D1D1F] mb-1">{t('chat.emailLabel')}</label>
             <input
               type="email"
               value={email}
@@ -131,7 +133,7 @@ function ChatAuth({ onAuth }: { onAuth: (token: string, user: ChatUser) => void 
             className="w-full mt-1 px-5 py-3 rounded-full bg-[#1D1D1F] text-white text-[15px] font-semibold hover:bg-[#3C3C43] transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : null}
-            Démarrer la conversation
+            {t('chat.startBtn')}
           </button>
 
         </form>
@@ -143,7 +145,7 @@ function ChatAuth({ onAuth }: { onAuth: (token: string, user: ChatUser) => void 
 /* ============== MAIN CHAT ============== */
 
 const ProjectChat = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
   const [user, setUser] = useState<ChatUser | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -264,6 +266,26 @@ const ProjectChat = () => {
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [messages, busy]);
 
+  // Pre-fill du chat via query string ?prefill=...
+  // Cas d'usage : bouton "S'inscrire" sur /formation -> redirige vers
+  // /discutons?prefill=Je%20souhaite%20m'inscrire... pour demarrer la conv sur le rail
+  // Formation. Le message est envoye automatiquement une fois le user authentifie.
+  // L'URL est nettoyee apres pour eviter le rejeu au refresh.
+  // @author Rabah Ziane - 2026-05-14
+  const prefillSentRef = useRef(false);
+  useEffect(() => {
+    if (prefillSentRef.current) return;
+    if (!user || !token || busy) return;
+    const params = new URLSearchParams(window.location.search);
+    const prefill = params.get('prefill');
+    if (!prefill || !prefill.trim()) return;
+    prefillSentRef.current = true;
+    const cleanUrl = window.location.pathname + window.location.hash;
+    window.history.replaceState({}, '', cleanUrl);
+    void send(prefill.slice(0, 1000));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, token]);
+
   const send = async (text?: string) => {
     let content = (text ?? input).trim();
     if (picked.size > 0) {
@@ -281,7 +303,8 @@ const ProjectChat = () => {
     try {
       const res = await authedFetch('/api/project-chat', {
         method: 'POST',
-        body: JSON.stringify({ sessionId: activeSessionId, message: content }),
+        // Force l'IA a repondre dans la langue UI active (sinon elle detecte FR par defaut). @author Rabah Ziane - 2026-05-13
+        body: JSON.stringify({ sessionId: activeSessionId, message: content, lang: (i18n.language || 'fr').split('-')[0] }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
@@ -317,7 +340,7 @@ const ProjectChat = () => {
           className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-[#1D1D1F] text-white text-[13.5px] font-semibold hover:bg-[#3C3C43] transition-colors"
         >
           <Plus className="h-4 w-4" strokeWidth={2.2} />
-          Nouvelle conversation
+          {t('chat.newConv')}
         </button>
       </div>
 
@@ -497,18 +520,21 @@ const ProjectChat = () => {
             {/* Starter suggestions inside scrollable area */}
             {!hasUserMsg && (
               <div className="pt-2">
-                <div className="text-[12px] uppercase tracking-[0.12em] font-semibold text-[#86868B] mb-2">Suggestions</div>
+                <div className="text-[12px] uppercase tracking-[0.12em] font-semibold text-[#86868B] mb-2">{t('chat.suggestionsTitle')}</div>
                 <div className="flex flex-col gap-2">
-                  {STARTER_SUGGESTIONS.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => send(s)}
-                      className="text-left text-[14.5px] text-[#1D1D1F] bg-white hover:bg-[#FAFAFA] ring-1 ring-black/8 rounded-[14px] px-4 py-3 transition-colors"
-                      style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
-                    >
-                      {s}
-                    </button>
-                  ))}
+                  {STARTER_SUGGESTION_KEYS.map((key) => {
+                    const s = t(key);
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => send(s)}
+                        className="text-left text-[14.5px] text-[#1D1D1F] bg-white hover:bg-[#FAFAFA] ring-1 ring-black/8 rounded-[14px] px-4 py-3 transition-colors"
+                        style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -567,7 +593,7 @@ const ProjectChat = () => {
                   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
                 }}
                 rows={1}
-                placeholder={picked.size > 0 ? 'Ajoutez une précision (optionnel)...' : 'Tapez votre message...'}
+                placeholder={picked.size > 0 ? t('chat.typePrecision') : t('chat.typePlaceholder')}
                 className="flex-1 resize-none border-0 outline-none bg-transparent text-[15px] py-2.5 max-h-32 text-[#1D1D1F] placeholder:text-[#86868B]"
                 disabled={busy}
               />

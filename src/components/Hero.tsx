@@ -184,7 +184,7 @@ const Hero = () => {
         autoOpen={false}
         autoOpenTimer={5000}
         messageBox={true}
-        messageBoxTxt="Bonjour! Comment puis-je vous aider aujourd'hui?"
+        messageBoxTxt={t("whatsapp.messageBoxTxt")}
         iconSize="40"
         iconColor="white"
         iconBgColor="#0066CC"
@@ -193,14 +193,14 @@ const Hero = () => {
         headerTxtColor="white"
         headerBgColor="#0066CC"
         headerTitle="DELIVERY Digital Support"
-        headerCaption="En ligne"
+        headerCaption={t("whatsapp.headerCaption")}
         bodyBgColor="#F5F5F7"
-        chatPersonName="Support"
-        chatMessage={<>Bonjour 👋 <br /><br /> Comment pouvons-nous vous aider?</>}
+        chatPersonName={t("whatsapp.chatPersonName")}
+        chatMessage={<>{t("whatsapp.chatGreeting")} <br /><br /> {t("whatsapp.chatHelp")}</>}
         footerBgColor="#1D1D1F"
         placeholder={t("chat.typePlaceholder")}
         btnBgColor="#0066CC"
-        btnTxt="Démarrer la discussion"
+        btnTxt={t("whatsapp.btnTxt")}
       />
     </>
   );

@@ -66,6 +66,17 @@ const CURRENCIES = [
   { code: 'SGD', label: 'SGD' },
 ];
 
+// Symbole compact a afficher a cote des inputs de prix (suit la devise du devis).
+// @author Rabah Ziane - 2026-05-12
+const CURRENCY_SYMBOL: Record<string, string> = {
+  EUR: '€', USD: '$', GBP: '£', CHF: 'CHF', CAD: 'CA$',
+  AED: 'AED', MAD: 'DH', TND: 'DT', AUD: 'A$',
+  JPY: '¥', CNY: '¥', SGD: 'S$',
+};
+function currencySymbol(code: string | undefined): string {
+  return CURRENCY_SYMBOL[(code || 'EUR').toUpperCase()] || code || '€';
+}
+
 interface CatalogItem {
   id: string;
   category?: string;
@@ -690,8 +701,8 @@ function QuoteEditor({
                               onChange={(e) => updateLine(i, { unitPrice: parseFloat(e.target.value) || 0 })}
                               className="w-24 px-2 py-1 rounded-[8px] bg-white outline-none text-[12.5px] text-right"
                             />
-                            <span className="text-[#86868B] text-[12px]">€</span>
-                            <span className="ml-auto font-semibold text-[13px]">{fmtEur((l.quantity || 1) * (l.unitPrice || 0))}</span>
+                            <span className="text-[#86868B] text-[12px]">{currencySymbol(q.currency)}</span>
+                            <span className="ml-auto font-semibold text-[13px]">{fmtCurrency((l.quantity || 1) * (l.unitPrice || 0), q.currency)}</span>
                           </div>
                         </div>
                         <button onClick={() => removeLine(i)} className="text-[#86868B] hover:text-[#FF3B30] mt-1">

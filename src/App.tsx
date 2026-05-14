@@ -22,6 +22,8 @@ import ClientDashboard from './components/ClientDashboard';
 import LegalModals from './components/LegalModals';
 import Reclamation from './components/Reclamation';
 import ResetPassword from './components/ResetPassword';
+import LocationsPage from './components/LocationsPage';
+import Auth from './components/Auth';
 import { useAuth } from './hooks/useApi';
 
 function App() {
@@ -55,13 +57,13 @@ function App() {
     } else if (pathname === '/reset-password') {
       setCurrentPage('reset-password');
     } else if (pathname === '/formation') {
-      // Formation cachee temporairement - le code reste, on bascule vers un site dedie. Redirige home.
-      window.history.replaceState({}, '', '/');
-      setCurrentPage('home');
+      setCurrentPage('formation');
     } else if (pathname === '/devis' || pathname === '/simulator') {
       // Simulator hidden temporarily - redirect to home
       window.history.replaceState({}, '', '/');
       setCurrentPage('home');
+    } else if (pathname === '/locations' || pathname === '/villes') {
+      setCurrentPage('locations');
     } else if (pathname === '/discutons' || pathname === '/projet') {
       setCurrentPage('chat');
     } else if (pathname === '/admin' || pathname.startsWith('/admin/')) {
@@ -93,20 +95,15 @@ function App() {
     } else if (isAuthenticated && !isAdmin && !isProjectManager) {
       return <ClientDashboard />;
     } else {
+      // Pas connecté : ouvrir directement le modal Auth pour ne pas bloquer sur Access Denied.
+      // @author Rabah Ziane · 2026-05-14
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
-          <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
-            <p className="text-gray-600 mb-4">
-              You need to be logged in as an administrator to access this page.
-            </p>
-            <button
-              onClick={() => setShowAdminDashboard(false)}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Return to Main Site
-            </button>
-          </div>
+          <Auth
+            isOpen={true}
+            onClose={() => setShowAdminDashboard(false)}
+            onSuccess={() => { /* Le useEffect authStateChanged va rafraîchir et afficher AdminDashboard */ }}
+          />
         </div>
       );
     }
@@ -181,6 +178,23 @@ function App() {
         </main>
         <Footer />
       <ConsentBanner />
+        <ScrollToTop />
+        <LegalModals />
+      </div>
+    );
+  }
+
+  // Locations : hub interne avec toutes les pages SEO par ville
+  // @author Rabah Ziane - 2026-05-13
+  if (currentPage === 'locations') {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow">
+          <LocationsPage />
+        </main>
+        <Footer />
+        <ConsentBanner />
         <ScrollToTop />
         <LegalModals />
       </div>

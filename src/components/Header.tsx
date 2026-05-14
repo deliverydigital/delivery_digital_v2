@@ -12,6 +12,7 @@ import { useAuth } from '../hooks/useApi';
 // @author Rabah Ziane - 2026-05-11
 const LANGUAGES = [
   { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'ar-AE', label: 'العربية (الإمارات)', flag: '🇦🇪' },
   { code: 'en', label: 'English', flag: '🇬🇧' },
   { code: 'es', label: 'Español', flag: '🇪🇸' },
   { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
@@ -25,14 +26,11 @@ const LANGUAGES = [
   { code: 'pl', label: 'Polski', flag: '🇵🇱' },
   { code: 'cs', label: 'Čeština', flag: '🇨🇿' },
   { code: 'hu', label: 'Magyar', flag: '🇭🇺' },
-  { code: 'ro', label: 'Română', flag: '🇷🇴' },
   { code: 'el', label: 'Ελληνικά', flag: '🇬🇷' },
   { code: 'tr', label: 'Türkçe', flag: '🇹🇷' },
   { code: 'ru', label: 'Русский', flag: '🇷🇺' },
   { code: 'ar', label: 'العربية', flag: '🇸🇦' },
-  { code: 'he', label: 'עברית', flag: '🇮🇱' },
-  { code: 'fa', label: 'فارسی', flag: '🇮🇷' },
-  { code: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'ar-QA', label: 'العربية (قطر)', flag: '🇶🇦' },
   { code: 'zh', label: '中文', flag: '🇨🇳' },
   { code: 'ja', label: '日本語', flag: '🇯🇵' },
   { code: 'ko', label: '한국어', flag: '🇰🇷' },
@@ -94,9 +92,8 @@ const Header = () => {
   const navItems = [
     { name: t('header.home'), href: '/' },
     { name: t('header.services'), href: '/#services' },
+    { name: t('header.training'), href: '/formation' },
     { name: 'Discutons', href: '/discutons' },
-    // Formation cachee temporairement - on bascule sur un site dedie. Ne pas supprimer.
-    // { name: t('header.training'), href: '/formation' },
   ];
 
   return (
@@ -153,7 +150,12 @@ const Header = () => {
                         >
                           <span className="text-[15px]">{l.flag}</span>
                           <span className="flex-1">{l.label}</span>
-                          {l.code === currentLangCode && <span className="text-[#0066CC]">●</span>}
+                          {l.code === currentLangCode && (
+                            <span className="relative inline-flex w-2.5 h-2.5" aria-hidden>
+                              <span className="absolute inset-0 rounded-full bg-[#0066CC] animate-ping opacity-75" />
+                              <span className="relative inline-block w-2.5 h-2.5 rounded-full bg-[#0066CC]" />
+                            </span>
+                          )}
                         </button>
                       ))}
                     </motion.div>
@@ -203,7 +205,12 @@ const Header = () => {
                       >
                         <span className="text-[14px]">{l.flag}</span>
                         <span className="flex-1 truncate">{l.label}</span>
-                        {l.code === currentLangCode && <span className="text-[#0066CC] text-[10px]">●</span>}
+                        {l.code === currentLangCode && (
+                          <span className="relative inline-flex w-2 h-2" aria-hidden>
+                            <span className="absolute inset-0 rounded-full bg-[#0066CC] animate-ping opacity-75" />
+                            <span className="relative inline-block w-2 h-2 rounded-full bg-[#0066CC]" />
+                          </span>
+                        )}
                       </button>
                     ))}
                   </motion.div>

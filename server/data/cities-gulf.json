@@ -25,5 +25,38 @@
   { "name": "Yanbu", "slug": "yanbu", "country": "SA", "country_label": "Saudi Arabia", "region": "Madinah", "pop": 330000, "context": "Red Sea port and industrial city, oil refining" },
   { "name": "NEOM", "slug": "neom", "country": "SA", "country_label": "Saudi Arabia", "region": "Tabuk", "pop": 50000, "context": "Vision 2030 flagship smart-city mega-project, focal point for tech startups" },
   { "name": "AlUla", "slug": "alula", "country": "SA", "country_label": "Saudi Arabia", "region": "Madinah", "pop": 35000, "context": "heritage tourism flagship of Vision 2030" },
-  { "name": "Diriyah", "slug": "diriyah", "country": "SA", "country_label": "Saudi Arabia", "region": "Riyadh", "pop": 75000, "context": "historic district, major cultural and tourism redevelopment near Riyadh" }
+  { "name": "Diriyah", "slug": "diriyah", "country": "SA", "country_label": "Saudi Arabia", "region": "Riyadh", "pop": 75000, "context": "historic district, major cultural and tourism redevelopment near Riyadh" },
+  { "name": "Taif", "slug": "taif", "country": "SA", "country_label": "Saudi Arabia", "region": "Makkah", "pop": 700000, "context": "mountain summer city, agriculture and tourism" },
+  { "name": "Najran", "slug": "najran", "country": "SA", "country_label": "Saudi Arabia", "region": "Najran", "pop": 380000, "context": "southern border region, agriculture and trade" },
+  { "name": "Jizan", "slug": "jizan", "country": "SA", "country_label": "Saudi Arabia", "region": "Jazan", "pop": 200000, "context": "Red Sea coastal city, fishing and tourism" },
+  { "name": "Sakaka", "slug": "sakaka", "country": "SA", "country_label": "Saudi Arabia", "region": "Al Jouf", "pop": 250000, "context": "northern administrative center, agriculture" },
+
+  { "name": "Dubai", "slug": "dubai", "country": "AE", "country_label": "United Arab Emirates", "region": "Dubai", "pop": 3600000, "context": "global business and tech hub, DIFC, Dubai Internet City, free zones" },
+  { "name": "Abu Dhabi", "slug": "abu-dhabi", "country": "AE", "country_label": "United Arab Emirates", "region": "Abu Dhabi", "pop": 1500000, "context": "capital, sovereign wealth, ADGM financial center, Masdar smart city" },
+  { "name": "Sharjah", "slug": "sharjah", "country": "AE", "country_label": "United Arab Emirates", "region": "Sharjah", "pop": 1700000, "context": "industrial and education hub, third-largest emirate" },
+  { "name": "Ajman", "slug": "ajman", "country": "AE", "country_label": "United Arab Emirates", "region": "Ajman", "pop": 540000, "context": "small but fast-growing emirate, free zone Ajman" },
+  { "name": "Ras Al Khaimah", "slug": "ras-al-khaimah", "country": "AE", "country_label": "United Arab Emirates", "region": "Ras Al Khaimah", "pop": 410000, "context": "tourism and manufacturing, RAK free zone" },
+  { "name": "Fujairah", "slug": "fujairah", "country": "AE", "country_label": "United Arab Emirates", "region": "Fujairah", "pop": 250000, "context": "east coast emirate, oil bunkering and shipping" },
+  { "name": "Umm Al Quwain", "slug": "umm-al-quwain", "country": "AE", "country_label": "United Arab Emirates", "region": "Umm Al Quwain", "pop": 80000, "context": "smallest emirate, fisheries and emerging tech" },
+  { "name": "Al Ain", "slug": "al-ain", "country": "AE", "country_label": "United Arab Emirates", "region": "Abu Dhabi", "pop": 760000, "context": "oasis city near Oman border, heritage and education" },
+
+  { "name": "Kuwait City", "slug": "kuwait-city", "country": "KW", "country_label": "Kuwait", "region": "Al Asimah", "pop": 2900000, "context": "capital, financial center, Kuwait Vision 2035 focal point" },
+  { "name": "Hawalli", "slug": "hawalli", "country": "KW", "country_label": "Kuwait", "region": "Hawalli", "pop": 200000, "context": "residential and commercial governorate adjacent to Kuwait City" },
+  { "name": "Salmiya", "slug": "salmiya", "country": "KW", "country_label": "Kuwait", "region": "Hawalli", "pop": 220000, "context": "shopping and business district along the Gulf coast" },
+  { "name": "Farwaniya", "slug": "farwaniya", "country": "KW", "country_label": "Kuwait", "region": "Farwaniya", "pop": 800000, "context": "near airport, residential and commercial growth" },
+  { "name": "Jahra", "slug": "jahra", "country": "KW", "country_label": "Kuwait", "region": "Jahra", "pop": 400000, "context": "western governorate, industrial and oil services" },
+  { "name": "Ahmadi", "slug": "ahmadi", "country": "KW", "country_label": "Kuwait", "region": "Ahmadi", "pop": 770000, "context": "oil industry hub, KPC headquarters" },
+
+  { "name": "Muscat", "slug": "muscat", "country": "OM", "country_label": "Oman", "region": "Muscat", "pop": 1400000, "context": "capital, Vision 2040 focal point, growing fintech and logistics" },
+  { "name": "Salalah", "slug": "salalah", "country": "OM", "country_label": "Oman", "region": "Dhofar", "pop": 350000, "context": "southern hub, port and free zone, monsoon tourism" },
+  { "name": "Sohar", "slug": "sohar", "country": "OM", "country_label": "Oman", "region": "Al Batinah North", "pop": 200000, "context": "industrial port city, manufacturing and logistics" },
+  { "name": "Nizwa", "slug": "nizwa", "country": "OM", "country_label": "Oman", "region": "Ad Dakhiliyah", "pop": 110000, "context": "historic and cultural center, heritage tourism" },
+  { "name": "Sur", "slug": "sur", "country": "OM", "country_label": "Oman", "region": "Ash Sharqiyah South", "pop": 120000, "context": "coastal city, traditional dhow building, energy industry" },
+  { "name": "Ibri", "slug": "ibri", "country": "OM", "country_label": "Oman", "region": "Ad Dhahirah", "pop": 130000, "context": "western Oman, mining and agriculture" },
+
+  { "name": "Manama", "slug": "manama", "country": "BH", "country_label": "Bahrain", "region": "Capital Governorate", "pop": 200000, "context": "capital, fintech and banking hub of the Gulf" },
+  { "name": "Riffa", "slug": "riffa", "country": "BH", "country_label": "Bahrain", "region": "Southern Governorate", "pop": 230000, "context": "second-largest city, residential and commercial growth" },
+  { "name": "Muharraq", "slug": "muharraq", "country": "BH", "country_label": "Bahrain", "region": "Muharraq Governorate", "pop": 180000, "context": "historic city, near airport, manufacturing" },
+  { "name": "Hamad Town", "slug": "hamad-town", "country": "BH", "country_label": "Bahrain", "region": "Northern Governorate", "pop": 110000, "context": "planned residential city, growing commercial sector" },
+  { "name": "Isa Town", "slug": "isa-town", "country": "BH", "country_label": "Bahrain", "region": "Southern Governorate", "pop": 50000, "context": "education hub, hosts University of Bahrain" }
 ]

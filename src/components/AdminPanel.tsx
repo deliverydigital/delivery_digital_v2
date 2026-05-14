@@ -1,15 +1,19 @@
 import { useEffect, useState, useCallback } from 'react';
-import { LayoutDashboard, Users, Sparkles, LogOut, MessageSquare, Loader2, FileText, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Users, Sparkles, LogOut, MessageSquare, Loader2, FileText, BarChart3, GraduationCap, FolderOpen, ExternalLink } from 'lucide-react';
 import AIOrb from './AIOrb';
 import SeoAdmin from './SeoAdmin';
 import ProspectAdmin from './ProspectAdmin';
 import LiveConversations from './LiveConversations';
 import QuoteAdmin from './QuoteAdmin';
+import TrainingProgramsManagement from './TrainingProgramsManagement';
 import AdminConversionsDashboard from '../pages/admin/AdminConversionsDashboard';
 
 const SECRET_KEY = 'dd_seo_admin_secret';
 
-type Section = 'overview' | 'conversations' | 'prospects' | 'quotes' | 'seo' | 'dashboard';
+// Fusion 2026-05-14 (Rabah) : ajout onglets 'formations' (TrainingProgramsManagement)
+// et 'gestion' (lien vers ancien AdminDashboard /?admin=true pour Clients/Projets/Taches
+// en attendant migration complete demain).
+type Section = 'overview' | 'conversations' | 'prospects' | 'quotes' | 'seo' | 'dashboard' | 'formations' | 'gestion';
 
 export default function AdminPanel() {
   const [secret, setSecret] = useState<string | null>(() => localStorage.getItem(SECRET_KEY));
@@ -20,6 +24,8 @@ export default function AdminPanel() {
     if (p.startsWith('/admin/conversations')) return 'conversations';
     if (p.startsWith('/admin/devis') || p.startsWith('/admin/quotes')) return 'quotes';
     if (p.startsWith('/admin/dashboard') || p.startsWith('/admin/conversions')) return 'dashboard';
+    if (p.startsWith('/admin/formations') || p.startsWith('/admin/training')) return 'formations';
+    if (p.startsWith('/admin/gestion') || p.startsWith('/admin/projects') || p.startsWith('/admin/clients')) return 'gestion';
     return 'overview';
   });
   const [stats, setStats] = useState<{ prospects: number; conversations: number; activeConv: number; published: number } | null>(null);
@@ -96,8 +102,10 @@ export default function AdminPanel() {
           />
           <SideBtn active={section === 'prospects'} icon={<Users className="h-4 w-4" />} label="Prospects" onClick={() => setSection('prospects')} />
           <SideBtn active={section === 'quotes'} icon={<FileText className="h-4 w-4" />} label="Devis" onClick={() => setSection('quotes')} />
+          <SideBtn active={section === 'formations'} icon={<GraduationCap className="h-4 w-4" />} label="Formations" onClick={() => setSection('formations')} />
           <SideBtn active={section === 'dashboard'} icon={<BarChart3 className="h-4 w-4" />} label="Dashboard" onClick={() => setSection('dashboard')} />
           <SideBtn active={section === 'seo'} icon={<Sparkles className="h-4 w-4" />} label="SEO Content" onClick={() => setSection('seo')} />
+          <SideBtn active={section === 'gestion'} icon={<FolderOpen className="h-4 w-4" />} label="Projets & Clients" onClick={() => setSection('gestion')} />
         </nav>
 
         <div className="px-4 py-3 border-t border-black/5">
@@ -129,6 +137,8 @@ export default function AdminPanel() {
         {section === 'quotes' && <QuoteAdmin secret={secret} />}
         {section === 'dashboard' && <AdminConversionsDashboard secret={secret} />}
         {section === 'seo' && <SeoAdmin embedded sharedSecret={secret} />}
+        {section === 'formations' && <TrainingProgramsManagement />}
+        {section === 'gestion' && <GestionPlaceholder />}
       </main>
     </div>
   );
@@ -190,6 +200,42 @@ function Overview({ stats }: { stats: { prospects: number; conversations: number
           <Stat label="Pages SEO publiees" value={stats.published} />
         </div>
       )}
+    </>
+  );
+}
+
+// Onglet temporaire "Projets & Clients" : pointe vers l'ancien AdminDashboard
+// (route /?admin=true) qui contient Clients, Projets, Taches, Categories, Types, Messages,
+// Parametres. A migrer demain dans le nouveau design unifie (Rabah - 2026-05-14).
+function GestionPlaceholder() {
+  return (
+    <>
+      <h1
+        className="text-[28px] sm:text-[40px] text-[#1D1D1F] mb-1"
+        style={{ fontFamily: '"Charter", "Iowan Old Style", Georgia, serif', fontWeight: 700 }}
+      >
+        Projets & Clients.
+      </h1>
+      <p className="text-[14px] text-[#86868B] mb-8 max-w-[640px]">
+        L'ancien tableau de bord (Clients, Projets, Taches, Categories, Types, Messages, Parametres)
+        sera migre dans ce panneau dans la prochaine mise a jour. En attendant, accedez-y ci-dessous.
+      </p>
+      <div className="bg-white rounded-[18px] ring-1 ring-black/5 p-6 max-w-[560px]" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <p className="text-[14px] text-[#1D1D1F] mb-4 font-semibold">Acceder a l'ancien dashboard</p>
+        <p className="text-[13px] text-[#86868B] mb-5 leading-[1.6]">
+          Connexion avec votre compte admin (admin@deliverydigital.fr). Le dashboard s'ouvre dans
+          un nouvel onglet et reste accessible en parallele de ce panneau.
+        </p>
+        <a
+          href="/?admin=true"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#1D1D1F] text-white text-[14px] font-semibold hover:bg-[#3C3C43] transition-colors"
+        >
+          <ExternalLink className="h-4 w-4" />
+          Ouvrir Clients / Projets / Taches
+        </a>
+      </div>
     </>
   );
 }

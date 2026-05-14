@@ -1,0 +1,152 @@
+[
+  {
+    "key": "agence-web",
+    "label": "Agence web",
+    "labels_alt": ["Création de site internet", "Développement web", "Agence digitale"],
+    "h1_variants": [
+      "Agence web à {ville} : développement de sites sur mesure",
+      "Création de site internet à {ville}",
+      "{ville} : votre agence web pour un site professionnel",
+      "Développement web pour les entreprises de {ville}"
+    ],
+    "meta_title_variants": [
+      "Agence web {ville} - Sites sur mesure | DELIVERY Digital",
+      "Création site internet {ville} - DELIVERY Digital",
+      "Développement web {ville} - Devis | DELIVERY Digital"
+    ],
+    "meta_desc_variants": [
+      "Création de sites web sur mesure pour les entreprises de {ville}. Agent IA pour cadrer votre projet. Certifié CII : 20% remboursés.",
+      "Agence web pour {ville} et au-delà. Sites vitrines, e-commerce, SaaS. Stack moderne, code maintenable. Discutons-en sur /discutons.",
+      "Développement web professionnel pour {ville}. Travail en remote, projets cadrés par notre agent IA. Certifié CII."
+    ],
+    "keywords_target": ["agence web", "création site internet", "développement web", "site web professionnel"],
+    "stack": ["React", "Next.js", "TypeScript", "Node.js", "PostgreSQL", "Tailwind CSS"],
+    "deliverables": ["Site vitrine performant", "Plateforme e-commerce", "Espace client B2B", "Site multilingue", "Refonte de site existant"],
+    "problems": ["site lent ou obsolète", "absence d'espace client", "design qui ne convertit pas", "pas de version mobile correcte", "référencement Google insuffisant"]
+  },
+  {
+    "key": "developpement-application-mobile",
+    "label": "Développement application mobile",
+    "labels_alt": ["Création d'app mobile", "Développement iOS et Android", "Agence mobile"],
+    "h1_variants": [
+      "Développement d'application mobile à {ville}",
+      "Création d'app iOS et Android pour les entreprises de {ville}",
+      "{ville} : votre partenaire pour une app mobile sur mesure",
+      "Agence mobile pour les entreprises de {ville}"
+    ],
+    "meta_title_variants": [
+      "Développement app mobile {ville} - iOS Android | DELIVERY Digital",
+      "Création application mobile {ville} | DELIVERY Digital",
+      "Agence mobile {ville} - App iOS Android | DELIVERY Digital"
+    ],
+    "meta_desc_variants": [
+      "Création d'applications iOS et Android sur mesure pour {ville}. React Native ou Swift/Kotlin. Certifié CII : 20% remboursés.",
+      "Développement d'app mobile pour {ville} et au-delà. Stack moderne, déploiement App Store + Play Store. Devis sur /discutons.",
+      "Agence mobile pour {ville}. Applications natives ou cross-platform, maintenance incluse. Certifié CII."
+    ],
+    "keywords_target": ["développement application mobile", "agence mobile", "création app iOS", "app Android"],
+    "stack": ["React Native", "Swift", "Kotlin", "TypeScript", "Firebase", "Node.js"],
+    "deliverables": ["App native iOS", "App native Android", "App cross-platform React Native", "Refonte d'app existante", "Publication App Store + Play Store"],
+    "problems": ["pas d'app mobile", "app obsolète qui plante", "expérience utilisateur faible", "publication App Store bloquée", "absence de notifications push"]
+  },
+  {
+    "key": "logiciel-sur-mesure",
+    "label": "Logiciel sur mesure",
+    "labels_alt": ["Développement logiciel métier", "ERP sur mesure", "Application métier"],
+    "h1_variants": [
+      "Logiciel sur mesure pour les entreprises de {ville}",
+      "Développement de logiciel métier à {ville}",
+      "{ville} : votre partenaire pour un ERP ou un CRM sur mesure",
+      "Application métier sur mesure pour les entreprises de {ville}"
+    ],
+    "meta_title_variants": [
+      "Logiciel sur mesure {ville} - ERP CRM | DELIVERY Digital",
+      "Développement logiciel métier {ville} | DELIVERY Digital",
+      "ERP CRM sur mesure {ville} | DELIVERY Digital"
+    ],
+    "meta_desc_variants": [
+      "Développement de logiciels métier sur mesure pour {ville}. ERP, CRM, plateformes B2B. Certifié CII : 20% remboursés.",
+      "Logiciel métier pour les entreprises de {ville}. Automatisation, dashboards, intégrations API. Devis sur /discutons.",
+      "ERP, CRM et plateformes B2B sur mesure pour {ville} et au-delà. Stack moderne, maintenance incluse."
+    ],
+    "keywords_target": ["logiciel sur mesure", "ERP sur mesure", "CRM sur mesure", "développement logiciel métier"],
+    "stack": ["Node.js", "PostgreSQL", "React", "TypeScript", "Docker", "AWS"],
+    "deliverables": ["CRM sur mesure", "ERP léger métier", "Plateforme B2B", "Dashboard analytics", "Automatisation de processus"],
+    "problems": ["processus manuels Excel", "outil SaaS inadapté", "doublons de données entre outils", "absence de visibilité temps réel", "intégration API manquante"]
+  },
+  {
+    "key": "saas-startup",
+    "label": "Développement SaaS",
+    "labels_alt": ["Création de SaaS", "Développement plateforme SaaS", "MVP SaaS"],
+    "h1_variants": [
+      "Développement de SaaS pour les fondateurs de {ville}",
+      "Création de plateforme SaaS à {ville}",
+      "{ville} : votre partenaire pour lancer un SaaS",
+      "MVP SaaS pour les startups de {ville}"
+    ],
+    "meta_title_variants": [
+      "Développement SaaS {ville} - MVP plateforme | DELIVERY Digital",
+      "Création SaaS {ville} - Startup | DELIVERY Digital",
+      "Agence SaaS {ville} | DELIVERY Digital"
+    ],
+    "meta_desc_variants": [
+      "Développement de plateformes SaaS pour les fondateurs de {ville}. MVP en 3 mois, scaling progressif. Certifié CII : 20% remboursés.",
+      "Création de SaaS pour les startups de {ville}. Stack moderne, abonnements Stripe, multi-tenant. Devis sur /discutons.",
+      "Agence SaaS pour {ville} et au-delà. MVP, scaling, refonte technique. Certifié CII."
+    ],
+    "keywords_target": ["développement SaaS", "création SaaS", "agence SaaS", "MVP SaaS"],
+    "stack": ["Next.js", "Node.js", "PostgreSQL", "Stripe", "AWS", "Docker"],
+    "deliverables": ["MVP SaaS multi-tenant", "Intégration Stripe abonnements", "Dashboard admin", "Application B2B SaaS", "Refonte technique de SaaS existant"],
+    "problems": ["pas de MVP encore lancé", "dette technique sur un SaaS existant", "abonnements Stripe non câblés", "scaling impossible avec l'architecture actuelle", "intégrations API manquantes"]
+  },
+  {
+    "key": "intelligence-artificielle",
+    "label": "Intelligence artificielle",
+    "labels_alt": ["Intégration IA", "Agent IA", "Automatisation IA"],
+    "h1_variants": [
+      "Intelligence artificielle pour les entreprises de {ville}",
+      "Intégration d'IA dans vos outils métier à {ville}",
+      "{ville} : votre partenaire IA et automatisation",
+      "Agents IA et automatisation pour les entreprises de {ville}"
+    ],
+    "meta_title_variants": [
+      "Intelligence artificielle {ville} - Agents IA | DELIVERY Digital",
+      "Intégration IA {ville} - Automatisation | DELIVERY Digital",
+      "Agent IA {ville} | DELIVERY Digital"
+    ],
+    "meta_desc_variants": [
+      "Intégration d'IA et d'agents conversationnels pour les entreprises de {ville}. Automatisation, chatbots, RAG. Certifié CII : 20% remboursés.",
+      "IA sur mesure pour {ville} : agents Claude/GPT, RAG, automatisation. Stack moderne. Devis sur /discutons.",
+      "Intelligence artificielle appliquée pour {ville} et au-delà. Agents, automatisation, dashboards intelligents."
+    ],
+    "keywords_target": ["intelligence artificielle entreprise", "intégration IA", "agent IA", "automatisation IA"],
+    "stack": ["Anthropic Claude API", "OpenAI", "LangChain", "Node.js", "Python", "Pinecone"],
+    "deliverables": ["Agent IA conversationnel sur mesure", "Automatisation de processus avec IA", "Système RAG sur vos données", "Intégration IA dans un outil métier existant", "Dashboard d'analyse augmenté par IA"],
+    "problems": ["réponses client lentes", "tâches répétitives chronophages", "données dormantes non exploitées", "ROI IA difficile à mesurer", "intégration des outils IA dans le SI"]
+  },
+  {
+    "key": "cloud-devops",
+    "label": "Cloud et DevOps",
+    "labels_alt": ["Infogérance cloud", "Migration cloud", "DevOps AWS"],
+    "h1_variants": [
+      "Cloud et DevOps pour les entreprises de {ville}",
+      "Migration cloud et infrastructure pour {ville}",
+      "{ville} : votre partenaire DevOps AWS",
+      "Infogérance cloud et CI/CD pour les entreprises de {ville}"
+    ],
+    "meta_title_variants": [
+      "Cloud DevOps {ville} - AWS infogérance | DELIVERY Digital",
+      "Migration cloud {ville} - AWS GCP | DELIVERY Digital",
+      "DevOps AWS {ville} | DELIVERY Digital"
+    ],
+    "meta_desc_variants": [
+      "Infogérance cloud et DevOps pour les entreprises de {ville}. AWS, Docker, CI/CD. Certifié CII : 20% remboursés.",
+      "Migration cloud et infrastructure managée pour {ville}. AWS, GCP, Kubernetes. Devis sur /discutons.",
+      "Cloud et DevOps pour {ville} et au-delà. Réduction des coûts cloud, automatisation CI/CD."
+    ],
+    "keywords_target": ["cloud entreprise", "infogérance AWS", "DevOps", "migration cloud"],
+    "stack": ["AWS", "Docker", "Kubernetes", "Terraform", "GitHub Actions", "GitLab CI"],
+    "deliverables": ["Migration vers AWS ou GCP", "Mise en place CI/CD", "Conteneurisation Docker", "Audit et réduction des coûts cloud", "Infrastructure as Code Terraform"],
+    "problems": ["facture cloud incontrôlée", "déploiement manuel risqué", "pas de monitoring", "infrastructure non documentée", "indisponibilités régulières"]
+  }
+]

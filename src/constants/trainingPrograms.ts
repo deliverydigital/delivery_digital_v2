@@ -190,23 +190,43 @@ export const staticPrograms = [
   },
   {
     id: 'hygiene-security-afest',
-    name: 'Hygiène, Sécurité et Développement Durable - AFEST',
-    description: 'Formation en situation de travail (AFEST) pour l\'hygiène et la sécurité en restauration',
+    program_id: 'hygiene-security-afest',
+    name: 'Hygiène, Sécurité et Développement Durable',
+    title: 'Hygiène, Sécurité et Développement Durable',
+    description: 'Formation en situation de travail (AFEST) pour l\'hygiène et la sécurité en restauration. 21 heures sur 3 jours consécutifs, conforme à l\'arrêté du 5 octobre 2011.',
     category: 'safety',
     duration: '21 heures',
+    duration_hours: 21,
     price: 525,
     level: 'beginner',
+    max_participants: 8,
     nextSession: new Date('2024-04-08'),
     available: true,
+    is_featured: true,
     objectives: [
       'Appliquer les bonnes pratiques d\'hygiène en situation réelle',
       'Identifier et corriger les non-conformités',
       'Mettre en place des actions correctives'
     ],
+    methods: [
+      'AFEST (Action de Formation en Situation de Travail)',
+      'Accompagnement sur le terrain',
+      'Analyse des pratiques'
+    ],
+    evaluation_methods: [
+      'Observation en situation',
+      'Grille d\'évaluation AFEST',
+      'Plan d\'amélioration'
+    ],
+    accessibility_info: 'Formation accessible aux personnes en situation de handicap',
+    access_delay: '1 semaine',
     prerequisites: 'Être en poste dans un établissement de restauration',
     certification: 'Attestation HACCP',
+    certification_type: 'Attestation HACCP',
     opcoEligible: true,
-    cpfEligible: false
+    opco_eligible: true,
+    cpfEligible: false,
+    cpf_eligible: false
   },
   {
     id: 'conduite-securitaire',

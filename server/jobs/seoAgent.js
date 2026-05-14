@@ -17,32 +17,35 @@ import { dirname, resolve } from 'node:path';
 import cron from 'node-cron';
 import { SeoContent } from '../models/index.js';
 import { generateLandingDraft, generateBlogDraft, BLOG_TOPIC_COUNT } from '../seo/templates-gulf.js';
+import { generateLandingDraftFr } from '../seo/templates-fr.js';
+import { pingAllEngines } from '../scripts/sitemap-ping.mjs';
 import { auditAllPublished } from '../seo/audit.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = resolve(__dirname, '../data');
 
-const CITIES = JSON.parse(readFileSync(resolve(DATA_DIR, 'cities-gulf.json'), 'utf8'));
-const SERVICES = JSON.parse(readFileSync(resolve(DATA_DIR, 'services-gulf-en.json'), 'utf8'));
+const CITIES_GULF = JSON.parse(readFileSync(resolve(DATA_DIR, 'cities-gulf.json'), 'utf8'));
+const SERVICES_GULF = JSON.parse(readFileSync(resolve(DATA_DIR, 'services-gulf-en.json'), 'utf8'));
+const CITIES_FR = JSON.parse(readFileSync(resolve(DATA_DIR, 'cities-fr.json'), 'utf8'));
+const SERVICES_FR = JSON.parse(readFileSync(resolve(DATA_DIR, 'services.json'), 'utf8'));
+// Combinaisons {city, service, isFr} a generer.
+const ALL_COMBOS = [
+  ...CITIES_GULF.flatMap((c) => SERVICES_GULF.map((s) => ({ city: c, service: s, lang: 'en' }))),
+  ...CITIES_FR.flatMap((c) => SERVICES_FR.map((s) => ({ city: c, service: s, lang: 'fr' }))),
+];
 
-/** Choisit la prochaine paire (city, service) jamais combine en draft/published. */
+/** Slug attendu pour un combo (city, service, lang). */
+function comboSlug({ city, service, lang }) {
+  if (lang === 'fr') return `${service.key}-${city.slug}`;
+  return `${service.key}-${city.slug}-${city.country.toLowerCase()}`;
+}
+
+/** Choisit la prochaine combinaison ville x service x lang jamais combinee en draft/published. */
 async function pickNextLandingCombo() {
-  const existing = await SeoContent.find({ type: 'city-service' })
-    .select('slug')
-    .lean();
+  const existing = await SeoContent.find({ type: 'city-service' }).select('slug').lean();
   const taken = new Set(existing.map((e) => e.slug));
-
-  const candidates = [];
-  for (const city of CITIES) {
-    for (const service of SERVICES) {
-      const candidateSlug = `${service.key}-${city.slug}-${city.country.toLowerCase()}`;
-      if (!taken.has(candidateSlug)) {
-        candidates.push({ city, service, candidateSlug });
-      }
-    }
-  }
+  const candidates = ALL_COMBOS.filter((c) => !taken.has(comboSlug(c)));
   if (candidates.length === 0) return null;
-  // Pioche au hasard pour eviter de toujours commencer par les memes
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
@@ -52,14 +55,16 @@ async function generateOneLanding(reason = 'cron') {
     console.log(`[seo-agent] ${reason}: all landing combos done (pool exhausted).`);
     return null;
   }
-  const { city, service } = combo;
+  const { city, service, lang } = combo;
   try {
-    const draft = generateLandingDraft({ city, service });
+    const draft = lang === 'fr'
+      ? generateLandingDraftFr({ city, service })
+      : generateLandingDraft({ city, service });
     const saved = await SeoContent.create(draft);
-    console.log(`[seo-agent] ${reason}: draft landing created ${saved.slug} (${city.country})`);
+    console.log(`[seo-agent] ${reason}: draft landing created ${saved.slug} (${city.country}/${lang})`);
     return saved;
   } catch (err) {
-    console.error(`[seo-agent] ${reason}: failed for ${city.slug}/${service.key} - ${err.message}`);
+    console.error(`[seo-agent] ${reason}: failed for ${city.slug}/${service.key}/${lang} - ${err.message}`);
     return null;
   }
 }
@@ -117,6 +122,12 @@ export function startSeoAgent() {
 
   // Audit : dimanche 22h
   cron.schedule('0 22 * * 0', () => runWeeklyAudit('cron-audit'), { timezone: 'Europe/Paris' });
+
+  // Daily 4h : ping moteurs de recherche (IndexNow + sitemap) pour forcer re-crawl.
+  // @author Rabah Ziane - 2026-05-14
+  cron.schedule('0 4 * * *', () => {
+    pingAllEngines().catch((e) => console.error('[seo-agent] daily ping failed:', e.message));
+  }, { timezone: 'Europe/Paris' });
 
   console.log('[seo-agent] cron scheduled (2 landings/day + 1 blog/week + audit Sunday).');
 

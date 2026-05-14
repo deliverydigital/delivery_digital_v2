@@ -24,25 +24,25 @@ const Footer = () => {
 
   const footerSections = [
     {
-      title: 'Services Numériques',
+      title: 'Services par ville (France)',
       items: [
-        { label: 'Développement Web', link: '#' },
-        { label: 'Applications Mobiles', link: '#' },
-        { label: 'Solutions Entreprise', link: '#' },
-        { label: 'Services Cloud', link: '#' },
-        { label: 'DevOps & Infrastructure', link: '#' },
-        { label: 'Conseil IT', link: '#' },
+        { label: 'Agence web à Paris', link: '/services/agence-web-paris' },
+        { label: 'Développement mobile à Lyon', link: '/services/developpement-application-mobile-lyon' },
+        { label: 'Agence web à Nice', link: '/services/agence-web-nice' },
+        { label: 'SaaS à Bordeaux', link: '/services/saas-startup-bordeaux' },
+        { label: 'IA à Toulouse', link: '/services/intelligence-artificielle-toulouse' },
+        { label: 'Voir toutes nos villes →', link: '/locations' },
       ],
     },
     {
-      title: 'Formation',
+      title: 'Services in the Gulf',
       items: [
-        { label: 'Développement Web', link: '#' },
-        { label: 'DevOps', link: '#' },
-        { label: 'Cloud Computing', link: '#' },
-        { label: 'Cybersécurité', link: '#' },
-        { label: 'Certifications', link: '#' },
-        { label: 'Formation sur mesure', link: '#' },
+        { label: 'Web agency in Doha', link: '/services/web-agency-doha-qa' },
+        { label: 'Mobile app in Dubai', link: '/services/mobile-app-development-dubai-ae' },
+        { label: 'SaaS in Riyadh', link: '/services/saas-development-riyadh-sa' },
+        { label: 'AI agents in NEOM', link: '/services/ai-integration-neom-sa' },
+        { label: 'Cloud in Kuwait City', link: '/services/cloud-devops-kuwait-city-kw' },
+        { label: 'View all locations →', link: '/locations' },
       ],
     },
     {

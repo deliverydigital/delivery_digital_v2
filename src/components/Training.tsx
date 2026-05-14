@@ -64,12 +64,21 @@ const Training = () => {
     }))
   ];
 
+  // Affichage TOUTES les formations actives, filtrees par la categorie selectionnee dans l'UI.
+  // Refonte 2026-05-14 (Rabah) : avant on hardcodait HYGIENE_ONLY_IDS pour ne montrer
+  // que 2 formations, mais le catalogue complet est ouvert (5 formations migrees dans
+  // delivery_digital). On revient au comportement standard "toutes les actives, filtre
+  // par categorie via le selecteur UI".
   const filteredPrograms = programs.filter(program => {
-    const matchesSearch = program.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         program.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || program.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    if (program.is_active === false) return false;
+    if (selectedCategory === 'all') return true;
+    return program.category === selectedCategory;
   });
+
+  // Auto-ouverture de la modal supprimee (@author Rabah Ziane 2026-05-14).
+  // Avant on auto-ouvrait la modal Hygiene 21h des l'arrivee sur /formation. Avec
+  // l'ouverture du catalogue complet (5 formations), on laisse l'utilisateur choisir
+  // librement la formation a consulter dans la grille.
 
   const getLevelBadgeColor = (_level: string) => {
     // Apple-style: all level badges use the same neutral palette.

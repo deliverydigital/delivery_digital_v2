@@ -102,6 +102,7 @@ function Papercraft({ kind }: { kind: 'hand' | 'tag' | 'shield' | 'warn' | 'plan
 }
 
 function WebMock() {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useFmInView(ref, { once: false, amount: 0.4 });
   // Conformite progression (effet visuel : 0 -> 100 en 6s, pause 1.2s, reset)
@@ -189,19 +190,19 @@ function WebMock() {
             className="flex items-center gap-1 px-1.5 py-1 rounded-[4px] bg-white/8"
           >
             <LayoutDashboard className="text-white flex-shrink-0" style={{ width: 8, height: 8 }} strokeWidth={1.7} />
-            <span className="text-[8px] font-semibold text-white whitespace-nowrap overflow-hidden">Vue d'ensemble</span>
+            <span className="text-[8px] font-semibold text-white whitespace-nowrap overflow-hidden">{t('mockups.web.overview')}</span>
           </motion.div>
 
           {/* Section PMS */}
           <div className="mt-1">
-            <div className="text-[6.5px] sm:text-[7px] font-bold tracking-[0.1em] text-white/45 px-1 mb-0.5 leading-tight">PLAN DE MAÎTRISE SANITAIRE</div>
+            <div className="text-[6.5px] sm:text-[7px] font-bold tracking-[0.1em] text-white/45 px-1 mb-0.5 leading-tight">{t('mockups.web.pmsSection')}</div>
             {[
-              { Icon: Sparkles, label: 'Bonnes pratiques' },
-              { Icon: FileText, label: 'Traçabilités' },
-              { Icon: Shield, label: 'Méthodes HACCP' },
-              { Icon: AlertTriangle, label: 'Non-conformités' },
-              { Icon: BookOpen, label: 'Documents' },
-              { Icon: Send, label: 'Envoyer mon PMS' },
+              { Icon: Sparkles, label: t('mockups.web.goodPractices') },
+              { Icon: FileText, label: t('mockups.web.traceability') },
+              { Icon: Shield, label: t('mockups.web.haccpMethods') },
+              { Icon: AlertTriangle, label: t('mockups.web.nonConformities') },
+              { Icon: BookOpen, label: t('mockups.web.documents') },
+              { Icon: Send, label: t('mockups.web.sendPms') },
             ].map(({ Icon, label }, i) => (
               <motion.div
                 key={i}
@@ -224,14 +225,14 @@ function WebMock() {
             className="mt-auto rounded-[6px] bg-white/5 ring-1 ring-white/10 p-1.5 overflow-hidden"
           >
             <div className="flex items-center justify-between mb-0.5">
-              <span className="text-[5.5px] sm:text-[6px] font-bold tracking-[0.1em] text-white/50">PLAN · ANNUEL</span>
-              <span className="text-[5.5px] sm:text-[6px] font-bold tracking-[0.08em] text-[#10B981]">RECOMMANDÉ</span>
+              <span className="text-[5.5px] sm:text-[6px] font-bold tracking-[0.1em] text-white/50">{t('mockups.web.planAnnual')}</span>
+              <span className="text-[5.5px] sm:text-[6px] font-bold tracking-[0.08em] text-[#10B981]">{t('mockups.web.recommended')}</span>
             </div>
             <div className="text-[7px] sm:text-[7.5px] font-semibold text-white leading-tight">PMS Pyemes</div>
-            <div className="text-[11px] sm:text-[13px] font-bold text-white leading-none tabular-nums">14 €<span className="text-[6px] text-white/55 font-normal ml-0.5">/mois HT</span></div>
-            <div className="text-[5.5px] sm:text-[6px] text-white/55 leading-tight mt-0.5">Annuel · économie 60€/an · 9€/mois promo</div>
-            <div className="mt-1 rounded-[4px] bg-white text-[#0F1216] text-[6.5px] sm:text-[7px] font-bold px-1.5 py-1 text-center">Choisir mon forfait</div>
-            <div className="text-[5.5px] text-white/45 text-center mt-0.5">3 forfaits · Stripe</div>
+            <div className="text-[11px] sm:text-[13px] font-bold text-white leading-none tabular-nums">14 €<span className="text-[6px] text-white/55 font-normal ml-0.5">{t('mockups.web.perMonth')}</span></div>
+            <div className="text-[5.5px] sm:text-[6px] text-white/55 leading-tight mt-0.5">{t('mockups.web.savings')}</div>
+            <div className="mt-1 rounded-[4px] bg-white text-[#0F1216] text-[6.5px] sm:text-[7px] font-bold px-1.5 py-1 text-center">{t('mockups.web.choosePlan')}</div>
+            <div className="text-[5.5px] text-white/45 text-center mt-0.5">{t('mockups.web.plansStripe')}</div>
           </motion.div>
 
           {/* Footer sidebar : Support + User + Logout (cache mobile pour densite) */}
@@ -241,7 +242,7 @@ function WebMock() {
                 <span className="text-white/70 text-[7px]">💡</span>
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[6.5px] font-semibold text-white/85 leading-tight">Idée & support</div>
+                <div className="text-[6.5px] font-semibold text-white/85 leading-tight">{t('mockups.web.ideasSupport')}</div>
               </div>
             </div>
             <div className="flex items-center gap-1 px-1 pt-0.5 border-t border-white/8">
@@ -267,7 +268,7 @@ function WebMock() {
               <div className="h-full transition-[width] duration-150" style={{ width: conformite + '%', background: 'linear-gradient(to right, #6B3D1F 0%, #1FB54E 33%, #F5A623 66%, #2BB7DE 100%)' }} />
             </div>
             <div className="flex items-baseline gap-2">
-              <div className="text-[6px] sm:text-[6.5px] font-bold tracking-[0.1em] uppercase text-[#86868B] leading-tight">Conformité</div>
+              <div className="text-[6px] sm:text-[6.5px] font-bold tracking-[0.1em] uppercase text-[#86868B] leading-tight">{t('mockups.web.compliance')}</div>
               <div className="text-[12px] sm:text-[14px] font-bold text-[#1D1D1F] tabular-nums leading-none">{conformite} %</div>
             </div>
             <div className="mt-1.5 rounded-[5px] bg-[#F1F0EE] ring-1 ring-black/5 p-1.5 flex items-center gap-1.5">
@@ -279,14 +280,14 @@ function WebMock() {
                 <rect x="22" y="20" width="6" height="2" fill="#FCD34D" stroke="#0A0A0C" strokeWidth="0.6"/>
               </svg>
               <div className="min-w-0 flex-1 overflow-hidden">
-                <div className="text-[5.5px] sm:text-[6px] font-bold tracking-[0.08em] uppercase text-[#86868B] leading-tight">Prochaine étape guidée</div>
-                <div className="text-[7.5px] sm:text-[8px] font-semibold text-[#1D1D1F] leading-tight truncate">Choisissez votre forfait</div>
-                <div className="text-[6px] sm:text-[6.5px] text-[#86868B] leading-tight truncate">Dès 9€/mois · Stripe · sans engagement</div>
+                <div className="text-[5.5px] sm:text-[6px] font-bold tracking-[0.08em] uppercase text-[#86868B] leading-tight">{t('mockups.web.nextStep')}</div>
+                <div className="text-[7.5px] sm:text-[8px] font-semibold text-[#1D1D1F] leading-tight truncate">{t('mockups.web.choosePlanShort')}</div>
+                <div className="text-[6px] sm:text-[6.5px] text-[#86868B] leading-tight truncate">{t('mockups.web.pricingFrom')}</div>
               </div>
-              <div className="rounded-full bg-[#1D1D1F] text-white text-[6.5px] sm:text-[7px] font-semibold px-1.5 sm:px-2 py-0.5 whitespace-nowrap flex-shrink-0">Choisir →</div>
+              <div className="rounded-full bg-[#1D1D1F] text-white text-[6.5px] sm:text-[7px] font-semibold px-1.5 sm:px-2 py-0.5 whitespace-nowrap flex-shrink-0">{t('mockups.web.choose')}</div>
             </div>
             <div className="flex items-center justify-between mt-1">
-              <span className="text-[6px] sm:text-[6.5px] text-[#1D1D1F] font-medium truncate">Voir les 19 actions à traiter →</span>
+              <span className="text-[6px] sm:text-[6.5px] text-[#1D1D1F] font-medium truncate">{t('mockups.web.seeActions')}</span>
               <span className="text-[6px] sm:text-[6.5px] text-[#86868B] tabular-nums flex-shrink-0 ml-1">Étape {etape} / 22</span>
             </div>
           </motion.div>
@@ -302,9 +303,9 @@ function WebMock() {
             <span className="text-white/45 text-[8px] px-0.5 flex-shrink-0">→</span>
             <span className="text-white/25 text-[8px] mx-0.5 flex-shrink-0">|</span>
             {[
-              { Icon: Activity, label: 'Température' },
-              { Icon: Database, label: 'Réception' },
-              { Icon: FileText, label: 'Tracer un lot' },
+              { Icon: Activity, label: t('mockups.web.temperature') },
+              { Icon: Database, label: t('mockups.web.reception') },
+              { Icon: FileText, label: t('mockups.web.traceBatch') },
             ].map(({ Icon, label }, i) => (
               <div key={i} className="flex-1 bg-white/10 rounded-full flex items-center justify-center gap-1 px-2 py-1 overflow-hidden">
                 <Icon className="text-white/80 flex-shrink-0" style={{ width: 7, height: 7 }} strokeWidth={1.7} />
@@ -315,20 +316,20 @@ function WebMock() {
 
           {/* TABLEAU DE BORD - BIENVENUE */}
           <div className="px-0.5">
-            <div className="text-[6.5px] sm:text-[7px] font-bold tracking-[0.1em] uppercase text-[#86868B] leading-tight">Tableau de bord</div>
-            <div className="text-[12px] sm:text-[14px] font-bold text-[#1D1D1F] tracking-tight leading-tight">Bienvenue</div>
+            <div className="text-[6.5px] sm:text-[7px] font-bold tracking-[0.1em] uppercase text-[#86868B] leading-tight">{t('mockups.web.dashboard')}</div>
+            <div className="text-[12px] sm:text-[14px] font-bold text-[#1D1D1F] tracking-tight leading-tight">{t('mockups.web.welcome')}</div>
           </div>
 
           {/* PLAN DE MAÎTRISE SANITAIRE - 5 cards Pyemes avec illustrations papercraft */}
           <div>
-            <div className="text-[6.5px] sm:text-[7px] font-bold tracking-[0.1em] uppercase text-[#86868B] px-0.5 mb-1">Plan de maîtrise sanitaire</div>
+            <div className="text-[6.5px] sm:text-[7px] font-bold tracking-[0.1em] uppercase text-[#86868B] px-0.5 mb-1">{t('mockups.web.pmsTitle')}</div>
             <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
               {[
-                { title: "Bonnes pratiques d'hygiène", sub: 'Procédures de nettoyage, désinfection, lavage des mains.', illu: 'hand' },
-                { title: 'Traçabilités', sub: 'Réceptions, températures, lots, DLC.', illu: 'tag' },
-                { title: 'Méthodes HACCP', sub: 'Tableau HACCP et 7 principes Codex Alimentarius.', illu: 'shield' },
-                { title: 'Non-conformités', sub: 'Fiches NC + actions correctives.', illu: 'warn' },
-                { title: 'Envoyer mon PMS', sub: 'Lien lecture seule pour la DDPP.', illu: 'plane' },
+                { title: t('mockups.web.cardHygieneTitle'), sub: t('mockups.web.cardHygieneDesc'), illu: 'hand' },
+                { title: t('mockups.web.cardTraceTitle'), sub: t('mockups.web.cardTraceDesc'), illu: 'tag' },
+                { title: t('mockups.web.cardHaccpTitle'), sub: t('mockups.web.cardHaccpDesc'), illu: 'shield' },
+                { title: t('mockups.web.cardNcTitle'), sub: t('mockups.web.cardNcDesc'), illu: 'warn' },
+                { title: t('mockups.web.cardSendTitle'), sub: t('mockups.web.cardSendDesc'), illu: 'plane' },
               ].map((c, i) => (
                 <motion.div
                   key={i}
@@ -567,6 +568,7 @@ function Phone({ children, scale = 1 }: { children: React.ReactNode; scale?: num
 /* PhoneScreenMenu - exact reproduction of DrawerMenu.tsx from deliveryeat-restaurant.
  * White drawer with logo top + 9 items + 2 round action buttons + green accepting bar. */
 function PhoneScreenMenu({ inView }: { inView: boolean }) {
+  const { t } = useTranslation();
   const items = [
     'Disponibilité des menus',
     'Demandes livreur',
@@ -654,7 +656,7 @@ function PhoneScreenMenu({ inView }: { inView: boolean }) {
           className="rounded-full border-[1.5px] border-white"
           style={{ width: 7, height: 7 }}
         />
-        <span className="text-[7.5px] font-medium text-white">Acceptation des commandes</span>
+        <span className="text-[7.5px] font-medium text-white">{t('mockups.mobile.acceptanceTitle')}</span>
       </div>
     </div>
   );
@@ -673,6 +675,7 @@ function PauseIcon({ size = 12 }: { size?: number }) {
 /* PhoneScreenNewOrder - exact reproduction of NewOrderOverlay.tsx fallback card.
  * Cyan card (#59C7DD = UE.green) inside dark navy padding, big number with pulse 1->1.08 loop. */
 function PhoneScreenNewOrder({ inView }: { inView: boolean }) {
+  const { t } = useTranslation();
   const [count, setCount] = useState(1);
 
   // Cycle the count to simulate incoming orders
@@ -736,13 +739,12 @@ function PhoneScreenNewOrder({ inView }: { inView: boolean }) {
           className="text-white font-bold text-center leading-[1.1]"
           style={{ fontSize: 13, letterSpacing: '-0.3px' }}
         >
-          {count > 1 ? 'Nouvelles' : 'Nouvelle'}<br />
-          commande{count > 1 ? 's' : ''}
+          {count > 1 ? t('mockups.mobile.newOrdersPlural') : t('mockups.mobile.newOrderSingular')}
         </motion.div>
 
         {/* Hint - 16 in original, scaled to 7 */}
         <p className="mt-2 text-white/85 text-center px-2" style={{ fontSize: 7 }}>
-          Appuyez n'importe où pour fermer
+          {t('mockups.mobile.tapClose')}
         </p>
       </div>
     </div>
@@ -753,6 +755,7 @@ function PhoneScreenNewOrder({ inView }: { inView: boolean }) {
  * Interactive: click "Tester en préparation" or "Tester nouvelle commande" to
  * see an animated incoming order card slide up. */
 function PhoneScreenDriver({ inView }: { inView: boolean }) {
+  const { t } = useTranslation();
   const [demo, setDemo] = useState<null | 'new' | 'inprogress'>(null);
 
   // Auto-dismiss after 3.5s
@@ -838,10 +841,10 @@ function PhoneScreenDriver({ inView }: { inView: boolean }) {
             style={{ background: 'rgba(68,160,70,0.15)', padding: '4px 10px', gap: 5 }}
           >
             <span className="rounded-full" style={{ width: 5, height: 5, background: '#44A046' }} />
-            <span style={{ color: '#7FD180', fontSize: 8, fontWeight: 600 }}>Vous êtes en ligne</span>
+            <span style={{ color: '#7FD180', fontSize: 8, fontWeight: 600 }}>{t('mockups.mobile.online')}</span>
           </motion.div>
 
-          <p style={{ color: '#9CA0A5', fontSize: 8, fontWeight: 500 }}>En attente de commandes…</p>
+          <p style={{ color: '#9CA0A5', fontSize: 8, fontWeight: 500 }}>{t('mockups.mobile.waitingOrders')}</p>
         </div>
 
         {/* Bottom CTA - HapticButton variant="outline" exact specs */}
@@ -859,7 +862,7 @@ function PhoneScreenDriver({ inView }: { inView: boolean }) {
               background: 'transparent',
             }}
           >
-            Se mettre hors ligne
+            {t('mockups.mobile.goOffline')}
           </button>
         </div>
       </div>
@@ -878,27 +881,27 @@ function PhoneScreenDriver({ inView }: { inView: boolean }) {
             <div className="flex items-center justify-between mb-1">
               <span className="inline-flex items-center gap-1 text-[7.5px] font-bold tracking-wider uppercase">
                 <Bike className="h-2.5 w-2.5" strokeWidth={2} />
-                {demo === 'new' ? 'Nouvelle course' : 'En préparation'}
+                {demo === 'new' ? t('mockups.mobile.newCourse') : t('mockups.mobile.inPreparation')}
               </span>
               <span className="text-[8.5px] font-bold tabular-nums">+ 6,80 €</span>
             </div>
             <div className="flex items-start gap-1 mb-0.5">
               <span className="w-1 h-1 rounded-full bg-[#1D1D1F] mt-[3px] flex-shrink-0" />
               <div className="min-w-0">
-                <div className="text-[6.5px] text-[#86868B]">Récupérer</div>
+                <div className="text-[6.5px] text-[#86868B]">{t('mockups.mobile.pickup')}</div>
                 <div className="text-[8px] font-semibold truncate">Le Comptoir Niçois</div>
               </div>
             </div>
             <div className="flex items-start gap-1 mb-1">
               <MapPin className="h-2 w-2 mt-[2px] flex-shrink-0 text-[#1D1D1F]" strokeWidth={2} />
               <div className="min-w-0">
-                <div className="text-[6.5px] text-[#86868B]">Déposer</div>
+                <div className="text-[6.5px] text-[#86868B]">{t('mockups.mobile.dropoff')}</div>
                 <div className="text-[8px] font-semibold truncate">12 rue Masséna · 2,4 km</div>
               </div>
             </div>
             <div className="flex items-center gap-1 mt-1">
-              <button className="flex-1 text-[7px] font-semibold py-0.5 rounded-full bg-[#F2F2F7] text-[#3C3C43]">Refuser</button>
-              <button className="flex-1 text-[7px] font-semibold py-0.5 rounded-full bg-[#1D1D1F] text-white">Accepter</button>
+              <button className="flex-1 text-[7px] font-semibold py-0.5 rounded-full bg-[#F2F2F7] text-[#3C3C43]">{t('mockups.mobile.decline')}</button>
+              <button className="flex-1 text-[7px] font-semibold py-0.5 rounded-full bg-[#1D1D1F] text-white">{t('mockups.mobile.accept')}</button>
             </div>
           </motion.div>
         )}
@@ -908,13 +911,14 @@ function PhoneScreenDriver({ inView }: { inView: boolean }) {
 }
 
 function PhoneScreenMessages({ inView }: { inView: boolean }) {
+  const { t } = useTranslation();
   const messages = [
-    { n: 'Marie', t: 'Le devis est parfait, on signe !', d: '14:32', u: true },
-    { n: 'Thomas', t: 'Réunion demain à 10h ?', d: '13:08', u: true },
-    { n: 'Sophie', t: 'Merci pour la livraison rapide', d: '12:45' },
-    { n: 'Lucas', t: 'Photo du chantier 📸', d: '11:20' },
-    { n: 'Élise', t: 'OK pour vendredi', d: '09:15' },
-    { n: 'Karim', t: 'Disponible cet après-midi ?', d: 'Hier' },
+    { n: 'Marie', t: t('mockups.mobile.msgQuote'), d: '14:32', u: true },
+    { n: 'Thomas', t: t('mockups.mobile.msgMeeting'), d: '13:08', u: true },
+    { n: 'Sophie', t: t('mockups.mobile.msgThanks'), d: '12:45' },
+    { n: 'Lucas', t: t('mockups.mobile.msgPhoto'), d: '11:20' },
+    { n: 'Élise', t: t('mockups.mobile.msgOk'), d: '09:15' },
+    { n: 'Karim', t: t('mockups.mobile.msgAvail'), d: 'Hier' },
   ];
 
   return (
@@ -922,7 +926,7 @@ function PhoneScreenMessages({ inView }: { inView: boolean }) {
       <div className="absolute top-[26px] left-0 right-0 px-3 pb-2 border-b border-[#E5E5EA]">
         <div className="flex items-center justify-between">
           <span className="text-[9px] text-[#0066CC]">Modifier</span>
-          <span className="text-[12px] font-bold text-[#1D1D1F]">Messages</span>
+          <span className="text-[12px] font-bold text-[#1D1D1F]">{t('mockups.mobile.messages')}</span>
           <motion.span
             className="relative w-3 h-3 rounded-full bg-[#F2F2F7] flex items-center justify-center"
             animate={{ scale: [1, 1.15, 1] }}
@@ -958,11 +962,12 @@ function PhoneScreenMessages({ inView }: { inView: boolean }) {
 }
 
 function PhoneScreenOrders({ inView }: { inView: boolean }) {
+  const { t } = useTranslation();
   return (
     <div className="absolute inset-0 bg-white">
       <div className="absolute top-[26px] left-3 right-3">
-        <div className="text-[8px] text-[#86868B] uppercase tracking-wider font-semibold">Aujourd'hui</div>
-        <div className="text-[12px] font-bold text-[#1D1D1F]">3 commandes</div>
+        <div className="text-[8px] text-[#86868B] uppercase tracking-wider font-semibold">{t('mockups.mobile.today')}</div>
+        <div className="text-[12px] font-bold text-[#1D1D1F]">{t('mockups.mobile.ordersCount')}</div>
       </div>
       <div className="absolute top-[70px] inset-x-3 space-y-1.5">
         {[1, 2, 3].map((i) => (
@@ -991,6 +996,7 @@ function PhoneScreenOrders({ inView }: { inView: boolean }) {
 }
 
 function PhoneScreenProfile({ inView }: { inView: boolean }) {
+  const { t } = useTranslation();
   return (
     <div className="absolute inset-0 bg-white">
       <div className="absolute top-[28px] inset-x-0 flex flex-col items-center">
@@ -1008,10 +1014,10 @@ function PhoneScreenProfile({ inView }: { inView: boolean }) {
         >
           Marie Lambert
         </motion.div>
-        <div className="text-[8px] text-[#86868B]">Membre Premium</div>
+        <div className="text-[8px] text-[#86868B]">{t('mockups.mobile.premiumMember')}</div>
       </div>
       <div className="absolute top-[120px] inset-x-3 space-y-1.5">
-        {['Mon compte', 'Commandes', 'Paiement', 'Préférences'].map((l, i) => (
+        {[t('mockups.mobile.myAccount'), t('mockups.mobile.orders'), t('mockups.mobile.payment'), t('mockups.mobile.preferences')].map((l, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, x: -8 }}
@@ -1032,6 +1038,7 @@ function PhoneScreenProfile({ inView }: { inView: boolean }) {
    3. Enterprise CRM - Kanban with card moving + animated bars
    ============================================================ */
 function EnterpriseMock() {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useFmInView(ref, { once: false, amount: 0.3 });
 
@@ -1101,7 +1108,7 @@ function EnterpriseMock() {
         </span>
         <div className="flex items-center gap-3 text-[#172B4D]">
           <Search className="w-4 h-4" strokeWidth={2} />
-          <span className="px-3 py-1 rounded bg-[#EBECF0] text-[11.5px] font-semibold">Créer</span>
+          <span className="px-3 py-1 rounded bg-[#EBECF0] text-[11.5px] font-semibold">{t('mockups.enterprise.create')}</span>
           <div className="flex -space-x-1.5">
             {[{ i: 'R', c: '#0EA5E9' }, { i: 'Z', c: '#10B981' }, { i: 'M', c: '#F59E0B' }].map((m, k) => (
               <span key={k} className="rounded-full ring-2 ring-white flex items-center justify-center text-white font-bold" style={{ width: 22, height: 22, background: m.c, fontSize: 9 }}>{m.i}</span>
@@ -1127,37 +1134,37 @@ function EnterpriseMock() {
         <div className="flex gap-3 px-3 py-3 h-full" style={{ minWidth: 'fit-content' }}>
           {[
             {
-              title: 'Outil',
+              title: t('mockups.enterprise.tool'),
               cards: [
-                { labels: ['#F2D600'], title: 'Message pro - Maçonnerie & Gros Œuvre', icons: ['eye', 'desc', 'attach:1'] },
-                { labels: ['#F2D600'], title: 'Message pro - Construction de maisons individuelles', icons: ['eye', 'desc'] },
-                { labels: ['#F2D600'], title: "Message pro - Installation d'eau et de gaz", icons: ['eye', 'desc'] },
-                { labels: ['#F2D600'], title: 'Objet : Planification formation Hygiène & DD', icons: ['eye', 'desc', 'attach:2'] },
+                { labels: ['#F2D600'], title: t('mockups.enterprise.cardConstruction'), icons: ['eye', 'desc', 'attach:1'] },
+                { labels: ['#F2D600'], title: t('mockups.enterprise.cardHouseBuilding'), icons: ['eye', 'desc'] },
+                { labels: ['#F2D600'], title: t('mockups.enterprise.cardPlumbing'), icons: ['eye', 'desc'] },
+                { labels: ['#F2D600'], title: t('mockups.enterprise.cardTrainingPlan'), icons: ['eye', 'desc', 'attach:2'] },
               ],
             },
             {
-              title: 'Prospects',
+              title: t('mockups.enterprise.prospects'),
               cards: [
-                { labels: [], title: 'Société de développement informatique', icons: ['eye', 'desc', 'comments:1'] },
+                { labels: [], title: t('mockups.enterprise.cardItCompany'), icons: ['eye', 'desc', 'comments:1'] },
                 { labels: [], title: 'Sophie M.', icons: ['eye', 'desc', 'comments:1'] },
-                { labels: [], title: 'Contact chez Cabinet Médical', icons: ['eye', 'desc', 'comments:1'] },
-                { labels: [], title: 'Comptable régional Nice', icons: ['eye', 'desc', 'comments:1'] },
-                { labels: ['#61BD4F', '#FF9F1A'], title: 'Promoteur immobilier', icons: ['eye', 'desc'] },
+                { labels: [], title: t('mockups.enterprise.cardMedicalContact'), icons: ['eye', 'desc', 'comments:1'] },
+                { labels: [], title: t('mockups.enterprise.cardAccountantNice'), icons: ['eye', 'desc', 'comments:1'] },
+                { labels: ['#61BD4F', '#FF9F1A'], title: t('mockups.enterprise.cardDeveloper'), icons: ['eye', 'desc'] },
               ],
             },
             {
-              title: 'En cours',
+              title: t('mockups.enterprise.inProgress'),
               cards: [
-                { labels: ['#0079BF'], title: 'Refonte site Boulangerie', icons: ['eye', 'desc', 'check:4/8', 'comments:7'] },
-                { labels: ['#0079BF'], title: 'App mobile Pharma', icons: ['eye', 'desc', 'check:2/5', 'comments:3'] },
-                { labels: ['#0079BF', '#F2D600'], title: 'Dashboard CRM Restaurant', icons: ['eye', 'desc', 'attach:3'] },
+                { labels: ['#0079BF'], title: t('mockups.enterprise.cardBakeryRedesign'), icons: ['eye', 'desc', 'check:4/8', 'comments:7'] },
+                { labels: ['#0079BF'], title: t('mockups.enterprise.cardPharmaApp'), icons: ['eye', 'desc', 'check:2/5', 'comments:3'] },
+                { labels: ['#0079BF', '#F2D600'], title: t('mockups.enterprise.cardRestaurantDashboard'), icons: ['eye', 'desc', 'attach:3'] },
               ],
             },
             {
-              title: 'Gagné',
+              title: t('mockups.enterprise.won'),
               cards: [
-                { labels: ['#61BD4F'], title: 'Cabinet Médical - signature contrat', icons: ['eye', 'desc', 'check:7/8', 'comments:12'] },
-                { labels: ['#61BD4F'], title: 'TPE - facturé', icons: ['eye', 'desc'] },
+                { labels: ['#61BD4F'], title: t('mockups.enterprise.cardMedicalSigned'), icons: ['eye', 'desc', 'check:7/8', 'comments:12'] },
+                { labels: ['#61BD4F'], title: t('mockups.enterprise.cardSmeInvoiced'), icons: ['eye', 'desc'] },
               ],
             },
           ].map((col, i) => (
@@ -1217,7 +1224,7 @@ function EnterpriseMock() {
                   </motion.div>
                 ))}
                 <div className="px-1 py-1.5 text-[#5E6C84] text-[10.5px] flex items-center gap-1">
-                  <span className="text-[13px] leading-none">+</span> Ajouter une carte
+                  <span className="text-[13px] leading-none">+</span> {t('mockups.enterprise.addCard')}
                 </div>
               </div>
             </motion.div>
@@ -1233,18 +1240,19 @@ function EnterpriseMock() {
 /* iPhone 17 Pro frame avec board Trello mobile reel (DELIVERY Digital Nice) */
 type EntCard = { n: string; I: any; tag: string; tagColor: string; amt?: string; due?: string; members: { i: string; c: string }[]; comments?: number; checklist?: { done: number; total: number } };
 function EnterpriseIphoneMockup({ inView, columns: _columns }: { inView: boolean; columns: { stage: string; cards: EntCard[] }[] }) {
+  const { t } = useTranslation();
   const outilCards = [
-    { label: '#F2D600', title: 'Message pro - Maçonnerie & Gros Œuvre', attachments: 1 },
-    { label: '#F2D600', title: 'Message pro - Construction de maisons individuelles' },
-    { label: '#F2D600', title: "Message pro - Installation d'eau et de gaz" },
-    { label: '#F2D600', title: 'Objet : Planification de la formation Hygiène et Développement Durable' },
+    { label: '#F2D600', title: t('mockups.enterprise.cardConstruction'), attachments: 1 },
+    { label: '#F2D600', title: t('mockups.enterprise.cardHouseBuilding') },
+    { label: '#F2D600', title: t('mockups.enterprise.cardPlumbing') },
+    { label: '#F2D600', title: t('mockups.enterprise.cardTrainingPlanLong') },
   ];
   const prospectCards = [
-    { labels: [] as string[], title: 'Société de développement informatique', comments: 1 },
+    { labels: [] as string[], title: t('mockups.enterprise.cardItCompany'), comments: 1 },
     { labels: [] as string[], title: 'Sophie M.', comments: 1 },
-    { labels: [] as string[], title: 'Contact chez Cabinet Médical', comments: 1 },
-    { labels: [] as string[], title: 'Comptable régional', comments: 1 },
-    { labels: ['#61BD4F', '#FF9F1A'], title: 'Promoteur immobilier' },
+    { labels: [] as string[], title: t('mockups.enterprise.cardMedicalContact'), comments: 1 },
+    { labels: [] as string[], title: t('mockups.enterprise.cardAccountantShort'), comments: 1 },
+    { labels: ['#61BD4F', '#FF9F1A'], title: t('mockups.enterprise.cardDeveloper') },
   ];
   return (
     <div className="relative mx-auto" style={{ filter: 'drop-shadow(0 30px 40px rgba(0,0,0,0.45))' }}>
@@ -1284,7 +1292,7 @@ function EnterpriseIphoneMockup({ inView, columns: _columns }: { inView: boolean
               </span>
               <div className="flex items-center gap-2">
                 <Search className="w-4 h-4 text-[#172B4D]" strokeWidth={2} />
-                <span className="px-2.5 py-1 rounded bg-[#EBECF0] text-[10.5px] font-semibold text-[#172B4D]">Créer</span>
+                <span className="px-2.5 py-1 rounded bg-[#EBECF0] text-[10.5px] font-semibold text-[#172B4D]">{t('mockups.enterprise.create')}</span>
                 <span className="text-[#172B4D] text-[14px] leading-none tracking-wider">⋯</span>
               </div>
             </div>
@@ -1305,7 +1313,7 @@ function EnterpriseIphoneMockup({ inView, columns: _columns }: { inView: boolean
                 {/* Column Outil */}
                 <div className="w-[230px] flex-shrink-0 rounded-xl bg-[#EBECF0] flex flex-col">
                   <div className="flex items-center justify-between px-3 py-2.5">
-                    <span className="text-[12.5px] font-bold text-[#172B4D]">Outil</span>
+                    <span className="text-[12.5px] font-bold text-[#172B4D]">{t('mockups.enterprise.tool')}</span>
                     <span className="text-[#172B4D] text-[14px] leading-none tracking-wider">⋯</span>
                   </div>
                   <div className="px-2 pb-2 space-y-2 overflow-y-auto">
@@ -1334,7 +1342,7 @@ function EnterpriseIphoneMockup({ inView, columns: _columns }: { inView: boolean
                       </motion.div>
                     ))}
                     <div className="px-1 py-1.5 text-[#5E6C84] text-[10.5px] flex items-center gap-1">
-                      <span className="text-[13px] leading-none">+</span> Ajouter une carte
+                      <span className="text-[13px] leading-none">+</span> {t('mockups.enterprise.addCard')}
                     </div>
                   </div>
                 </div>
@@ -1342,7 +1350,7 @@ function EnterpriseIphoneMockup({ inView, columns: _columns }: { inView: boolean
                 {/* Column Prospects */}
                 <div className="w-[230px] flex-shrink-0 rounded-xl bg-[#EBECF0] flex flex-col">
                   <div className="flex items-center justify-between px-3 py-2.5">
-                    <span className="text-[12.5px] font-bold text-[#172B4D]">Prospects</span>
+                    <span className="text-[12.5px] font-bold text-[#172B4D]">{t('mockups.enterprise.prospects')}</span>
                     <span className="text-[#172B4D] text-[14px] leading-none tracking-wider">⋯</span>
                   </div>
                   <div className="px-2 pb-2 space-y-2 overflow-y-auto">
@@ -1376,7 +1384,7 @@ function EnterpriseIphoneMockup({ inView, columns: _columns }: { inView: boolean
                       </motion.div>
                     ))}
                     <div className="px-1 py-1.5 text-[#5E6C84] text-[10.5px] flex items-center gap-1">
-                      <span className="text-[13px] leading-none">+</span> Ajouter une carte
+                      <span className="text-[13px] leading-none">+</span> {t('mockups.enterprise.addCard')}
                     </div>
                   </div>
                 </div>
@@ -1408,6 +1416,7 @@ function EnterpriseIphoneMockup({ inView, columns: _columns }: { inView: boolean
    4. Cloud - live metrics, pulsing servers, scrolling logs
    ============================================================ */
 function CloudMock() {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useFmInView(ref, { once: false, amount: 0.3 });
 
@@ -1471,8 +1480,8 @@ function CloudMock() {
             <path d="M12 12 L12 22" fill="none" stroke="#FF9900" strokeWidth="1.5"/>
           </svg>
           <div>
-            <div className="text-[9px] sm:text-[10px] text-white/55 font-medium">AWS Console · Production</div>
-            <div className="text-[15px] sm:text-[18px] font-bold tracking-tight text-white">Tableau de bord AWS</div>
+            <div className="text-[9px] sm:text-[10px] text-white/55 font-medium">{t('mockups.cloud.consoleLabel')}</div>
+            <div className="text-[15px] sm:text-[18px] font-bold tracking-tight text-white">{t('mockups.cloud.dashboardTitle')}</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -1483,17 +1492,17 @@ function CloudMock() {
             transition={{ duration: 2, repeat: Infinity }}
           >
             <motion.span className="w-2 h-2 rounded-full bg-[#FF9900]" animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1.4, repeat: Infinity }} />
-            <span className="text-[10px] font-semibold text-[#FF9900]">Live</span>
+            <span className="text-[10px] font-semibold text-[#FF9900]">{t('mockups.cloud.liveBadge')}</span>
           </motion.div>
         </div>
       </div>
 
       {/* CloudWatch metrics row */}
       <div className="grid grid-cols-4 gap-2.5 mb-3">
-        <LiveMetricTile Icon={Cpu} label="EC2 · CPU" value={cpu} suffix="%" inView={inView} delay={0.1} />
-        <LiveMetricTile Icon={MemoryStick} label="RDS · RAM" value={ram} suffix="%" inView={inView} delay={0.2} />
-        <LiveMetricTile Icon={Activity} label="ALB · Latence" value={latency} suffix="ms" inView={inView} delay={0.3} />
-        <UptimeTile Icon={Shield} inView={inView} />
+        <LiveMetricTile Icon={Cpu} label="EC2 · CPU" value={cpu} suffix="%" inView={inView} delay={0.1} statusLabel={t('mockups.cloud.metricStable')} />
+        <LiveMetricTile Icon={MemoryStick} label="RDS · RAM" value={ram} suffix="%" inView={inView} delay={0.2} statusLabel={t('mockups.cloud.metricStable')} />
+        <LiveMetricTile Icon={Activity} label={t('mockups.cloud.metricAlbLatency') as string} value={latency} suffix="ms" inView={inView} delay={0.3} statusLabel={t('mockups.cloud.metricStable')} />
+        <UptimeTile Icon={Shield} inView={inView} uptimeLabel={t('mockups.cloud.uptimeLabel')} uptimePeriod={t('mockups.cloud.uptimePeriod')} />
       </div>
 
       {/* EC2 instances list */}
@@ -1501,9 +1510,9 @@ function CloudMock() {
         <div className="flex items-center justify-between mb-1 px-0.5">
           <div className="flex items-center gap-1.5">
             <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="#FF9900" strokeWidth="1.7" aria-hidden><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
-            <span className="text-[10px] font-semibold text-white/75">EC2 Instances</span>
+            <span className="text-[10px] font-semibold text-white/75">{t('mockups.cloud.instancesTitle')}</span>
           </div>
-          <span className="text-[9px] text-white/45">4 running</span>
+          <span className="text-[9px] text-white/45">{t('mockups.cloud.instancesRunning')}</span>
         </div>
         {servers.map((srv, i) => (
           <motion.div
@@ -1533,7 +1542,7 @@ function CloudMock() {
   );
 }
 
-function LiveMetricTile({ Icon, label, value, suffix, inView, delay }: { Icon: any; label: string; value: number; suffix: string; inView: boolean; delay: number }) {
+function LiveMetricTile({ Icon, label, value, suffix, inView, delay, statusLabel }: { Icon: any; label: string; value: number; suffix: string; inView: boolean; delay: number; statusLabel: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -1551,12 +1560,12 @@ function LiveMetricTile({ Icon, label, value, suffix, inView, delay }: { Icon: a
         </motion.span>
         {suffix}
       </div>
-      <div className="text-[9px] text-white/65 font-semibold">stable</div>
+      <div className="text-[9px] text-white/65 font-semibold">{statusLabel}</div>
     </motion.div>
   );
 }
 
-function UptimeTile({ Icon, inView }: { Icon: any; inView: boolean }) {
+function UptimeTile({ Icon, inView, uptimeLabel, uptimePeriod }: { Icon: any; inView: boolean; uptimeLabel: string; uptimePeriod: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -1566,10 +1575,10 @@ function UptimeTile({ Icon, inView }: { Icon: any; inView: boolean }) {
     >
       <div className="flex items-center gap-1 text-[9px] text-white/55">
         <Icon className="text-white/55" style={{ width: 10, height: 10 }} strokeWidth={1.6} />
-        Uptime
+        {uptimeLabel}
       </div>
       <div className="text-[18px] font-bold text-white tabular-nums leading-tight mt-0.5">99.99%</div>
-      <div className="text-[9px] text-white/65 font-semibold">90 jours</div>
+      <div className="text-[9px] text-white/65 font-semibold">{uptimePeriod}</div>
     </motion.div>
   );
 }
@@ -1578,6 +1587,7 @@ function UptimeTile({ Icon, inView }: { Icon: any; inView: boolean }) {
    5. Training - animated progress + chapter checks
    ============================================================ */
 function TrainingMock() {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useFmInView(ref, { once: false, amount: 0.3 });
 
@@ -1603,8 +1613,8 @@ function TrainingMock() {
             <GraduationCap className="h-3.5 w-3.5 text-white" strokeWidth={1.5} />
           </div>
           <div className="leading-tight">
-            <div className="text-[8px] uppercase tracking-[0.12em] font-semibold text-[#86868B]">DELIVERY Digital</div>
-            <div className="text-[12px] font-bold text-[#1D1D1F] tracking-tight">Espace apprenant</div>
+            <div className="text-[8px] uppercase tracking-[0.12em] font-semibold text-[#86868B]">{t('mockups.training.headerLabel')}</div>
+            <div className="text-[12px] font-bold text-[#1D1D1F] tracking-tight">{t('mockups.training.headerTitle')}</div>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -1625,8 +1635,8 @@ function TrainingMock() {
             transition={{ duration: 4, repeat: Infinity }}
           />
           <div className="relative">
-            <div className="text-[10px] text-white/65 font-semibold uppercase tracking-wider">Initiation · 21h · Niveau débutant</div>
-            <div className="text-[15px] sm:text-[19px] font-bold text-white tracking-tight leading-[1.1] mt-1">Hygiène, Sécurité et<br />Développement Durable</div>
+            <div className="text-[10px] text-white/65 font-semibold uppercase tracking-wider">{t('mockups.training.courseInfo')}</div>
+            <div className="text-[15px] sm:text-[19px] font-bold text-white tracking-tight leading-[1.1] mt-1">{t('mockups.training.courseTitleLine1')}<br />{t('mockups.training.courseTitleLine2')}</div>
             <div className="mt-3 flex items-center gap-2">
               <div className="flex-1 h-[3px] rounded-full bg-white/15 overflow-hidden">
                 <motion.div
@@ -1654,21 +1664,21 @@ function TrainingMock() {
               >
                 <Play className="h-3 w-3 fill-current" strokeWidth={0} />
               </motion.div>
-              <span className="text-[10px] text-white/85 font-medium">Reprendre la lecture</span>
+              <span className="text-[10px] text-white/85 font-medium">{t('mockups.training.resume')}</span>
             </motion.div>
           </div>
         </div>
 
         {/* Sidebar chapters - check off staggered */}
         <div className="rounded-[14px] p-3 space-y-1.5 bg-white border border-[#E5E5EA]">
-          <div className="text-[9px] font-semibold uppercase tracking-wider mb-1 text-[#86868B]">Chapitres</div>
+          <div className="text-[9px] font-semibold uppercase tracking-wider mb-1 text-[#86868B]">{t('mockups.training.chapters')}</div>
           {[
-            { n: '1', t: "Bonnes pratiques d'hygiène", done: true },
-            { n: '2', t: 'Normes HACCP', done: true },
-            { n: '3', t: 'Gestion des contaminations', done: true },
-            { n: '4', t: 'Stockage des aliments', done: false, active: true },
-            { n: '5', t: 'Gestion des déchets', done: false },
-            { n: '6', t: 'Réduction du gaspillage', done: false },
+            { n: '1', t: t('mockups.training.chapter1'), done: true },
+            { n: '2', t: t('mockups.training.chapter2'), done: true },
+            { n: '3', t: t('mockups.training.chapter3'), done: true },
+            { n: '4', t: t('mockups.training.chapter4'), done: false, active: true },
+            { n: '5', t: t('mockups.training.chapter5'), done: false },
+            { n: '6', t: t('mockups.training.chapter6'), done: false },
           ].map((c, i) => (
             <motion.div
               key={i}

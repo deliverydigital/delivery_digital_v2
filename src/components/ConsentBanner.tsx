@@ -1,11 +1,13 @@
 /**
  * Bandeau de consentement cookies RGPD.
  *
- * Couleurs brand : primary #59C7DD, ink-dark #002731, accent #1F5865.
+ * Couleurs brand : ink-noir #1D1D1F (fond), primary cyan #59C7DD (accent CTA).
+ * Refonte 2026-05-14 (Rabah) : fond passe de #002731 (bleu fonce) a #1D1D1F (noir brand)
+ * pour rester coherent avec les autres CTA noirs du site (header email devis, etc.).
  * S'affiche bas de page tant que l'utilisateur n'a ni accepte ni refuse.
  * Persistance : localStorage `dd_consent` = 'granted' | 'denied'.
  *
- * @author Rabah Ziane - 2026-05-13
+ * @author Rabah Ziane - 2026-05-14
  */
 import { useState, useEffect } from 'react';
 import { setConsent } from '../lib/analytics';
@@ -37,9 +39,9 @@ export default function ConsentBanner() {
       <div
         className="mx-auto max-w-3xl rounded-2xl shadow-2xl border"
         style={{
-          background: '#002731',
-          borderColor: 'rgba(89, 199, 221, 0.35)',
-          color: '#F6FAFA',
+          background: '#1D1D1F',
+          borderColor: 'rgba(255, 255, 255, 0.08)',
+          color: '#FFFFFF',
         }}
       >
         <div className="p-4 sm:p-5 md:p-6">

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TrainingProgramsApiService, TrainingProgram } from '../services/trainingProgramsApi';
+import { staticPrograms } from '../constants/trainingPrograms';
 
 export const useTrainingPrograms = () => {
   const [programs, setPrograms] = useState<TrainingProgram[]>([]);
@@ -14,22 +15,29 @@ export const useTrainingPrograms = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Load all programs for admin (both active and inactive)
-      const data = await TrainingProgramsApiService.getAllPrograms({
-        show_inactive: true // This will show both active and inactive programs
-      });
-      
-      setPrograms(data);
+      const data = await TrainingProgramsApiService.getAllPrograms({ show_inactive: true });
+      if (Array.isArray(data) && data.length > 0) {
+        setPrograms(data);
+      } else {
+        // Pas de programmes en DB : fallback statique limité aux formations hygiène
+        // (les autres entrées statiques n'ont pas le champ `title` requis par le rendu).
+        setPrograms(filterHygieneOnly(staticPrograms));
+      }
     } catch (err) {
       console.error('Error loading training programs:', err);
       setError(err instanceof Error ? err.message : 'Failed to load programs');
-      // Set fallback data on error
-      setPrograms([]);
+      setPrograms(filterHygieneOnly(staticPrograms));
     } finally {
       setLoading(false);
     }
   };
+
+  // Garde uniquement les formations hygiène et normalise name → title pour le rendu.
+  function filterHygieneOnly(items: any[]): TrainingProgram[] {
+    return items
+      .filter(p => p.id === 'hygiene-security-afest' || p.id === 'hygiene-security')
+      .map(p => ({...p, title: p.title || p.name})) as unknown as TrainingProgram[];
+  }
 
   const downloadDocument = (documentId: string, programId: string) => {
     TrainingProgramsApiService.downloadDocument(documentId, programId);

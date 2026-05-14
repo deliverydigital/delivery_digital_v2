@@ -16,14 +16,10 @@ import translationFI from './locales/fi.json';
 import translationPL from './locales/pl.json';
 import translationCS from './locales/cs.json';
 import translationHU from './locales/hu.json';
-import translationRO from './locales/ro.json';
 import translationEL from './locales/el.json';
 import translationTR from './locales/tr.json';
 import translationRU from './locales/ru.json';
 import translationAR from './locales/ar.json';
-import translationHE from './locales/he.json';
-import translationFA from './locales/fa.json';
-import translationHI from './locales/hi.json';
 import translationZH from './locales/zh.json';
 import translationJA from './locales/ja.json';
 import translationKO from './locales/ko.json';
@@ -43,14 +39,10 @@ const resources = {
   pl: { translation: translationPL },
   cs: { translation: translationCS },
   hu: { translation: translationHU },
-  ro: { translation: translationRO },
   el: { translation: translationEL },
   tr: { translation: translationTR },
   ru: { translation: translationRU },
   ar: { translation: translationAR },
-  he: { translation: translationHE },
-  fa: { translation: translationFA },
-  hi: { translation: translationHI },
   zh: { translation: translationZH },
   ja: { translation: translationJA },
   ko: { translation: translationKO },
@@ -73,7 +65,7 @@ i18n
   });
 
 // Met a jour les attributs HTML (lang + dir) au changement de langue, pour RTL.
-const RTL_LANGS = new Set(['ar', 'he', 'fa']);
+const RTL_LANGS = new Set(['ar']);
 const applyHtmlAttrs = (lng: string) => {
   const code = (lng || 'en').split('-')[0];
   document.documentElement.lang = code;
@@ -119,8 +111,6 @@ const COUNTRY_TO_LANG: Record<string, string> = {
   CZ: 'cs', SK: 'cs',
   // Hungarian
   HU: 'hu',
-  // Romanian
-  RO: 'ro', MD: 'ro',
   // Greek
   GR: 'el', CY: 'el',
   // Turkish
@@ -128,11 +118,9 @@ const COUNTRY_TO_LANG: Record<string, string> = {
   // Russian
   RU: 'ru', BY: 'ru', KZ: 'ru', KG: 'ru', UA: 'ru',
   // Arabic
-  SA: 'ar', AE: 'ar', EG: 'ar', MA: 'ar', DZ: 'ar', TN: 'ar', QA: 'ar', KW: 'ar', BH: 'ar', OM: 'ar', JO: 'ar', LB: 'ar', SY: 'ar', IQ: 'ar', YE: 'ar', LY: 'ar', SD: 'ar', PS: 'ar',
-  // Hebrew
-  IL: 'he',
-  // Persian / Farsi
-  IR: 'fa', AF: 'fa', TJ: 'fa',
+  SA: 'ar', EG: 'ar', MA: 'ar', DZ: 'ar', TN: 'ar', KW: 'ar', BH: 'ar', OM: 'ar', JO: 'ar', LB: 'ar', SY: 'ar', IQ: 'ar', YE: 'ar', LY: 'ar', SD: 'ar', PS: 'ar',
+  AE: 'ar-AE', // Emirats = variant arabe regional (fallback ar via nonExplicitSupportedLngs)
+  QA: 'ar-QA', // Qatar = variant arabe regional
   // Chinese
   CN: 'zh', TW: 'zh', HK: 'zh', MO: 'zh',
   // Japanese

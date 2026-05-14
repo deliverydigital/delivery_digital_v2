@@ -24,3 +24,12 @@ uploads/**
 *.sln
 *.sw?
 .env
+.env.*
+secrets/
+
+# Backups & secrets (added 2026-05-14)
+*.bak
+*.bak.*
+*.bak-*
+_backup_*/
+.pem
