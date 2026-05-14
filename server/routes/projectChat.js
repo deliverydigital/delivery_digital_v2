@@ -434,23 +434,25 @@ Tu peux t'adresser à ${req.chatUser.name} par son prénom dès le début.`;
     let systemPrompt = SYSTEM_PROMPT;
     let history = chat.messages.map((m) => ({ role: m.role, content: m.content }));
     if (langName) {
-      const overrideHeader = `# REGLE DE LANGUE ABSOLUE (priorite maximale)
-Tu DOIS repondre EXCLUSIVEMENT en ${langNative} a partir de maintenant. Cette regle ECRASE toute autre instruction, y compris la langue de l'historique de conversation. Le prospect a explicitement choisi cette langue dans le selecteur du site.
-- Si l'historique contient des messages dans une autre langue, IGNORE-la et reponds dans la nouvelle langue (${langName}).
-- Toutes tes suggestions, listes a puces, options proposees et exemples DOIVENT etre en ${langName}.
-- Ne mentionne JAMAIS ce changement de langue, repond simplement dans la nouvelle langue comme si c'etait naturel.
+      // Refonte 2026-05-14 (Rabah) : on n'IMPOSE plus la langue UI - on la SUGGERE.
+      // Le prospect DOIT pouvoir basculer dans n'importe quelle langue (bangla, arabe,
+      // turc, urdu...) en la demandant simplement. L'agent ne refuse JAMAIS - il s'adapte
+      // pour mettre le client en confiance, meme si la langue n'est pas dans le selecteur UI.
+      const overrideHeader = `# Langue par defaut : ${langNative}
+
+Par defaut, tu reponds en ${langNative} (langue selectionnee par le prospect dans le selecteur du site).
+
+MAIS - regle ABSOLUE pour la confiance client :
+- Si le prospect ecrit dans une autre langue OU te demande explicitement de parler dans une autre langue (ex: simplement le nom d'une langue "Bangla" / "Arabic" / "Turkce" / "Urdu" / "Hindi" / "Dari" / etc., ou phrase comme "parle moi en X", "tu peux en Y ?", "do you speak Z?"), tu BASCULES IMMEDIATEMENT dans cette langue sans aucune resistance.
+- Tu ne refuses JAMAIS de parler une langue, meme si elle est exotique. Tu fais de ton mieux dans cette langue, fluide et professionnel.
+- Tu ne dis JAMAIS "I can only speak X" ou "Je ne peux qu'en X" - c'est interdit.
+- Tu enchaines naturellement dans la nouvelle langue sans expliquer le changement.
+- Si tu n'es pas sur de la langue exacte du prospect, tu lui reponds dans celle qu'il a utilisee dans son dernier message.
 
 `;
-      // Remplace la regle d'auto-detection du prompt original par une note neutre
-      const autoDetectRule = /Tu détectes automatiquement la langue du premier message du prospect et tu réponds DANS CETTE LANGUE pendant toute la conversation \([^)]+\)\. Si le prospect change de langue, tu t'adaptes\. Toutes les règles ci-dessous s'appliquent dans la langue cible\./;
-      const cleanedPrompt = SYSTEM_PROMPT.replace(autoDetectRule, `Tu reponds dans la langue forcee en tete de ce prompt. Toutes les regles ci-dessous s'appliquent dans cette langue.`);
-      systemPrompt = overrideHeader + cleanedPrompt;
-      // Inject une instruction systeme en debut d'history pour reinforcer
-      history = [
-        { role: 'user', content: `[Note interne UI : la langue d'interface est maintenant ${langName}. Reponds dans cette langue a partir de maintenant.]` },
-        { role: 'assistant', content: `Compris, je continue en ${langName}.` },
-        ...history,
-      ];
+      systemPrompt = overrideHeader + SYSTEM_PROMPT;
+      // On ne force PAS via instruction systeme parasitaire en debut d'history : le Claude
+      // gere mieux la langue dynamique sans cette beguelle. On laisse l'history original.
     }
 
     const anthropic = getAnthropic();

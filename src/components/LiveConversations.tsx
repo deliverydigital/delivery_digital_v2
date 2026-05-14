@@ -3,7 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2, Search, RefreshCw, X as XIcon, Mail, Phone, Building2,
   MessageSquare, Circle, ChevronRight, User as UserIcon, Globe, Clock,
+  Languages,
 } from 'lucide-react';
+
+// Ouvre Google Translate web dans un nouvel onglet pour traduire un message
+// du drawer LiveConversations. Detection auto de la langue source -> francais.
+// Pratique quand un prospect ecrit en bangla / arabe / urdu / etc.
+// @author Rabah Ziane - 2026-05-14
+function openTranslate(text: string) {
+  const url = `https://translate.google.com/?sl=auto&tl=fr&op=translate&text=${encodeURIComponent(text.slice(0, 5000))}`;
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
 
 interface ConvUser {
   email: string;
@@ -333,7 +343,7 @@ function ConversationDrawer({
             </div>
           )}
           {session?.messages.map((m, i) => (
-            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} gap-1`}>
               <div
                 className={`max-w-[85%] rounded-[16px] px-3.5 py-2.5 text-[13.5px] leading-relaxed whitespace-pre-wrap ${
                   m.role === 'user'
@@ -346,6 +356,16 @@ function ConversationDrawer({
               >
                 {m.content}
               </div>
+              {/* Bouton Traduire (Google Translate web) - utile pour les messages
+                  en langues non maitrisees (bangla, arabe, urdu, etc.).
+                  @author Rabah Ziane - 2026-05-14 */}
+              <button
+                onClick={() => openTranslate(m.content)}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white border border-black/8 hover:border-black/20 hover:bg-[#F5F5F7] text-[10.5px] text-[#86868B] hover:text-[#1D1D1F] transition"
+                title="Traduire en francais via Google Translate"
+              >
+                <Languages className="h-3 w-3" /> Traduire
+              </button>
             </div>
           ))}
         </div>
