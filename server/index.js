@@ -39,6 +39,7 @@ import conversationsAdminRoutes from './routes/conversationsAdmin.js';
 import quotesAdminRoutes, { publicQuotesRouter } from './routes/quotesAdmin.js';
 import { publicRouter as conversionsPublicRouter, adminRouter as conversionsAdminRouter } from './routes/conversions.js';
 import seoAnalyticsRouter from "./routes/seoAnalytics.js";
+import googleOauthRouter from "./routes/googleOauth.js";
 // SEO agent autonome (drafts dans /admin/seo) - @author Rabah Ziane 2026-05-13
 import { startSeoAgent } from './jobs/seoAgent.js';
 import { llmsRouter } from './seo/llmsTxt.js';
@@ -148,6 +149,7 @@ app.use('/api/admin/quotes-quick', quotesAdminRoutes);
 app.use('/api/conversions', conversionsPublicRouter);
 app.use('/api/admin/conversions', conversionsAdminRouter);
 app.use("/api/admin/seo-analytics", seoAnalyticsRouter);
+app.use("/api/admin/google-oauth", googleOauthRouter);
 app.use('/devis', publicQuotesRouter);
 
 // Robots.txt (servi par express pour cohérence avec sitemap dynamique)

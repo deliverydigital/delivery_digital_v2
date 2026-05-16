@@ -48,6 +48,7 @@ type SeoOverview = {
   conversions: { total: number; byType: Record<ConvType, number>; uniqueSessions: number; conversionRate: number; denominator: number };
 };
 type FunnelStep = { key: string; label: string; value: number; available: boolean };
+type GoogleOAuthStatus = { connected: boolean; email?: string; scopes?: string[]; since?: string };
 
 const COLORS = {
   primary: '#59C7DD',
@@ -66,7 +67,20 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
   const [sources, setSources] = useState<Source[]>([]);
   const [seoOverview, setSeoOverview] = useState<SeoOverview | null>(null);
   const [funnel, setFunnel] = useState<FunnelStep[]>([]);
+  const [googleAuth, setGoogleAuth] = useState<GoogleOAuthStatus | null>(null);
+  const [oauthBanner, setOauthBanner] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get('googleConnected') === '1') {
+      setOauthBanner({ type: 'success', msg: 'Connecté à Google ! Les données GSC vont apparaître sous 30s.' });
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (p.get('googleError')) {
+      setOauthBanner({ type: 'error', msg: `Échec OAuth Google: ${p.get('googleError')}` });
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   useEffect(() => {
     if (!secret) return;
@@ -83,6 +97,7 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
           fetch(`/api/admin/seo-analytics/overview?range=${range}`, { headers: { 'x-admin-secret': secret } }).then((r) => r.json()),
           fetch(`/api/admin/seo-analytics/funnel?range=${range}`, { headers: { 'x-admin-secret': secret } }).then((r) => r.json()),
         ]);
+        const gauth = await fetch(`/api/admin/google-oauth/status?secret=${encodeURIComponent(secret)}`).then((r) => r.json()).catch(() => null);
         if (cancelled) return;
         setStats(s);
         setList(l.items || []);
@@ -90,6 +105,7 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
         setSources(src.sources || []);
         setSeoOverview(seo && !seo.error ? seo : null);
         setFunnel(fn?.steps || []);
+        setGoogleAuth(gauth);
       } catch { /* */ }
       finally { if (!cancelled) setLoading(false); }
     }
@@ -105,6 +121,13 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
   return (
     <div style={{ background: '#F6FAFA', minHeight: '100vh' }} className="p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
+        {oauthBanner && (
+          <div className="rounded-2xl p-3 mb-4 text-[13px] flex items-center gap-3" style={{ background: oauthBanner.type === 'success' ? '#E7F8EE' : '#FFE5E5', border: `1px solid ${oauthBanner.type === 'success' ? '#B4E0C6' : '#F5B5B5'}` }}>
+            <span>{oauthBanner.type === 'success' ? '✓' : '✗'}</span>
+            <span className="flex-1" style={{ color: oauthBanner.type === 'success' ? '#1F7A4D' : '#A33' }}>{oauthBanner.msg}</span>
+            <button onClick={() => setOauthBanner(null)} className="font-bold">×</button>
+          </div>
+        )}
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
@@ -188,11 +211,48 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
             </div>
 
             {seoOverview.seo.gscStatus !== 'ok' && (
-              <div className="rounded-2xl p-3 sm:p-4 mb-4 text-[12.5px] flex items-start gap-3" style={{ background: '#FFF8E1', border: '1px solid #F5D78E' }}>
+              <div className="rounded-2xl p-3 sm:p-4 mb-4 text-[12.5px] flex items-center gap-3 flex-wrap" style={{ background: '#FFF8E1', border: '1px solid #F5D78E' }}>
                 <span style={{ color: '#B26A00' }}>⚠</span>
-                <div style={{ color: '#7A4F00' }}>
-                  <strong>Google Search Console non autorisé.</strong> Ajoute <code className="font-mono text-[11.5px] bg-white/60 px-1 rounded">indexing-bot@deliverydigital-indexing.iam.gserviceaccount.com</code> comme <em>Propriétaire</em> dans Search Console → Paramètres → Utilisateurs (propriété <code>deliverydigital.fr</code>). Cache 1h après autorisation.
+                <div className="flex-1 min-w-[260px]" style={{ color: '#7A4F00' }}>
+                  {googleAuth?.connected ? (
+                    <>
+                      <strong>Google connecté ({googleAuth.email})</strong> mais GSC répond non autorisé. Vérifie que <code className="font-mono text-[11.5px] bg-white/60 px-1 rounded">{googleAuth.email}</code> est Propriétaire de la propriété <code>deliverydigital.fr</code> dans Search Console.
+                    </>
+                  ) : (
+                    <>
+                      <strong>Google Search Console non connecté.</strong> Clique sur "Connecter Google" pour autoriser l'accès aux clics &amp; impressions par page.
+                    </>
+                  )}
                 </div>
+                {!googleAuth?.connected ? (
+                  <a
+                    href={`/api/admin/google-oauth/start?secret=${encodeURIComponent(secret)}`}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[12.5px] font-semibold whitespace-nowrap"
+                    style={{ background: '#1D1D1F', color: '#fff' }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21.35 11.1h-9.17v2.93h5.27c-.23 1.5-1.7 4.4-5.27 4.4-3.17 0-5.76-2.62-5.76-5.85s2.59-5.85 5.76-5.85c1.81 0 3.02.77 3.71 1.43l2.53-2.43C16.85 4.12 14.78 3 12.18 3 7.06 3 3 7.06 3 12s4.06 9 9.18 9c5.3 0 8.82-3.72 8.82-8.96 0-.6-.07-1.06-.15-1.55z" fill="#fff"/></svg>
+                    Connecter Google
+                  </a>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      if (!confirm('Déconnecter Google ?')) return;
+                      await fetch('/api/admin/google-oauth/disconnect', { method: 'POST', headers: { 'x-admin-secret': secret } });
+                      window.location.reload();
+                    }}
+                    className="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap"
+                    style={{ background: '#fff', color: '#7A4F00', border: '1px solid #E0C76E' }}
+                  >
+                    Déconnecter
+                  </button>
+                )}
+              </div>
+            )}
+
+            {seoOverview.seo.gscStatus === 'ok' && googleAuth?.connected && (
+              <div className="rounded-2xl p-2.5 mb-4 text-[12px] flex items-center gap-2" style={{ background: '#E7F8EE', border: '1px solid #B4E0C6' }}>
+                <span style={{ color: '#1F7A4D' }}>✓</span>
+                <span style={{ color: '#1F7A4D' }}>Google Search Console connecté via <strong>{googleAuth.email}</strong>.</span>
               </div>
             )}
 
