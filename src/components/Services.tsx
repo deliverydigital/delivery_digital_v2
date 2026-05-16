@@ -593,13 +593,6 @@ function PhoneScreenMenu({ inView }: { inView: boolean }) {
 
       {/* Header: brand logo + close X (matches DrawerMenu paddingHorizontal:24, paddingTop:60, paddingBottom:24) */}
       <div className="absolute top-[28px] left-[12px] right-[12px] flex items-center justify-between">
-        <img
-          src="/de-logo.png"
-          alt="DeliveryEat"
-          className="object-contain"
-          style={{ width: 70, height: 16 }}
-          draggable={false}
-        />
         <X className="h-3.5 w-3.5 text-[#0A0A0A]" strokeWidth={2} />
       </div>
 

@@ -69,9 +69,13 @@ const FAQ_THEMES = [
   'Credit Impot Innovation',
 ];
 
+type PageStat = { path: string; clicks: number; impressions: number; position: number; ctr: number; conversions: number };
+
 export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?: boolean; sharedSecret?: string } = {}) {
   const [secret, setSecret] = useState<string | null>(() => sharedSecret || localStorage.getItem(SECRET_KEY));
   const [items, setItems] = useState<SeoItem[]>([]);
+  const [pageStats, setPageStats] = useState<Record<string, PageStat>>({});
+  const [gscStatus, setGscStatus] = useState<'ok' | 'unauthorized' | 'error' | null>(null);
   const [filterStatus, setFilterStatus] = useState<SeoStatus>('draft');
   const [filterType, setFilterType] = useState<SeoType | 'all'>('all');
   const [loading, setLoading] = useState(false);
@@ -109,6 +113,16 @@ export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?
       if (filterType !== 'all') params.set('type', filterType);
       const data = await api(`/api/admin/seo?${params}`);
       setItems(data.items || []);
+      if (filterStatus === 'published') {
+        try {
+          const ps = await api(`/api/admin/seo-analytics/page-stats?range=30`);
+          setPageStats(ps.stats || {});
+          setGscStatus(ps.gscStatus || null);
+        } catch { /* non-blocking */ }
+      } else {
+        setPageStats({});
+        setGscStatus(null);
+      }
     } catch (e: any) {
       setError(e.message || 'erreur de chargement');
       if (/unauthorized/i.test(e.message)) {
@@ -221,6 +235,8 @@ export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?
         {view === 'list' && (
           <ListView
             items={items}
+            pageStats={pageStats}
+            gscStatus={gscStatus}
             loading={loading}
             filterStatus={filterStatus}
             filterType={filterType}
@@ -341,6 +357,8 @@ export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?
         {view === 'list' && (
           <ListView
             items={items}
+            pageStats={pageStats}
+            gscStatus={gscStatus}
             loading={loading}
             filterStatus={filterStatus}
             filterType={filterType}
@@ -452,11 +470,13 @@ function NavBtn({ active, icon, onClick, label }: { active: boolean; icon: React
 /* ============== LIST VIEW ============== */
 
 function ListView({
-  items, loading, filterStatus, filterType, setFilterType,
+  items, pageStats, gscStatus, loading, filterStatus, filterType, setFilterType,
   onEdit, onSubmit, onReject, onDelete, onRefresh,
   onBulkSubmit, onPingAll, onCopyBatch,
 }: {
   items: SeoItem[];
+  pageStats: Record<string, PageStat>;
+  gscStatus: 'ok' | 'unauthorized' | 'error' | null;
   loading: boolean;
   filterStatus: SeoStatus;
   filterType: SeoType | 'all';
@@ -539,6 +559,12 @@ function ListView({
         ))}
       </div>
 
+      {filterStatus === 'published' && gscStatus && gscStatus !== 'ok' && (
+        <div className="mb-4 rounded-[14px] bg-[#FFF8E1] border border-[#F5D78E] p-3 text-[12.5px] text-[#7A4F00]">
+          ⚠ <strong>Google Search Console non autorisé</strong> — clics &amp; impressions par page indisponibles. Ajoute <code className="font-mono text-[11.5px] bg-white/60 px-1 rounded">indexing-bot@deliverydigital-indexing.iam.gserviceaccount.com</code> comme Propriétaire dans Search Console.
+        </div>
+      )}
+
       {loading ? (
         <div className="flex items-center gap-2 text-[#86868B] text-[14px]">
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -554,6 +580,7 @@ function ListView({
             <ItemCard
               key={item._id}
               item={item}
+              stats={filterStatus === 'published' ? pageStats[item.slug] : undefined}
               onEdit={onEdit}
               onSubmit={onSubmit}
               onReject={onReject}
@@ -567,9 +594,10 @@ function ListView({
 }
 
 function ItemCard({
-  item, onEdit, onSubmit, onReject, onDelete,
+  item, stats, onEdit, onSubmit, onReject, onDelete,
 }: {
   item: SeoItem;
+  stats?: PageStat;
   onEdit: (item: SeoItem) => void;
   onSubmit: (id: string) => void;
   onReject: (id: string) => void;
@@ -583,13 +611,21 @@ function ItemCard({
       className="bg-white rounded-[18px] ring-1 ring-black/5 p-5"
       style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
     >
-      <div className="flex items-start gap-3 mb-3">
+      <div className="flex items-start gap-3 mb-3 flex-wrap">
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F2EFE9] text-[10.5px] font-semibold text-[#1D1D1F]">
           {typeIcon}
           {typeLabel}
         </span>
         {item.targetKeyword && (
           <span className="text-[11.5px] text-[#86868B] truncate">cible : <strong className="text-[#1D1D1F]">{item.targetKeyword}</strong></span>
+        )}
+        {stats && (
+          <span className="ml-auto inline-flex items-center gap-2 text-[11px] text-[#1D1D1F]">
+            <span title="Clics GSC 30j" className="px-2 py-0.5 rounded-full bg-[#E8F5FB] font-semibold">{stats.clicks}<span className="ml-1 font-normal text-[#86868B]">clics</span></span>
+            <span title="Impressions GSC 30j" className="px-2 py-0.5 rounded-full bg-[#F2EFE9] font-semibold">{stats.impressions}<span className="ml-1 font-normal text-[#86868B]">imp.</span></span>
+            <span title="Position moyenne" className="px-2 py-0.5 rounded-full bg-[#F2EFE9] font-semibold">{stats.position > 0 ? `#${stats.position.toFixed(1)}` : '—'}<span className="ml-1 font-normal text-[#86868B]">pos.</span></span>
+            <span title="Conversions 30j" className="px-2 py-0.5 rounded-full bg-[#E7F8EE] font-semibold text-[#1F7A4D]">{stats.conversions}<span className="ml-1 font-normal text-[#1F7A4D]/70">conv.</span></span>
+          </span>
         )}
       </div>
 

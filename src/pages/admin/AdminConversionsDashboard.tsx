@@ -41,6 +41,14 @@ type ListItem = {
 type Source = { source: string; count: number };
 type TopPage = { page: string; count: number };
 
+type SeoOverview = {
+  range: number;
+  pages: { published: number; draft: number; rejected: number; byType: Record<string, number>; byCountry: Record<string, number>; byLang: Record<string, number> };
+  seo: { gscStatus: 'ok' | 'unauthorized' | 'error'; clicks: number; impressions: number; ctr: number; position: number; indexedUrls: number; gscMessage?: string };
+  conversions: { total: number; byType: Record<ConvType, number>; uniqueSessions: number; conversionRate: number; denominator: number };
+};
+type FunnelStep = { key: string; label: string; value: number; available: boolean };
+
 const COLORS = {
   primary: '#59C7DD',
   primaryDark: '#002731',
@@ -56,6 +64,8 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
   const [list, setList] = useState<ListItem[]>([]);
   const [pages, setPages] = useState<TopPage[]>([]);
   const [sources, setSources] = useState<Source[]>([]);
+  const [seoOverview, setSeoOverview] = useState<SeoOverview | null>(null);
+  const [funnel, setFunnel] = useState<FunnelStep[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -65,17 +75,21 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
       setLoading(true);
       try {
         const qs = `range=${range}` + (typeFilter !== 'all' ? `&type=${typeFilter}` : '');
-        const [s, l, p, src] = await Promise.all([
+        const [s, l, p, src, seo, fn] = await Promise.all([
           fetch(`/api/admin/conversions/stats?range=${range}`, { headers: { 'x-admin-secret': secret } }).then((r) => r.json()),
           fetch(`/api/admin/conversions/list?${qs}&limit=20`, { headers: { 'x-admin-secret': secret } }).then((r) => r.json()),
           fetch(`/api/admin/conversions/top-pages?range=${range}`, { headers: { 'x-admin-secret': secret } }).then((r) => r.json()),
           fetch(`/api/admin/conversions/sources?range=${range}`, { headers: { 'x-admin-secret': secret } }).then((r) => r.json()),
+          fetch(`/api/admin/seo-analytics/overview?range=${range}`, { headers: { 'x-admin-secret': secret } }).then((r) => r.json()),
+          fetch(`/api/admin/seo-analytics/funnel?range=${range}`, { headers: { 'x-admin-secret': secret } }).then((r) => r.json()),
         ]);
         if (cancelled) return;
         setStats(s);
         setList(l.items || []);
         setPages(p.pages || []);
         setSources(src.sources || []);
+        setSeoOverview(seo && !seo.error ? seo : null);
+        setFunnel(fn?.steps || []);
       } catch { /* */ }
       finally { if (!cancelled) setLoading(false); }
     }
@@ -95,10 +109,10 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
             <p className="text-[10.5px] uppercase tracking-[0.22em] font-bold mb-1" style={{ color: COLORS.accent }}>
-              Suivi des conversions
+              Performance globale
             </p>
             <h1 className="text-2xl lg:text-3xl tracking-tight font-bold" style={{ color: COLORS.primaryDark }}>
-              Dashboard
+              SEO &amp; Conversions
             </h1>
           </div>
           {/* Range selector */}
@@ -118,7 +132,99 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
           </div>
         </div>
 
-        {/* KPI cards */}
+        {/* SEO + funnel overview ---------- */}
+        {seoOverview && (
+          <>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-3">
+              <div className="rounded-2xl p-4 sm:p-5 shadow-sm" style={{ background: '#fff', borderLeft: `4px solid ${COLORS.primary}` }}>
+                <p className="text-[11px] uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: COLORS.accent }}>Pages publiées</p>
+                <p className="text-3xl font-bold" style={{ color: COLORS.primaryDark }}>{seoOverview.pages.published.toLocaleString('fr-FR')}</p>
+                <p className="text-[11px] mt-1" style={{ color: '#86868B' }}>
+                  {Object.entries(seoOverview.pages.byCountry).slice(0, 4).map(([k, v]) => `${k}:${v}`).join(' · ')}
+                </p>
+              </div>
+
+              <div className="rounded-2xl p-4 sm:p-5 shadow-sm" style={{ background: '#fff', borderLeft: `4px solid ${COLORS.accent}` }}>
+                <p className="text-[11px] uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: COLORS.accent }}>Pages indexées (GSC)</p>
+                {seoOverview.seo.gscStatus === 'ok' ? (
+                  <>
+                    <p className="text-3xl font-bold" style={{ color: COLORS.primaryDark }}>{seoOverview.seo.indexedUrls.toLocaleString('fr-FR')}</p>
+                    <p className="text-[11px] mt-1" style={{ color: '#86868B' }}>sur {seoOverview.pages.published} publiées</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xl font-bold" style={{ color: COLORS.accent }}>—</p>
+                    <p className="text-[11px] mt-1" style={{ color: '#86868B' }}>GSC non autorisée</p>
+                  </>
+                )}
+              </div>
+
+              <div className="rounded-2xl p-4 sm:p-5 shadow-sm" style={{ background: '#fff', borderLeft: `4px solid ${COLORS.secondary}` }}>
+                <p className="text-[11px] uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: COLORS.accent }}>Clics SEO {range}j</p>
+                {seoOverview.seo.gscStatus === 'ok' ? (
+                  <>
+                    <p className="text-3xl font-bold" style={{ color: COLORS.primaryDark }}>{seoOverview.seo.clicks.toLocaleString('fr-FR')}</p>
+                    <p className="text-[11px] mt-1" style={{ color: '#86868B' }}>
+                      {seoOverview.seo.impressions.toLocaleString('fr-FR')} impressions · CTR {(seoOverview.seo.ctr * 100).toFixed(2)}% · pos {seoOverview.seo.position.toFixed(1)}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xl font-bold" style={{ color: COLORS.accent }}>—</p>
+                    <p className="text-[11px] mt-1" style={{ color: '#86868B' }}>Activer Search Console API</p>
+                  </>
+                )}
+              </div>
+
+              <div className="rounded-2xl p-4 sm:p-5 shadow-sm" style={{ background: '#fff', borderLeft: `4px solid ${COLORS.primaryDark}` }}>
+                <p className="text-[11px] uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: COLORS.accent }}>Taux de conversion</p>
+                <p className="text-3xl font-bold" style={{ color: COLORS.primaryDark }}>
+                  {(seoOverview.conversions.conversionRate * 100).toFixed(1)}%
+                </p>
+                <p className="text-[11px] mt-1" style={{ color: '#86868B' }}>
+                  {seoOverview.conversions.total} conv. / {seoOverview.conversions.denominator} {seoOverview.seo.gscStatus === 'ok' && seoOverview.seo.clicks > 0 ? 'clics' : 'sessions'}
+                </p>
+              </div>
+            </div>
+
+            {seoOverview.seo.gscStatus !== 'ok' && (
+              <div className="rounded-2xl p-3 sm:p-4 mb-4 text-[12.5px] flex items-start gap-3" style={{ background: '#FFF8E1', border: '1px solid #F5D78E' }}>
+                <span style={{ color: '#B26A00' }}>⚠</span>
+                <div style={{ color: '#7A4F00' }}>
+                  <strong>Google Search Console non autorisé.</strong> Ajoute <code className="font-mono text-[11.5px] bg-white/60 px-1 rounded">indexing-bot@deliverydigital-indexing.iam.gserviceaccount.com</code> comme <em>Propriétaire</em> dans Search Console → Paramètres → Utilisateurs (propriété <code>deliverydigital.fr</code>). Cache 1h après autorisation.
+                </div>
+              </div>
+            )}
+
+            {funnel.length > 0 && (
+              <div className="rounded-2xl p-4 sm:p-5 mb-6 shadow-sm" style={{ background: '#fff' }}>
+                <p className="text-[13px] font-bold mb-3" style={{ color: COLORS.primaryDark }}>Funnel {range}j</p>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  {funnel.map((step, i) => {
+                    const maxVal = Math.max(...funnel.map((s) => s.value)) || 1;
+                    const pct = step.available ? (step.value / maxVal) * 100 : 0;
+                    return (
+                      <div key={step.key} className="rounded-xl p-3" style={{ background: i === 0 ? COLORS.textLight : '#fafcfc' }}>
+                        <p className="text-[10.5px] uppercase tracking-[0.12em] font-semibold mb-1" style={{ color: COLORS.accent }}>{step.label}</p>
+                        <p className="text-2xl font-bold" style={{ color: step.available ? COLORS.primaryDark : '#bbb' }}>
+                          {step.available ? step.value.toLocaleString('fr-FR') : '—'}
+                        </p>
+                        <div className="mt-2 h-1.5 rounded-full" style={{ background: '#eee' }}>
+                          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: COLORS.primary }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Conversions par type ---------- */}
+        <p className="text-[12px] uppercase tracking-[0.14em] font-semibold mb-2" style={{ color: COLORS.accent }}>
+          Conversions par type
+        </p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
           {kpiCards.map((c) => (
             <div
