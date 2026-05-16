@@ -278,4 +278,49 @@ router.get('/page-stats', async (req, res) => {
   }
 });
 
+/* ------------------------- GSC PAGES RAW (toutes URLs GSC, pas filtre SeoContent) ------------------------- */
+router.get('/gsc-pages', async (req, res) => {
+  const days = clampRange(req.query.range);
+  const limit = Math.max(1, Math.min(500, parseInt(req.query.limit, 10) || 100));
+  const since = rangeStart(days);
+
+  try {
+    const gsc = await querySearchAnalytics({ days, dimensions: ['page'], rowLimit: 5000 });
+    if (!gsc.ok) {
+      return res.json({ range: days, gscStatus: gsc.status, pages: [], message: gsc.message });
+    }
+
+    const convAgg = await Conversion.aggregate([
+      { $match: { createdAt: { $gte: since } } },
+      { $group: { _id: '$page', conversions: { $sum: 1 } } },
+    ]);
+    const convMap = Object.fromEntries(convAgg.map((x) => [x._id, x.conversions]));
+
+    const pages = gsc.rows.map((r) => {
+      const url = r.keys[0];
+      let pathname = url; let host = '';
+      try {
+        const u = new URL(url);
+        pathname = u.pathname || '/';
+        host = u.hostname || '';
+      } catch { /* ignore */ }
+      return {
+        url,
+        host,
+        path: pathname,
+        clicks: r.clicks || 0,
+        impressions: r.impressions || 0,
+        ctr: r.ctr || 0,
+        position: r.position || 0,
+        conversions: convMap[pathname] || 0,
+      };
+    });
+
+    pages.sort((a, b) => b.clicks - a.clicks || b.impressions - a.impressions);
+    res.json({ range: days, gscStatus: 'ok', pages: pages.slice(0, limit), total: pages.length });
+  } catch (e) {
+    res.status(500).json({ error: 'gsc_pages_failed', message: String(e.message || e) });
+  }
+});
+
 export default router;

@@ -7,6 +7,9 @@ import Simulator from './components/Simulator';
 import ProjectChat from './components/ProjectChat';
 import SeoAdmin from './components/SeoAdmin';
 import PublicSeoPage from './components/PublicSeoPage';
+import ServicesHub from './components/ServicesHub';
+import CountryHub from './components/CountryHub';
+import StickyDiscutonsBar from './components/StickyDiscutonsBar';
 import ProspectAdmin from './components/ProspectAdmin';
 import AdminPanel from './components/AdminPanel';
 import Contact from './components/Contact';
@@ -33,6 +36,7 @@ function App() {
   const [authKey, setAuthKey] = useState(0);
   const [currentPage, setCurrentPage] = useState('home');
   const [seoSlug, setSeoSlug] = useState<{ type: 'services' | 'blog'; slug: string } | null>(null);
+  const [countryHubCode, setCountryHubCode] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = i18n.language === 'fr'
@@ -68,6 +72,13 @@ function App() {
       setCurrentPage('chat');
     } else if (pathname === '/admin' || pathname.startsWith('/admin/')) {
       setCurrentPage('admin-panel');
+    } else if (pathname === '/services' || pathname === '/services/') {
+      setCurrentPage('services-hub');
+    } else if (pathname.startsWith('/services/country/')) {
+      // Country hub route - intentional fall-through to next block
+      const code = pathname.slice('/services/country/'.length).replace(/\/$/, '');
+      setCountryHubCode(code);
+      setCurrentPage('country-hub');
     } else if (pathname.startsWith('/services/')) {
       setSeoSlug({ type: 'services', slug: pathname.slice('/services/'.length) });
       setCurrentPage('seo-public');
@@ -168,6 +179,32 @@ function App() {
     return <AdminPanel />;
   }
 
+  // Services hub - liste pays
+  if (currentPage === 'services-hub') {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <ServicesHub />
+        <ConsentBanner />
+        <ScrollToTop />
+        <LegalModals />
+        <StickyDiscutonsBar source="services-hub" />
+      </div>
+    );
+  }
+
+  // Country hub - liste villes/services d'un pays
+  if (currentPage === 'country-hub' && countryHubCode) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <CountryHub code={countryHubCode} />
+        <ConsentBanner />
+        <ScrollToTop />
+        <LegalModals />
+        <StickyDiscutonsBar source="country-hub" />
+      </div>
+    );
+  }
+
   // SEO public page (city-service or article)
   if (currentPage === 'seo-public' && seoSlug) {
     return (
@@ -177,9 +214,10 @@ function App() {
           <PublicSeoPage slug={seoSlug.slug} />
         </main>
         <Footer />
-      <ConsentBanner />
+        <ConsentBanner />
         <ScrollToTop />
         <LegalModals />
+        <StickyDiscutonsBar source={seoSlug.type === 'article' ? 'blog' : 'service'} />
       </div>
     );
   }
@@ -226,7 +264,7 @@ function App() {
       <ScrollToTop />
       <ProjectSubmission />
       <LegalModals />
-      <ConsentBanner />
+      <StickyDiscutonsBar source="home" />
     </div>
   );
 }

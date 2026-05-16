@@ -20,11 +20,18 @@ interface SeoItem {
 }
 
 interface RelatedItem { slug: string; title: string; type: string; city?: string; service?: string }
+interface HubRelated {
+  relatedCities: Array<{ slug: string; title: string; city: string }>;
+  relatedServices: Array<{ slug: string; title: string; service: string }>;
+  country?: string;
+  countryName?: string;
+}
 
 export default function PublicSeoPage({ slug }: { slug: string }) {
   const { t } = useTranslation();
   const [item, setItem] = useState<SeoItem | null>(null);
   const [related, setRelated] = useState<RelatedItem[]>([]);
+  const [hubRelated, setHubRelated] = useState<HubRelated | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -65,6 +72,12 @@ export default function PublicSeoPage({ slug }: { slug: string }) {
         const others = all.filter((x: any) => !sameService.includes(x) && !sameCity.includes(x));
         const rel = [...sameService.slice(0, 4), ...sameCity.slice(0, 3), ...others.slice(0, 3)].slice(0, 8);
         setRelated(rel);
+
+        // Maillage interne v2 : utilise /api/seo-hubs/related (exact match city+service+country)
+        fetch(`/api/seo-hubs/related/${encodeURIComponent(slug)}`)
+          .then((r) => r.json())
+          .then((d) => { if (!cancelled) setHubRelated(d); })
+          .catch(() => { /* ignore */ });
 
         // Meta tags + JSON-LD
         document.title = it.metaTitle || it.title;
@@ -192,8 +205,48 @@ export default function PublicSeoPage({ slug }: { slug: string }) {
         </a>
       </div>
 
-      {/* Maillage interne : autres pages */}
-      {related.length > 0 && (
+      {/* Maillage interne v2 : par service + par ville (exact match) */}
+      {hubRelated && (hubRelated.relatedCities.length > 0 || hubRelated.relatedServices.length > 0) ? (
+        <aside className="mt-12 pt-10 border-t border-black/8 grid sm:grid-cols-2 gap-6">
+          {hubRelated.relatedCities.length > 0 && (
+            <div>
+              <h4 className="text-[14px] font-semibold uppercase tracking-wider text-[#86868B] mb-3">Le même service dans d'autres villes</h4>
+              <ul className="space-y-1.5">
+                {hubRelated.relatedCities.map((r) => (
+                  <li key={r.slug}>
+                    <a href={`/services/${r.slug}`} className="group flex items-start gap-2 p-2 rounded-[10px] bg-[#FAFAFA] hover:bg-[#F2EFE9] transition-colors">
+                      <MapPin className="h-3.5 w-3.5 text-[#86868B] mt-0.5 flex-shrink-0 group-hover:text-[#1D1D1F]" />
+                      <span className="text-[13.5px] text-[#1D1D1F] leading-snug">{r.city || r.title}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {hubRelated.relatedServices.length > 0 && (
+            <div>
+              <h4 className="text-[14px] font-semibold uppercase tracking-wider text-[#86868B] mb-3">Autres services dans cette ville</h4>
+              <ul className="space-y-1.5">
+                {hubRelated.relatedServices.map((r) => (
+                  <li key={r.slug}>
+                    <a href={`/services/${r.slug}`} className="group flex items-start gap-2 p-2 rounded-[10px] bg-[#FAFAFA] hover:bg-[#F2EFE9] transition-colors">
+                      <ChevronRight className="h-3.5 w-3.5 text-[#86868B] mt-0.5 flex-shrink-0 group-hover:text-[#1D1D1F]" />
+                      <span className="text-[13.5px] text-[#1D1D1F] leading-snug">{r.title}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {hubRelated.countryName && (
+            <div className="sm:col-span-2 pt-4 border-t border-black/5 text-center">
+              <a href={`/services/country/${(hubRelated.country || '').toLowerCase()}`} className="inline-flex items-center gap-1.5 text-[13.5px] text-[#0066CC] hover:underline">
+                Voir tous nos services au {hubRelated.countryName} <ChevronRight className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          )}
+        </aside>
+      ) : related.length > 0 && (
         <aside className="mt-12 pt-10 border-t border-black/8">
           <h4 className="text-[14px] font-semibold uppercase tracking-wider text-[#86868B] mb-4">A explorer aussi</h4>
           <div className="grid sm:grid-cols-2 gap-2">
@@ -319,6 +372,35 @@ function MarkdownView({ body }: { body: string }) {
       );
     } else if (/^[-*]\s+/.test(line)) {
       listBuf.push(line.replace(/^[-*]\s+/, ''));
+    } else if (line.startsWith('> ')) {
+      flushList();
+      const inner = line.replace(/^>\s+/, '');
+      // Si le blockquote contient un lien (CTA), render comme une carte CTA proeminente
+      const ctaMatch = inner.match(/^\*\*\[([^\]]+)\]\(([^)]+)\)\*\*\s*[-–—]?\s*(.*)$/);
+      if (ctaMatch) {
+        const [, label, href, desc] = ctaMatch;
+        const isExternal = href.startsWith('http');
+        out.push(
+          <div key={key++} className="my-6 rounded-[16px] p-4 sm:p-5 bg-[#F2EFE9] ring-1 ring-black/5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <a
+              href={href}
+              target={isExternal ? '_blank' : undefined}
+              rel={isExternal ? 'noopener noreferrer' : undefined}
+              className="inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-[#1D1D1F] text-white text-[14px] font-semibold hover:bg-[#3C3C43] transition-colors whitespace-nowrap"
+            >
+              {label}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="ml-1.5"><path d="M5 12h14M13 5l7 7-7 7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </a>
+            {desc && <span className="text-[14px] text-[#1D1D1F]/75">{renderInline(desc)}</span>}
+          </div>
+        );
+      } else {
+        out.push(
+          <blockquote key={key++} className="my-4 pl-4 border-l-2 border-[#1D1D1F]/15 text-[15.5px] text-[#1D1D1F]/75 italic">
+            {renderInline(inner)}
+          </blockquote>
+        );
+      }
     } else {
       flushList();
       out.push(
@@ -345,7 +427,8 @@ function renderInline(text: string): React.ReactNode {
       const end = text.indexOf('**', i + 2);
       if (end !== -1) {
         flushBuf();
-        parts.push(<strong key={key++} className="font-semibold text-[#1D1D1F]">{text.slice(i + 2, end)}</strong>);
+        // Recursively render inner text so links/etc inside bold work
+        parts.push(<strong key={key++} className="font-semibold text-[#1D1D1F]">{renderInline(text.slice(i + 2, end))}</strong>);
         i = end + 2;
         continue;
       }

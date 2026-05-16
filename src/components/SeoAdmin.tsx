@@ -21,6 +21,8 @@ interface SeoItem {
   body: string;
   city?: string;
   service?: string;
+  country?: string;
+  lang?: string;
   faqItems?: Array<{ question: string; answer: string }>;
   createdAt: string;
   publishedAt?: string;
@@ -621,6 +623,8 @@ function ListView({
 type SortKey = 'title' | 'clicks' | 'impressions' | 'position' | 'ctr' | 'conversions';
 type SortDir = 'asc' | 'desc';
 
+type PerfFilter = 'all' | 'top_positions' | 'with_clicks' | 'with_impressions' | 'no_impressions';
+
 function PublishedTable({ items, pageStats, onEdit }: {
   items: SeoItem[];
   pageStats: Record<string, PageStat>;
@@ -629,10 +633,22 @@ function PublishedTable({ items, pageStats, onEdit }: {
   const [sortKey, setSortKey] = useState<SortKey>('clicks');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [search, setSearch] = useState('');
+  const [perfFilter, setPerfFilter] = useState<PerfFilter>('all');
+  const [countryFilter, setCountryFilter] = useState<string>('all');
+
+  const countries = Array.from(new Set(items.map((i: any) => i.country).filter(Boolean))).sort() as string[];
 
   const rows = items
     .map((it) => ({ item: it, stats: pageStats[it.slug] || { path: '', clicks: 0, impressions: 0, position: 0, ctr: 0, conversions: 0 } }))
-    .filter((r) => !search.trim() || r.item.title.toLowerCase().includes(search.toLowerCase()) || r.item.slug.toLowerCase().includes(search.toLowerCase()));
+    .filter((r) => !search.trim() || r.item.title.toLowerCase().includes(search.toLowerCase()) || r.item.slug.toLowerCase().includes(search.toLowerCase()))
+    .filter((r) => {
+      if (perfFilter === 'top_positions') return r.stats.impressions > 0;
+      if (perfFilter === 'with_clicks') return r.stats.clicks > 0;
+      if (perfFilter === 'with_impressions') return r.stats.impressions > 0;
+      if (perfFilter === 'no_impressions') return r.stats.impressions === 0;
+      return true;
+    })
+    .filter((r) => countryFilter === 'all' || (r.item as any).country === countryFilter);
 
   rows.sort((a, b) => {
     let av: number | string = 0; let bv: number | string = 0;
@@ -661,17 +677,49 @@ function PublishedTable({ items, pageStats, onEdit }: {
 
   return (
     <div className="bg-white rounded-[18px] ring-1 ring-black/5 overflow-hidden">
-      <div className="p-3 border-b border-black/5 flex items-center gap-3 flex-wrap">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher titre / slug..."
-          className="px-3 py-1.5 rounded-full bg-[#F5F5F7] text-[12.5px] outline-none focus:ring-1 focus:ring-[#1D1D1F] flex-1 min-w-[200px]"
-        />
-        <span className="text-[12px] text-[#86868B]">
-          {rows.length} pages · {totalClicks} clics · {totalImp} imp. · {totalConv} conv.
-        </span>
+      <div className="p-3 border-b border-black/5 flex flex-col gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          {([
+            ['all', 'Toutes'],
+            ['top_positions', '🎯 Mieux positionnées'],
+            ['with_clicks', 'Avec clics'],
+            ['with_impressions', 'Avec impressions'],
+            ['no_impressions', 'Pas encore vues'],
+          ] as const).map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => {
+                setPerfFilter(k);
+                if (k === 'top_positions') { setSortKey('position'); setSortDir('asc'); }
+              }}
+              className={`px-3 py-1 rounded-full text-[11.5px] font-medium transition-colors ${perfFilter === k ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F] hover:ring-black/20'}`}
+            >
+              {label}
+            </button>
+          ))}
+          {countries.length > 1 && (
+            <select
+              value={countryFilter}
+              onChange={(e) => setCountryFilter(e.target.value)}
+              className="px-3 py-1 rounded-full bg-white ring-1 ring-black/8 text-[11.5px] outline-none cursor-pointer"
+            >
+              <option value="all">Tous pays</option>
+              {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher titre / slug..."
+            className="px-3 py-1.5 rounded-full bg-[#F5F5F7] text-[12.5px] outline-none focus:ring-1 focus:ring-[#1D1D1F] flex-1 min-w-[200px]"
+          />
+          <span className="text-[12px] text-[#86868B]">
+            {rows.length} pages · {totalClicks} clics · {totalImp} imp. · {totalConv} conv.
+          </span>
+        </div>
       </div>
       {totalImp > 0 && totalClicks === 0 && (
         <div className="px-3 py-2 text-[11.5px] text-[#7A4F00] bg-[#FFF8E1] border-b border-[#F5D78E]">
@@ -701,7 +749,16 @@ function PublishedTable({ items, pageStats, onEdit }: {
                 <td className="p-3 text-right tabular-nums font-semibold" style={{ color: r.stats.clicks > 0 ? '#1D1D1F' : '#C7C7CC' }}>{r.stats.clicks}</td>
                 <td className="p-3 text-right tabular-nums" style={{ color: r.stats.impressions > 0 ? '#1D1D1F' : '#C7C7CC' }}>{r.stats.impressions}</td>
                 <td className="p-3 text-right tabular-nums" style={{ color: r.stats.ctr > 0 ? '#1D1D1F' : '#C7C7CC' }}>{r.stats.ctr > 0 ? `${(r.stats.ctr * 100).toFixed(1)}%` : '—'}</td>
-                <td className="p-3 text-right tabular-nums" style={{ color: r.stats.position > 0 ? '#1D1D1F' : '#C7C7CC' }}>{r.stats.position > 0 ? `#${r.stats.position.toFixed(1)}` : '—'}</td>
+                <td className="p-3 text-right tabular-nums font-semibold">
+                  {r.stats.position > 0 ? (
+                    <span className="inline-block px-2 py-0.5 rounded-full text-[11px]" style={{
+                      background: r.stats.position <= 3 ? '#E7F8EE' : r.stats.position <= 10 ? '#E8F5FB' : r.stats.position <= 20 ? '#FFF4E0' : '#F5F5F7',
+                      color: r.stats.position <= 3 ? '#1F7A4D' : r.stats.position <= 10 ? '#1F5865' : r.stats.position <= 20 ? '#B26A00' : '#86868B',
+                    }}>
+                      #{r.stats.position.toFixed(1)}
+                    </span>
+                  ) : <span className="text-[#C7C7CC]">—</span>}
+                </td>
                 <td className="p-3 text-right tabular-nums font-semibold" style={{ color: r.stats.conversions > 0 ? '#1F7A4D' : '#C7C7CC' }}>{r.stats.conversions}</td>
                 <td className="p-3 whitespace-nowrap">
                   <button onClick={() => onEdit(r.item)} title="Editer" className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white ring-1 ring-black/8 text-[11px] text-[#1D1D1F] hover:ring-black/20">

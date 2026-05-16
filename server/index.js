@@ -39,6 +39,7 @@ import conversationsAdminRoutes from './routes/conversationsAdmin.js';
 import quotesAdminRoutes, { publicQuotesRouter } from './routes/quotesAdmin.js';
 import { publicRouter as conversionsPublicRouter, adminRouter as conversionsAdminRouter } from './routes/conversions.js';
 import seoAnalyticsRouter from "./routes/seoAnalytics.js";
+import seoHubsRouter from "./routes/seoHubs.js";
 import googleOauthRouter from "./routes/googleOauth.js";
 // SEO agent autonome (drafts dans /admin/seo) - @author Rabah Ziane 2026-05-13
 import { startSeoAgent } from './jobs/seoAgent.js';
@@ -149,6 +150,7 @@ app.use('/api/admin/quotes-quick', quotesAdminRoutes);
 app.use('/api/conversions', conversionsPublicRouter);
 app.use('/api/admin/conversions', conversionsAdminRouter);
 app.use("/api/admin/seo-analytics", seoAnalyticsRouter);
+app.use("/api/seo-hubs", seoHubsRouter);
 app.use("/api/admin/google-oauth", googleOauthRouter);
 app.use('/devis', publicQuotesRouter);
 
@@ -215,7 +217,18 @@ app.get('/sitemap.xml', async (req, res) => {
     const urls = [
       { loc: 'https://deliverydigital.fr/', priority: '1.0', changefreq: 'weekly', lastmod: today },
       { loc: 'https://deliverydigital.fr/discutons', priority: '0.9', changefreq: 'weekly', lastmod: today },
+      { loc: 'https://deliverydigital.fr/services', priority: '0.95', changefreq: 'weekly', lastmod: today },
+      { loc: 'https://deliverydigital.fr/formation', priority: '0.7', changefreq: 'monthly', lastmod: today },
     ];
+    try {
+      const { SeoContent: SC2 } = await import('./models/index.js');
+      const distinctCountries = await SC2.distinct('country', { status: 'published', type: 'city-service' });
+      for (const c of distinctCountries) {
+        if (c && c !== 'unknown') {
+          urls.push({ loc: `https://deliverydigital.fr/services/country/${c.toLowerCase()}`, priority: '0.85', changefreq: 'weekly', lastmod: today });
+        }
+      }
+    } catch { /* ignore */ }
 
     for (const it of items) {
       const path = it.type === 'article' ? `/blog/${it.slug}` : `/services/${it.slug}`;
