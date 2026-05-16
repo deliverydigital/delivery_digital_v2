@@ -76,6 +76,7 @@ export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?
   const [items, setItems] = useState<SeoItem[]>([]);
   const [pageStats, setPageStats] = useState<Record<string, PageStat>>({});
   const [gscStatus, setGscStatus] = useState<'ok' | 'unauthorized' | 'error' | null>(null);
+  const [displayMode, setDisplayMode] = useState<'cards' | 'table'>(() => (localStorage.getItem('dd_seo_display_mode') as 'cards' | 'table') || 'cards');
   const [filterStatus, setFilterStatus] = useState<SeoStatus>('draft');
   const [filterType, setFilterType] = useState<SeoType | 'all'>('all');
   const [loading, setLoading] = useState(false);
@@ -110,6 +111,7 @@ export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?
     try {
       const params = new URLSearchParams();
       params.set('status', filterStatus);
+      params.set('limit', '2000');
       if (filterType !== 'all') params.set('type', filterType);
       const data = await api(`/api/admin/seo?${params}`);
       setItems(data.items || []);
@@ -237,6 +239,8 @@ export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?
             items={items}
             pageStats={pageStats}
             gscStatus={gscStatus}
+            displayMode={displayMode}
+            setDisplayMode={(m) => { setDisplayMode(m); localStorage.setItem('dd_seo_display_mode', m); }}
             loading={loading}
             filterStatus={filterStatus}
             filterType={filterType}
@@ -359,6 +363,8 @@ export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?
             items={items}
             pageStats={pageStats}
             gscStatus={gscStatus}
+            displayMode={displayMode}
+            setDisplayMode={(m) => { setDisplayMode(m); localStorage.setItem('dd_seo_display_mode', m); }}
             loading={loading}
             filterStatus={filterStatus}
             filterType={filterType}
@@ -470,13 +476,15 @@ function NavBtn({ active, icon, onClick, label }: { active: boolean; icon: React
 /* ============== LIST VIEW ============== */
 
 function ListView({
-  items, pageStats, gscStatus, loading, filterStatus, filterType, setFilterType,
+  items, pageStats, gscStatus, displayMode, setDisplayMode, loading, filterStatus, filterType, setFilterType,
   onEdit, onSubmit, onReject, onDelete, onRefresh,
   onBulkSubmit, onPingAll, onCopyBatch,
 }: {
   items: SeoItem[];
   pageStats: Record<string, PageStat>;
   gscStatus: 'ok' | 'unauthorized' | 'error' | null;
+  displayMode: 'cards' | 'table';
+  setDisplayMode: (m: 'cards' | 'table') => void;
   loading: boolean;
   filterStatus: SeoStatus;
   filterType: SeoType | 'all';
@@ -561,7 +569,21 @@ function ListView({
 
       {filterStatus === 'published' && gscStatus && gscStatus !== 'ok' && (
         <div className="mb-4 rounded-[14px] bg-[#FFF8E1] border border-[#F5D78E] p-3 text-[12.5px] text-[#7A4F00]">
-          ⚠ <strong>Google Search Console non autorisé</strong> — clics &amp; impressions par page indisponibles. Ajoute <code className="font-mono text-[11.5px] bg-white/60 px-1 rounded">indexing-bot@deliverydigital-indexing.iam.gserviceaccount.com</code> comme Propriétaire dans Search Console.
+          ⚠ <strong>Google Search Console non connecté</strong> — clics &amp; impressions par page indisponibles. Connecte Google dans l'onglet <em>Dashboard</em>.
+        </div>
+      )}
+
+      {filterStatus === 'published' && items.length > 0 && (
+        <div className="mb-3 flex items-center gap-2">
+          <span className="text-[12px] text-[#86868B] mr-1">Affichage :</span>
+          <button
+            onClick={() => setDisplayMode('cards')}
+            className={`px-3 py-1.5 rounded-full text-[12.5px] font-medium transition-colors ${displayMode === 'cards' ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F] hover:ring-black/20'}`}
+          >Cartes</button>
+          <button
+            onClick={() => setDisplayMode('table')}
+            className={`px-3 py-1.5 rounded-full text-[12.5px] font-medium transition-colors ${displayMode === 'table' ? 'bg-[#1D1D1F] text-white' : 'bg-white ring-1 ring-black/8 text-[#1D1D1F] hover:ring-black/20'}`}
+          >Tableau triable ({items.length})</button>
         </div>
       )}
 
@@ -574,6 +596,8 @@ function ListView({
         <div className="bg-white rounded-[18px] ring-1 ring-black/5 p-10 text-center">
           <p className="text-[#86868B] text-[14px]">Rien a afficher pour ce filtre.</p>
         </div>
+      ) : filterStatus === 'published' && displayMode === 'table' ? (
+        <PublishedTable items={items} pageStats={pageStats} onEdit={onEdit} />
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
@@ -590,6 +614,115 @@ function ListView({
         </div>
       )}
     </>
+  );
+}
+
+/* ============== PUBLISHED TABLE (sortable) ============== */
+type SortKey = 'title' | 'clicks' | 'impressions' | 'position' | 'ctr' | 'conversions';
+type SortDir = 'asc' | 'desc';
+
+function PublishedTable({ items, pageStats, onEdit }: {
+  items: SeoItem[];
+  pageStats: Record<string, PageStat>;
+  onEdit: (item: SeoItem) => void;
+}) {
+  const [sortKey, setSortKey] = useState<SortKey>('clicks');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [search, setSearch] = useState('');
+
+  const rows = items
+    .map((it) => ({ item: it, stats: pageStats[it.slug] || { path: '', clicks: 0, impressions: 0, position: 0, ctr: 0, conversions: 0 } }))
+    .filter((r) => !search.trim() || r.item.title.toLowerCase().includes(search.toLowerCase()) || r.item.slug.toLowerCase().includes(search.toLowerCase()));
+
+  rows.sort((a, b) => {
+    let av: number | string = 0; let bv: number | string = 0;
+    if (sortKey === 'title') { av = a.item.title.toLowerCase(); bv = b.item.title.toLowerCase(); }
+    else if (sortKey === 'position') {
+      av = a.stats.position > 0 ? a.stats.position : 999;
+      bv = b.stats.position > 0 ? b.stats.position : 999;
+    } else {
+      av = (a.stats as any)[sortKey] || 0;
+      bv = (b.stats as any)[sortKey] || 0;
+    }
+    if (av === bv) return 0;
+    const cmp = av > bv ? 1 : -1;
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
+
+  const setSort = (k: SortKey) => {
+    if (sortKey === k) setSortDir((d) => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(k); setSortDir(k === 'position' || k === 'title' ? 'asc' : 'desc'); }
+  };
+
+  const arrow = (k: SortKey) => sortKey !== k ? '' : sortDir === 'asc' ? ' ↑' : ' ↓';
+  const totalClicks = rows.reduce((s, r) => s + r.stats.clicks, 0);
+  const totalImp = rows.reduce((s, r) => s + r.stats.impressions, 0);
+  const totalConv = rows.reduce((s, r) => s + r.stats.conversions, 0);
+
+  return (
+    <div className="bg-white rounded-[18px] ring-1 ring-black/5 overflow-hidden">
+      <div className="p-3 border-b border-black/5 flex items-center gap-3 flex-wrap">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher titre / slug..."
+          className="px-3 py-1.5 rounded-full bg-[#F5F5F7] text-[12.5px] outline-none focus:ring-1 focus:ring-[#1D1D1F] flex-1 min-w-[200px]"
+        />
+        <span className="text-[12px] text-[#86868B]">
+          {rows.length} pages · {totalClicks} clics · {totalImp} imp. · {totalConv} conv.
+        </span>
+      </div>
+      {totalImp > 0 && totalClicks === 0 && (
+        <div className="px-3 py-2 text-[11.5px] text-[#7A4F00] bg-[#FFF8E1] border-b border-[#F5D78E]">
+          ℹ Les pages city-service commencent à apparaître dans Google ({totalImp} impressions) mais n'ont pas encore généré de clics. Trie par <strong>Imp.</strong> pour voir celles qui se positionnent.
+        </div>
+      )}
+      <div className="overflow-x-auto">
+        <table className="w-full text-[12.5px]">
+          <thead className="bg-[#FAFAFC] text-[#86868B]">
+            <tr>
+              <th onClick={() => setSort('title')} className="text-left p-3 font-semibold cursor-pointer hover:text-[#1D1D1F]">Page{arrow('title')}</th>
+              <th onClick={() => setSort('clicks')} className="text-right p-3 font-semibold cursor-pointer hover:text-[#1D1D1F] whitespace-nowrap">Clics{arrow('clicks')}</th>
+              <th onClick={() => setSort('impressions')} className="text-right p-3 font-semibold cursor-pointer hover:text-[#1D1D1F] whitespace-nowrap">Imp.{arrow('impressions')}</th>
+              <th onClick={() => setSort('ctr')} className="text-right p-3 font-semibold cursor-pointer hover:text-[#1D1D1F] whitespace-nowrap">CTR{arrow('ctr')}</th>
+              <th onClick={() => setSort('position')} className="text-right p-3 font-semibold cursor-pointer hover:text-[#1D1D1F] whitespace-nowrap">Pos.{arrow('position')}</th>
+              <th onClick={() => setSort('conversions')} className="text-right p-3 font-semibold cursor-pointer hover:text-[#1D1D1F] whitespace-nowrap">Conv.{arrow('conversions')}</th>
+              <th className="p-3"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-black/5">
+            {rows.map((r) => (
+              <tr key={r.item._id} className="hover:bg-[#FAFAFC]">
+                <td className="p-3 max-w-[420px]">
+                  <div className="font-semibold text-[#1D1D1F] truncate">{r.item.title}</div>
+                  <div className="text-[11px] text-[#86868B] font-mono truncate">{r.stats.path || `/services/${r.item.slug}`}</div>
+                </td>
+                <td className="p-3 text-right tabular-nums font-semibold" style={{ color: r.stats.clicks > 0 ? '#1D1D1F' : '#C7C7CC' }}>{r.stats.clicks}</td>
+                <td className="p-3 text-right tabular-nums" style={{ color: r.stats.impressions > 0 ? '#1D1D1F' : '#C7C7CC' }}>{r.stats.impressions}</td>
+                <td className="p-3 text-right tabular-nums" style={{ color: r.stats.ctr > 0 ? '#1D1D1F' : '#C7C7CC' }}>{r.stats.ctr > 0 ? `${(r.stats.ctr * 100).toFixed(1)}%` : '—'}</td>
+                <td className="p-3 text-right tabular-nums" style={{ color: r.stats.position > 0 ? '#1D1D1F' : '#C7C7CC' }}>{r.stats.position > 0 ? `#${r.stats.position.toFixed(1)}` : '—'}</td>
+                <td className="p-3 text-right tabular-nums font-semibold" style={{ color: r.stats.conversions > 0 ? '#1F7A4D' : '#C7C7CC' }}>{r.stats.conversions}</td>
+                <td className="p-3 whitespace-nowrap">
+                  <button onClick={() => onEdit(r.item)} title="Editer" className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white ring-1 ring-black/8 text-[11px] text-[#1D1D1F] hover:ring-black/20">
+                    <Edit3 className="h-3 w-3" />
+                  </button>
+                  <a
+                    href={r.item.type === 'article' ? `/blog/${r.item.slug}` : `/services/${r.item.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Voir la page"
+                    className="ml-1 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white ring-1 ring-black/8 text-[11px] text-[#1D1D1F] hover:ring-black/20"
+                  >
+                    <Eye className="h-3 w-3" />
+                  </a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
