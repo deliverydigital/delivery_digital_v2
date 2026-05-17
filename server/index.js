@@ -40,6 +40,7 @@ import quotesAdminRoutes, { publicQuotesRouter } from './routes/quotesAdmin.js';
 import { publicRouter as conversionsPublicRouter, adminRouter as conversionsAdminRouter } from './routes/conversions.js';
 import seoAnalyticsRouter from "./routes/seoAnalytics.js";
 import rankingsRouter from "./routes/rankings.js";
+import backlinksRouter from "./routes/backlinks.js";
 import seoHubsRouter from "./routes/seoHubs.js";
 import googleOauthRouter from "./routes/googleOauth.js";
 // SEO agent autonome (drafts dans /admin/seo) - @author Rabah Ziane 2026-05-13
@@ -152,6 +153,7 @@ app.use('/api/conversions', conversionsPublicRouter);
 app.use('/api/admin/conversions', conversionsAdminRouter);
 app.use("/api/admin/seo-analytics", seoAnalyticsRouter);
 app.use("/api/admin/rankings", rankingsRouter);
+app.use("/api/admin/backlinks", backlinksRouter);
 app.use("/api/seo-hubs", seoHubsRouter);
 app.use("/api/admin/google-oauth", googleOauthRouter);
 app.use('/devis', publicQuotesRouter);

@@ -3,6 +3,7 @@ import { LayoutDashboard, Users, Sparkles, LogOut, MessageSquare, Loader2, FileT
 import AIOrb from './AIOrb';
 import SeoAdmin from './SeoAdmin';
 import RankingsTab from './admin/RankingsTab';
+import LinkBuildingTab from './admin/LinkBuildingTab';
 import ProspectAdmin from './ProspectAdmin';
 import LiveConversations from './LiveConversations';
 import QuoteAdmin from './QuoteAdmin';
@@ -14,7 +15,7 @@ const SECRET_KEY = 'dd_seo_admin_secret';
 // Fusion 2026-05-14 (Rabah) : ajout onglets 'formations' (TrainingProgramsManagement)
 // et 'gestion' (lien vers ancien AdminDashboard /?admin=true pour Clients/Projets/Taches
 // en attendant migration complete demain).
-type Section = 'overview' | 'conversations' | 'prospects' | 'quotes' | 'seo' | 'dashboard' | 'formations' | 'gestion' | 'rankings';
+type Section = 'overview' | 'conversations' | 'prospects' | 'quotes' | 'seo' | 'dashboard' | 'formations' | 'gestion' | 'rankings' | 'linkbuilding';
 
 export default function AdminPanel() {
   const [secret, setSecret] = useState<string | null>(() => localStorage.getItem(SECRET_KEY));
@@ -112,6 +113,7 @@ export default function AdminPanel() {
           <SideBtn active={section === 'formations'} icon={<GraduationCap className="h-4 w-4" />} label="Formations" onClick={() => setSection('formations')} />
           <SideBtn active={section === 'dashboard'} icon={<BarChart3 className="h-4 w-4" />} label="Dashboard" onClick={() => setSection('dashboard')} />
           <SideBtn active={section === 'rankings'} icon={<BarChart3 className="h-4 w-4" />} label="Mots-clés SERP" onClick={() => setSection('rankings')} />
+          <SideBtn active={section === 'linkbuilding'} icon={<ExternalLink className="h-4 w-4" />} label="Link Building" onClick={() => setSection('linkbuilding')} />
           <SideBtn active={section === 'seo'} icon={<Sparkles className="h-4 w-4" />} label="SEO Content" onClick={() => setSection('seo')} />
           <SideBtn active={section === 'gestion'} icon={<FolderOpen className="h-4 w-4" />} label="Projets & Clients" onClick={() => setSection('gestion')} />
         </nav>
@@ -145,6 +147,7 @@ export default function AdminPanel() {
         {section === 'quotes' && <QuoteAdmin secret={secret} />}
         {section === 'dashboard' && <AdminConversionsDashboard secret={secret} />}
         {section === 'rankings' && <RankingsTab secret={secret} />}
+        {section === 'linkbuilding' && <LinkBuildingTab secret={secret} />}
         {section === 'seo' && <SeoAdmin embedded sharedSecret={secret} />}
         {section === 'formations' && <TrainingProgramsManagement />}
         {section === 'gestion' && <GestionPlaceholder />}
