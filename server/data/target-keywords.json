@@ -1,0 +1,132 @@
+{
+  "packs": [
+    {
+      "id": "fr-agences-villes",
+      "name": "🇫🇷 Agences web — top villes France",
+      "market": "fr",
+      "keywords": [
+        "agence web paris", "agence web lyon", "agence web marseille", "agence web nice",
+        "agence web bordeaux", "agence web toulouse", "agence web montpellier", "agence web lille",
+        "agence web nantes", "agence web strasbourg", "agence web rennes", "agence web cannes",
+        "agence digitale paris", "agence digitale lyon", "agence digitale nice"
+      ]
+    },
+    {
+      "id": "fr-developpeurs",
+      "name": "🇫🇷 Développeurs (search clients)",
+      "market": "fr",
+      "keywords": [
+        "développeur web", "développeur web freelance", "développeur web sur mesure", "développeur web paris",
+        "développeur web lyon", "développeur web nice", "développeur mobile", "développeur mobile freelance",
+        "développeur ios", "développeur android", "développeur react native", "développeur flutter",
+        "développeur full stack", "développeur full stack freelance", "développeur back end", "développeur front end",
+        "développeur node js", "développeur next.js", "développeur python", "développeur freelance paris",
+        "développeur freelance lyon", "développeur freelance nice"
+      ]
+    },
+    {
+      "id": "fr-creation-site",
+      "name": "🇫🇷 Création de site (intent clients)",
+      "market": "fr",
+      "keywords": [
+        "création site internet", "création site web", "création site web professionnel",
+        "création site internet paris", "création site internet lyon", "création site internet nice",
+        "création site vitrine", "création site e-commerce", "création boutique en ligne",
+        "création site sur mesure", "refonte site web", "refonte site internet",
+        "création site web pme", "création site catalogue", "création site wordpress",
+        "création site shopify", "création site prestashop"
+      ]
+    },
+    {
+      "id": "fr-dev-mobile",
+      "name": "🇫🇷 Développement application mobile",
+      "market": "fr",
+      "keywords": [
+        "développement application mobile", "développement application mobile paris",
+        "développement application mobile lyon", "agence application mobile paris",
+        "création application mobile", "création application mobile pme",
+        "application mobile sur mesure", "agence app mobile", "développement ios sur mesure",
+        "développement android sur mesure"
+      ]
+    },
+    {
+      "id": "fr-saas-erp-crm",
+      "name": "🇫🇷 SaaS · ERP · CRM sur mesure",
+      "market": "fr",
+      "keywords": [
+        "développement saas sur mesure", "agence saas paris", "saas sur mesure pme",
+        "logiciel sur mesure entreprise", "développement crm sur mesure", "développement erp sur mesure",
+        "erp sur mesure pme", "crm sur mesure pme", "logiciel métier sur mesure",
+        "développement plateforme web", "création logiciel sur mesure", "logiciel gestion entreprise"
+      ]
+    },
+    {
+      "id": "fr-ia",
+      "name": "🇫🇷 Intelligence artificielle",
+      "market": "fr",
+      "keywords": [
+        "agence intelligence artificielle", "consultant ia entreprise", "intégration ia entreprise",
+        "agent ia entreprise", "automatisation entreprise ia", "chatbot ia sur mesure",
+        "intelligence artificielle paris", "intelligence artificielle pme",
+        "consultant chatgpt entreprise", "agence ia france", "ia générative entreprise",
+        "agent conversationnel sur mesure"
+      ]
+    },
+    {
+      "id": "fr-cloud-devops",
+      "name": "🇫🇷 Cloud · DevOps · Infra",
+      "market": "fr",
+      "keywords": [
+        "cloud devops paris", "agence devops", "infogérance cloud aws",
+        "migration cloud entreprise", "infrastructure cloud sur mesure",
+        "consultant aws france", "agence aws france", "agence azure france",
+        "hébergement cloud entreprise"
+      ]
+    },
+    {
+      "id": "fr-prestataires",
+      "name": "🇫🇷 Prestataires & consultants",
+      "market": "fr",
+      "keywords": [
+        "prestataire informatique", "prestataire web", "prestataire site internet",
+        "consultant web freelance", "consultant seo freelance", "consultant seo paris",
+        "audit site web", "audit seo gratuit", "agence seo paris",
+        "agence référencement naturel", "chef de projet web freelance",
+        "intégrateur web freelance", "webmaster freelance"
+      ]
+    },
+    {
+      "id": "gulf-en-agency",
+      "name": "🌐 Web agency — Gulf (EN)",
+      "market": "ae",
+      "keywords": [
+        "web agency dubai", "web agency abu dhabi", "web agency saudi arabia",
+        "web agency riyadh", "web agency jeddah", "web agency qatar",
+        "web agency doha", "web agency kuwait", "web agency bahrain", "web agency oman",
+        "web developer dubai", "web developer riyadh", "freelance web developer dubai"
+      ]
+    },
+    {
+      "id": "gulf-en-mobile-saas",
+      "name": "🌐 Mobile + SaaS — Gulf (EN)",
+      "market": "sa",
+      "keywords": [
+        "mobile app development saudi arabia", "mobile app development dubai",
+        "mobile app developer dubai", "saas development saudi arabia",
+        "saas development dubai", "ai integration uae", "ai integration saudi arabia",
+        "cloud devops qatar", "erp development gulf", "custom software development uae",
+        "custom software development saudi arabia"
+      ]
+    },
+    {
+      "id": "fr-formation",
+      "name": "🇫🇷 Formation pro — Qualiopi",
+      "market": "fr",
+      "keywords": [
+        "formation hygiène alimentaire", "formation haccp", "formation sécurité chantier",
+        "centre de formation qualiopi", "formation opco", "formation professionnelle nice",
+        "formation continue paris", "formation salariés entreprise", "formation cpf"
+      ]
+    }
+  ]
+}

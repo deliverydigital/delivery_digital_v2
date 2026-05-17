@@ -48,6 +48,7 @@ type SeoOverview = {
   conversions: { total: number; byType: Record<ConvType, number>; uniqueSessions: number; conversionRate: number; denominator: number };
 };
 type FunnelStep = { key: string; label: string; value: number; available: boolean };
+type GscPage = { url: string; host: string; path: string; clicks: number; impressions: number; ctr: number; position: number; conversions: number };
 type GoogleOAuthStatus = { connected: boolean; email?: string; scopes?: string[]; since?: string };
 
 const COLORS = {
@@ -56,6 +57,17 @@ const COLORS = {
   secondary: '#A2DDE9',
   textLight: '#F6FAFA',
   accent: '#1F5865',
+};
+
+
+const navigate = (section: string, intent?: Record<string, string>) => {
+  if (intent) sessionStorage.setItem('admin_nav_intent', JSON.stringify({ section, ...intent }));
+  window.dispatchEvent(new CustomEvent('admin-navigate', { detail: section }));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+const scrollToId = (id: string) => {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
 export default function AdminConversionsDashboard({ secret }: { secret: string }) {
@@ -70,6 +82,10 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
   const [googleAuth, setGoogleAuth] = useState<GoogleOAuthStatus | null>(null);
   const [oauthBanner, setOauthBanner] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [gscPages, setGscPages] = useState<GscPage[]>([]);
+  const [gscHostFilter, setGscHostFilter] = useState<'all' | 'main' | 'subdomain'>('all');
+  const [keywords, setKeywords] = useState<KeywordsData | null>(null);
+  const [kwTab, setKwTab] = useState<KwTab>("converting");
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -99,6 +115,10 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
         ]);
         const gauth = await fetch(`/api/admin/google-oauth/status?secret=${encodeURIComponent(secret)}`).then((r) => r.json()).catch(() => null);
         if (cancelled) return;
+        const gpages = await fetch(`/api/admin/seo-analytics/gsc-pages?range=${range}&limit=200`, { headers: { 'x-admin-secret': secret } }).then((r) => r.json()).catch(() => null);
+        const kws = await fetch(`/api/admin/seo-analytics/keywords?range=${range}`, { headers: { 'x-admin-secret': secret } }).then((r) => r.json()).catch(() => null);
+        setGscPages(gpages?.pages || []);
+        setKeywords(kws);
         setStats(s);
         setList(l.items || []);
         setPages(p.pages || []);
@@ -159,7 +179,7 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
         {seoOverview && (
           <>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-3">
-              <div className="rounded-2xl p-4 sm:p-5 shadow-sm" style={{ background: '#fff', borderLeft: `4px solid ${COLORS.primary}` }}>
+              <div onClick={() => navigate('seo', { filterStatus: 'published', displayMode: 'table', perfFilter: 'all' })} className="rounded-2xl p-4 sm:p-5 shadow-sm cursor-pointer hover:shadow-md transition" style={{ background: '#fff', borderLeft: `4px solid ${COLORS.primary}` }} title="Voir toutes les pages publiées (tableau triable)">
                 <p className="text-[11px] uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: COLORS.accent }}>Pages publiées</p>
                 <p className="text-3xl font-bold" style={{ color: COLORS.primaryDark }}>{seoOverview.pages.published.toLocaleString('fr-FR')}</p>
                 <p className="text-[11px] mt-1" style={{ color: '#86868B' }}>
@@ -167,8 +187,8 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
                 </p>
               </div>
 
-              <div className="rounded-2xl p-4 sm:p-5 shadow-sm" style={{ background: '#fff', borderLeft: `4px solid ${COLORS.accent}` }}>
-                <p className="text-[11px] uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: COLORS.accent }} title="Nombre de pages qui ont reçu au moins 1 impression dans Google sur la période. Le nombre réel de pages indexées peut être plus élevé (visible dans GSC > Pages).">Pages actives (GSC)</p>
+              <div onClick={() => navigate('seo', { filterStatus: 'published', displayMode: 'table', perfFilter: 'with_impressions' })} className="rounded-2xl p-4 sm:p-5 shadow-sm cursor-pointer hover:shadow-md transition" style={{ background: '#fff', borderLeft: `4px solid ${COLORS.accent}` }} title="Voir uniquement les pages avec impressions GSC">
+                <p className="text-[11px] uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: COLORS.accent }}>Pages actives (GSC)</p>
                 {seoOverview.seo.gscStatus === 'ok' ? (
                   <>
                     <p className="text-3xl font-bold" style={{ color: COLORS.primaryDark }}>{seoOverview.seo.indexedUrls.toLocaleString('fr-FR')}</p>
@@ -182,7 +202,7 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
                 )}
               </div>
 
-              <div className="rounded-2xl p-4 sm:p-5 shadow-sm" style={{ background: '#fff', borderLeft: `4px solid ${COLORS.secondary}` }}>
+              <div onClick={() => navigate('seo', { filterStatus: 'published', displayMode: 'table', perfFilter: 'with_clicks' })} className="rounded-2xl p-4 sm:p-5 shadow-sm cursor-pointer hover:shadow-md transition" style={{ background: '#fff', borderLeft: `4px solid ${COLORS.secondary}` }} title="Voir uniquement les pages avec clics GSC">
                 <p className="text-[11px] uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: COLORS.accent }}>Clics SEO {range}j</p>
                 {seoOverview.seo.gscStatus === 'ok' ? (
                   <>
@@ -199,7 +219,7 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
                 )}
               </div>
 
-              <div className="rounded-2xl p-4 sm:p-5 shadow-sm" style={{ background: '#fff', borderLeft: `4px solid ${COLORS.primaryDark}` }}>
+              <div onClick={() => scrollToId('recent-conversions')} className="rounded-2xl p-4 sm:p-5 shadow-sm cursor-pointer hover:shadow-md transition" style={{ background: '#fff', borderLeft: `4px solid ${COLORS.primaryDark}` }} title="Voir les dernières conversions">
                 <p className="text-[11px] uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: COLORS.accent }}>Taux de conversion</p>
                 <p className="text-3xl font-bold" style={{ color: COLORS.primaryDark }}>
                   {(seoOverview.conversions.conversionRate * 100).toFixed(1)}%
@@ -267,6 +287,92 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
               </div>
             )}
 
+
+            {keywords && keywords.gscStatus === 'ok' && (
+              <div className="rounded-2xl p-4 sm:p-5 mb-6 shadow-sm" style={{ background: '#fff' }}>
+                <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                  <div>
+                    <p className="text-[13px] font-bold" style={{ color: COLORS.primaryDark }}>
+                      Mots-cles utilises par tes visiteurs (GSC)
+                    </p>
+                    <p className="text-[11.5px] mt-0.5" style={{ color: COLORS.accent }}>
+                      {keywords.totals.totalQueries} requetes &middot; {keywords.totals.totalImpressions} impressions &middot; {keywords.totals.totalClicks} clics
+                    </p>
+                  </div>
+                  <div className="flex gap-1 flex-wrap rounded-full p-1" style={{ background: '#F6FAFA', border: `1px solid ${COLORS.secondary}` }}>
+                    {([
+                      ['converting', `Convertis (${keywords.convertingKeywords.length})`],
+                      ['quickWins', `Quick wins p2 (${keywords.quickWins.length})`],
+                      ['boostTop3', `Booster top3 (${keywords.boostTop3.length})`],
+                      ['top3Keepers', `Top 3 (${keywords.top3Keepers.length})`],
+                      ['pageThreePlus', `Page 3+ (${keywords.pageThreePlus.length})`],
+                    ] as const).map(([k, label]) => (
+                      <button key={k} onClick={() => setKwTab(k)} className="px-2.5 py-1 rounded-full text-[11px] font-semibold transition whitespace-nowrap"
+                        style={kwTab === k ? { background: COLORS.primary, color: COLORS.primaryDark } : { color: COLORS.accent, background: 'transparent' }}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {(() => {
+                  const data: KwRow[] = (keywords as any)[kwTab];
+                  const explanations: Record<string, string> = {
+                    converting: "Les requetes Google qui ont amene des visiteurs sur des pages ayant ensuite converti. C'est par CA que tes clients arrivent.",
+                    quickWins: "Position 11-20 = page 2. A un effort de page 1. Booster ces mots-cles = +200-300% clics possibles.",
+                    boostTop3: "Position 4-10 = deja page 1, mais pas top 3. Optimiser pour gagner top 3 (75% des clics).",
+                    top3Keepers: "Position 1-3 = top page 1. A proteger contre concurrents.",
+                    pageThreePlus: "Position > 20 = page 3+. A pousser progressivement.",
+                  };
+                  return (
+                    <>
+                      <p className="text-[12px] mb-3 italic" style={{ color: COLORS.accent }}>{explanations[kwTab]}</p>
+                      {(!data || data.length === 0) ? (
+                        <p className="text-[12.5px]" style={{ color: COLORS.accent }}>Aucune donnee pour ce filtre.</p>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-[12.5px]">
+                            <thead style={{ background: '#FAFAFC' }}>
+                              <tr>
+                                <th className="text-left p-2.5 font-semibold" style={{ color: COLORS.accent }}>Requete tapee</th>
+                                <th className="text-left p-2.5 font-semibold" style={{ color: COLORS.accent }}>Page</th>
+                                <th className="text-right p-2.5 font-semibold whitespace-nowrap" style={{ color: COLORS.accent }}>Imp.</th>
+                                <th className="text-right p-2.5 font-semibold whitespace-nowrap" style={{ color: COLORS.accent }}>Clics</th>
+                                <th className="text-right p-2.5 font-semibold whitespace-nowrap" style={{ color: COLORS.accent }}>Pos.</th>
+                                {kwTab === 'converting' && <th className="text-right p-2.5 font-semibold whitespace-nowrap" style={{ color: COLORS.accent }}>Conv.</th>}
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y" style={{ borderColor: '#eee' }}>
+                              {data.slice(0, 20).map((r: KwRow, i: number) => (
+                                <tr key={i} className="hover:bg-[#FAFAFC]">
+                                  <td className="p-2.5" style={{ color: COLORS.primaryDark }}>
+                                    <strong>{r.query}</strong>
+                                  </td>
+                                  <td className="p-2.5 max-w-[260px]">
+                                    <a href={r.url} target="_blank" rel="noopener noreferrer" className="font-mono text-[11px] hover:underline truncate block" style={{ color: COLORS.accent }}>
+                                      {r.path}
+                                    </a>
+                                  </td>
+                                  <td className="p-2.5 text-right tabular-nums" style={{ color: COLORS.primaryDark }}>{r.impressions}</td>
+                                  <td className="p-2.5 text-right tabular-nums font-semibold" style={{ color: r.clicks > 0 ? COLORS.primaryDark : '#C7C7CC' }}>{r.clicks}</td>
+                                  <td className="p-2.5 text-right tabular-nums">
+                                    <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold" style={{
+                                      background: r.position <= 3 ? '#E7F8EE' : r.position <= 10 ? '#E8F5FB' : r.position <= 20 ? '#FFF4E0' : '#F5F5F7',
+                                      color: r.position <= 3 ? '#1F7A4D' : r.position <= 10 ? '#1F5865' : r.position <= 20 ? '#B26A00' : '#86868B',
+                                    }}>#{r.position.toFixed(1)}</span>
+                                  </td>
+                                  {kwTab === 'converting' && <td className="p-2.5 text-right tabular-nums font-semibold" style={{ color: r.conversions > 0 ? '#1F7A4D' : '#C7C7CC' }}>{r.conversions}</td>}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            )}
             {funnel.length > 0 && (
               <div className="rounded-2xl p-4 sm:p-5 mb-6 shadow-sm" style={{ background: '#fff' }}>
                 <p className="text-[13px] font-bold mb-3" style={{ color: COLORS.primaryDark }}>Funnel {range}j</p>
@@ -274,8 +380,15 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
                   {funnel.map((step, i) => {
                     const maxVal = Math.max(...funnel.map((s) => s.value)) || 1;
                     const pct = step.available ? (step.value / maxVal) * 100 : 0;
+                    const onClickStep = () => {
+                      if (step.key === 'gsc_clicks') navigate('seo', { filterStatus: 'published', displayMode: 'table', perfFilter: 'with_clicks' });
+                      else if (step.key === 'sessions') scrollToId('recent-conversions');
+                      else if (step.key === 'contact_submit') setTypeFilter('contact_submit');
+                      else if (step.key === 'quote_click') setTypeFilter('quote_click');
+                      else if (step.key === 'phone_email') setTypeFilter('email_click');
+                    };
                     return (
-                      <div key={step.key} className="rounded-xl p-3" style={{ background: i === 0 ? COLORS.textLight : '#fafcfc' }}>
+                      <div key={step.key} onClick={step.available ? onClickStep : undefined} className={`rounded-xl p-3 ${step.available ? 'cursor-pointer hover:shadow-md transition' : ''}`} style={{ background: i === 0 ? COLORS.textLight : '#fafcfc' }} title={step.available ? 'Cliquer pour détailler' : undefined}>
                         <p className="text-[10.5px] uppercase tracking-[0.12em] font-semibold mb-1" style={{ color: COLORS.accent }}>{step.label}</p>
                         <p className="text-2xl font-bold" style={{ color: step.available ? COLORS.primaryDark : '#bbb' }}>
                           {step.available ? step.value.toLocaleString('fr-FR') : '—'}
@@ -390,7 +503,7 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
         </div>
 
         {/* Recent conversions table */}
-        <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: '#fff' }}>
+        <div id="recent-conversions" className="rounded-2xl shadow-sm overflow-hidden" style={{ background: '#fff' }}>
           <div className="p-4 sm:p-5 border-b" style={{ borderColor: '#eee' }}>
             <p className="text-[13px] font-bold" style={{ color: COLORS.primaryDark }}>
               Dernières conversions {typeFilter !== 'all' && `(${TYPE_LABELS[typeFilter]})`}

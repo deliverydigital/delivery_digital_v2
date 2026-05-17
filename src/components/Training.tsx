@@ -185,25 +185,34 @@ const Training = () => {
                   setShowModal(true);
                 }}
               >
-                {/* Header - colored gradient hero with animated SVG illustration */}
+                {/* Header pro 2026-05-17 : typographie bold + lucide icon mono
+                    discrete (plus de SVG cartoon animes). Style Apple/Stripe -
+                    categorie en eyebrow + duree XXL bold + icone categorie
+                    en filigrane a droite. Plus serieux que les illustrations
+                    dessinees. */}
                 <div
-                  className="relative h-[140px] flex items-center justify-center overflow-hidden"
+                  className="relative h-[140px] flex items-center justify-between px-6 overflow-hidden"
                   style={{ background: getCategoryGradient(program.category) }}
                 >
-                  <div
-                    className="select-none"
-                    style={{ filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.08))' }}
-                  >
-                    {getProgramIllustration(program)}
+                  <div className="flex flex-col z-10">
+                    <span className="text-[10.5px] uppercase tracking-[0.22em] font-bold text-[var(--ink-700)] mb-1.5 opacity-70">
+                      {getCategoryLabel(program.category)}
+                    </span>
+                    <span className="text-[40px] leading-none font-bold tracking-[-0.04em] text-[var(--ink-900)]">
+                      {program.duration_hours}h
+                    </span>
+                  </div>
+                  <div className="opacity-20 -mr-4">
+                    {getCategoryLucideIcon(program.category)}
                   </div>
                   {program.is_featured && (
-                    <span className="absolute top-3 left-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-[10px] font-bold text-[var(--ink-900)]">
+                    <span className="absolute top-3 left-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-[10px] font-bold text-[var(--ink-900)] z-10">
                       <Star className="h-2.5 w-2.5 fill-current" strokeWidth={0} />
                       Phare
                     </span>
                   )}
                   {program.satisfaction && program.satisfaction > 0 && (
-                    <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-[10px] font-bold text-[var(--ink-900)] tabular-nums">
+                    <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-sm text-[10px] font-bold text-[var(--ink-900)] tabular-nums z-10">
                       {program.satisfaction}/10
                     </span>
                   )}
@@ -571,6 +580,38 @@ function getProgramEmoji(program: any): string {
   if (/comptab|finance/.test(t)) return '📊';
   if (/sant[ée]|m[ée]dic/.test(t)) return '🩺';
   return '📚';
+}
+
+/* Label fr lisible par categorie (2026-05-17 - refonte cards pro) */
+function getCategoryLabel(category: string): string {
+  const map: Record<string, string> = {
+    safety: 'Hygiène · Sécurité',
+    languages: 'Langues',
+    web: 'Web · Développement',
+    design: 'Design',
+    office: 'Bureautique',
+    health: 'Santé',
+    business: 'Business',
+    management: 'Management',
+  };
+  return map[category] || 'Formation';
+}
+
+/* Icone Lucide minimaliste par categorie - utilisee en filigrane sur le
+   header card (opacite 20%) pour un rendu pro typo-driven sans cartoon. */
+function getCategoryLucideIcon(category: string) {
+  const props = { size: 80, strokeWidth: 1.4, className: 'text-[var(--ink-900)]' };
+  switch (category) {
+    case 'safety':     return <Shield {...props} />;
+    case 'languages':  return <Languages {...props} />;
+    case 'web':        return <Code {...props} />;
+    case 'design':     return <Palette {...props} />;
+    case 'office':     return <FileText {...props} />;
+    case 'health':     return <Heart {...props} />;
+    case 'business':   return <Briefcase {...props} />;
+    case 'management': return <Target {...props} />;
+    default:           return <BookOpen {...props} />;
+  }
 }
 
 /* Apple-style subtle gradient backgrounds per category */

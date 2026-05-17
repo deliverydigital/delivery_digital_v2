@@ -20,18 +20,18 @@ const ProgramFormModalComponent = memo(({
                                           updateArrayItem,
                                           setFormData
 }: any) => (
-  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      className="bg-gray-900 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+      className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
     >
-      <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-        <h3 className="text-xl font-bold text-white">
+      <div className="p-6 border-b border-black/10 flex justify-between items-center">
+        <h3 className="text-xl font-bold text-[#1D1D1F]">
           {modalType === 'create' ? 'Créer un Programme' : 'Modifier le Programme'}
         </h3>
-        <button onClick={onClose} className="text-gray-400 hover:text-white">
+        <button onClick={onClose} className="text-[#86868B] hover:text-[#1D1D1F]">
           <X className="h-6 w-6" />
         </button>
       </div>
@@ -39,28 +39,28 @@ const ProgramFormModalComponent = memo(({
       <form onSubmit={onSubmit} className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#86868B] mb-2">
               ID Programme *
             </label>
             <input
               type="text"
               value={formData.program_id}
               onChange={(e) => onChange('program_id', e.target.value)}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="Ex: wordpress-advanced"
               required
               disabled={modalType === 'edit'}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#86868B] mb-2">
               Titre *
             </label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => onChange('title', e.target.value)}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="Ex: WordPress Avancé"
               required
             />
@@ -68,13 +68,13 @@ const ProgramFormModalComponent = memo(({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[#86868B] mb-2">
             Description *
           </label>
           <textarea
             value={formData.description}
             onChange={(e) => onChange('description', e.target.value)}
-            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="Description détaillée du programme..."
             rows={4}
             required
@@ -82,13 +82,13 @@ const ProgramFormModalComponent = memo(({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[#86868B] mb-2">
             Public visé *
           </label>
           <textarea
             value={formData.target_audience}
             onChange={(e) => onChange('target_audience', e.target.value)}
-            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="Décrivez le public visé par cette formation..."
             rows={4}
             required
@@ -97,13 +97,13 @@ const ProgramFormModalComponent = memo(({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#86868B] mb-2">
               Catégorie
             </label>
             <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="md:w-64 px-4 py-2.5 bg-white ring-1 ring-black/8 rounded-full text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-[#1D1D1F]/30 text-[13.5px] cursor-pointer"
             >
               {categories.map((category) => (
                   <option key={category.slug} value={category.slug}>
@@ -113,13 +113,13 @@ const ProgramFormModalComponent = memo(({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#86868B] mb-2">
               Niveau
             </label>
             <select
                 value={formData.level}
                 onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="beginner">Débutant</option>
               <option value="intermediate">Intermédiaire</option>
@@ -127,14 +127,14 @@ const ProgramFormModalComponent = memo(({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#86868B] mb-2">
               Durée (heures) *
             </label>
             <input
                 type="number"
                 value={formData.duration_hours}
                 onChange={(e) => setFormData({ ...formData, duration_hours: parseInt(e.target.value) || 0 })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                 min="1"
                 required
             />
@@ -143,28 +143,28 @@ const ProgramFormModalComponent = memo(({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#86868B] mb-2">
               Prix (€) *
             </label>
             <input
                 type="number"
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                 min="0"
                 step="0.01"
                 required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#86868B] mb-2">
               Participants max
             </label>
             <input
                 type="number"
                 value={formData.max_participants}
                 onChange={(e) => setFormData({ ...formData, max_participants: parseInt(e.target.value) || 12 })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                 min="1"
             />
           </div>
@@ -172,7 +172,7 @@ const ProgramFormModalComponent = memo(({
 
         {/* Objectives */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[#86868B] mb-2">
             Objectifs pédagogiques
           </label>
           <div className="space-y-2">
@@ -182,7 +182,7 @@ const ProgramFormModalComponent = memo(({
                       type="text"
                       value={objective}
                       onChange={(e) => updateArrayItem('objectives', index, e.target.value)}
-                      className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="flex-1 px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder={`Objectif ${index + 1}`}
                   />
                   {formData.objectives.length > 1 && (
@@ -209,7 +209,7 @@ const ProgramFormModalComponent = memo(({
 
         {/* Training Modalities */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[#86868B] mb-2">
             Modalités de la formation
           </label>
           <div className="space-y-2">
@@ -219,7 +219,7 @@ const ProgramFormModalComponent = memo(({
                       type="text"
                       value={modality}
                       onChange={(e) => updateArrayItem('training_modalities', index, e.target.value)}
-                      className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="flex-1 px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder={`Modalité ${index + 1}`}
                   />
                   {formData.training_modalities.length > 1 && (
@@ -246,7 +246,7 @@ const ProgramFormModalComponent = memo(({
 
         {/* Methods */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[#86868B] mb-2">
             Méthodes mobilisées
           </label>
           <div className="space-y-2">
@@ -256,7 +256,7 @@ const ProgramFormModalComponent = memo(({
                       type="text"
                       value={method}
                       onChange={(e) => updateArrayItem('methods', index, e.target.value)}
-                      className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="flex-1 px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder={`Méthode ${index + 1}`}
                   />
                   {formData.methods.length > 1 && (
@@ -283,7 +283,7 @@ const ProgramFormModalComponent = memo(({
 
         {/* Evaluation Methods */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[#86868B] mb-2">
             Méthodes d'évaluation
           </label>
           <div className="space-y-2">
@@ -293,7 +293,7 @@ const ProgramFormModalComponent = memo(({
                       type="text"
                       value={method}
                       onChange={(e) => updateArrayItem('evaluation_methods', index, e.target.value)}
-                      className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="flex-1 px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder={`Méthode d'évaluation ${index + 1}`}
                   />
                   {formData.evaluation_methods.length > 1 && (
@@ -319,13 +319,13 @@ const ProgramFormModalComponent = memo(({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[#86868B] mb-2">
             Prérequis
           </label>
           <textarea
               value={formData.prerequisites}
               onChange={(e) => setFormData({ ...formData, prerequisites: e.target.value })}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="Prérequis nécessaires..."
               rows={2}
           />
@@ -333,26 +333,26 @@ const ProgramFormModalComponent = memo(({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#86868B] mb-2">
               Type de certification
             </label>
             <input
                 type="text"
                 value={formData.certification_type}
                 onChange={(e) => setFormData({ ...formData, certification_type: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="Ex: Attestation de formation"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#86868B] mb-2">
               Organisme certificateur
             </label>
             <input
                 type="text"
                 value={formData.certification_provider}
                 onChange={(e) => setFormData({ ...formData, certification_provider: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="Ex: DELIVERY Digital"
             />
           </div>
@@ -367,7 +367,7 @@ const ProgramFormModalComponent = memo(({
                 onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                 className="mr-2"
             />
-            <span className="text-gray-300">Actif</span>
+            <span className="text-[#86868B]">Actif</span>
           </label>
           <label className="flex items-center">
             <input
@@ -376,7 +376,7 @@ const ProgramFormModalComponent = memo(({
                 onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
                 className="mr-2"
             />
-            <span className="text-gray-300">Formation phare</span>
+            <span className="text-[#86868B]">Formation phare</span>
           </label>
           <label className="flex items-center">
             <input
@@ -385,7 +385,7 @@ const ProgramFormModalComponent = memo(({
                 onChange={(e) => setFormData({ ...formData, opco_eligible: e.target.checked })}
                 className="mr-2"
             />
-            <span className="text-gray-300">OPCO Éligible</span>
+            <span className="text-[#86868B]">OPCO Éligible</span>
           </label>
           <label className="flex items-center">
             <input
@@ -394,20 +394,20 @@ const ProgramFormModalComponent = memo(({
                 onChange={(e) => setFormData({ ...formData, cpf_eligible: e.target.checked })}
                 className="mr-2"
             />
-            <span className="text-gray-300">CPF Éligible</span>
+            <span className="text-[#86868B]">CPF Éligible</span>
           </label>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#86868B] mb-2">
               Taux de satisfaction (%)
             </label>
             <input
               type="number"
               value={formData.satisfaction_rate}
               onChange={(e) => onChange('satisfaction_rate', parseFloat(e.target.value) || 0)}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="95"
               min="0"
               max="100"
@@ -415,14 +415,14 @@ const ProgramFormModalComponent = memo(({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#86868B] mb-2">
               Taux de réussite (%)
             </label>
             <input
               type="number"
               value={formData.success_rate}
               onChange={(e) => onChange('success_rate', parseFloat(e.target.value) || 0)}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="90"
               min="0"
               max="100"
@@ -430,14 +430,14 @@ const ProgramFormModalComponent = memo(({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#86868B] mb-2">
               Taux de recommandation (%)
             </label>
             <input
               type="number"
               value={formData.recommendation_rate}
               onChange={(e) => onChange('recommendation_rate', parseFloat(e.target.value) || 0)}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="92"
               min="0"
               max="100"
@@ -445,14 +445,14 @@ const ProgramFormModalComponent = memo(({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[#86868B] mb-2">
               Taux de présence (%)
             </label>
             <input
               type="number"
               value={formData.attendance_rate}
               onChange={(e) => onChange('attendance_rate', parseFloat(e.target.value) || 0)}
-              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="98"
               min="0"
               max="100"
@@ -462,14 +462,14 @@ const ProgramFormModalComponent = memo(({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[#86868B] mb-2">
             Taux de satisfaction de 1 à 10
           </label>
           <input
             type="number"
             value={formData.satisfaction}
             onChange={(e) => onChange('satisfaction', parseFloat(e.target.value) || 0)}
-            className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="8"
             min="1"
             max="10"
@@ -481,7 +481,7 @@ const ProgramFormModalComponent = memo(({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+            className="px-4 py-2 text-[#86868B] hover:text-[#1D1D1F] transition-colors"
             disabled={isSubmitting}
           >
             Annuler
@@ -489,7 +489,7 @@ const ProgramFormModalComponent = memo(({
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`btn ${isSubmitting ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : 'btn-primary'}`}
+            className={`btn ${isSubmitting ? 'bg-[#E5E5EA] text-[#86868B] cursor-not-allowed' : 'btn-primary'}`}
           >
             {isSubmitting ? (
               <>
@@ -832,25 +832,31 @@ const TrainingProgramsManagement = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-end flex-wrap gap-4 mb-2">
         <div>
-          <h2 className="text-2xl font-bold text-white">Gestion des Programmes de Formation</h2>
-          <p className="text-gray-400">Gérez les programmes de formation Qualiopi</p>
+          <p className="text-[10.5px] uppercase tracking-[0.22em] font-bold mb-1.5 text-[#1F5865]">Formations Qualiopi</p>
+          <h1
+            className="text-[32px] sm:text-[40px] text-[#1D1D1F] leading-[1.05]"
+            style={{ fontFamily: '"Charter", "Iowan Old Style", Georgia, serif', fontWeight: 700 }}
+          >
+            Gestion des Programmes
+          </h1>
+          <p className="text-[14px] text-[#86868B] mt-1.5">Catalogue de formations professionnelles agréées OPCO</p>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-2">
           <button
             onClick={refetchPrograms}
-            className="btn btn-secondary"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white ring-1 ring-black/8 text-[#1D1D1F] text-[13px] font-semibold hover:ring-black/20 transition-colors"
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="h-3.5 w-3.5" />
             Actualiser
           </button>
           <button
             onClick={openCreateModal}
-            className="btn btn-primary"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#1D1D1F] text-white text-[13px] font-semibold hover:bg-[#3C3C43] transition-colors"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau Programme
+            <Plus className="h-3.5 w-3.5" />
+            Nouveau programme
           </button>
         </div>
       </div>
@@ -863,14 +869,14 @@ const TrainingProgramsManagement = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Rechercher un programme..."
-            className="w-full px-4 py-2 pl-10 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-4 py-2.5 pl-10 bg-white ring-1 ring-black/8 rounded-full text-[#1D1D1F] placeholder-[#86868B] focus:outline-none focus:ring-2 focus:ring-[#1D1D1F]/30 text-[13.5px]"
           />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#86868B]" />
         </div>
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
-          className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <option value="all">Toutes les catégories</option>
           {categories.map((category) => (
@@ -885,13 +891,13 @@ const TrainingProgramsManagement = () => {
       {programsLoading ? (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-400">Chargement des programmes...</p>
+          <p className="mt-4 text-[#86868B]">Chargement des programmes...</p>
         </div>
       ) : filteredPrograms.length === 0 ? (
-        <div className="text-center py-12 bg-gray-800 rounded-lg">
-          <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">Aucun programme trouvé</h3>
-          <p className="text-gray-400">
+        <div className="text-center py-12 bg-[#F5F5F7] rounded-lg">
+          <GraduationCap className="h-12 w-12 text-[#86868B] mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-[#1D1D1F] mb-2">Aucun programme trouvé</h3>
+          <p className="text-[#86868B]">
             {searchQuery || selectedCategory !== 'all'
               ? 'Aucun programme ne correspond aux critères de recherche.'
               : 'Aucun programme n\'a été créé.'}
@@ -906,61 +912,59 @@ const TrainingProgramsManagement = () => {
             return (
               <div
                 key={program.id}
-                className="bg-gray-800 rounded-lg border border-gray-700 hover:border-gray-600 transition-all overflow-hidden"
+                className="bg-white rounded-[14px] ring-1 ring-black/5 shadow-sm hover:shadow-md transition-all overflow-hidden"
               >
                 <div
                   className="h-2"
                   style={{ backgroundColor: categoryData?.color || '#3b82f6' }}
                 />
 
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center mr-3"
-                        style={{
-                          backgroundColor: `${categoryData?.color || '#3b82f6'}20`,
-                          color: categoryData?.color || '#3b82f6'
-                        }}
-                      >
-                        <IconComponent className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-white">{program.title}</h3>
-                        <p className="text-sm text-gray-400">{categoryData?.name || program.category}</p>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end space-y-1">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        program.is_active ? 'bg-green-900/50 text-green-400' : 'bg-gray-700 text-gray-300'
-                      }`}>
-                        {program.is_active ? 'Actif' : 'Inactif'}
+                <div className="p-5">
+                  <div className="flex items-center justify-end gap-1.5 mb-3">
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                      program.is_active ? 'bg-[#E7F8EE] text-[#1F7A4D]' : 'bg-[#F2EFE9] text-[#86868B]'
+                    }`}>
+                      {program.is_active ? 'Actif' : 'Inactif'}
+                    </span>
+                    {program.is_featured && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#FFF4E0] text-[#B26A00]">
+                        <Star className="h-3 w-3" />
+                        Phare
                       </span>
-                      {program.is_featured && (
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-900/50 text-yellow-400">
-                          <Star className="h-3 w-3 inline mr-1" />
-                          Phare
-                        </span>
-                      )}
+                    )}
+                  </div>
+                  <div className="flex items-start gap-3 mb-4">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{
+                        backgroundColor: `${categoryData?.color || '#3b82f6'}20`,
+                        color: categoryData?.color || '#3b82f6'
+                      }}
+                    >
+                      <IconComponent className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-[17px] text-[#1D1D1F] leading-tight mb-1" style={{ fontFamily: '"Charter", "Iowan Old Style", Georgia, serif', fontWeight: 700 }}>{program.title}</h3>
+                      <p className="text-[12px] text-[#86868B]">{categoryData?.name || (program.category ? program.category.charAt(0).toUpperCase() + program.category.slice(1) : '')}</p>
                     </div>
                   </div>
 
-                  <p className="text-gray-300 text-sm mb-4 line-clamp-2">
+                  <p className="text-[#86868B] text-sm mb-4 line-clamp-2">
                     {program.description}
                   </p>
 
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">Durée:</span>
-                      <span className="text-white">{program.duration_hours}h</span>
+                      <span className="text-[#86868B]">Durée:</span>
+                      <span className="text-[#1D1D1F]">{program.duration_hours}h</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">Prix:</span>
-                      <span className="text-white">{program.price}€</span>
+                      <span className="text-[#86868B]">Prix:</span>
+                      <span className="text-[#1D1D1F]">{program.price}€</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">Participants:</span>
-                      <span className="text-white">Max {program.max_participants}</span>
+                      <span className="text-[#86868B]">Participants:</span>
+                      <span className="text-[#1D1D1F]">Max {program.max_participants}</span>
                     </div>
                   </div>
 
@@ -988,7 +992,7 @@ const TrainingProgramsManagement = () => {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-400">
+                    <div className="text-sm text-[#86868B]">
                       {program.created_at ? new Date(program.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}
                     </div>
                     <div className="flex items-center space-x-2">
@@ -1041,18 +1045,18 @@ const TrainingProgramsManagement = () => {
           />
         )}
         {showUploadModal && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
               <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
-                  className="bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl"
+                  className="bg-white rounded-xl shadow-xl w-full max-w-2xl"
               >
-                <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-                  <h3 className="text-xl font-bold text-white">Télécharger des documents</h3>
+                <div className="p-6 border-b border-black/10 flex justify-between items-center">
+                  <h3 className="text-xl font-bold text-[#1D1D1F]">Télécharger des documents</h3>
                   <button
                       onClick={closeUploadModal}
-                      className="text-gray-400 hover:text-white transition-colors"
+                      className="text-[#86868B] hover:text-[#1D1D1F] transition-colors"
                   >
                     <X className="h-6 w-6" />
                   </button>
@@ -1061,7 +1065,7 @@ const TrainingProgramsManagement = () => {
                 <form onSubmit={handleUploadSubmit} className="p-6 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-[#86868B] mb-2">
                         Programme de formation *
                       </label>
                       <select
@@ -1074,7 +1078,7 @@ const TrainingProgramsManagement = () => {
                               program_name: selectedProgram?.title || selectedProgram?.name || ''
                             }));
                           }}
-                          className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                           required
                       >
                         <option value="">Sélectionner un programme</option>
@@ -1086,13 +1090,13 @@ const TrainingProgramsManagement = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-[#86868B] mb-2">
                         Type de document
                       </label>
                       <select
                           value={uploadFormData.category}
                           onChange={(e) => setUploadFormData(prev => ({ ...prev, category: e.target.value }))}
-                          className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                       >
                         <option value="program">Programme de formation</option>
                         <option value="guide">Guide pratique</option>
@@ -1104,14 +1108,14 @@ const TrainingProgramsManagement = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-[#86868B] mb-2">
                       Titre du document *
                     </label>
                     <input
                         type="text"
                         value={uploadFormData.title}
                         onChange={(e) => handleUploadFormChange('title', e.target.value)}
-                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                         placeholder="Ex: Programme détaillé WordPress"
                         required
                         autoComplete="off"
@@ -1119,13 +1123,13 @@ const TrainingProgramsManagement = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-[#86868B] mb-2">
                       Description
                     </label>
                     <textarea
                         value={uploadFormData?.description ?? ''}
                         onChange={(e) => setUploadFormData(prev => ({ ...prev, description: e.target.value }))}
-                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                         placeholder="Description du document..."
                         rows={3}
                         autoComplete="off"
@@ -1134,27 +1138,27 @@ const TrainingProgramsManagement = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-[#86868B] mb-2">
                         Tags (séparés par des virgules)
                       </label>
                       <input
                           type="text"
                           value={uploadFormData.tags}
                           onChange={(e) => handleUploadFormChange('tags', e.target.value)}
-                          className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                           placeholder="Ex: wordpress, guide, installation"
                           autoComplete="off"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-[#86868B] mb-2">
                         Version
                       </label>
                       <input
                           type="text"
                           value={uploadFormData.version}
                           onChange={(e) => handleUploadFormChange('version', e.target.value)}
-                          className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="w-full px-4 py-2 bg-[#F5F5F7] border border-black/10 rounded-lg text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-primary-500"
                           placeholder="1.0"
                           autoComplete="off"
                       />
@@ -1162,16 +1166,16 @@ const TrainingProgramsManagement = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-[#86868B] mb-2">
                       Fichiers PDF *
                     </label>
-                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-700 border-dashed rounded-md hover:border-gray-600 transition-colors">
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-black/10 border-dashed rounded-md hover:border-black/10 transition-colors">
                       <div className="space-y-1 text-center">
-                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                        <div className="flex text-sm text-gray-400">
+                        <Upload className="mx-auto h-12 w-12 text-[#86868B]" />
+                        <div className="flex text-sm text-[#86868B]">
                           <label
                               htmlFor="file-upload"
-                              className="relative cursor-pointer bg-gray-800 rounded-md font-medium text-primary-400 hover:text-primary-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500 px-3 py-1"
+                              className="relative cursor-pointer bg-[#F5F5F7] rounded-md font-medium text-primary-400 hover:text-primary-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500 px-3 py-1"
                           >
                             <span>Télécharger des fichiers PDF</span>
                             <input
@@ -1190,24 +1194,24 @@ const TrainingProgramsManagement = () => {
                           </label>
                           <p className="pl-1">ou glisser-déposer</p>
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-[#86868B]">
                           PDF uniquement, jusqu'à 10MB par fichier
                         </p>
                       </div>
                     </div>
                     {uploadFormData.files.length > 0 && (
                         <div className="mt-4">
-                          <h4 className="text-sm font-medium text-gray-300 mb-2">
+                          <h4 className="text-sm font-medium text-[#86868B] mb-2">
                             Fichiers sélectionnés ({uploadFormData.files.length})
                           </h4>
                           <div className="space-y-2">
                             {uploadFormData.files.map((file, index) => (
-                                <div key={index} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                                <div key={index} className="flex items-center justify-between p-3 bg-[#F5F5F7] rounded-lg">
                                   <div className="flex items-center">
                                     <FileText className="h-5 w-5 text-red-400 mr-3" />
                                     <div>
-                                      <p className="text-white text-sm font-medium">{file.name}</p>
-                                      <p className="text-gray-400 text-xs">
+                                      <p className="text-[#1D1D1F] text-sm font-medium">{file.name}</p>
+                                      <p className="text-[#86868B] text-xs">
                                         {(file.size / 1024 / 1024).toFixed(2)} MB
                                       </p>
                                     </div>
@@ -1233,7 +1237,7 @@ const TrainingProgramsManagement = () => {
                     <button
                         type="button"
                         onClick={closeUploadModal}
-                        className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                        className="px-4 py-2 text-[#86868B] hover:text-[#1D1D1F] transition-colors"
                         disabled={isSubmitting}
                     >
                       Annuler
@@ -1243,7 +1247,7 @@ const TrainingProgramsManagement = () => {
                         disabled={isSubmitting || !uploadFormData.title || uploadFormData.files.length === 0}
                         className={`btn ${
                             isSubmitting || !uploadFormData.title || uploadFormData.files.length === 0
-                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                ? 'bg-[#E5E5EA] text-[#86868B] cursor-not-allowed'
                                 : 'btn-primary'
                         }`}
                     >

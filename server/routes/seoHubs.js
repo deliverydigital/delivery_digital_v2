@@ -70,6 +70,7 @@ router.get('/all', async (_req, res) => {
 
     const result = {
       countries: Object.values(byCountry)
+        .filter((c) => c.code !== 'unknown' && c.code) // skip pages sans country defini
         .map((c) => ({ code: c.code, name: c.name, lang: c.lang, total: c.total, cityCount: c.cities.size, services: Array.from(c.services, ([service, count]) => ({ service, count })).sort((a, b) => b.count - a.count) }))
         .sort((a, b) => b.total - a.total),
       totalPages: items.length,

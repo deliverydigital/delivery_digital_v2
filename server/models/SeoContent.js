@@ -53,6 +53,8 @@ const seoContentSchema = new Schema(
 
     // Audit
     publishedAt: { type: Date },
+    // Traductions par langue: { en: { title, metaTitle, metaDescription, body, faqItems }, ar: {...}, ... }
+    translations: { type: Map, of: new mongoose.Schema({ title: String, metaTitle: String, metaDescription: String, body: String, faqItems: [{ question: String, answer: String }] }, { _id: false }), default: () => new Map() },
     indexingApiPingedAt: { type: Date, default: null, index: true }, // dernière fois envoyée à Google Indexing API
     indexingApiPingResult: { type: String, default: '' }, // 'ok' | '429' | 'error'
     createdBy: { type: String, default: 'agent' },

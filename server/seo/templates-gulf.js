@@ -65,9 +65,9 @@ const CONTEXT_LINES = {
 };
 
 const CTA_INLINE_VARIANTS = [
-  "Tell us about your project on our [conversational AI agent]({cta}). It will scope the brief in 5 minutes and route it to the right person.",
-  "Have a 2-minute description of what you need? [Start the conversation here]({cta}) — our AI agent will collect the essentials.",
-  "Not ready for a long brief? Just [tell our AI agent]({cta}) what you want to build. We will reply within one business day.",
+  "Tell us about your project on [discutons]({cta})..",
+  "Have a 2-minute description of what you need? [Start the conversation here]({cta}) .",
+  "Not ready for a long brief? Just [describe your idea]({cta}).",
   "Want to discuss feasibility, timeline or budget? [Open the chat]({cta}) and we will get back to you fast.",
 ];
 
@@ -105,7 +105,7 @@ const FAQ_BANK = [
       "How do we get started?",
       "What is the first step?",
     ],
-    a: () => `The fastest path is our conversational AI agent on /discutons. It collects the essentials in a few minutes, then a senior engineer follows up directly. No long forms.`,
+    a: () => `The fastest path is /discutons. A few targeted questions, then a senior engineer follows up directly. No long forms.`,
   },
   {
     q_variants: [
@@ -146,7 +146,7 @@ function buildBody({ city, service, seed }) {
 
 ${intro}
 
-> **[Tell us about your project on /discutons](${cta})** — our AI agent collects the essentials in 5 minutes.
+> **[Tell us about your project](${cta})** .
 
 ## What we deliver
 
@@ -183,7 +183,7 @@ ${faqShuffled.map((f) => `### ${pick(f.q_variants, seed).replace('{country_label
 
 ## Let's talk
 
-The fastest way to start is on our conversational AI agent. It will ask the 5 questions that matter and route your request to a senior engineer.
+The fastest way to start is via [our conversation form](/discutons). We will ask the 5 questions that matter.
 
 [**Start the conversation on /discutons →**](${cta})
 `;
@@ -314,13 +314,13 @@ export function generateBlogDraft({ topicIndex = 0 } = {}) {
 
 ${topic.sections[0][1]}
 
-> **Have a project in mind?** [Tell our AI agent](${cta}) — it scopes your brief in 5 minutes.
+> **Have a project in mind?** [Describe your idea](${cta}) .
 
 ${topic.sections.slice(1).map(([h, p]) => `## ${h}\n\n${p}`).join('\n\n')}
 
 ## Want to discuss this for your business?
 
-DELIVERY Digital is a French software studio building custom platforms, apps and AI agents for clients across the Gulf and Europe. If you want to discuss your specific case, the fastest path is our AI agent.
+DELIVERY Digital is a French software studio building custom platforms, apps and AI agents for clients across the Gulf and Europe. If you want to discuss your specific case, the fastest path is /discutons.
 
 [**Start the conversation →**](${cta})
 `;

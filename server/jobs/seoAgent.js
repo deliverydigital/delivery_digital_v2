@@ -107,6 +107,33 @@ async function runWeeklyAudit(reason = 'cron') {
   }
 }
 
+async function autoImportTargetKeywords() {
+  try {
+    const { readFile } = await import("node:fs/promises");
+    const { KeywordRanking } = await import("../models/index.js").catch(() => ({}));
+    if (!KeywordRanking) {
+      const m = await import("../models/KeywordRanking.js");
+      KeywordRanking._impl = m.default;
+    }
+    const KR = KeywordRanking?._impl || KeywordRanking || (await import("../models/KeywordRanking.js")).default;
+    const raw = await readFile(resolve(DATA_DIR, "target-keywords.json"), "utf8");
+    const packs = JSON.parse(raw).packs || [];
+    let created = 0;
+    for (const pack of packs) {
+      for (const kw of pack.keywords) {
+        const exists = await KR.findOne({ keyword: kw.toLowerCase() });
+        if (!exists) {
+          await KR.create({ keyword: kw.toLowerCase(), market: pack.market, source: "pack:" + pack.id });
+          created++;
+        }
+      }
+    }
+    if (created > 0) console.log("[seo-agent] auto-imported", created, "target keywords");
+  } catch (e) {
+    console.error("[seo-agent] auto-import failed:", e.message);
+  }
+}
+
 export function startSeoAgent() {
   if (process.env.SEO_AGENT_DISABLED === '1') {
     console.log('[seo-agent] disabled via SEO_AGENT_DISABLED=1');
@@ -138,6 +165,21 @@ export function startSeoAgent() {
       runDailyIndexingBatch('cron-10h').catch((e) => console.error('[seo-indexing-cron] failed:', e.message));
     }, { timezone: 'Europe/Paris' });
     console.log('[seo-agent] indexing cron scheduled: daily 10h Paris (200 URLs/day to Google Indexing API)');
+
+  // Weekly Monday 8h Paris : rapport SEO email
+  cron.schedule('0 8 * * 1', () => {
+    sendRankingReport({ periodLabel: 'hebdomadaire' }).then(r => console.log('[seo-report]', r)).catch(e => console.error('[seo-report] failed:', e.message));
+  }, { timezone: 'Europe/Paris' });
+  console.log('[seo-agent] ranking report cron scheduled: weekly Monday 8h Paris');
+
+  // Weekly Sunday 3h Paris : auto-optimize 10 keywords prioritaires
+  cron.schedule('0 3 * * 0', () => {
+    runOptimizerBatch({ limit: 10 }).then(r => console.log('[seo-optimizer]', r.count || 0, 'pages traitées')).catch(e => console.error('[seo-optimizer] failed:', e.message));
+  }, { timezone: 'Europe/Paris' });
+  console.log('[seo-agent] auto-optimizer cron scheduled: weekly Sunday 3h Paris (10 pages/run)');
+
+  // Auto-import target keywords au boot (idempotent)
+  autoImportTargetKeywords();
   }
 
 

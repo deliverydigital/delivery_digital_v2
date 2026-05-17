@@ -78,8 +78,19 @@ export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?
   const [items, setItems] = useState<SeoItem[]>([]);
   const [pageStats, setPageStats] = useState<Record<string, PageStat>>({});
   const [gscStatus, setGscStatus] = useState<'ok' | 'unauthorized' | 'error' | null>(null);
-  const [displayMode, setDisplayMode] = useState<'cards' | 'table'>(() => (localStorage.getItem('dd_seo_display_mode') as 'cards' | 'table') || 'cards');
-  const [filterStatus, setFilterStatus] = useState<SeoStatus>('draft');
+  // Initial state from cross-tab nav intent (set by Dashboard KPI clicks)
+  const navIntent = (() => {
+    try {
+      const raw = sessionStorage.getItem('admin_nav_intent');
+      if (!raw) return null;
+      const j = JSON.parse(raw);
+      if (j.section !== 'seo') return null;
+      sessionStorage.removeItem('admin_nav_intent');
+      return j;
+    } catch { return null; }
+  })();
+  const [displayMode, setDisplayMode] = useState<'cards' | 'table'>(() => navIntent?.displayMode || (localStorage.getItem('dd_seo_display_mode') as 'cards' | 'table') || 'cards');
+  const [filterStatus, setFilterStatus] = useState<SeoStatus>((navIntent?.filterStatus as SeoStatus) || 'draft');
   const [filterType, setFilterType] = useState<SeoType | 'all'>('all');
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -243,6 +254,7 @@ export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?
             gscStatus={gscStatus}
             displayMode={displayMode}
             setDisplayMode={(m) => { setDisplayMode(m); localStorage.setItem('dd_seo_display_mode', m); }}
+            initialPerfFilter={navIntent?.perfFilter}
             loading={loading}
             filterStatus={filterStatus}
             filterType={filterType}
@@ -367,6 +379,7 @@ export default function SeoAdmin({ embedded = false, sharedSecret }: { embedded?
             gscStatus={gscStatus}
             displayMode={displayMode}
             setDisplayMode={(m) => { setDisplayMode(m); localStorage.setItem('dd_seo_display_mode', m); }}
+            initialPerfFilter={navIntent?.perfFilter}
             loading={loading}
             filterStatus={filterStatus}
             filterType={filterType}
@@ -478,7 +491,7 @@ function NavBtn({ active, icon, onClick, label }: { active: boolean; icon: React
 /* ============== LIST VIEW ============== */
 
 function ListView({
-  items, pageStats, gscStatus, displayMode, setDisplayMode, loading, filterStatus, filterType, setFilterType,
+  items, pageStats, gscStatus, displayMode, setDisplayMode, initialPerfFilter, loading, filterStatus, filterType, setFilterType,
   onEdit, onSubmit, onReject, onDelete, onRefresh,
   onBulkSubmit, onPingAll, onCopyBatch,
 }: {
@@ -487,6 +500,7 @@ function ListView({
   gscStatus: 'ok' | 'unauthorized' | 'error' | null;
   displayMode: 'cards' | 'table';
   setDisplayMode: (m: 'cards' | 'table') => void;
+  initialPerfFilter?: string;
   loading: boolean;
   filterStatus: SeoStatus;
   filterType: SeoType | 'all';
@@ -599,7 +613,7 @@ function ListView({
           <p className="text-[#86868B] text-[14px]">Rien a afficher pour ce filtre.</p>
         </div>
       ) : filterStatus === 'published' && displayMode === 'table' ? (
-        <PublishedTable items={items} pageStats={pageStats} onEdit={onEdit} />
+        <PublishedTable items={items} pageStats={pageStats} onEdit={onEdit} initialPerfFilter={initialPerfFilter as any} />
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
@@ -625,15 +639,16 @@ type SortDir = 'asc' | 'desc';
 
 type PerfFilter = 'all' | 'top_positions' | 'with_clicks' | 'with_impressions' | 'no_impressions';
 
-function PublishedTable({ items, pageStats, onEdit }: {
+function PublishedTable({ items, pageStats, onEdit, initialPerfFilter }: {
   items: SeoItem[];
   pageStats: Record<string, PageStat>;
   onEdit: (item: SeoItem) => void;
+  initialPerfFilter?: PerfFilter;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>('clicks');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [search, setSearch] = useState('');
-  const [perfFilter, setPerfFilter] = useState<PerfFilter>('all');
+  const [perfFilter, setPerfFilter] = useState<PerfFilter>(initialPerfFilter || 'all');
   const [countryFilter, setCountryFilter] = useState<string>('all');
 
   const countries = Array.from(new Set(items.map((i: any) => i.country).filter(Boolean))).sort() as string[];

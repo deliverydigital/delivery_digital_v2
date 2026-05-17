@@ -323,4 +323,77 @@ router.get('/gsc-pages', async (req, res) => {
   }
 });
 
+
+/* ------------------------- KEYWORDS (queries GSC categorises) ------------------------- */
+router.get('/keywords', async (req, res) => {
+  const days = clampRange(req.query.range);
+  const since = rangeStart(days);
+  try {
+    const gsc = await querySearchAnalytics({ days, dimensions: ['query', 'page'], rowLimit: 1000 });
+    if (!gsc.ok) {
+      return res.json({ range: days, gscStatus: gsc.status, message: gsc.message, quickWins: [], boostTop3: [], top3Keepers: [], pageThreePlus: [], convertingKeywords: [] });
+    }
+
+    // Pages qui ont eu des conversions
+    const convAgg = await Conversion.aggregate([
+      { $match: { createdAt: { $gte: since } } },
+      { $group: { _id: '$page', conversions: { $sum: 1 } } },
+    ]);
+    const convByPath = Object.fromEntries(convAgg.map((x) => [x._id, x.conversions]));
+
+    const items = [];
+    for (const row of gsc.rows) {
+      const query = row.keys[0];
+      const url = row.keys[1] || '';
+      let host = '', pathname = '/', slug = null;
+      try {
+        const u = new URL(url);
+        host = u.hostname; pathname = u.pathname || '/';
+        if (host === 'deliverydigital.fr' || host === 'www.deliverydigital.fr') {
+          if (pathname.startsWith('/services/')) slug = pathname.slice('/services/'.length).replace(/\/$/, '');
+          else if (pathname.startsWith('/blog/')) slug = pathname.slice('/blog/'.length).replace(/\/$/, '');
+        }
+      } catch { /* */ }
+
+      const isMain = host === 'deliverydigital.fr' || host === 'www.deliverydigital.fr';
+      if (!isMain) continue; // skip subdomains
+
+      items.push({
+        query,
+        url,
+        path: pathname,
+        slug,
+        clicks: row.clicks || 0,
+        impressions: row.impressions || 0,
+        ctr: row.ctr || 0,
+        position: row.position || 0,
+        conversions: convByPath[pathname] || 0,
+      });
+    }
+
+    // Categorisation
+    const quickWins = items.filter(x => x.position > 10 && x.position <= 20).sort((a,b) => b.impressions - a.impressions);
+    const boostTop3 = items.filter(x => x.position > 3 && x.position <= 10).sort((a,b) => b.clicks - a.clicks || b.impressions - a.impressions);
+    const top3Keepers = items.filter(x => x.position > 0 && x.position <= 3).sort((a,b) => b.clicks - a.clicks || b.impressions - a.impressions);
+    const pageThreePlus = items.filter(x => x.position > 20).sort((a,b) => b.impressions - a.impressions).slice(0, 30);
+
+    // Convertingkeywords : queries dont la page a eu des conversions
+    const convertingKeywords = items.filter(x => x.conversions > 0).sort((a,b) => b.conversions - a.conversions || b.clicks - a.clicks).slice(0, 30);
+
+    res.json({
+      range: days,
+      gscStatus: 'ok',
+      totals: { totalQueries: items.length, totalImpressions: items.reduce((s, x) => s + x.impressions, 0), totalClicks: items.reduce((s, x) => s + x.clicks, 0) },
+      quickWins: quickWins.slice(0, 30),
+      boostTop3: boostTop3.slice(0, 30),
+      top3Keepers: top3Keepers.slice(0, 30),
+      pageThreePlus,
+      convertingKeywords,
+    });
+  } catch (e) {
+    res.status(500).json({ error: 'keywords_failed', message: String(e.message || e) });
+  }
+});
+
+
 export default router;

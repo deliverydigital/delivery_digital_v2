@@ -201,7 +201,7 @@ export default function PublicSeoPage({ slug }: { slug: string }) {
           href={`/discutons?utm_source=site&utm_medium=article_footer&utm_campaign=${encodeURIComponent(slug)}`}
           className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#1D1D1F] text-white text-[15px] font-semibold hover:bg-[#3C3C43]"
         >
-          🤖 Démarrer maintenant →
+          Démarrer maintenant →
         </a>
       </div>
 

@@ -48,7 +48,7 @@ export default function ConsentBanner() {
           <div className="flex items-start gap-3 mb-3">
             <span
               className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(89,199,221,0.18)', color: '#59C7DD' }}
+              style={{ background: 'rgba(0,102,204,0.18)', color: '#0066CC' }}
               aria-hidden
             >
               🍪
@@ -82,8 +82,8 @@ export default function ConsentBanner() {
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <button
               onClick={() => setConsent('granted')}
-              className="px-4 py-2 rounded-full text-[13px] font-semibold transition active:scale-[0.98] hover:opacity-90"
-              style={{ background: '#59C7DD', color: '#002731' }}
+              className="px-4 py-2 rounded-full text-[13px] font-semibold transition active:scale-[0.98] hover:bg-[#0077ED]"
+              style={{ background: '#0066CC', color: '#FFFFFF' }}
             >
               Accepter tout
             </button>
@@ -97,7 +97,7 @@ export default function ConsentBanner() {
             <button
               onClick={() => setShowDetails((v) => !v)}
               className="ml-auto text-[12px] underline transition hover:opacity-80"
-              style={{ color: '#A2DDE9' }}
+              style={{ color: '#5CADFF' }}
             >
               {showDetails ? 'Masquer les détails' : 'Personnaliser'}
             </button>

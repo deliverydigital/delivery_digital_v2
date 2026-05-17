@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { LayoutDashboard, Users, Sparkles, LogOut, MessageSquare, Loader2, FileText, BarChart3, GraduationCap, FolderOpen, ExternalLink } from 'lucide-react';
 import AIOrb from './AIOrb';
 import SeoAdmin from './SeoAdmin';
+import RankingsTab from './admin/RankingsTab';
 import ProspectAdmin from './ProspectAdmin';
 import LiveConversations from './LiveConversations';
 import QuoteAdmin from './QuoteAdmin';
@@ -13,12 +14,13 @@ const SECRET_KEY = 'dd_seo_admin_secret';
 // Fusion 2026-05-14 (Rabah) : ajout onglets 'formations' (TrainingProgramsManagement)
 // et 'gestion' (lien vers ancien AdminDashboard /?admin=true pour Clients/Projets/Taches
 // en attendant migration complete demain).
-type Section = 'overview' | 'conversations' | 'prospects' | 'quotes' | 'seo' | 'dashboard' | 'formations' | 'gestion';
+type Section = 'overview' | 'conversations' | 'prospects' | 'quotes' | 'seo' | 'dashboard' | 'formations' | 'gestion' | 'rankings';
 
 export default function AdminPanel() {
   const [secret, setSecret] = useState<string | null>(() => localStorage.getItem(SECRET_KEY));
   const [section, setSection] = useState<Section>(() => {
     const p = window.location.pathname;
+    if (p.startsWith('/admin/rankings') || p.startsWith('/admin/serp')) return 'rankings';
     if (p.startsWith('/admin/seo')) return 'seo';
     if (p.startsWith('/admin/prospects')) return 'prospects';
     if (p.startsWith('/admin/conversations')) return 'conversations';
@@ -28,6 +30,11 @@ export default function AdminPanel() {
     if (p.startsWith('/admin/gestion') || p.startsWith('/admin/projects') || p.startsWith('/admin/clients')) return 'gestion';
     return 'overview';
   });
+  useEffect(() => {
+    const handler = (e: any) => { if (e?.detail) setSection(e.detail); };
+    window.addEventListener('admin-navigate', handler as any);
+    return () => window.removeEventListener('admin-navigate', handler as any);
+  }, []);
   const [stats, setStats] = useState<{ prospects: number; conversations: number; activeConv: number; published: number } | null>(null);
 
   const loadStats = useCallback(async () => {
@@ -104,6 +111,7 @@ export default function AdminPanel() {
           <SideBtn active={section === 'quotes'} icon={<FileText className="h-4 w-4" />} label="Devis" onClick={() => setSection('quotes')} />
           <SideBtn active={section === 'formations'} icon={<GraduationCap className="h-4 w-4" />} label="Formations" onClick={() => setSection('formations')} />
           <SideBtn active={section === 'dashboard'} icon={<BarChart3 className="h-4 w-4" />} label="Dashboard" onClick={() => setSection('dashboard')} />
+          <SideBtn active={section === 'rankings'} icon={<BarChart3 className="h-4 w-4" />} label="Mots-clés SERP" onClick={() => setSection('rankings')} />
           <SideBtn active={section === 'seo'} icon={<Sparkles className="h-4 w-4" />} label="SEO Content" onClick={() => setSection('seo')} />
           <SideBtn active={section === 'gestion'} icon={<FolderOpen className="h-4 w-4" />} label="Projets & Clients" onClick={() => setSection('gestion')} />
         </nav>
@@ -136,6 +144,7 @@ export default function AdminPanel() {
         {section === 'prospects' && <ProspectAdmin embedded sharedSecret={secret} />}
         {section === 'quotes' && <QuoteAdmin secret={secret} />}
         {section === 'dashboard' && <AdminConversionsDashboard secret={secret} />}
+        {section === 'rankings' && <RankingsTab secret={secret} />}
         {section === 'seo' && <SeoAdmin embedded sharedSecret={secret} />}
         {section === 'formations' && <TrainingProgramsManagement />}
         {section === 'gestion' && <GestionPlaceholder />}

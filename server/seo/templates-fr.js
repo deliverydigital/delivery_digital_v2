@@ -40,9 +40,9 @@ const VALUE_PROPS = [
 ];
 
 const CTA_INLINE_VARIANTS = [
-  "Parlez de votre projet a notre [agent IA conversationnel]({cta}). Il cadre votre besoin en 5 minutes et le route vers le bon interlocuteur.",
-  "Une idee claire ? [Demarrez la conversation ici]({cta}) - notre agent IA recupere l'essentiel et on revient vers vous sous 24h ouvrees.",
-  "Pas envie d'un long cahier des charges ? [Decrivez votre projet a l'agent IA]({cta}). On vous repond sous 1 jour ouvre.",
+  "Parlez-nous de votre projet. [Décrivez votre idée]({cta}).",
+  "Une idée claire ? [Démarrez la conversation ici]({cta}).",
+  "Pas envie d'un long cahier des charges ? [Décrivez votre projet]({cta}).",
   "Envie d'evaluer la faisabilite ou le budget ? [Ouvrez le chat]({cta}) et on revient vers vous rapidement.",
 ];
 
@@ -80,14 +80,14 @@ const FAQ_BANK = [
       "Comment se passe le premier contact ?",
       "Quelle est la premiere etape ?",
     ],
-    a: () => `Le plus rapide : notre agent IA conversationnel sur /discutons. Il pose les 5 questions qui comptent en quelques minutes, puis un ingenieur senior vous rappelle. Pas de formulaire interminable.`,
+    a: () => `Le plus rapide : passez par /discutons. Quelques questions ciblées, puis un ingénieur senior vous rappelle. Pas de formulaire interminable.`,
   },
   {
     q_variants: [
       "Signez-vous un NDA avant d'echanger les details ?",
       "Pouvons-nous partager des informations confidentielles ?",
     ],
-    a: () => `Oui. Nous signons des NDA mutuels quand les projets le necessitent. Mentionnez-le sur /discutons ou dans votre premier message, on vous renvoie un projet de NDA sous 24h.`,
+    a: () => `Oui. Nous signons des NDA mutuels quand les projets le necessitent. Mentionnez-le sur /discutons ou dans votre premier message, on vous renvoie un projet de NDA .`,
   },
 ];
 
@@ -118,7 +118,7 @@ function buildBody({ city, service, seed }) {
 
 ${intro}
 
-> **[Decrivez votre projet a notre agent IA](${cta})** - il cadre le besoin en 5 minutes.
+> **[Décrivez votre idée](${cta})**.
 
 ## Ce que nous livrons
 
@@ -161,7 +161,7 @@ ${faqShuffled.map((f) => `### ${pick(f.q_variants, seed).replace('{city}', city.
 
 ## Discutons
 
-Le plus rapide pour demarrer : notre agent IA conversationnel. Il pose les 5 questions qui comptent et route votre demande vers un ingenieur senior.
+Le plus rapide pour démarrer : [décrivez votre idée](/discutons). Quelques questions ciblées et un ingénieur senior prend la suite.
 
 [**Demarrer la conversation sur /discutons →**](${cta})
 `;
