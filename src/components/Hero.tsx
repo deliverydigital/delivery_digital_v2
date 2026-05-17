@@ -164,7 +164,7 @@ const Hero = () => {
               href="#services"
               className="text-[17px] text-[#2997FF] hover:underline inline-flex items-center"
             >
-              Voir nos services
+              {t('hero.viewServices')}
               <span className="ml-1 text-[18px]">›</span>
             </a>
             {/* Lien Formation pro cache temporairement - on bascule la formation sur un site dedie */}

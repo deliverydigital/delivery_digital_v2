@@ -192,16 +192,16 @@ export default function PublicSeoPage({ slug }: { slug: string }) {
           className="text-[22px] sm:text-[28px] text-[#1D1D1F] mb-3"
           style={{ fontFamily: '"Charter", "Iowan Old Style", Georgia, serif', fontWeight: 700 }}
         >
-          Discutons de votre projet
+          Notre agent IA vous répond
         </h3>
         <p className="text-[15px] text-[#86868B] mb-6 max-w-[480px] mx-auto">
-          {t("chat.aiUnderstands")}
+          Décrivez votre idée.
         </p>
         <a
-          href="/discutons"
+          href={`/discutons?utm_source=site&utm_medium=article_footer&utm_campaign=${encodeURIComponent(slug)}`}
           className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#1D1D1F] text-white text-[15px] font-semibold hover:bg-[#3C3C43]"
         >
-          Demarrer la conversation
+          🤖 Démarrer maintenant →
         </a>
       </div>
 

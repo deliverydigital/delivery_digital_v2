@@ -8,7 +8,9 @@
     "training": "Training",
     "quote": "Offerte",
     "formationBtn": "Training",
-    "solutionsBtn": "Oplossingen"
+    "solutionsBtn": "Oplossingen",
+    "discutons": "Laten we praten",
+    "discutonsLong": "Laten we over je project praten"
   },
   "tiles": {
     "eyebrow": "Onze expertise",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Digitale Diensten"
-    }
+    },
+    "viewServices": "Onze diensten"
   },
   "services": {
     "title": "Onze Diensten",
@@ -181,7 +184,24 @@
       "privacy": "Privacybeleid",
       "terms": "Gebruiksvoorwaarden",
       "sitemap": "Sitemap"
-    }
+    },
+    "sectionFrance": "Diensten per stad (Frankrijk)",
+    "sectionGulf": "Diensten in de Golf",
+    "sectionCompany": "Bedrijf",
+    "sectionContact": "Contact",
+    "about": "Over ons",
+    "careers": "Vacatures",
+    "blog": "Blog",
+    "cases": "Casestudy's",
+    "faq": "FAQ",
+    "support": "Support",
+    "viewAllCitiesFr": "Alle steden bekijken →",
+    "viewAllCitiesGulf": "Alle locaties →",
+    "hours": "Ma - Vr · 9u - 18u",
+    "downloadAccessPlan": "Toegangsplan downloaden",
+    "legalMentions": "Juridische vermeldingen",
+    "complaint": "Klacht",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Nice, Frankrijk · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "Klacht",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Typ uw bericht",
     "typing": "DELIVERY Digital is aan het typen...",
-    "describeIdea": "Beschrijf uw idee. Een expert neemt binnen 24u contact met u op.",
+    "describeIdea": "Beschrijf je idee.",
     "letsTalk": "Laten we praten over uw project.",
     "logout": "Uitloggen",
     "confidential": "Uw berichten blijven vertrouwelijk en worden alleen gebruikt voor uw project.",
@@ -454,5 +474,9 @@
       "chapter5": "Afvalbeheer",
       "chapter6": "Afvalreductie"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Beschrijf je idee.",
+    "cta": "Starten"
   }
 }

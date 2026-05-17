@@ -8,7 +8,9 @@
     "training": "研修",
     "quote": "お見積り",
     "formationBtn": "研修",
-    "solutionsBtn": "ソリューション"
+    "solutionsBtn": "ソリューション",
+    "discutons": "話しましょう",
+    "discutonsLong": "プロジェクトについてお話しましょう"
   },
   "tiles": {
     "eyebrow": "当社の専門分野",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "デジタルサービス"
-    }
+    },
+    "viewServices": "サービスを見る"
   },
   "services": {
     "title": "サービス",
@@ -181,7 +184,24 @@
       "privacy": "プライバシーポリシー",
       "terms": "利用規約",
       "sitemap": "サイトマップ"
-    }
+    },
+    "sectionFrance": "都市別サービス (フランス)",
+    "sectionGulf": "湾岸地域のサービス",
+    "sectionCompany": "会社",
+    "sectionContact": "お問い合わせ",
+    "about": "会社概要",
+    "careers": "採用",
+    "blog": "ブログ",
+    "cases": "導入事例",
+    "faq": "よくある質問",
+    "support": "サポート",
+    "viewAllCitiesFr": "すべての都市を見る →",
+    "viewAllCitiesGulf": "すべての拠点 →",
+    "hours": "月 - 金 · 9時 - 18時",
+    "downloadAccessPlan": "アクセスプランをダウンロード",
+    "legalMentions": "法的事項",
+    "complaint": "苦情",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 ニース, フランス · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "苦情受付",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "メッセージを入力",
     "typing": "DELIVERY Digitalが入力中...",
-    "describeIdea": "アイデアをお聞かせください。専門家が24時間以内にご連絡します。",
+    "describeIdea": "アイデアを教えてください。",
     "letsTalk": "プロジェクトについてお聞かせください。",
     "logout": "ログアウト",
     "confidential": "メッセージは機密情報として扱われ、プロジェクトのためにのみ使用されます。",
@@ -454,5 +474,9 @@
       "chapter5": "廃棄物管理",
       "chapter6": "廃棄物削減"
     }
+  },
+  "stickyDiscutons": {
+    "title": "アイデアを教えてください。",
+    "cta": "開始"
   }
 }

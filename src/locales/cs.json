@@ -8,7 +8,9 @@
     "training": "Školení",
     "quote": "Cenová nabídka",
     "formationBtn": "Školení",
-    "solutionsBtn": "Řešení"
+    "solutionsBtn": "Řešení",
+    "discutons": "Promluvme si",
+    "discutonsLong": "Promluvme si o vašem projektu"
   },
   "tiles": {
     "eyebrow": "Naše odbornost",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Digitální služby"
-    }
+    },
+    "viewServices": "Naše služby"
   },
   "services": {
     "title": "Naše služby",
@@ -181,7 +184,24 @@
       "privacy": "Zásady ochrany osobních údajů",
       "terms": "Podmínky použití",
       "sitemap": "Mapa stránek"
-    }
+    },
+    "sectionFrance": "Služby podle města (Francie)",
+    "sectionGulf": "Služby v Zálivu",
+    "sectionCompany": "Společnost",
+    "sectionContact": "Kontakt",
+    "about": "O nás",
+    "careers": "Kariéra",
+    "blog": "Blog",
+    "cases": "Případové studie",
+    "faq": "FAQ",
+    "support": "Podpora",
+    "viewAllCitiesFr": "Zobrazit všechna města →",
+    "viewAllCitiesGulf": "Všechny lokality →",
+    "hours": "Po - Pá · 9 - 18",
+    "downloadAccessPlan": "Stáhnout plán přístupu",
+    "legalMentions": "Právní upozornění",
+    "complaint": "Reklamace",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Nice, Francie · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "Reklamace",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Napište svou zprávu",
     "typing": "DELIVERY Digital píše...",
-    "describeIdea": "Popište svůj nápad. Odborník se vám ozve do 24 hodin.",
+    "describeIdea": "Popište svůj nápad.",
     "letsTalk": "Promluvme si o vašem projektu.",
     "logout": "Odhlásit se",
     "confidential": "Vaše zprávy zůstávají důvěrné a slouží pouze pro váš projekt.",
@@ -454,5 +474,9 @@
       "chapter5": "Nakládání s odpady",
       "chapter6": "Snižování odpadu"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Popište svůj nápad.",
+    "cta": "Začít"
   }
 }

@@ -131,6 +131,17 @@ export function startSeoAgent() {
 
   console.log('[seo-agent] cron scheduled (2 landings/day + 1 blog/week + audit Sunday).');
 
+  // Daily 10h Paris : ping Google Indexing API 200 URLs/jour (apres reset quota a 9h Paris).
+  // @author Rabah Ziane - 2026-05-17
+  if (process.env.SEO_INDEXING_CRON_DISABLED !== '1') {
+    cron.schedule('0 10 * * *', () => {
+      runDailyIndexingBatch('cron-10h').catch((e) => console.error('[seo-indexing-cron] failed:', e.message));
+    }, { timezone: 'Europe/Paris' });
+    console.log('[seo-agent] indexing cron scheduled: daily 10h Paris (200 URLs/day to Google Indexing API)');
+  }
+
+
+
   // Kickstart : au boot, si pas de draft en cours, genere 1 immediate (sauf si SEO_AGENT_NO_KICKSTART=1).
   if (process.env.SEO_AGENT_NO_KICKSTART !== '1') {
     setTimeout(async () => {
@@ -172,4 +183,52 @@ if (cliArg) {
     console.error(e);
     process.exit(1);
   });
+}
+
+/**
+ * Ping Google Indexing API pour 200 URLs/jour (quota par defaut).
+ * Strategie : prio aux pages publiees jamais pingees, puis aux plus anciennes (re-cycle).
+ * Quota Google reset a minuit Pacific Time = ~9h Paris. On lance a 10h Paris.
+ *
+ * @author Rabah Ziane - 2026-05-17
+ */
+export async function runDailyIndexingBatch(reason = 'cron') {
+  const QUOTA = parseInt(process.env.GOOGLE_INDEXING_DAILY_QUOTA || '200', 10);
+  const log = (msg) => console.log(`[seo-indexing-cron:${reason}] ${msg}`);
+  log(`start, quota=${QUOTA}`);
+
+  const items = await SeoContent.find({ status: 'published' })
+    .sort({ indexingApiPingedAt: 1, publishedAt: 1 })
+    .limit(QUOTA)
+    .lean();
+
+  if (items.length === 0) {
+    log('no published pages to ping');
+    return { count: 0, ok: 0, quota: 0, error: 0 };
+  }
+
+  const { notifyGoogle } = await import('../seo/googleIndexing.js');
+
+  let ok = 0, quota = 0, err = 0;
+  for (const it of items) {
+    const path = it.type === 'article' ? `/blog/${it.slug}` : `/services/${it.slug}`;
+    const url = `https://deliverydigital.fr${path}`;
+    const r = await notifyGoogle(url);
+    const now = new Date();
+    let result = 'error';
+    if (r.ok) { result = 'ok'; ok++; }
+    else if (r.status === 429) { result = '429'; quota++; }
+    else { err++; log(`error ${url}: ${r.status || '?'}`); }
+
+    await SeoContent.updateOne({ _id: it._id }, { $set: { indexingApiPingedAt: now, indexingApiPingResult: result } });
+
+    if (quota >= 1) {
+      log(`quota 429 hit after ${ok} OK, stop`);
+      break;
+    }
+    await new Promise((res) => setTimeout(res, 200));
+  }
+
+  log(`done: ${ok} OK, ${quota} quota-stopped, ${err} errors over ${items.length} candidates`);
+  return { count: items.length, ok, quota, error: err };
 }

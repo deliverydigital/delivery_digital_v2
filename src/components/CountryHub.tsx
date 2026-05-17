@@ -50,7 +50,7 @@ export default function CountryHub({ code }: { code: string }) {
   if (error || !data) return <div style={{ background: '#F2EFE9', minHeight: '100vh' }}><Header /><div className="text-center py-20 text-[#86868B]">Pays non trouvé. <a href="/services" className="text-[#0066CC] underline">Retour aux pays</a></div></div>;
 
   return (
-    <div style={{ background: '#F2EFE9', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg-soft, #FBFBFD)', minHeight: '100vh' }}>
       <Header />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         <p className="text-[11px] uppercase tracking-[0.22em] font-bold mb-2 text-[#1D1D1F]/70">

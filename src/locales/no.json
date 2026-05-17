@@ -8,7 +8,9 @@
     "training": "Opplæring",
     "quote": "Tilbud",
     "formationBtn": "Opplæring",
-    "solutionsBtn": "Løsninger"
+    "solutionsBtn": "Løsninger",
+    "discutons": "La oss snakke",
+    "discutonsLong": "La oss snakke om prosjektet ditt"
   },
   "tiles": {
     "eyebrow": "Vår ekspertise",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Digitale tjenester"
-    }
+    },
+    "viewServices": "Våre tjenester"
   },
   "services": {
     "title": "Våre tjenester",
@@ -181,7 +184,24 @@
       "privacy": "Personvernpolicy",
       "terms": "Bruksvilkår",
       "sitemap": "Nettstedskart"
-    }
+    },
+    "sectionFrance": "Tjenester per by (Frankrike)",
+    "sectionGulf": "Tjenester i Gulfen",
+    "sectionCompany": "Selskap",
+    "sectionContact": "Kontakt",
+    "about": "Om oss",
+    "careers": "Karriere",
+    "blog": "Blogg",
+    "cases": "Kundecase",
+    "faq": "FAQ",
+    "support": "Support",
+    "viewAllCitiesFr": "Se alle byer →",
+    "viewAllCitiesGulf": "Alle lokasjoner →",
+    "hours": "Man - Fre · 9 - 18",
+    "downloadAccessPlan": "Last ned adkomstplan",
+    "legalMentions": "Juridisk informasjon",
+    "complaint": "Klage",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Nice, Frankrike · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "Klage",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Skriv din melding",
     "typing": "DELIVERY Digital skriver...",
-    "describeIdea": "Beskriv ideen din. En ekspert svarer innen 24 timer.",
+    "describeIdea": "Beskriv idéen din.",
     "letsTalk": "La oss snakke om prosjektet ditt.",
     "logout": "Logg ut",
     "confidential": "Meldingene dine forblir konfidensielle og brukes kun for prosjektet ditt.",
@@ -454,5 +474,9 @@
       "chapter5": "Avfallshåndtering",
       "chapter6": "Avfallsreduksjon"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Beskriv idéen din.",
+    "cta": "Start"
   }
 }

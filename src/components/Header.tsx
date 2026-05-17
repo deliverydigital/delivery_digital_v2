@@ -93,7 +93,7 @@ const Header = () => {
     { name: t('header.home'), href: '/' },
     { name: t('header.services'), href: '/#services' },
     { name: t('header.training'), href: '/formation' },
-    { name: 'Discutons', href: '/discutons' },
+    { name: t('header.discutons'), href: '/discutons' },
   ];
 
   return (
@@ -245,7 +245,7 @@ const Header = () => {
                   onClick={toggleMenu}
                   className="block w-full text-center px-5 py-3 rounded-full text-[16px] font-semibold text-white bg-[#0066CC] hover:bg-[#0077ED] transition-colors"
                 >
-                  Discutons de votre projet ›
+                  {t('header.discutonsLong')} &rsaquo;
                 </a>
               </div>
               {/* Pas de language picker dans le drawer mobile : on garde uniquement le bouton Globe + dropdown du header (toujours visible). @author Rabah Ziane - 2026-05-11 */}

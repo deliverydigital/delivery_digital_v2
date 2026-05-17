@@ -8,7 +8,9 @@
     "training": "Formation",
     "quote": "Devis",
     "formationBtn": "Formation",
-    "solutionsBtn": "Solutions"
+    "solutionsBtn": "Solutions",
+    "discutons": "Discutons",
+    "discutonsLong": "Discutons de votre projet"
   },
   "tiles": {
     "eyebrow": "Nos expertises",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Services Numériques"
-    }
+    },
+    "viewServices": "Voir nos services"
   },
   "services": {
     "title": "Nos Services",
@@ -181,7 +184,24 @@
       "privacy": "Politique de confidentialité",
       "terms": "Conditions d'utilisation",
       "sitemap": "Plan du site"
-    }
+    },
+    "sectionFrance": "Services par ville (France)",
+    "sectionGulf": "Services dans le Golfe",
+    "sectionCompany": "Entreprise",
+    "sectionContact": "Contact",
+    "about": "À propos",
+    "careers": "Carrières",
+    "blog": "Blog",
+    "cases": "Études de cas",
+    "faq": "FAQ",
+    "support": "Support",
+    "viewAllCitiesFr": "Voir toutes nos villes →",
+    "viewAllCitiesGulf": "Toutes nos implantations →",
+    "hours": "Lun - Ven · 9h - 18h",
+    "downloadAccessPlan": "Télécharger le plan d'accès",
+    "legalMentions": "Mentions légales",
+    "complaint": "Réclamation",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Nice · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195. Déclaration d'activité enregistrée sous le numéro 93061064306 auprès du Préfet de la Région de Provence-Alpes-Côte d'Azur. Cet enregistrement ne vaut pas agrément de l'État."
   },
   "reclamation": {
     "badge": "Réclamation",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Tapez votre message",
     "typing": "DELIVERY Digital est en train d'écrire...",
-    "describeIdea": "Décrivez votre idée. Un expert revient vers vous sous 24h.",
+    "describeIdea": "Décrivez votre idée.",
     "letsTalk": "Parlons de votre projet.",
     "logout": "Se déconnecter",
     "confidential": "Vos messages restent confidentiels et servent uniquement pour votre projet.",
@@ -454,5 +474,9 @@
       "chapter5": "Gestion des déchets",
       "chapter6": "Réduction du gaspillage"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Décrivez votre idée.",
+    "cta": "Démarrer"
   }
 }

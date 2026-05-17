@@ -8,7 +8,9 @@
     "training": "Formação",
     "quote": "Orçamento",
     "formationBtn": "Formação",
-    "solutionsBtn": "Soluções"
+    "solutionsBtn": "Soluções",
+    "discutons": "Vamos conversar",
+    "discutonsLong": "Vamos falar do seu projeto"
   },
   "tiles": {
     "eyebrow": "As nossas competências",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Serviços Digitais"
-    }
+    },
+    "viewServices": "Nossos serviços"
   },
   "services": {
     "title": "Os Nossos Serviços",
@@ -181,7 +184,24 @@
       "privacy": "Política de Privacidade",
       "terms": "Condições de Utilização",
       "sitemap": "Mapa do Site"
-    }
+    },
+    "sectionFrance": "Serviços por cidade (França)",
+    "sectionGulf": "Serviços no Golfo",
+    "sectionCompany": "Empresa",
+    "sectionContact": "Contato",
+    "about": "Sobre",
+    "careers": "Carreiras",
+    "blog": "Blog",
+    "cases": "Casos de sucesso",
+    "faq": "FAQ",
+    "support": "Suporte",
+    "viewAllCitiesFr": "Ver todas as cidades →",
+    "viewAllCitiesGulf": "Todas as localizações →",
+    "hours": "Seg - Sex · 9h - 18h",
+    "downloadAccessPlan": "Baixar plano de acesso",
+    "legalMentions": "Aviso legal",
+    "complaint": "Reclamação",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Nice, França · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "Reclamação",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Digite a sua mensagem",
     "typing": "DELIVERY Digital está a escrever...",
-    "describeIdea": "Descreva a sua ideia. Um especialista responde em 24h.",
+    "describeIdea": "Descreva sua ideia.",
     "letsTalk": "Vamos falar sobre o seu projeto.",
     "logout": "Terminar sessão",
     "confidential": "As suas mensagens permanecem confidenciais e servem apenas para o seu projeto.",
@@ -454,5 +474,9 @@
       "chapter5": "Gestão de resíduos",
       "chapter6": "Redução do desperdício"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Descreva sua ideia.",
+    "cta": "Começar"
   }
 }

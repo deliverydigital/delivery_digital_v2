@@ -168,11 +168,11 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
               </div>
 
               <div className="rounded-2xl p-4 sm:p-5 shadow-sm" style={{ background: '#fff', borderLeft: `4px solid ${COLORS.accent}` }}>
-                <p className="text-[11px] uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: COLORS.accent }}>Pages indexées (GSC)</p>
+                <p className="text-[11px] uppercase tracking-[0.14em] font-semibold mb-1" style={{ color: COLORS.accent }} title="Nombre de pages qui ont reçu au moins 1 impression dans Google sur la période. Le nombre réel de pages indexées peut être plus élevé (visible dans GSC > Pages).">Pages actives (GSC)</p>
                 {seoOverview.seo.gscStatus === 'ok' ? (
                   <>
                     <p className="text-3xl font-bold" style={{ color: COLORS.primaryDark }}>{seoOverview.seo.indexedUrls.toLocaleString('fr-FR')}</p>
-                    <p className="text-[11px] mt-1" style={{ color: '#86868B' }}>sur {seoOverview.pages.published} publiées</p>
+                    <p className="text-[11px] mt-1" style={{ color: '#86868B' }}>vues sur {range}j · {seoOverview.pages.published} publiées</p>
                   </>
                 ) : (
                   <>
@@ -250,9 +250,20 @@ export default function AdminConversionsDashboard({ secret }: { secret: string }
             )}
 
             {seoOverview.seo.gscStatus === 'ok' && googleAuth?.connected && (
-              <div className="rounded-2xl p-2.5 mb-4 text-[12px] flex items-center gap-2" style={{ background: '#E7F8EE', border: '1px solid #B4E0C6' }}>
+              <div className="rounded-2xl p-2.5 mb-4 text-[12px] flex items-center gap-2 flex-wrap" style={{ background: '#E7F8EE', border: '1px solid #B4E0C6' }}>
                 <span style={{ color: '#1F7A4D' }}>✓</span>
-                <span style={{ color: '#1F7A4D' }}>Google Search Console connecté via <strong>{googleAuth.email}</strong>.</span>
+                <span className="flex-1" style={{ color: '#1F7A4D' }}>Google Search Console connecté via <strong>{googleAuth.email}</strong> · scopes: {(googleAuth.scopes || []).filter(x => !x.includes('openid') && !x.includes('userinfo')).map(x => x.split('/').pop()).join(', ')}</span>
+                <button
+                  onClick={async () => {
+                    if (!confirm('Déconnecter Google ?')) return;
+                    await fetch('/api/admin/google-oauth/disconnect', { method: 'POST', headers: { 'x-admin-secret': secret } });
+                    window.location.reload();
+                  }}
+                  className="inline-flex items-center px-3 py-1 rounded-full text-[11.5px] font-semibold whitespace-nowrap"
+                  style={{ background: '#fff', color: '#1F7A4D', border: '1px solid #B4E0C6' }}
+                >
+                  Déconnecter
+                </button>
               </div>
             )}
 

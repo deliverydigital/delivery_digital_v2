@@ -8,7 +8,9 @@
     "training": "Képzés",
     "quote": "Árajánlat",
     "formationBtn": "Képzés",
-    "solutionsBtn": "Megoldások"
+    "solutionsBtn": "Megoldások",
+    "discutons": "Beszéljünk",
+    "discutonsLong": "Beszéljünk a projektjéről"
   },
   "tiles": {
     "eyebrow": "Szakterületeink",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Digitális Szolgáltatások"
-    }
+    },
+    "viewServices": "Szolgáltatásaink"
   },
   "services": {
     "title": "Szolgáltatásaink",
@@ -181,7 +184,24 @@
       "privacy": "Adatvédelmi szabályzat",
       "terms": "Felhasználási feltételek",
       "sitemap": "Oldaltérkép"
-    }
+    },
+    "sectionFrance": "Szolgáltatások városonként (Franciaország)",
+    "sectionGulf": "Szolgáltatások az Öbölben",
+    "sectionCompany": "Vállalat",
+    "sectionContact": "Kapcsolat",
+    "about": "Rólunk",
+    "careers": "Karrier",
+    "blog": "Blog",
+    "cases": "Esettanulmányok",
+    "faq": "GYIK",
+    "support": "Támogatás",
+    "viewAllCitiesFr": "Összes város megtekintése →",
+    "viewAllCitiesGulf": "Összes helyszín →",
+    "hours": "H - P · 9 - 18",
+    "downloadAccessPlan": "Megközelítési terv letöltése",
+    "legalMentions": "Jogi nyilatkozat",
+    "complaint": "Panasz",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Nizza, Franciaország · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "Reklamáció",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Írja be üzenetét",
     "typing": "DELIVERY Digital épp ír...",
-    "describeIdea": "Írja le ötletét. Egy szakértő 24 órán belül válaszol.",
+    "describeIdea": "Írja le az ötletét.",
     "letsTalk": "Beszéljünk projektjéről.",
     "logout": "Kijelentkezés",
     "confidential": "Üzenetei bizalmasak maradnak és csak projektjéhez kerülnek felhasználásra.",
@@ -454,5 +474,9 @@
       "chapter5": "Hulladékkezelés",
       "chapter6": "Hulladékcsökkentés"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Írja le az ötletét.",
+    "cta": "Indítás"
   }
 }

@@ -53,6 +53,8 @@ const seoContentSchema = new Schema(
 
     // Audit
     publishedAt: { type: Date },
+    indexingApiPingedAt: { type: Date, default: null, index: true }, // dernière fois envoyée à Google Indexing API
+    indexingApiPingResult: { type: String, default: '' }, // 'ok' | '429' | 'error'
     createdBy: { type: String, default: 'agent' },
   },
   { timestamps: true }

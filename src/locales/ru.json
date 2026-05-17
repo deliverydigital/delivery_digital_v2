@@ -8,7 +8,9 @@
     "training": "Обучение",
     "quote": "Коммерческое предложение",
     "formationBtn": "Обучение",
-    "solutionsBtn": "Решения"
+    "solutionsBtn": "Решения",
+    "discutons": "Обсудим",
+    "discutonsLong": "Обсудим ваш проект"
   },
   "tiles": {
     "eyebrow": "Наша экспертиза",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Цифровые услуги"
-    }
+    },
+    "viewServices": "Наши услуги"
   },
   "services": {
     "title": "Наши услуги",
@@ -181,7 +184,24 @@
       "privacy": "Политика конфиденциальности",
       "terms": "Условия использования",
       "sitemap": "Карта сайта"
-    }
+    },
+    "sectionFrance": "Услуги по городам (Франция)",
+    "sectionGulf": "Услуги в Заливе",
+    "sectionCompany": "Компания",
+    "sectionContact": "Контакты",
+    "about": "О нас",
+    "careers": "Карьера",
+    "blog": "Блог",
+    "cases": "Кейсы",
+    "faq": "ЧЗВ",
+    "support": "Поддержка",
+    "viewAllCitiesFr": "Все города →",
+    "viewAllCitiesGulf": "Все локации →",
+    "hours": "Пн - Пт · 9 - 18",
+    "downloadAccessPlan": "Скачать план проезда",
+    "legalMentions": "Юридическая информация",
+    "complaint": "Жалоба",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Ницца, Франция · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "Жалоба",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Введите ваше сообщение",
     "typing": "DELIVERY Digital печатает...",
-    "describeIdea": "Опишите вашу идею. Эксперт свяжется с вами в течение 24 ч.",
+    "describeIdea": "Опишите вашу идею.",
     "letsTalk": "Поговорим о вашем проекте.",
     "logout": "Выйти",
     "confidential": "Ваши сообщения остаются конфиденциальными и используются только для вашего проекта.",
@@ -454,5 +474,9 @@
       "chapter5": "Управление отходами",
       "chapter6": "Сокращение отходов"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Опишите вашу идею.",
+    "cta": "Начать"
   }
 }

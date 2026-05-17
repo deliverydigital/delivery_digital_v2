@@ -8,7 +8,9 @@
     "training": "Schulung",
     "quote": "Angebot",
     "formationBtn": "Schulung",
-    "solutionsBtn": "Lösungen"
+    "solutionsBtn": "Lösungen",
+    "discutons": "Sprechen wir",
+    "discutonsLong": "Sprechen wir über Ihr Projekt"
   },
   "tiles": {
     "eyebrow": "Unsere Expertise",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Digitale Dienstleistungen"
-    }
+    },
+    "viewServices": "Unsere Leistungen"
   },
   "services": {
     "title": "Unsere Leistungen",
@@ -181,7 +184,24 @@
       "privacy": "Datenschutzerklärung",
       "terms": "Nutzungsbedingungen",
       "sitemap": "Sitemap"
-    }
+    },
+    "sectionFrance": "Dienstleistungen nach Stadt (Frankreich)",
+    "sectionGulf": "Dienstleistungen im Golf",
+    "sectionCompany": "Unternehmen",
+    "sectionContact": "Kontakt",
+    "about": "Über uns",
+    "careers": "Karriere",
+    "blog": "Blog",
+    "cases": "Fallstudien",
+    "faq": "FAQ",
+    "support": "Support",
+    "viewAllCitiesFr": "Alle Städte ansehen →",
+    "viewAllCitiesGulf": "Alle Standorte →",
+    "hours": "Mo - Fr · 9 - 18 Uhr",
+    "downloadAccessPlan": "Anfahrtsplan herunterladen",
+    "legalMentions": "Impressum",
+    "complaint": "Beschwerde",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Nizza, Frankreich · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "Beschwerde",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Ihre Nachricht eingeben",
     "typing": "DELIVERY Digital schreibt gerade...",
-    "describeIdea": "Beschreiben Sie Ihre Idee. Ein Experte meldet sich innerhalb von 24h bei Ihnen.",
+    "describeIdea": "Beschreiben Sie Ihre Idee.",
     "letsTalk": "Sprechen wir über Ihr Projekt.",
     "logout": "Abmelden",
     "confidential": "Ihre Nachrichten bleiben vertraulich und werden ausschließlich für Ihr Projekt verwendet.",
@@ -454,5 +474,9 @@
       "chapter5": "Abfallwirtschaft",
       "chapter6": "Abfallreduktion"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Beschreiben Sie Ihre Idee.",
+    "cta": "Starten"
   }
 }

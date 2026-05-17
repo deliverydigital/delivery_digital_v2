@@ -7,10 +7,12 @@
  * @author Rabah Ziane - 2026-05-17
  */
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const DISMISS_KEY = 'dd_sticky_discutons_dismissed';
 
 export default function StickyDiscutonsBar({ source = 'sticky' }: { source?: string }) {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -48,17 +50,14 @@ export default function StickyDiscutonsBar({ source = 'sticky' }: { source?: str
         <span className="text-[15px] sm:text-[14px] hidden xs:inline">💬</span>
         <div className="flex-1 min-w-0">
           <div className="text-[13px] sm:text-[13.5px] font-semibold leading-tight truncate">
-            Décrivez votre projet en 2&nbsp;minutes
-          </div>
-          <div className="text-[11px] text-white/60 leading-tight truncate hidden sm:block">
-            Notre agent IA cadre votre besoin · réponse sous 24h
+            {t('stickyDiscutons.title', 'Décrivez votre idée.')}
           </div>
         </div>
         <a
           href={href}
           className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-white text-[#1D1D1F] text-[12.5px] font-semibold hover:bg-[#F2EFE9] transition-colors whitespace-nowrap"
         >
-          Démarrer
+          {t('stickyDiscutons.cta', 'Démarrer')}
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 5l7 7-7 7" stroke="#1D1D1F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </a>
         <button onClick={close} aria-label="Fermer" className="text-white/40 hover:text-white p-1.5 -mr-0.5">

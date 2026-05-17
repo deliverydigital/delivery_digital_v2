@@ -8,7 +8,9 @@
     "training": "Εκπαίδευση",
     "quote": "Προσφορά",
     "formationBtn": "Εκπαίδευση",
-    "solutionsBtn": "Λύσεις"
+    "solutionsBtn": "Λύσεις",
+    "discutons": "Ας μιλήσουμε",
+    "discutonsLong": "Ας μιλήσουμε για το έργο σας"
   },
   "tiles": {
     "eyebrow": "Οι ειδικότητές μας",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Ψηφιακές Υπηρεσίες"
-    }
+    },
+    "viewServices": "Οι υπηρεσίες μας"
   },
   "services": {
     "title": "Οι Υπηρεσίες μας",
@@ -181,7 +184,24 @@
       "privacy": "Πολιτική Απορρήτου",
       "terms": "Όροι Χρήσης",
       "sitemap": "Χάρτης Ιστότοπου"
-    }
+    },
+    "sectionFrance": "Υπηρεσίες ανά πόλη (Γαλλία)",
+    "sectionGulf": "Υπηρεσίες στον Κόλπο",
+    "sectionCompany": "Εταιρεία",
+    "sectionContact": "Επικοινωνία",
+    "about": "Σχετικά",
+    "careers": "Καριέρα",
+    "blog": "Blog",
+    "cases": "Μελέτες περίπτωσης",
+    "faq": "Συχνές ερωτήσεις",
+    "support": "Υποστήριξη",
+    "viewAllCitiesFr": "Δείτε όλες τις πόλεις →",
+    "viewAllCitiesGulf": "Όλες οι τοποθεσίες →",
+    "hours": "Δευ - Παρ · 9 - 18",
+    "downloadAccessPlan": "Λήψη σχεδίου πρόσβασης",
+    "legalMentions": "Νομική σημείωση",
+    "complaint": "Παράπονο",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Νίκαια, Γαλλία · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "Καταγγελία",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Πληκτρολογήστε το μήνυμά σας",
     "typing": "Η DELIVERY Digital γράφει...",
-    "describeIdea": "Περιγράψτε την ιδέα σας. Ένας ειδικός θα επικοινωνήσει μαζί σας εντός 24 ωρών.",
+    "describeIdea": "Περιγράψτε την ιδέα σας.",
     "letsTalk": "Ας μιλήσουμε για το έργο σας.",
     "logout": "Αποσύνδεση",
     "confidential": "Τα μηνύματά σας παραμένουν εμπιστευτικά και χρησιμοποιούνται μόνο για το έργο σας.",
@@ -454,5 +474,9 @@
       "chapter5": "Διαχείριση αποβλήτων",
       "chapter6": "Μείωση αποβλήτων"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Περιγράψτε την ιδέα σας.",
+    "cta": "Έναρξη"
   }
 }

@@ -8,7 +8,9 @@
     "training": "Szkolenia",
     "quote": "Wycena",
     "formationBtn": "Szkolenia",
-    "solutionsBtn": "Rozwiązania"
+    "solutionsBtn": "Rozwiązania",
+    "discutons": "Porozmawiajmy",
+    "discutonsLong": "Porozmawiajmy o Twoim projekcie"
   },
   "tiles": {
     "eyebrow": "Nasze kompetencje",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Usługi Cyfrowe"
-    }
+    },
+    "viewServices": "Nasze usługi"
   },
   "services": {
     "title": "Nasze Usługi",
@@ -181,7 +184,24 @@
       "privacy": "Polityka prywatności",
       "terms": "Warunki użytkowania",
       "sitemap": "Mapa strony"
-    }
+    },
+    "sectionFrance": "Usługi według miast (Francja)",
+    "sectionGulf": "Usługi w Zatoce",
+    "sectionCompany": "Firma",
+    "sectionContact": "Kontakt",
+    "about": "O nas",
+    "careers": "Kariera",
+    "blog": "Blog",
+    "cases": "Studia przypadków",
+    "faq": "FAQ",
+    "support": "Wsparcie",
+    "viewAllCitiesFr": "Zobacz wszystkie miasta →",
+    "viewAllCitiesGulf": "Wszystkie lokalizacje →",
+    "hours": "Pon - Pt · 9 - 18",
+    "downloadAccessPlan": "Pobierz plan dojazdu",
+    "legalMentions": "Informacje prawne",
+    "complaint": "Reklamacja",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Nicea, Francja · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "Reklamacja",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Wpisz wiadomość",
     "typing": "DELIVERY Digital pisze...",
-    "describeIdea": "Opisz swój pomysł. Ekspert skontaktuje się z Tobą w ciągu 24h.",
+    "describeIdea": "Opisz swój pomysł.",
     "letsTalk": "Porozmawiajmy o Twoim projekcie.",
     "logout": "Wyloguj się",
     "confidential": "Twoje wiadomości pozostają poufne i są wykorzystywane wyłącznie do celów Twojego projektu.",
@@ -454,5 +474,9 @@
       "chapter5": "Zarządzanie odpadami",
       "chapter6": "Redukcja odpadów"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Opisz swój pomysł.",
+    "cta": "Rozpocznij"
   }
 }

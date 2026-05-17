@@ -21,6 +21,7 @@
 
 import crypto from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import GoogleOAuthToken from '../models/GoogleOAuthToken.js';
 
 let cachedSa = null;
 let cachedTokenInfo = null;
@@ -62,7 +63,37 @@ function signJwt(sa) {
   return `${signingInput}.${base64url(sig)}`;
 }
 
-async function getAccessToken() {
+async function getAccessTokenViaOAuth() {
+  try {
+    const doc = await GoogleOAuthToken.findOne({ service: 'gsc' });
+    if (!doc || !doc.refreshToken) return null;
+    // Verifier que le scope indexing est present
+    if (!doc.scopes || !doc.scopes.some(s => s.includes('indexing'))) return null;
+    const now = Date.now();
+    if (doc.accessToken && doc.accessTokenExpiresAt && doc.accessTokenExpiresAt.getTime() > now + 60_000) {
+      return doc.accessToken;
+    }
+    const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID || '';
+    const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET || '';
+    if (!clientId || !clientSecret) return null;
+    const r = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: clientId, client_secret: clientSecret,
+        refresh_token: doc.refreshToken, grant_type: 'refresh_token',
+      }),
+    });
+    const j = await r.json();
+    if (!j.access_token) return null;
+    doc.accessToken = j.access_token;
+    doc.accessTokenExpiresAt = new Date(now + (j.expires_in || 3600) * 1000 - 60_000);
+    await doc.save();
+    return j.access_token;
+  } catch { return null; }
+}
+
+async function getAccessTokenViaSA() {
   if (cachedTokenInfo && cachedTokenInfo.expiresAt > Date.now() + 60_000) {
     return cachedTokenInfo.token;
   }
@@ -80,7 +111,7 @@ async function getAccessToken() {
   });
   if (!res.ok) {
     const text = await res.text();
-    console.error('[google-indexing] token exchange failed:', res.status, text);
+    console.error('[google-indexing] SA token exchange failed:', res.status, text);
     return null;
   }
   const data = await res.json();
@@ -89,6 +120,13 @@ async function getAccessToken() {
     expiresAt: Date.now() + (data.expires_in || 3600) * 1000,
   };
   return cachedTokenInfo.token;
+}
+
+async function getAccessToken() {
+  // Priorite OAuth user (toujours propagee en GSC) sinon fallback SA
+  const oauth = await getAccessTokenViaOAuth();
+  if (oauth) return oauth;
+  return getAccessTokenViaSA();
 }
 
 export async function notifyGoogle(url, type = 'URL_UPDATED') {
@@ -126,5 +164,14 @@ export async function notifyGoogleBatch(urls, type = 'URL_UPDATED') {
 }
 
 export function isIndexingConfigured() {
-  return Boolean(process.env.GOOGLE_INDEXING_SA_KEY || process.env.GOOGLE_INDEXING_SA_FILE);
+  return Boolean(process.env.GOOGLE_INDEXING_SA_KEY || process.env.GOOGLE_INDEXING_SA_FILE || process.env.GOOGLE_OAUTH_CLIENT_ID);
+}
+
+export async function isIndexingReady() {
+  if (process.env.GOOGLE_INDEXING_SA_KEY || process.env.GOOGLE_INDEXING_SA_FILE) return true;
+  try {
+    const doc = await GoogleOAuthToken.findOne({ service: 'gsc' });
+    if (doc?.scopes?.some(s => s.includes('indexing'))) return true;
+  } catch { /* ignore */ }
+  return false;
 }

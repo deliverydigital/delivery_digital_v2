@@ -8,7 +8,9 @@
     "training": "التدريب",
     "quote": "عرض السعر",
     "formationBtn": "التدريب",
-    "solutionsBtn": "الحلول"
+    "solutionsBtn": "الحلول",
+    "discutons": "لنتحدث",
+    "discutonsLong": "لنناقش مشروعك"
   },
   "tiles": {
     "eyebrow": "خبراتنا",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "الخدمات الرقمية"
-    }
+    },
+    "viewServices": "تصفح خدماتنا"
   },
   "services": {
     "title": "خدماتنا",
@@ -181,7 +184,24 @@
       "privacy": "سياسة الخصوصية",
       "terms": "شروط الاستخدام",
       "sitemap": "خريطة الموقع"
-    }
+    },
+    "sectionFrance": "الخدمات حسب المدينة (فرنسا)",
+    "sectionGulf": "الخدمات في الخليج",
+    "sectionCompany": "الشركة",
+    "sectionContact": "اتصل بنا",
+    "about": "من نحن",
+    "careers": "الوظائف",
+    "blog": "المدونة",
+    "cases": "دراسات الحالة",
+    "faq": "الأسئلة الشائعة",
+    "support": "الدعم",
+    "viewAllCitiesFr": "عرض جميع المدن ←",
+    "viewAllCitiesGulf": "جميع المواقع ←",
+    "hours": "الاثنين - الجمعة · 9ص - 6م",
+    "downloadAccessPlan": "تنزيل خطة الوصول",
+    "legalMentions": "إشعارات قانونية",
+    "complaint": "شكوى",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 نيس، فرنسا · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "شكوى",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "اكتب رسالتك",
     "typing": "DELIVERY Digital تكتب...",
-    "describeIdea": "صِف فكرتك. سيتواصل معك خبير خلال 24 ساعة.",
+    "describeIdea": "صف فكرتك.",
     "letsTalk": "لنتحدث عن مشروعك.",
     "logout": "تسجيل الخروج",
     "confidential": "رسائلك تبقى سرية وتُستخدم فقط لمشروعك.",
@@ -454,5 +474,9 @@
       "chapter5": "إدارة النفايات",
       "chapter6": "تقليل النفايات"
     }
+  },
+  "stickyDiscutons": {
+    "title": "صف فكرتك.",
+    "cta": "ابدأ"
   }
 }

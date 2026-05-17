@@ -8,7 +8,9 @@
     "training": "Koulutus",
     "quote": "Tarjous",
     "formationBtn": "Koulutus",
-    "solutionsBtn": "Ratkaisut"
+    "solutionsBtn": "Ratkaisut",
+    "discutons": "Keskustellaan",
+    "discutonsLong": "Keskustellaan projektistasi"
   },
   "tiles": {
     "eyebrow": "Asiantuntemuksemme",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Digitaaliset palvelut"
-    }
+    },
+    "viewServices": "Palvelumme"
   },
   "services": {
     "title": "Palvelumme",
@@ -181,7 +184,24 @@
       "privacy": "Tietosuojakäytäntö",
       "terms": "Käyttöehdot",
       "sitemap": "Sivukartta"
-    }
+    },
+    "sectionFrance": "Palvelut kaupungeittain (Ranska)",
+    "sectionGulf": "Palvelut Persianlahdella",
+    "sectionCompany": "Yritys",
+    "sectionContact": "Yhteystiedot",
+    "about": "Tietoa meistä",
+    "careers": "Uramahdollisuudet",
+    "blog": "Blogi",
+    "cases": "Asiakastapaukset",
+    "faq": "UKK",
+    "support": "Tuki",
+    "viewAllCitiesFr": "Katso kaikki kaupungit →",
+    "viewAllCitiesGulf": "Kaikki sijainnit →",
+    "hours": "Ma - Pe · 9 - 18",
+    "downloadAccessPlan": "Lataa kulkukartta",
+    "legalMentions": "Lakisääteiset tiedot",
+    "complaint": "Reklamaatio",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Nizza, Ranska · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "Valitus",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Kirjoita viestisi",
     "typing": "DELIVERY Digital kirjoittaa...",
-    "describeIdea": "Kuvaile ideasi. Asiantuntija palaa luoksesi 24 tunnin kuluessa.",
+    "describeIdea": "Kuvaile ideasi.",
     "letsTalk": "Keskustellaan projektistasi.",
     "logout": "Kirjaudu ulos",
     "confidential": "Viestisi pysyvät luottamuksellisina ja niitä käytetään ainoastaan projektiasi varten.",
@@ -454,5 +474,9 @@
       "chapter5": "Jätehuolto",
       "chapter6": "Jätteen vähentäminen"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Kuvaile ideasi.",
+    "cta": "Aloita"
   }
 }

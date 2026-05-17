@@ -8,7 +8,9 @@
     "training": "Eğitim",
     "quote": "Teklif",
     "formationBtn": "Eğitim",
-    "solutionsBtn": "Çözümler"
+    "solutionsBtn": "Çözümler",
+    "discutons": "Konuşalım",
+    "discutonsLong": "Projeniz hakkında konuşalım"
   },
   "tiles": {
     "eyebrow": "Uzmanlık Alanlarımız",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Dijital Hizmetler"
-    }
+    },
+    "viewServices": "Hizmetlerimiz"
   },
   "services": {
     "title": "Hizmetlerimiz",
@@ -181,7 +184,24 @@
       "privacy": "Gizlilik Politikası",
       "terms": "Kullanım Koşulları",
       "sitemap": "Site Haritası"
-    }
+    },
+    "sectionFrance": "Şehre göre hizmetler (Fransa)",
+    "sectionGulf": "Körfez'de hizmetler",
+    "sectionCompany": "Şirket",
+    "sectionContact": "İletişim",
+    "about": "Hakkımızda",
+    "careers": "Kariyer",
+    "blog": "Blog",
+    "cases": "Vaka çalışmaları",
+    "faq": "SSS",
+    "support": "Destek",
+    "viewAllCitiesFr": "Tüm şehirleri görüntüle →",
+    "viewAllCitiesGulf": "Tüm lokasyonlar →",
+    "hours": "Pzt - Cum · 9 - 18",
+    "downloadAccessPlan": "Erişim planını indir",
+    "legalMentions": "Yasal bilgiler",
+    "complaint": "Şikayet",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Nice, Fransa · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "Şikayet",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Mesajınızı yazın",
     "typing": "DELIVERY Digital yazıyor...",
-    "describeIdea": "Fikrinizi açıklayın. Bir uzman 24 saat içinde size geri dönecektir.",
+    "describeIdea": "Fikrinizi anlatın.",
     "letsTalk": "Projeniz hakkında konuşalım.",
     "logout": "Çıkış yap",
     "confidential": "Mesajlarınız gizli kalır ve yalnızca projeniz için kullanılır.",
@@ -454,5 +474,9 @@
       "chapter5": "Atık yönetimi",
       "chapter6": "Atık azaltma"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Fikrinizi anlatın.",
+    "cta": "Başla"
   }
 }

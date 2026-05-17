@@ -8,7 +8,9 @@
     "training": "Training",
     "quote": "Quote",
     "formationBtn": "Training",
-    "solutionsBtn": "Solutions"
+    "solutionsBtn": "Solutions",
+    "discutons": "Let's talk",
+    "discutonsLong": "Let's discuss your project"
   },
   "tiles": {
     "eyebrow": "Our expertise",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Digital Services"
-    }
+    },
+    "viewServices": "View our services"
   },
   "services": {
     "title": "Our Services",
@@ -181,7 +184,24 @@
       "privacy": "Privacy Policy",
       "terms": "Terms of Use",
       "sitemap": "Sitemap"
-    }
+    },
+    "sectionFrance": "Services by city (France)",
+    "sectionGulf": "Services in the Gulf",
+    "sectionCompany": "Company",
+    "sectionContact": "Contact",
+    "about": "About",
+    "careers": "Careers",
+    "blog": "Blog",
+    "cases": "Case studies",
+    "faq": "FAQ",
+    "support": "Support",
+    "viewAllCitiesFr": "View all cities →",
+    "viewAllCitiesGulf": "View all locations →",
+    "hours": "Mon - Fri · 9am - 6pm",
+    "downloadAccessPlan": "Download access plan",
+    "legalMentions": "Legal notices",
+    "complaint": "Complaint",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Nice, France · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195. Training activity registered under number 93061064306 with the Préfet of the Provence-Alpes-Côte d'Azur Region. This registration does not constitute State approval."
   },
   "reclamation": {
     "badge": "Complaint",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Type your message",
     "typing": "DELIVERY Digital is typing...",
-    "describeIdea": "Describe your idea. An expert will get back to you within 24h.",
+    "describeIdea": "Describe your idea.",
     "letsTalk": "Let's talk about your project.",
     "logout": "Log out",
     "confidential": "Your messages stay confidential and are only used for your project.",
@@ -454,5 +474,9 @@
       "chapter5": "Waste management",
       "chapter6": "Waste reduction"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Describe your idea.",
+    "cta": "Start"
   }
 }

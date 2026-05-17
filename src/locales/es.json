@@ -8,7 +8,9 @@
     "training": "Formación",
     "quote": "Presupuesto",
     "formationBtn": "Formación",
-    "solutionsBtn": "Soluciones"
+    "solutionsBtn": "Soluciones",
+    "discutons": "Hablemos",
+    "discutonsLong": "Hablemos de tu proyecto"
   },
   "tiles": {
     "eyebrow": "Nuestras especialidades",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Servicios Digitales"
-    }
+    },
+    "viewServices": "Ver nuestros servicios"
   },
   "services": {
     "title": "Nuestros Servicios",
@@ -181,7 +184,24 @@
       "privacy": "Política de privacidad",
       "terms": "Condiciones de uso",
       "sitemap": "Mapa del sitio"
-    }
+    },
+    "sectionFrance": "Servicios por ciudad (Francia)",
+    "sectionGulf": "Servicios en el Golfo",
+    "sectionCompany": "Empresa",
+    "sectionContact": "Contacto",
+    "about": "Acerca de",
+    "careers": "Carreras",
+    "blog": "Blog",
+    "cases": "Casos de éxito",
+    "faq": "Preguntas frecuentes",
+    "support": "Soporte",
+    "viewAllCitiesFr": "Ver todas las ciudades →",
+    "viewAllCitiesGulf": "Todas las ubicaciones →",
+    "hours": "Lun - Vie · 9h - 18h",
+    "downloadAccessPlan": "Descargar plano de acceso",
+    "legalMentions": "Aviso legal",
+    "complaint": "Reclamación",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Niza, Francia · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "Reclamación",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Escribe tu mensaje",
     "typing": "DELIVERY Digital está escribiendo...",
-    "describeIdea": "Describe tu idea. Un experto te responderá en 24h.",
+    "describeIdea": "Describe tu idea.",
     "letsTalk": "Hablemos de tu proyecto.",
     "logout": "Cerrar sesión",
     "confidential": "Tus mensajes son confidenciales y se utilizan únicamente para tu proyecto.",
@@ -454,5 +474,9 @@
       "chapter5": "Gestión de residuos",
       "chapter6": "Reducción del desperdicio"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Describe tu idea.",
+    "cta": "Empezar"
   }
 }

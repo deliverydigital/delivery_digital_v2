@@ -8,7 +8,9 @@
     "training": "培训",
     "quote": "报价",
     "formationBtn": "培训",
-    "solutionsBtn": "解决方案"
+    "solutionsBtn": "解决方案",
+    "discutons": "聊一聊",
+    "discutonsLong": "聊聊您的项目"
   },
   "tiles": {
     "eyebrow": "我们的专业领域",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "数字服务"
-    }
+    },
+    "viewServices": "查看我们的服务"
   },
   "services": {
     "title": "我们的服务",
@@ -181,7 +184,24 @@
       "privacy": "隐私政策",
       "terms": "使用条款",
       "sitemap": "网站地图"
-    }
+    },
+    "sectionFrance": "按城市服务 (法国)",
+    "sectionGulf": "海湾地区服务",
+    "sectionCompany": "公司",
+    "sectionContact": "联系我们",
+    "about": "关于我们",
+    "careers": "招聘",
+    "blog": "博客",
+    "cases": "案例研究",
+    "faq": "常见问题",
+    "support": "支持",
+    "viewAllCitiesFr": "查看所有城市 →",
+    "viewAllCitiesGulf": "所有地点 →",
+    "hours": "周一 - 周五 · 9:00 - 18:00",
+    "downloadAccessPlan": "下载交通图",
+    "legalMentions": "法律声明",
+    "complaint": "投诉",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 尼斯, 法国 · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "投诉",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "输入您的消息",
     "typing": "DELIVERY Digital 正在输入...",
-    "describeIdea": "描述您的想法。专家将在 24 小时内回复您。",
+    "describeIdea": "描述您的想法。",
     "letsTalk": "聊聊您的项目。",
     "logout": "登出",
     "confidential": "您的消息保密，仅用于您的项目。",
@@ -454,5 +474,9 @@
       "chapter5": "废物管理",
       "chapter6": "减少浪费"
     }
+  },
+  "stickyDiscutons": {
+    "title": "描述您的想法。",
+    "cta": "开始"
   }
 }

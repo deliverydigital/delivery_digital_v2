@@ -24,45 +24,45 @@ const Footer = () => {
 
   const footerSections = [
     {
-      title: 'Services par ville (France)',
+      title: t('footer.sectionFrance'),
       items: [
         { label: 'Agence web à Paris', link: '/services/agence-web-paris' },
         { label: 'Développement mobile à Lyon', link: '/services/developpement-application-mobile-lyon' },
         { label: 'Agence web à Nice', link: '/services/agence-web-nice' },
         { label: 'SaaS à Bordeaux', link: '/services/saas-startup-bordeaux' },
         { label: 'IA à Toulouse', link: '/services/intelligence-artificielle-toulouse' },
-        { label: 'Voir toutes nos villes →', link: '/locations' },
+        { label: t('footer.viewAllCitiesFr'), link: '/locations' },
       ],
     },
     {
-      title: 'Services in the Gulf',
+      title: t('footer.sectionGulf'),
       items: [
         { label: 'Web agency in Doha', link: '/services/web-agency-doha-qa' },
         { label: 'Mobile app in Dubai', link: '/services/mobile-app-development-dubai-ae' },
         { label: 'SaaS in Riyadh', link: '/services/saas-development-riyadh-sa' },
         { label: 'AI agents in NEOM', link: '/services/ai-integration-neom-sa' },
         { label: 'Cloud in Kuwait City', link: '/services/cloud-devops-kuwait-city-kw' },
-        { label: 'View all locations →', link: '/locations' },
+        { label: t('footer.viewAllCitiesGulf'), link: '/locations' },
       ],
     },
     {
-      title: 'Entreprise',
+      title: t('footer.sectionCompany'),
       items: [
-        { label: 'À propos', link: '#' },
-        { label: 'Carrières', link: '#' },
-        { label: 'Blog', link: '#' },
-        { label: 'Études de cas', link: '#' },
-        { label: 'FAQ', link: '#' },
-        { label: 'Support', link: '#' },
+        { label: t('footer.about'), link: '#' },
+        { label: t('footer.careers'), link: '#' },
+        { label: t('footer.blog'), link: '#' },
+        { label: t('footer.cases'), link: '#' },
+        { label: t('footer.faq'), link: '#' },
+        { label: t('footer.support'), link: '#' },
       ],
     },
     {
-      title: 'Contact',
+      title: t('footer.sectionContact'),
       items: [
         { label: '470 promenade des Anglais, 06200 Nice', icon: MapPin, isInfo: true },
         { label: 'contact@deliverydigital.fr', icon: Mail, link: 'mailto:contact@deliverydigital.fr' },
-        { label: 'Lun - Ven · 9h - 18h', isInfo: true },
-        { label: "Télécharger le plan d'accès", icon: Download, action: 'download-plan' as const },
+        { label: t('footer.hours'), isInfo: true },
+        { label: t('footer.downloadAccessPlan'), icon: Download, action: 'download-plan' as const },
       ],
     },
   ];
@@ -71,9 +71,9 @@ const Footer = () => {
     { label: t('footer.links.privacy'), modal: 'privacy' },
     { label: t('footer.links.terms'), modal: 'terms' },
     { label: t('footer.links.sitemap'), modal: 'sitemap' },
-    { label: 'Mentions légales', modal: 'legal' },
+    { label: t('footer.legalMentions'), modal: 'legal' },
     { label: 'RGPD', modal: 'privacy' },
-    { label: 'Réclamation', href: '/reclamation' },
+    { label: t('footer.complaint'), href: '/reclamation' },
   ];
 
   const socialLinks = [
@@ -108,8 +108,7 @@ const Footer = () => {
       <div className="container-wide py-10 sm:py-12 relative">
         {/* Disclaimer paragraph */}
         <p className="text-[12px] leading-relaxed text-white/45 max-w-3xl mb-8 pb-8 border-b border-white/10">
-          DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Nice · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195.
-          Déclaration d'activité enregistrée sous le numéro 93061064306 auprès du Préfet de la Région de Provence-Alpes-Côte d'Azur. Cet enregistrement ne vaut pas agrément de l'État.
+          {t('footer.disclaimer')}
         </p>
 
         {/* Columns */}

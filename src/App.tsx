@@ -168,7 +168,6 @@ function App() {
         <Footer />
       <ConsentBanner />
         <ScrollToTop />
-        <ProjectSubmission />
         <LegalModals />
       </div>
     );
@@ -262,7 +261,6 @@ function App() {
       <Footer />
       <ConsentBanner />
       <ScrollToTop />
-      <ProjectSubmission />
       <LegalModals />
       <StickyDiscutonsBar source="home" />
     </div>

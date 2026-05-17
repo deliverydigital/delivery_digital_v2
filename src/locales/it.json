@@ -8,7 +8,9 @@
     "training": "Formazione",
     "quote": "Preventivo",
     "formationBtn": "Formazione",
-    "solutionsBtn": "Soluzioni"
+    "solutionsBtn": "Soluzioni",
+    "discutons": "Parliamone",
+    "discutonsLong": "Parliamo del tuo progetto"
   },
   "tiles": {
     "eyebrow": "Le nostre competenze",
@@ -66,7 +68,8 @@
     },
     "badges": {
       "digital": "Servizi Digitali"
-    }
+    },
+    "viewServices": "I nostri servizi"
   },
   "services": {
     "title": "I nostri servizi",
@@ -181,7 +184,24 @@
       "privacy": "Informativa sulla privacy",
       "terms": "Condizioni d'uso",
       "sitemap": "Mappa del sito"
-    }
+    },
+    "sectionFrance": "Servizi per città (Francia)",
+    "sectionGulf": "Servizi nel Golfo",
+    "sectionCompany": "Azienda",
+    "sectionContact": "Contatto",
+    "about": "Chi siamo",
+    "careers": "Lavora con noi",
+    "blog": "Blog",
+    "cases": "Casi studio",
+    "faq": "FAQ",
+    "support": "Supporto",
+    "viewAllCitiesFr": "Vedi tutte le città →",
+    "viewAllCitiesGulf": "Tutte le sedi →",
+    "hours": "Lun - Ven · 9 - 18",
+    "downloadAccessPlan": "Scarica il piano d'accesso",
+    "legalMentions": "Note legali",
+    "complaint": "Reclamo",
+    "disclaimer": "DELIVERY Digital Nice · 470 promenade des Anglais, 06200 Nizza, Francia · Siret 90294519500029 · NAF 6201Z · RCS 902 945 195."
   },
   "reclamation": {
     "badge": "Reclamo",
@@ -307,7 +327,7 @@
   "chat": {
     "typePlaceholder": "Scrivi il tuo messaggio",
     "typing": "DELIVERY Digital sta scrivendo...",
-    "describeIdea": "Descrivi la tua idea. Un esperto ti ricontatta entro 24h.",
+    "describeIdea": "Descrivi la tua idea.",
     "letsTalk": "Parliamo del tuo progetto.",
     "logout": "Disconnetti",
     "confidential": "I tuoi messaggi restano confidenziali e servono solo per il tuo progetto.",
@@ -454,5 +474,9 @@
       "chapter5": "Gestione dei rifiuti",
       "chapter6": "Riduzione degli sprechi"
     }
+  },
+  "stickyDiscutons": {
+    "title": "Descrivi la tua idea.",
+    "cta": "Inizia"
   }
 }
