@@ -33,3 +33,5 @@ secrets/
 *.bak-*
 _backup_*/
 .pem
+
+*.bak*

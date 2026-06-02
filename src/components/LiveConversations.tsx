@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2, Search, RefreshCw, X as XIcon, Mail, Phone, Building2,
   MessageSquare, Circle, ChevronRight, User as UserIcon, Globe, Clock,
-  Languages,
+  Languages, Send, CheckCircle2, FileText,
 } from 'lucide-react';
 
 // Ouvre Google Translate web dans un nouvel onglet pour traduire un message
@@ -35,6 +35,8 @@ interface ConvSummary {
   updatedAt: string;
   createdAt: string;
   isActive: boolean;
+  relancedAt?: string | null;
+  relanceCount?: number;
   user: ConvUser;
 }
 
@@ -47,6 +49,10 @@ interface SessionDetail {
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
+  relancedAt?: string | null;
+  relanceCount?: number;
+  humanTakeover?: boolean;
+  category?: 'hot' | 'serious' | 'callback' | 'cold' | 'spam' | null;
 }
 
 interface FullUser extends ConvUser {
@@ -243,7 +249,167 @@ function ConversationDrawer({
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastLenRef = useRef(0);
 
-  const fetchFull = useCallback(async () => {
+  // Bouton "Relancer par email" - envoie un email au prospect qui a commence
+  // a discuter puis a quitte. La confirmation utilise window.confirm pour
+  // rester simple (pas de modal custom). Stocke un flash pour feedback inline.
+  // @author Rabah Ziane - 2026-05-19
+  const [relanceState, setRelanceState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [relanceMsg, setRelanceMsg] = useState<string>('');
+  // Generation de devis a partir de la conversation (Claude). @Rabah 2026-06-02
+  const [quoteState, setQuoteState] = useState<'idle' | 'generating' | 'done' | 'error'>('idle');
+  const [quoteMsg, setQuoteMsg] = useState<string>('');
+
+  // Reprise main par conseiller (mode humain) : permet de taper un message
+  // manuel envoye au prospect. Active humanTakeover cote serveur, qui empeche
+  // le bot IA de repondre automatiquement aux messages suivants du prospect.
+  // @author Rabah Ziane - 2026-05-21
+  const [manualText, setManualText] = useState('');
+  const [sendingManual, setSendingManual] = useState(false);
+  const sendManualMessage = useCallback(async () => {
+    const content = manualText.trim();
+    if (!content) return;
+    setSendingManual(true);
+    try {
+      const res = await fetch(`/api/admin/conversations/${sessionId}/manual-message`, {
+        method: 'POST',
+        headers: { 'x-admin-secret': secret, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      setSession((prev) => (prev ? { ...prev, messages: data.messages, humanTakeover: true } : prev));
+      setManualText('');
+    } catch (e: any) {
+      alert(`Erreur envoi : ${e.message || 'inconnue'}`);
+    } finally {
+      setSendingManual(false);
+    }
+  }, [manualText, sessionId, secret]);
+  const toggleTakeover = useCallback(async (active: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/conversations/${sessionId}/takeover`, {
+        method: 'POST',
+        headers: { 'x-admin-secret': secret, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      setSession((prev) => (prev ? { ...prev, humanTakeover: data.humanTakeover } : prev));
+    } catch (e: any) {
+      alert(`Erreur toggle : ${e.message || 'inconnue'}`);
+    }
+  }, [sessionId, secret]);
+
+  const sendRelance = useCallback(async () => {
+    if (!user?.email) {
+      setRelanceState('error');
+      setRelanceMsg('Pas d’email pour ce prospect');
+      return;
+    }
+    const ok = window.confirm(
+      `Envoyer un email de relance à ${user.email} ?\n\n` +
+      (session?.relancedAt
+        ? `⚠️ Déjà relancé le ${new Date(session.relancedAt).toLocaleString('fr-FR')}. Renvoyer quand même ?`
+        : 'Un email avec le dernier message du prospect lui sera envoyé.')
+    );
+    if (!ok) return;
+    setRelanceState('sending');
+    try {
+      const res = await fetch(`/api/admin/conversations/${sessionId}/relance`, {
+        method: 'POST',
+        headers: { 'x-admin-secret': secret, 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      setRelanceState('sent');
+      setRelanceMsg(`Email envoyé à ${data.sentTo}`);
+      // Met a jour la session locale pour afficher la date de relance.
+      setSession((prev) => (prev ? { ...prev, relancedAt: data.relancedAt, relanceCount: data.relanceCount } : prev));
+      setTimeout(() => setRelanceState('idle'), 4000);
+    } catch (e: any) {
+      setRelanceState('error');
+      setRelanceMsg(e.message || 'Erreur envoi');
+      setTimeout(() => setRelanceState('idle'), 5000);
+    }
+  }, [sessionId, secret, user, session]);
+
+  // Genere un devis (brouillon) a partir de la conversation : Claude lit l'echange
+  // + le catalogue et propose des lignes tarifees. Le devis apparait dans la
+  // section Devis pour relecture/envoi. @Rabah 2026-06-02
+  const generateQuote = useCallback(async () => {
+    if (quoteState === 'generating') return;
+    const ok = window.confirm('Générer un devis (brouillon) à partir de cette conversation ?\n\nL’IA analyse l’échange et propose des prestations chiffrées. Vous pourrez le relire et l’ajuster dans la section Devis avant de l’envoyer.');
+    if (!ok) return;
+    setQuoteState('generating');
+    setQuoteMsg('');
+    try {
+      const res = await fetch('/api/admin/quotes-quick/from-conversation', {
+        method: 'POST',
+        headers: { 'x-admin-secret': secret, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      setQuoteState('done');
+      setQuoteMsg(`Devis ${data.item?.ref || ''} créé en brouillon — retrouvez-le dans la section Devis pour l’ajuster et l’envoyer.`);
+      setTimeout(() => setQuoteState('idle'), 8000);
+    } catch (e: any) {
+      setQuoteState('error');
+      setQuoteMsg(e.message || 'Erreur génération devis');
+      setTimeout(() => setQuoteState('idle'), 6000);
+    }
+  }, [sessionId, secret, quoteState]);
+
+  const editMessageAt = useCallback(async (i: number, current: string) => {
+    const next = window.prompt('Modifier le message :', current);
+    if (next === null) return;
+    const trimmed = next.trim();
+    if (!trimmed || trimmed === current.trim()) return;
+    try {
+      const res = await fetch(`/api/admin/conversations/${sessionId}/messages/${i}`, {
+        method: 'PATCH',
+        headers: { 'x-admin-secret': secret, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: trimmed }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      setSession((prev) => (prev ? { ...prev, messages: data.messages } : prev));
+    } catch (e: any) {
+      alert(`Erreur modification : ${e.message || 'inconnue'}`);
+    }
+  }, [sessionId, secret]);
+  const deleteMessageAt = useCallback(async (i: number) => {
+    if (!window.confirm('Supprimer ce message ? Action irréversible.')) return;
+    try {
+      const res = await fetch(`/api/admin/conversations/${sessionId}/messages/${i}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-secret': secret },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      setSession((prev) => (prev ? { ...prev, messages: data.messages } : prev));
+    } catch (e: any) {
+      alert(`Erreur suppression : ${e.message || 'inconnue'}`);
+    }
+  }, [sessionId, secret]);
+
+    const setCategoryAt = useCallback(async (cat: string | null) => {
+    try {
+      const res = await fetch(`/api/admin/conversations/${sessionId}/category`, {
+        method: 'PATCH',
+        headers: { 'x-admin-secret': secret, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: cat }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      setSession((prev) => (prev ? { ...prev, category: data.category } : prev));
+    } catch (e: any) {
+      alert(`Erreur categorie : ${e.message || 'inconnue'}`);
+    }
+  }, [sessionId, secret]);
+
+    const fetchFull = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/conversations/${sessionId}`, {
         headers: { 'x-admin-secret': secret },
@@ -314,13 +480,84 @@ function ConversationDrawer({
                 {user.phone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{user.phone}</span>}
                 {user.company && <span className="inline-flex items-center gap-1"><Building2 className="h-3 w-3" />{user.company}</span>}
                 {user.country && <span className="inline-flex items-center gap-1"><Globe className="h-3 w-3" />{user.country}</span>}
+                {session?.relancedAt && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#34C759]/10 text-[#34C759] font-semibold">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Relancé {session.relanceCount && session.relanceCount > 1 ? `×${session.relanceCount}` : ''}
+                  </span>
+                )}
               </div>
             )}
           </div>
-          <button onClick={onClose} className="text-[#86868B] hover:text-[#1D1D1F] flex-shrink-0">
-            <XIcon className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Bouton Generer un devis - lit la conversation et cree un brouillon de devis. */}
+            <button
+              onClick={generateQuote}
+              disabled={quoteState === 'generating'}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold transition ${
+                quoteState === 'done'
+                  ? 'bg-[#34C759] text-white'
+                  : quoteState === 'error'
+                  ? 'bg-[#FF3B30]/10 text-[#FF3B30] ring-1 ring-[#FF3B30]/30'
+                  : 'bg-white text-[#1D1D1F] border border-black/10 hover:border-black/20 disabled:opacity-50'
+              }`}
+              title="Générer un devis (brouillon) à partir de cette conversation"
+            >
+              {quoteState === 'generating' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
+              {quoteState === 'generating' ? 'Génération…' : quoteState === 'done' ? 'Devis créé ✓' : quoteState === 'error' ? 'Échec' : 'Générer un devis'}
+            </button>
+            {/* Bouton Relancer par email - actif uniquement si on a un email. */}
+            {user?.email && (
+              <button
+                onClick={sendRelance}
+                disabled={relanceState === 'sending'}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold transition ${
+                  relanceState === 'sent'
+                    ? 'bg-[#34C759] text-white'
+                    : relanceState === 'error'
+                    ? 'bg-[#FF3B30]/10 text-[#FF3B30] ring-1 ring-[#FF3B30]/30'
+                    : 'bg-[#1D1D1F] text-white hover:bg-black disabled:opacity-50'
+                }`}
+                title={user.email ? `Envoyer un email de relance à ${user.email}` : ''}
+              >
+                {relanceState === 'sending' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                {relanceState === 'sending' ? 'Envoi…' : relanceState === 'sent' ? 'Envoyé ✓' : relanceState === 'error' ? 'Échec' : 'Relancer'}
+              </button>
+            )}
+            <select
+              value={session?.category || ''}
+              onChange={(e) => setCategoryAt(e.target.value || null)}
+              className="px-2.5 py-1.5 rounded-full text-[12px] font-semibold bg-white border border-black/10 hover:border-black/20 text-[#1D1D1F] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1D1D1F]/30"
+              title="Categorie du prospect"
+            >
+              <option value="">Categorie...</option>
+              <option value="hot">🔥 Hot lead</option>
+              <option value="serious">⭐ Sérieux</option>
+              <option value="callback">📞 À rappeler</option>
+              <option value="cold">❄️ Froid</option>
+              <option value="spam">🗑️ Spam</option>
+            </select>
+            <button onClick={onClose} className="text-[#86868B] hover:text-[#1D1D1F]">
+              <XIcon className="h-5 w-5" />
+            </button>
+          </div>
         </div>
+        {relanceState !== 'idle' && relanceMsg && (
+          <div className={`px-5 py-2 text-[12px] ${
+            relanceState === 'sent' ? 'bg-[#34C759]/10 text-[#34C759]' :
+            relanceState === 'error' ? 'bg-[#FF3B30]/10 text-[#FF3B30]' : 'bg-[#F2EFE9] text-[#86868B]'
+          }`}>
+            {relanceMsg}
+          </div>
+        )}
+        {quoteState !== 'idle' && quoteMsg && (
+          <div className={`px-5 py-2 text-[12px] ${
+            quoteState === 'done' ? 'bg-[#34C759]/10 text-[#34C759]' :
+            quoteState === 'error' ? 'bg-[#FF3B30]/10 text-[#FF3B30]' : 'bg-[#F2EFE9] text-[#86868B]'
+          }`}>
+            {quoteMsg}
+          </div>
+        )}
 
         {/* Messages */}
         <div
@@ -359,15 +596,82 @@ function ConversationDrawer({
               {/* Bouton Traduire (Google Translate web) - utile pour les messages
                   en langues non maitrisees (bangla, arabe, urdu, etc.).
                   @author Rabah Ziane - 2026-05-14 */}
-              <button
-                onClick={() => openTranslate(m.content)}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white border border-black/8 hover:border-black/20 hover:bg-[#F5F5F7] text-[10.5px] text-[#86868B] hover:text-[#1D1D1F] transition"
-                title="Traduire en francais via Google Translate"
-              >
-                <Languages className="h-3 w-3" /> Traduire
-              </button>
+              <div className="inline-flex items-center gap-1">
+                <button
+                  onClick={() => openTranslate(m.content)}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white border border-black/8 hover:border-black/20 hover:bg-[#F5F5F7] text-[10.5px] text-[#86868B] hover:text-[#1D1D1F] transition"
+                  title="Traduire en francais via Google Translate"
+                >
+                  <Languages className="h-3 w-3" /> Traduire
+                </button>
+                <button
+                  onClick={() => editMessageAt(i, m.content)}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white border border-black/8 hover:border-black/20 hover:bg-[#F5F5F7] text-[10.5px] text-[#86868B] hover:text-[#1D1D1F] transition"
+                  title="Modifier ce message"
+                >
+                  ✏️ Modifier
+                </button>
+                <button
+                  onClick={() => deleteMessageAt(i)}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white border border-black/8 hover:border-[#FF3B30]/40 hover:bg-[#FF3B30]/5 text-[10.5px] text-[#86868B] hover:text-[#FF3B30] transition"
+                  title="Supprimer ce message"
+                >
+                  🗑️ Supprimer
+                </button>
+              </div>
             </div>
           ))}
+        </div>
+
+        {/* Barre composition admin : reprise main / message manuel.
+            @author Rabah Ziane - 2026-05-21 */}
+        <div className="px-5 py-3 border-t border-black/5 bg-[#FBFAF6]">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[11px] font-semibold text-[#1D1D1F] uppercase tracking-wide">
+              {session?.humanTakeover ? 'Mode humain (IA en pause)' : 'Mode IA (auto)'}
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => toggleTakeover(true)}
+                disabled={!!session?.humanTakeover}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition ${session?.humanTakeover ? 'bg-[#1D1D1F] text-white' : 'bg-white text-[#1D1D1F] ring-1 ring-black/10 hover:bg-black/5'}`}
+                title="Mettre l'IA en pause - vous repondez manuellement"
+              >
+                Reprendre la main
+              </button>
+              <button
+                onClick={() => toggleTakeover(false)}
+                disabled={!session?.humanTakeover}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition ${!session?.humanTakeover ? 'bg-[#1D1D1F] text-white' : 'bg-white text-[#1D1D1F] ring-1 ring-black/10 hover:bg-black/5'}`}
+                title="Laisser le bot IA repondre automatiquement"
+              >
+                Laisser à l'IA DDN
+              </button>
+            </div>
+          </div>
+          <div className="flex items-end gap-2">
+            <textarea
+              value={manualText}
+              onChange={(e) => setManualText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  sendManualMessage();
+                }
+              }}
+              rows={2}
+              placeholder="Tapez un message pour le prospect (Cmd+Entree pour envoyer)..."
+              className="flex-1 resize-none rounded-[12px] border border-black/10 bg-white px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#1D1D1F]/30"
+            />
+            <button
+              onClick={sendManualMessage}
+              disabled={sendingManual || !manualText.trim()}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#1D1D1F] text-white text-[12px] font-semibold hover:bg-black disabled:opacity-40"
+            >
+              {sendingManual ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+              {sendingManual ? 'Envoi…' : 'Envoyer'}
+            </button>
+          </div>
         </div>
 
         {/* Footer info */}

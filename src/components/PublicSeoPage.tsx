@@ -34,6 +34,10 @@ export default function PublicSeoPage({ slug }: { slug: string }) {
   const [hubRelated, setHubRelated] = useState<HubRelated | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  // Hero CTA en haut + article SEO entierement visible en dessous (pas d'accordeon).
+  // Privilegie le SEO (texte visible = poids max Google) tout en gardant le CTA
+  // prioritaire en haut pour la conversion.
+  // @author Rabah Ziane - 2026-05-19
 
   useEffect(() => {
     let cancelled = false;
@@ -170,10 +174,16 @@ export default function PublicSeoPage({ slug }: { slug: string }) {
     );
   }
 
+  // Extrait la 1ere phrase du body comme intro (si dispo) sinon metaDescription
+  const introLine = item.metaDescription
+    || (item.body || '').split('\n').filter((l) => l.trim() && !l.startsWith('#') && !l.startsWith('>'))[0]?.replace(/\*\*/g, '').slice(0, 220)
+    || '';
+  const discutonsHref = `/discutons?utm_source=site&utm_medium=seo_hero&utm_campaign=${encodeURIComponent(slug)}`;
+
   return (
-    <article className="max-w-[760px] mx-auto px-5 sm:px-8 pt-[80px] sm:pt-[120px] pb-24">
-      {/* Breadcrumb visible (echo du JSON-LD pour user) */}
-      <nav className="text-[12.5px] text-[#86868B] mb-5 flex items-center flex-wrap gap-1.5" aria-label="Breadcrumb">
+    <article className="max-w-[860px] mx-auto px-5 sm:px-8 pt-[80px] sm:pt-[120px] pb-24">
+      {/* Breadcrumb */}
+      <nav className="text-[12.5px] text-[#86868B] mb-7 flex items-center flex-wrap gap-1.5" aria-label="Breadcrumb">
         <a href="/" className="hover:text-[#1D1D1F]">Accueil</a>
         <ChevronRight className="h-3 w-3" />
         <a href="/discutons" className="hover:text-[#1D1D1F]">{item.type === 'article' ? 'Blog' : 'Services'}</a>
@@ -181,24 +191,47 @@ export default function PublicSeoPage({ slug }: { slug: string }) {
         <span className="text-[#1D1D1F] truncate max-w-[300px]">{item.title}</span>
       </nav>
 
-      <div className="prose prose-neutral max-w-none">
+      {/* HERO COMPACT : 90% des visiteurs cliquent directement sur le CTA */}
+      <header className="text-center py-10 sm:py-14">
+        <div className="flex justify-center mb-6"><AIOrb size={56} innerColor="#FFFFFF" /></div>
+        <h1
+          className="text-[34px] sm:text-[48px] leading-[1.05] text-[#1D1D1F] mb-5 max-w-[700px] mx-auto"
+          style={{ fontFamily: '"Charter", "Iowan Old Style", Georgia, serif', fontWeight: 700 }}
+        >
+          {item.title}
+        </h1>
+        {introLine && (
+          <p className="text-[16px] sm:text-[17px] text-[#3C3C43] mb-8 max-w-[580px] mx-auto leading-relaxed">
+            {introLine}
+          </p>
+        )}
+        <a
+          href={discutonsHref}
+          className="inline-flex items-center gap-2 px-7 py-4 rounded-full bg-[#1D1D1F] text-white text-[15.5px] font-semibold hover:bg-[#3C3C43] transition shadow-card"
+        >
+          Démarrer la discussion →
+        </a>
+        <p className="text-[12px] text-[#86868B] mt-4">Réponse sous 24h · Sans engagement</p>
+      </header>
+
+      {/* ARTICLE SEO toujours visible (pas d'accordeon : on garde tout le poids SEO Google) */}
+      <div className="prose prose-neutral max-w-none pt-8 border-t border-black/8">
         <MarkdownView body={item.body} />
       </div>
 
-      {/* CTA discutons en fin de page */}
+      {/* CTA secondaire en fin d'article */}
       <div className="mt-12 pt-10 border-t border-black/8 text-center">
-        <div className="flex justify-center mb-4"><AIOrb size={48} innerColor="#FFFFFF" /></div>
         <h3
           className="text-[22px] sm:text-[28px] text-[#1D1D1F] mb-3"
           style={{ fontFamily: '"Charter", "Iowan Old Style", Georgia, serif', fontWeight: 700 }}
         >
-          Notre agent IA vous répond
+          Discutons de votre projet
         </h3>
         <p className="text-[15px] text-[#86868B] mb-6 max-w-[480px] mx-auto">
-          Décrivez votre idée.
+          Décrivez votre idée en quelques messages.
         </p>
         <a
-          href={`/discutons?utm_source=site&utm_medium=article_footer&utm_campaign=${encodeURIComponent(slug)}`}
+          href={discutonsHref.replace('seo_hero', 'seo_footer')}
           className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#1D1D1F] text-white text-[15px] font-semibold hover:bg-[#3C3C43]"
         >
           Démarrer maintenant →

@@ -6,6 +6,8 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { QuickQuote } from '../models/index.js';
+import ProjectChat from '../models/ProjectChat.js';
+import ChatUser from '../models/ChatUser.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Logo pour PDF (resolu depuis server/routes/ vers public/). Meme image que celle servie en URL au HTML.
@@ -144,6 +146,14 @@ router.get('/catalog', requireAdmin, (req, res) => {
       { id: 'maintenance', category: 'Maintenance', label: 'Maintenance mensuelle', defaultPrice: 800, unit: 'mois', description: 'Mises a jour, surveillance, corrections de bugs, evolutions mineures.' },
       { id: 'support-prio', category: 'Maintenance', label: 'Support prioritaire (SLA 4h)', defaultPrice: 1500, unit: 'mois', description: 'Reponse sous 4h ouvrees, hotline, resolution des incidents critiques.' },
       { id: 'formation-team', category: 'Formation', label: 'Formation equipe technique', defaultPrice: 1200, unit: 'jour', description: 'Formation sur mesure pour vos equipes (React, Node, AWS, ...).' },
+
+      // Regie / Jour de dev
+      { id: 'jour-dev', category: 'Regie', label: 'Jour de developpement', defaultPrice: 330, unit: 'jour', description: 'Prestation de developpement au jour, sur mesure selon besoin client. Pour ajustements, evolutions ponctuelles ou support technique.' },
+
+      // R&D (CII) - prix preferentiels clients R&D
+      // Champs promo : originalPriceTTC + promoExpiry (date YYYY-MM-DD inclus).
+      // Si presents, le rendu du devis et de la facture affichent le tarif initial barre + mention "OFFRE PROMO jusqu'au ...".
+      { id: 'rd-info', category: 'R&D', label: 'Prestation R&D informatique', defaultPrice: 125, unit: 'jour', originalPriceTTC: 330, promoExpiry: '2026-05-24', description: 'Prestations de recherche et développement (R&D) informatique dans le cadre du projet HiPe Kids, incluant des travaux de conception, développement expérimental et résolution de verrous techniques.' },
     ],
   });
 });
@@ -251,6 +261,49 @@ router.get('/', requireAdmin, async (req, res) => {
   }
 });
 
+// Suggestions clients pour autocompletion dans la creation de devis.
+// Cherche dans les devis existants par nom/email/societe, dedupe par email, retourne les 10 derniers clients distincts.
+// @author Rabah Ziane - 2026-05-23
+router.get('/clients/suggest', requireAdmin, async (req, res) => {
+  try {
+    const q = String(req.query.q || '').trim();
+    if (q.length < 2) return res.json({ items: [] });
+    const safe = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const filter = {
+      $or: [
+        { 'client.name': { $regex: safe, $options: 'i' } },
+        { 'client.email': { $regex: safe, $options: 'i' } },
+        { 'client.company': { $regex: safe, $options: 'i' } },
+      ],
+    };
+    const docs = await QuickQuote.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(60)
+      .select('client createdAt ref')
+      .lean();
+    const seen = new Set();
+    const items = [];
+    for (const d of docs) {
+      const email = (d.client?.email || '').toLowerCase();
+      if (!email || seen.has(email)) continue;
+      seen.add(email);
+      items.push({
+        name: d.client.name || '',
+        email: d.client.email || '',
+        company: d.client.company || '',
+        phone: d.client.phone || '',
+        address: d.client.address || '',
+        lastQuoteAt: d.createdAt,
+        lastQuoteRef: d.ref || '',
+      });
+      if (items.length >= 10) break;
+    }
+    res.json({ items });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.get('/:id', requireAdmin, async (req, res) => {
   try {
     const item = await QuickQuote.findById(req.params.id).lean();
@@ -271,9 +324,107 @@ router.post('/', requireAdmin, async (req, res) => {
   }
 });
 
+/* ===========================================================
+   Generer un devis (brouillon) a partir d'une conversation prospect.
+   Le commercial clique "Generer un devis" depuis le panneau conversation ;
+   Claude lit l'echange + le catalogue et propose des lignes tarifees. Le devis
+   est cree en brouillon -> retrouvable dans la section Devis pour envoi.
+   @author Rabah Ziane - 2026-06-02
+   =========================================================== */
+const CATALOG_FOR_AI = `Web : Site vitrine 990€ | Plateforme SaaS/dashboard 18000€ | E-commerce 12000€ | Refonte 8500€
+Mobile : App iOS+Android 15000€ | MVP mobile 1 plateforme 12000€ | PWA 6500€
+Logiciels : CRM 22000€ | ERP modulaire 35000€ | Marketplace B2B 28000€ | Outil gestion projet 14000€
+Paiement : Stripe 300€ | Stripe abonnements 500€ | Stripe Connect marketplace 5500€ | Apple/Google Pay 300€ | PayPal 1200€ | Multi-providers 4500€
+SEO : Audit 1500€ | On-page 2500€ | Pack 10 articles 1800€ | Pack 30 articles 4500€ | Pages villes (50) 3500€ | Pages pays (100) 6500€ | Suivi mensuel 1200€/mois | GEO 2500€
+Cloud : Setup DevOps 4500€ | Migration cloud 7500€ | Infra as Code 6000€
+IA : Chatbot Claude 6500€ | RAG documents 8500€ | Vision/OCR 5500€ | Automatisation workflow 7500€
+Design : UI/UX 3500€ | Design system 5500€ | Logo + charte 2500€
+Integrations : API/connecteur 3500€ | Systeme webhooks 2500€
+Acquisition : Plateforme outbound 12000€ | Campagne mensuelle 1500€/mois | Enrichissement 1000 prospects 800€
+Audit : Technique 1500€ | Securite 2500€
+Maintenance : Mensuelle 800€/mois | Support SLA 4h 1500€/mois
+Formation : Equipe technique 1200€/jour
+Regie : Jour de developpement 330€/jour`;
+
+router.post('/from-conversation', requireAdmin, async (req, res) => {
+  try {
+    if (!anthropic) return res.status(500).json({ error: 'ANTHROPIC_API_KEY missing' });
+    const { sessionId } = req.body || {};
+    if (!sessionId) return res.status(400).json({ error: 'sessionId required' });
+
+    const session = await ProjectChat.findOne({ sessionId }).lean();
+    if (!session) return res.status(404).json({ error: 'conversation not found' });
+    const uid = session.chatUserId || session.userId;
+    const user = uid ? await ChatUser.findById(uid).lean() : null;
+
+    const clientEmail = (user?.email || '').trim().toLowerCase();
+    if (!clientEmail) return res.status(422).json({ error: "Le prospect n'a pas d'email - impossible de creer le devis." });
+
+    const transcript = (session.messages || [])
+      .map((m) => `${m.role === 'assistant' ? 'DELIVERY Digital' : 'Prospect'}: ${(m.content || '').trim()}`)
+      .filter((l) => l.length > 0)
+      .join('\n');
+    if (!transcript) return res.status(422).json({ error: 'conversation vide' });
+
+    const prompt = `Tu es l'assistant commercial de DELIVERY Digital (agence web / app / IA / SEO). A partir de la CONVERSATION avec un prospect, redige un DEVIS pertinent et realiste.
+
+CATALOGUE DE REFERENCE (prix HT indicatifs - adapte le prix a l'ampleur decrite, reste coherent) :
+${CATALOG_FOR_AI}
+
+REGLES :
+- N'inclure QUE les prestations reellement evoquees ou clairement necessaires au(x) projet(s) du prospect. Ne gonfle pas.
+- Prix en EUR HT (nombres entiers). Tu peux ajuster vs catalogue selon le brief.
+- "intro" : 2-3 phrases personnalisees qui reprennent le besoin exprime par le prospect.
+- Si plusieurs projets distincts sont evoques, fais des lignes distinctes (le "details" precise le projet concerne).
+- Reponds UNIQUEMENT en JSON valide, sans texte autour :
+{"title": string, "intro": string, "lines": [{"description": string, "details": string, "quantity": number, "unit": string, "unitPrice": number}]}
+
+CONVERSATION :
+${transcript}`;
+
+    const r = await anthropic.messages.create({
+      model: 'claude-opus-4-7',
+      max_tokens: 3000,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    const text = r.content[0]?.text || '';
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end === -1) throw new Error('no JSON in response');
+    const draft = JSON.parse(text.slice(start, end + 1));
+
+    const lines = (Array.isArray(draft.lines) ? draft.lines : [])
+      .filter((l) => l && l.description && Number(l.unitPrice) >= 0)
+      .map((l) => ({
+        description: String(l.description).slice(0, 300),
+        details: l.details ? String(l.details).slice(0, 1000) : '',
+        quantity: Number(l.quantity) > 0 ? Number(l.quantity) : 1,
+        unit: l.unit ? String(l.unit).slice(0, 40) : 'forfait',
+        unitPrice: Math.max(0, Math.round(Number(l.unitPrice) || 0)),
+      }));
+    if (lines.length === 0) return res.status(422).json({ error: 'aucune prestation identifiee dans la conversation' });
+
+    const quote = await QuickQuote.create({
+      client: { name: user?.name || clientEmail, email: clientEmail, company: user?.company || '', phone: user?.phone || '' },
+      title: draft.title || 'Devis projet sur mesure',
+      intro: draft.intro || '',
+      lines,
+      taxRate: 20,
+      language: 'fr',
+      issuer: 'fr',
+      status: 'draft',
+      notes: `Devis genere automatiquement depuis la conversation prospect (session ${sessionId}).`,
+    });
+    res.json({ item: quote });
+  } catch (e) {
+    console.error('from-conversation error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.patch('/:id', requireAdmin, async (req, res) => {
   try {
-    const allowed = ['client', 'title', 'intro', 'lines', 'taxRate', 'ciiEligible', 'validUntil', 'notes', 'prospectId', 'status', 'currency', 'secondaryCurrency', 'secondaryRate', 'discountType', 'discountValue', 'language', 'issuer', 'paymentSchedule'];
+    const allowed = ['client', 'title', 'intro', 'lines', 'taxRate', 'ciiEligible', 'validUntil', 'notes', 'prospectId', 'status', 'currency', 'secondaryCurrency', 'secondaryRate', 'discountType', 'discountValue', 'language', 'issuer', 'paymentSchedule', 'autoSendInvoice'];
     const updates = {};
     for (const k of allowed) if (k in req.body) updates[k] = req.body[k];
     const item = await QuickQuote.findById(req.params.id);
@@ -424,6 +575,29 @@ function getLabels(lang) {
   return LABELS[(lang || 'fr').toLowerCase()] || LABELS.fr;
 }
 
+// Map des promos actives par label catalogue. Permet d'enrichir automatiquement chaque ligne
+// du devis avec un prix barre + badge promo (rendu HTML) sans toucher au frontend admin.
+// Pour ajouter une promo : ajouter une entree { 'Label exact du catalogue': { originalPriceTTC, promoExpiry: 'YYYY-MM-DD' } }
+// @author Rabah Ziane - 2026-05-23
+const CATALOG_PROMO_MAP = {
+  'Prestation R&D informatique': { originalPriceTTC: 330, promoExpiry: '2026-05-24' },
+};
+
+function enrichLinesWithPromo(lines, taxRate) {
+  const now = new Date();
+  const tva = Number(taxRate) || 20;
+  return (lines || []).map((l) => {
+    if (!l) return l;
+    // Si la ligne a deja sa promo explicite, on respecte
+    if (l.promoExpiry || l.originalUnitPrice) return l;
+    const promo = CATALOG_PROMO_MAP[l.description];
+    if (!promo) return l;
+    if (new Date(promo.promoExpiry) < now) return l; // promo expiree, on ignore
+    const origHT = Math.round((Number(promo.originalPriceTTC) / (1 + tva / 100)) * 100) / 100;
+    return { ...l, originalUnitPrice: origHT, promoExpiry: promo.promoExpiry };
+  });
+}
+
 function renderHtml(quote, { publicView = false } = {}) {
   const lang = (quote.language || 'fr').toLowerCase();
   const L = getLabels(lang);
@@ -438,6 +612,7 @@ function renderHtml(quote, { publicView = false } = {}) {
   const sec = quote.secondaryCurrency ? quote.secondaryCurrency.toUpperCase() : null;
   const rate = quote.secondaryRate || 1;
   const M = (n) => fmtBoth(n, cur, sec, rate);
+  const lines = enrichLinesWithPromo(quote.lines, quote.taxRate);
 
   return `<!doctype html>
 <html lang="${lang}" dir="${dir}">
@@ -446,13 +621,13 @@ function renderHtml(quote, { publicView = false } = {}) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>${L.quote} ${quote.ref} - DELIVERY Digital</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; background: #F2EFE9; color: #1D1D1F; margin: 0; padding: 0; }
+  @font-face { font-family: 'Neo Sans Bold'; src: url('https://deliverydigital.fr/NeoSansStd-Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; font-display: swap; } body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; background: #F2EFE9; color: #1D1D1F; margin: 0; padding: 0; }
   .wrap { max-width: 760px; margin: 0 auto; background: #fff; padding: 40px 48px; box-shadow: 0 8px 30px -8px rgba(0,0,0,0.08); }
   .header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 30px; border-bottom: 1px solid #E5E5EA; margin-bottom: 30px; }
   .header img { height: 38px; }
   .meta { text-align: right; font-size: 13px; color: #86868B; line-height: 1.6; }
   .meta strong { color: #1D1D1F; font-weight: 600; }
-  h1 { font-family: "Charter", "Iowan Old Style", Georgia, serif; font-weight: 700; font-size: 30px; line-height: 1.1; margin: 10px 0 8px; }
+  h1 { font-family: "Neo Sans Bold", "Helvetica Neue", Arial, sans-serif; font-weight: 700; font-size: 30px; line-height: 1.1; margin: 10px 0 8px; }
   .ref { font-size: 13px; color: #86868B; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 600; }
   .client-block { background: #F5F5F7; border-radius: 14px; padding: 20px; margin: 24px 0; }
   .client-block .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #86868B; font-weight: 600; margin-bottom: 4px; }
@@ -526,14 +701,18 @@ function renderHtml(quote, { publicView = false } = {}) {
       </tr>
     </thead>
     <tbody>
-      ${(quote.lines || []).map((l) => `
+      ${lines.map((l) => `
         <tr>
           <td>
             <div class="desc-main">${escapeHtml(l.description)}</div>
             ${l.details ? `<div class="desc-details">${escapeHtml(l.details)}</div>` : ''}
+            ${l.promoExpiry ? `<div style="color:#34C759;font-size:12px;margin-top:6px;font-weight:600;letter-spacing:0.02em;">OFFRE PROMOTIONNELLE - valable jusqu'au ${new Date(l.promoExpiry).toLocaleDateString(dateLocale)}</div>` : ''}
           </td>
           <td class="num">${l.quantity} ${l.unit ? escapeHtml(l.unit) : ''}</td>
-          <td class="num">${M(l.unitPrice)}</td>
+          <td class="num">
+            ${l.originalUnitPrice && Number(l.originalUnitPrice) > Number(l.unitPrice) ? `<div style="text-decoration:line-through;color:#86868B;font-size:11.5px;font-weight:normal;">${M(l.originalUnitPrice)}</div>` : ''}
+            ${M(l.unitPrice)}
+          </td>
           <td class="num"><strong>${M((l.quantity || 1) * (l.unitPrice || 0))}</strong></td>
         </tr>
       `).join('')}
@@ -700,6 +879,23 @@ function renderDepositInvoicePdf(quote) {
       doc.moveTo(left, y).lineTo(right, y).strokeColor('#F2F2F7').lineWidth(0.5).stroke();
       y += 18;
 
+      // Detail des prestations (reprise de la description complete des items du devis,
+      // important notamment pour les mentions R&D / CII sur la facture).
+      // @author Rabah Ziane - 2026-05-23
+      if (Array.isArray(quote.items) && quote.items.some((it) => it && it.description)) {
+        doc.fillColor('#86868B').font('Helvetica-Bold').fontSize(8).text('DETAIL DES PRESTATIONS', left, y);
+        y += 14;
+        for (const it of quote.items) {
+          if (!it || !it.description) continue;
+          doc.fillColor('#1D1D1F').font('Helvetica-Bold').fontSize(10).text(it.label || '', left, y, { width: W });
+          y += 14;
+          doc.fillColor('#86868B').font('Helvetica').fontSize(9).text(it.description, left, y, { width: W, lineGap: 2 });
+          y += Math.ceil(doc.heightOfString(it.description, { width: W, lineGap: 2 })) + 10;
+        }
+        doc.moveTo(left, y).lineTo(right, y).strokeColor('#F2F2F7').lineWidth(0.5).stroke();
+        y += 18;
+      }
+
       // Totaux (alignes a droite)
       const totalsX = right - 220;
       const totalsW = 220;
@@ -785,13 +981,13 @@ function renderDepositInvoiceHtml(quote) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>${DL.invoice} ${invoiceRef} - DELIVERY Digital</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; background: #F2EFE9; color: #1D1D1F; margin: 0; padding: 0; }
+  @font-face { font-family: 'Neo Sans Bold'; src: url('https://deliverydigital.fr/NeoSansStd-Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; font-display: swap; } body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; background: #F2EFE9; color: #1D1D1F; margin: 0; padding: 0; }
   .wrap { max-width: 760px; margin: 0 auto; background: #fff; padding: 40px 48px; box-shadow: 0 8px 30px -8px rgba(0,0,0,0.08); }
   .header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 30px; border-bottom: 1px solid #E5E5EA; margin-bottom: 30px; }
   .header img { height: 38px; }
   .meta { text-align: right; font-size: 13px; color: #86868B; line-height: 1.6; }
   .meta strong { color: #1D1D1F; font-weight: 600; }
-  h1 { font-family: "Charter", "Iowan Old Style", Georgia, serif; font-weight: 700; font-size: 30px; line-height: 1.1; margin: 10px 0 8px; }
+  h1 { font-family: "Neo Sans Bold", "Helvetica Neue", Arial, sans-serif; font-weight: 700; font-size: 30px; line-height: 1.1; margin: 10px 0 8px; }
   .ref { font-size: 13px; color: #86868B; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 600; }
   .client-block { background: #F5F5F7; border-radius: 14px; padding: 20px; margin: 24px 0; }
   .client-block .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #86868B; font-weight: 600; margin-bottom: 4px; }
@@ -1129,7 +1325,11 @@ publicRouter.post('/:token/accept', async (req, res) => {
     // PDF natif (pdfkit) en piece jointe + corps mail court. Statut sauvegarde en DB
     // pour affichage admin (quote.invoice.*).
     // @author Rabah Ziane - 2026-05-11
-    try {
+    // 2026-05-23 : conditionne par quote.autoSendInvoice (defaut true). Si false, on n'envoie pas
+    // la facture, l'admin l'enverra manuellement depuis l'UI.
+    if (quote.autoSendInvoice === false) {
+      console.log(`[accept] devis ${quote.ref} accepte, envoi facture auto DESACTIVE`);
+    } else try {
       const transporter = getTransporter();
       const quoteObj = quote.toObject();
       const D = buildDepositInvoiceData(quoteObj);

@@ -15,9 +15,9 @@
       "Custom web development in {city} | DELIVERY Digital"
     ],
     "meta_desc_variants": [
-      "Custom website development for businesses in {city}, {country_label}. AI agent to scope your project. European engineering, GDPR-grade security.",
-      "Web agency serving {city} and the wider {country_label} market. SaaS, e-commerce, dashboards. Talk to our AI agent on /discutons.",
-      "Professional web development in {city}. Modern stack, remote delivery, multilingual sites. Aligned with Vision 2030 digital priorities."
+      "Custom website development for businesses in {city}, {country_label}. European engineering, GDPR-grade security.",
+      "Web agency serving {city} and the wider {country_label} market. SaaS, e-commerce, dashboards. Tell us about your project on /discutons.",
+      "Professional web development in {city}. Modern stack, multilingual sites. Aligned with Vision 2030 digital priorities."
     ],
     "keywords_target": ["web agency", "website development", "custom web development", "digital agency"],
     "stack": ["React", "Next.js", "TypeScript", "Node.js", "PostgreSQL", "Tailwind CSS"],
@@ -41,7 +41,7 @@
     ],
     "meta_desc_variants": [
       "Custom iOS and Android app development for {city}, {country_label}. React Native or native. European engineering, App Store and Google Play delivery.",
-      "Mobile app development for {city} and the {country_label} market. Modern stack, MVPs, B2B and consumer apps. Talk to our AI agent.",
+      "Mobile app development for {city} and the {country_label} market. Modern stack, MVPs, B2B and consumer apps. Tell us about your project.",
       "Mobile agency serving {city}. Native or cross-platform apps, maintenance included, multilingual ready."
     ],
     "keywords_target": ["mobile app development", "iOS app", "Android app", "mobile agency"],
@@ -66,7 +66,7 @@
     ],
     "meta_desc_variants": [
       "Custom business software for {city}, {country_label}. ERP, CRM, B2B platforms. European engineering, scalable architecture.",
-      "Tailored business applications for {city} companies. Automate processes, dashboards, API integrations. Talk to our AI agent.",
+      "Tailored business applications for {city} companies. Automate processes, dashboards, API integrations. Tell us about your project.",
       "Custom ERP, CRM and B2B platforms for {city} and the {country_label} market. Modern stack, ongoing maintenance."
     ],
     "keywords_target": ["custom software", "custom ERP", "custom CRM", "business application development"],
@@ -91,7 +91,7 @@
     ],
     "meta_desc_variants": [
       "SaaS platform development for founders in {city}, {country_label}. MVP in 3 months, then scale. European engineering, modern stack.",
-      "Build your SaaS in {city}. Multi-tenant architecture, Stripe billing, dashboards. Talk to our AI agent on /discutons.",
+      "Build your SaaS in {city}. Multi-tenant architecture, Stripe billing, dashboards. Tell us about your project on /discutons.",
       "SaaS agency for {city} and the {country_label} startup market. MVPs, scaling, technical rebuild."
     ],
     "keywords_target": ["SaaS development", "build SaaS", "SaaS agency", "MVP development"],
@@ -116,7 +116,7 @@
     ],
     "meta_desc_variants": [
       "AI integration and custom agents for businesses in {city}, {country_label}. Claude, GPT, RAG on your data. Aligned with Vision 2030 priorities.",
-      "Bring generative AI into your tools in {city}. Chatbots, RAG, document automation. Talk to our AI agent on /discutons.",
+      "Bring generative AI into your tools in {city}. Chatbots, RAG, document automation. Tell us about your project on /discutons.",
       "AI agents and automation for {city} companies. Multilingual (Arabic + English), measurable ROI."
     ],
     "keywords_target": ["AI integration", "AI for business", "AI agents", "generative AI"],
@@ -141,7 +141,7 @@
     ],
     "meta_desc_variants": [
       "Managed cloud and DevOps for businesses in {city}, {country_label}. AWS, Docker, CI/CD, infrastructure-as-code.",
-      "Cloud migration and managed infrastructure for {city}. AWS, GCP, Kubernetes. Talk to our AI agent on /discutons.",
+      "Cloud migration and managed infrastructure for {city}. AWS, GCP, Kubernetes. Tell us about your project on /discutons.",
       "Cloud and DevOps for {city} and the {country_label} market. Cloud cost optimization, CI/CD automation."
     ],
     "keywords_target": ["cloud for business", "AWS managed services", "DevOps", "cloud migration"],

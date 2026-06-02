@@ -17,7 +17,7 @@
     "meta_desc_variants": [
       "Création de sites web sur mesure pour les entreprises de {ville}. Agent IA pour cadrer votre projet. Certifié CII : 20% remboursés.",
       "Agence web pour {ville} et au-delà. Sites vitrines, e-commerce, SaaS. Stack moderne, code maintenable. Discutons-en sur /discutons.",
-      "Développement web professionnel pour {ville}. Travail en remote, projets cadrés par notre agent IA. Certifié CII."
+      "Développement web professionnel pour {ville}. Équipe senior, livraisons hebdo. Certifié CII."
     ],
     "keywords_target": ["agence web", "création site internet", "développement web", "site web professionnel"],
     "stack": ["React", "Next.js", "TypeScript", "Node.js", "PostgreSQL", "Tailwind CSS"],

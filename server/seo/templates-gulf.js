@@ -45,7 +45,7 @@ const discutonsCta = (city, service) =>
 const VALUE_PROPS = [
   "European engineering quality with GDPR-grade security",
   "Modern stack, maintainable codebase, no vendor lock-in",
-  "Remote-first delivery, weekly demos, full ownership of source code",
+  "Weekly demos, transparent delivery, full ownership of source code",
   "Aligned with Vision 2030 digital transformation priorities",
   "Multilingual ready (Arabic and English) from day one",
   "Direct access to senior engineers, no offshore handoffs",
@@ -77,7 +77,7 @@ const FAQ_BANK = [
       "Do you work with companies based in {country_label}?",
       "Can you serve clients from {city}?",
     ],
-    a: (city) => `Yes. We work remotely with companies across ${city.country_label} and the wider Gulf region. Time zones overlap well with our European working hours, and we run weekly demos and async updates so you always know where the project stands. Get in touch on /discutons.`,
+    a: (city) => `Yes. We work with companies across ${city.country_label} and the wider Gulf region. Time zones overlap well with our European working hours, and we run weekly demos and regular updates so you always know where the project stands. Get in touch on /discutons.`,
   },
   {
     q_variants: [
@@ -139,7 +139,7 @@ function buildBody({ city, service, seed }) {
 
   const intro = [
     `${intro1} If your company is based in ${city.name}, ${city.country_label}, and you need ${service.label.toLowerCase()} delivered by a focused European team, this page is for you.`,
-    `${city.context.charAt(0).toUpperCase() + city.context.slice(1)}. DELIVERY Digital is a French software studio that builds custom ${service.label.toLowerCase()} solutions for clients across the Gulf, fully remote, with senior engineers and weekly demos.`,
+    `${city.context.charAt(0).toUpperCase() + city.context.slice(1)}. DELIVERY Digital is a French software studio that builds custom ${service.label.toLowerCase()} solutions for clients across the Gulf, with senior engineers and weekly demos.`,
   ][seed % 2];
 
   return `# ${h1}
@@ -166,10 +166,9 @@ We build with a modern, proven stack: **${stack}**. We pick technologies that wi
 
 ## How we work with clients in ${city.country_label}
 
-- **Remote-first**: weekly video demos, async updates, and a shared backlog you can read at any time.
+- **Weekly demos**: regular updates, and a shared backlog you can read at any time.
 - **Senior engineers**: no offshore handoffs, no junior-only teams. The person you talk to is the person who writes the code.
 - **Bilingual ready**: products designed for Arabic and English from day one, with proper RTL layouts.
-- **Vision 2030 friendly**: we have experience integrating with Saudi and Qatar government APIs, payment gateways, and identity providers.
 
 ${ctaInline2}
 

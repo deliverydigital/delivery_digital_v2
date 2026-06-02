@@ -400,3 +400,6 @@ table { width: 100%; max-width: 100%; }
 @media print {
   .no-print { display: none !important; }
 }
+
+/* Police d affichage (espace formation/agence) */
+.h-display { font-family: "NeoSansStd", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif; font-weight: 700; }

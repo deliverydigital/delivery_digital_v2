@@ -1,3 +1,5 @@
+import colors from 'tailwindcss/colors';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
@@ -34,7 +36,17 @@ export default {
         error: {
           500: 'var(--error-500)',
         },
+        // Tokens partages avec l'espace formation/agence (palette Pyemes).
+        // On etend les couleurs Tailwind par defaut avec un DEFAULT pour que
+        // bg-green / text-amber / text-cyan fonctionnent SANS perdre les shades.
+        paper: '#FFFFFF',
+        paper2: '#F5F5F7',
+        ink: { 100: '#EAE5EE', 200: '#D8D2DF', 400: '#8C8597', 500: '#6B6378', 700: '#4F455F', 800: '#2D2D2D', 900: '#1F1F1F' },
+        green: { ...colors.green, DEFAULT: '#1FB54E' },
+        amber: { ...colors.amber, DEFAULT: '#F5A623' },
+        cyan: { ...colors.cyan, DEFAULT: '#2BB7DE' },
       },
+      letterSpacing: { tightest: '-0.025em' },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
       },

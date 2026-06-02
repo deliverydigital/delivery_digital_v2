@@ -58,6 +58,12 @@ const quickQuoteSchema = new Schema({
   ciiEligible: { type: Boolean, default: false },
   ciiAmount: { type: Number, default: 0 },
 
+  // Si true (defaut historique), la facture d'acompte PDF est envoyee automatiquement
+  // au client juste apres acceptation du devis. Si false, la signature est juste enregistree
+  // (mail confirmation a l'admin uniquement) et la facture sera envoyee manuellement plus tard.
+  // @author Rabah Ziane - 2026-05-23
+  autoSendInvoice: { type: Boolean, default: true },
+
   status: {
     type: String,
     enum: ['draft', 'sent', 'viewed', 'accepted', 'rejected', 'expired'],

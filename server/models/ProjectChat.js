@@ -44,6 +44,28 @@ const projectChatSchema = new Schema({
   // Email notification trigger
   notifiedAt: { type: Date, default: null },
 
+  // Manual relance email sent by admin to bring the prospect back when they
+  // chatted briefly puis ont disparu. Permet de tracker qui a deja recu une
+  // relance (et combien) pour eviter de spammer.
+  // @author Rabah Ziane - 2026-05-19
+  relancedAt: { type: Date, default: null },
+  relanceCount: { type: Number, default: 0 },
+
+  // Mode "humain" : si true, le bot IA ne repond plus automatiquement aux messages
+  // du prospect ; l'admin envoie des messages manuels via /admin/conversations.
+  // @author Rabah Ziane - 2026-05-21
+  humanTakeover: { type: Boolean, default: false },
+
+  // Categorie admin pour qualifier rapidement le prospect.
+  // null = non classe (default). Permet de filtrer/trier en interne.
+  // @author Rabah Ziane - 2026-05-22
+  category: {
+    type: String,
+    enum: ['hot', 'serious', 'callback', 'cold', 'spam', null],
+    default: null,
+    index: true,
+  },
+
   // Optional: link to user if logged in
   userId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
 

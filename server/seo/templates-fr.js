@@ -4,7 +4,7 @@
  * Specifite vs templates-gulf.js :
  *  - Texte en francais (Google FR + lecteurs francophones)
  *  - MENTION du CII (Credit Impot Innovation) car les clients FR y sont eligibles
- *  - Argument anti-localite (DELIVERY est remote-first, base a Nice mais sert toute la France)
+ *  - Argument anti-localite (DELIVERY est base a Nice mais sert toute la France)
  *  - Argument Qualiopi pour la formation (optionnel par service)
  *
  * @author Rabah Ziane - 2026-05-13
@@ -32,7 +32,7 @@ const discutonsCta = (city, service) =>
 
 const VALUE_PROPS = [
   "Equipe d'ingenieurs senior, code maintenable, propriete totale du code source",
-  "Methode remote-first eprouvee, points hebdo, backlog partage en temps reel",
+  "Methode eprouvee, points hebdo, backlog partage en temps reel",
   "Stack technique moderne (React, Next.js, TypeScript, Node.js)",
   "Certifies CII : 20 % de vos depenses d'innovation remboursees (plafond 400 000 EUR/an)",
   "Pas de sous-traitance offshore : l'ingenieur qui vous parle est celui qui ecrit le code",
@@ -52,7 +52,7 @@ const FAQ_BANK = [
       "Travaillez-vous avec des entreprises a {city} ?",
       "Pouvez-vous accompagner les entreprises de {city} ?",
     ],
-    a: (city) => `Oui. Nous travaillons en remote avec des entreprises partout en France, y compris a ${city.name}. Nous fonctionnons par demos hebdomadaires en visio, backlog partage et echanges async. Vous gardez le controle du projet. Echangeons sur /discutons.`,
+    a: (city) => `Oui. Nous accompagnons des entreprises partout en France, y compris a ${city.name}. Nous fonctionnons par demos hebdomadaires, backlog partage et points reguliers. Vous gardez le controle du projet. Echangeons sur /discutons.`,
   },
   {
     q_variants: [
@@ -110,7 +110,7 @@ function buildBody({ city, service, seed }) {
   const stack = service.stack.join(', ');
 
   const intro = [
-    `Vous etes une entreprise basee a ${city.name} et vous avez besoin d'un partenaire technique fiable pour ${service.label.toLowerCase()} ? DELIVERY Digital est un studio logiciel base a Nice qui intervient en remote pour les entreprises de ${city.name} et de ${city.region}, avec des ingenieurs senior et des livraisons hebdomadaires.`,
+    `Vous etes une entreprise basee a ${city.name} et vous avez besoin d'un partenaire technique fiable pour ${service.label.toLowerCase()} ? DELIVERY Digital est un studio logiciel base a Nice qui accompagne les entreprises de ${city.name} et de ${city.region}, avec des ingenieurs senior et des livraisons hebdomadaires.`,
     `${city.context.charAt(0).toUpperCase() + city.context.slice(1)}. Pour ${service.label.toLowerCase()} a ${city.name}, DELIVERY Digital propose une approche directe : code de qualite, equipe senior, mise en production rapide, et accompagnement CII pour eligibilite a 20 % de remboursement.`,
   ][seed % 2];
 
@@ -138,7 +138,7 @@ Nous construisons avec une stack moderne et durable : **${stack}**. Nous choisis
 
 ## Comment nous travaillons avec les entreprises de ${city.region}
 
-- **Remote-first** : demos en visio hebdomadaires, backlog partage, mises a jour async.
+- **Demos hebdomadaires** : points reguliers, backlog partage, suivi clair.
 - **Ingenieurs senior** : pas de sous-traitance offshore, pas d'equipes junior seules.
 - **Methodologie agile** : sprints de 2 a 4 semaines, livrables concrets a chaque cycle.
 - **Reactivite** : Slack partage avec votre equipe, reponse rapide en heures ouvrees.

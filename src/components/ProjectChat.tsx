@@ -66,19 +66,25 @@ function ChatAuth({ onAuth }: { onAuth: (token: string, user: ChatUser) => void 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!/^\S+@\S+\.\S+$/.test(email)) { setError(t('chat.emailInvalid')); return; }
+    if (!/^\S+@\S+\.\S+$/.test(email)) { setError('Veuillez vérifier votre email.'); return; }
     setBusy(true);
+    // Tous les cas d'echec (syntaxe, jetable, MX inexistant, reseau, erreur backend) renvoient
+    // le meme message simple cote UX : "Veuillez verifier votre email."
+    // Pourquoi : demande user 2026-05-19, message generique a affichage clair plutot que
+    // techniques (no_mx, jetable...) qui peuvent confondre un prospect non technique.
+    // @author Rabah Ziane
+    const GENERIC_EMAIL_ERROR = 'Veuillez vérifier votre email.';
     try {
       const res = await fetch('/api/project-chat/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      if (!res.ok) throw new Error('auth_failed');
+      if (!res.ok) { setError(GENERIC_EMAIL_ERROR); return; }
       const data = await res.json();
       onAuth(data.token, data.user);
     } catch (err) {
-      setError("Impossible de continuer. Vérifiez votre connexion et réessayez.");
+      setError(GENERIC_EMAIL_ERROR);
     } finally {
       setBusy(false);
     }

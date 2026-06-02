@@ -80,7 +80,7 @@ export default function LocationsPage() {
           Nos services par ville
         </h1>
         <p className="text-[16px] text-[#86868B] mb-10 max-w-[720px]">
-          DELIVERY Digital intervient en remote pour des entreprises en France et dans le Golfe. Voici toutes les pages dédiées par ville et par service.
+          DELIVERY Digital accompagne des entreprises en France et dans le Golfe. Voici toutes les pages dédiées par ville et par service.
           {!loading && items.length > 0 && (
             <span className="text-[#1D1D1F] font-medium"> {items.length} pages disponibles.</span>
           )}

@@ -174,7 +174,49 @@ app.use((req, res, next) => {
   next();
 });
 
-// 1) Routes SEO injectees : doivent etre AVANT le static car index.html serait servi tel quel.
+// 1a) Hub /services et /services/country/:code : meta SSR dedies pour ne pas
+// que Google voit ces hubs comme duplicate du / homepage.
+// @author Rabah Ziane - 2026-05-19
+const COUNTRY_NAMES_HUB = {
+  FR: 'France', SA: 'Arabie Saoudite', QA: 'Qatar', AE: 'Émirats Arabes Unis',
+  KW: 'Koweït', OM: 'Oman', BH: 'Bahreïn', MC: 'Monaco', GULF: 'Golfe',
+};
+app.get('/services', (req, res) => {
+  const html = readIndexHtml();
+  const injected = injectSeo(html, {
+    canonicalUrl: `${SITE_URL}/services`,
+    title: 'Services & expertises - Agence DELIVERY Digital',
+    description: 'Découvrez nos services par ville et par pays : développement web, SaaS, mobile, IA, cloud. Plus de 800 pages dédiées aux entreprises en France et dans le Golfe.',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: 'Services DELIVERY Digital par ville et pays',
+      url: `${SITE_URL}/services`,
+      description: 'Pages dédiées aux services de développement web, mobile, SaaS, IA et cloud, par ville et pays.',
+    },
+  });
+  res.status(200).type('html').send(injected);
+});
+app.get('/services/country/:code', (req, res) => {
+  const code = String(req.params.code || '').toUpperCase();
+  const countryName = COUNTRY_NAMES_HUB[code] || code;
+  const html = readIndexHtml();
+  const injected = injectSeo(html, {
+    canonicalUrl: `${SITE_URL}/services/country/${code.toLowerCase()}`,
+    title: `Services en ${countryName} - DELIVERY Digital`,
+    description: `Tous nos services dédiés aux entreprises en ${countryName} : développement web, SaaS, mobile, IA, cloud. Stack moderne, équipe senior.`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: `Services DELIVERY Digital en ${countryName}`,
+      url: `${SITE_URL}/services/country/${code.toLowerCase()}`,
+      about: { '@type': 'Country', name: countryName },
+    },
+  });
+  res.status(200).type('html').send(injected);
+});
+
+// 1b) Routes SEO injectees : doivent etre AVANT le static car index.html serait servi tel quel.
 const seoRoutes = ['/services/:slug', '/blog/:slug'];
 for (const route of seoRoutes) {
   app.get(route, async (req, res, next) => {

@@ -15,9 +15,9 @@ export const llmsRouter = express.Router();
 
 const HEADER = `# DELIVERY Digital Technology
 
-> French software studio that builds custom websites, mobile apps, SaaS platforms, business software and AI agents. Remote-first delivery for clients in France, Europe, and the Gulf region (Qatar, Saudi Arabia and beyond). Differentiator: a conversational AI agent at /discutons that scopes any project in 5 minutes.
+> French software studio that builds custom websites, mobile apps, SaaS platforms, business software and AI agents for clients in France, Europe, and the Gulf region (Qatar, Saudi Arabia and beyond). Differentiator: a conversational project intake at /discutons that scopes any project in 5 minutes.
 
-DELIVERY Digital Technology is based in Nice, France, and operates remotely. We are certified CII (Crédit Impôt Innovation) in France, which lets eligible French SMEs recover 20% of their innovation spend (up to 80,000 EUR/year). For non-French clients, our value proposition is European engineering quality, GDPR-grade security and Vision 2030 alignment for Gulf markets.
+DELIVERY Digital Technology is based in Nice, France. We are certified CII (Crédit Impôt Innovation) in France, which lets eligible French SMEs recover 20% of their innovation spend (up to 80,000 EUR/year). For non-French clients, our value proposition is European engineering quality, GDPR-grade security and Vision 2030 alignment for Gulf markets.
 
 Primary services:
 - Web agency: custom websites, e-commerce, SaaS dashboards (React, Next.js, Node.js)
@@ -76,7 +76,7 @@ llmsRouter.get('/llms.txt', async (req, res) => {
     }
 
     lines.push('## Talk to us');
-    lines.push('- [Conversational AI agent for project scoping](https://deliverydigital.fr/discutons): start any project conversation here');
+    lines.push('- [Describe your project](https://deliverydigital.fr/discutons): conversational project intake, scopes any project in 5 minutes');
     lines.push('- [Homepage](https://deliverydigital.fr/): main entry point');
 
     res.set('content-type', 'text/markdown; charset=utf-8');

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { LayoutDashboard, Users, Sparkles, LogOut, MessageSquare, Loader2, FileText, BarChart3, GraduationCap, FolderOpen, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Users, Sparkles, LogOut, MessageSquare, Loader2, FileText, BarChart3, GraduationCap, FolderOpen, ExternalLink, Building2 } from 'lucide-react';
 import AIOrb from './AIOrb';
+import AgencyAdmin from './AgencyAdmin';
 import SeoAdmin from './SeoAdmin';
 import RankingsTab from './admin/RankingsTab';
 import LinkBuildingTab from './admin/LinkBuildingTab';
@@ -15,7 +16,7 @@ const SECRET_KEY = 'dd_seo_admin_secret';
 // Fusion 2026-05-14 (Rabah) : ajout onglets 'formations' (TrainingProgramsManagement)
 // et 'gestion' (lien vers ancien AdminDashboard /?admin=true pour Clients/Projets/Taches
 // en attendant migration complete demain).
-type Section = 'overview' | 'conversations' | 'prospects' | 'quotes' | 'seo' | 'dashboard' | 'formations' | 'gestion' | 'rankings' | 'linkbuilding';
+type Section = 'overview' | 'conversations' | 'prospects' | 'quotes' | 'seo' | 'dashboard' | 'formations' | 'gestion' | 'rankings' | 'linkbuilding' | 'agencies';
 
 export default function AdminPanel() {
   const [secret, setSecret] = useState<string | null>(() => localStorage.getItem(SECRET_KEY));
@@ -116,6 +117,7 @@ export default function AdminPanel() {
           <SideBtn active={section === 'linkbuilding'} icon={<ExternalLink className="h-4 w-4" />} label="Link Building" onClick={() => setSection('linkbuilding')} />
           <SideBtn active={section === 'seo'} icon={<Sparkles className="h-4 w-4" />} label="SEO Content" onClick={() => setSection('seo')} />
           <SideBtn active={section === 'gestion'} icon={<FolderOpen className="h-4 w-4" />} label="Projets & Clients" onClick={() => setSection('gestion')} />
+          <SideBtn active={section === 'agencies'} icon={<Building2 className="h-4 w-4" />} label="Agences" onClick={() => setSection('agencies')} />
         </nav>
 
         <div className="px-4 py-3 border-t border-black/5">
@@ -150,6 +152,7 @@ export default function AdminPanel() {
         {section === 'linkbuilding' && <LinkBuildingTab secret={secret} />}
         {section === 'seo' && <SeoAdmin embedded sharedSecret={secret} />}
         {section === 'formations' && <TrainingProgramsManagement />}
+        {section === 'agencies' && <AgencyAdmin secret={secret} />}
         {section === 'gestion' && <GestionPlaceholder />}
       </main>
     </div>

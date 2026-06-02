@@ -384,6 +384,37 @@ function QuoteEditor({
     setProspectQuery('');
   };
 
+  // Autocomplete client depuis devis existants (clients deja devises)
+  // @author Rabah Ziane - 2026-05-23
+  const [clientSuggestions, setClientSuggestions] = useState<Array<any>>([]);
+  const [showClientSuggestions, setShowClientSuggestions] = useState(false);
+
+  useEffect(() => {
+    const name = q.client?.name || '';
+    if (!showClientSuggestions || name.length < 2) { setClientSuggestions([]); return; }
+    const timer = setTimeout(() => {
+      api(`/api/admin/quotes-quick/clients/suggest?q=${encodeURIComponent(name)}`)
+        .then((d) => setClientSuggestions(d.items || []))
+        .catch(() => {});
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [q.client?.name, showClientSuggestions, api]);
+
+  const selectExistingClient = (c: any) => {
+    setQ({
+      ...q,
+      client: {
+        name: c.name || '',
+        email: c.email || '',
+        company: c.company || '',
+        phone: c.phone || '',
+        address: c.address || '',
+      },
+    } as Quote);
+    setShowClientSuggestions(false);
+    setClientSuggestions([]);
+  };
+
   // Recalcul totaux en local
   useEffect(() => {
     const round = (n: number) => Math.round(n * 100) / 100;
@@ -417,6 +448,7 @@ function QuoteEditor({
         language: q.language,
         issuer: q.issuer || 'fr',
         paymentSchedule: q.paymentSchedule || [],
+        autoSendInvoice: (q as any).autoSendInvoice !== false,
       };
       const res = isNew
         ? await api('/api/admin/quotes-quick', { method: 'POST', body: JSON.stringify(body) })
@@ -597,7 +629,36 @@ function QuoteEditor({
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <Input label="Nom *" value={q.client.name} onChange={(v) => setQ({ ...q, client: { ...q.client, name: v } })} />
+                {/* Nom client avec autocomplete sur clients deja devises */}
+                <div className="relative">
+                  <label className="block text-[11px] font-semibold text-[#86868B] uppercase tracking-wider mb-1">Nom *</label>
+                  <input
+                    type="text"
+                    value={q.client.name}
+                    onChange={(e) => { setQ({ ...q, client: { ...q.client, name: e.target.value } }); setShowClientSuggestions(true); }}
+                    onFocus={() => { if ((q.client?.name || '').length >= 2) setShowClientSuggestions(true); }}
+                    onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)}
+                    className="w-full px-3 py-2 rounded-[10px] bg-[#F5F5F7] outline-none text-[14px] text-[#1D1D1F]"
+                  />
+                  {showClientSuggestions && clientSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 max-h-[240px] overflow-y-auto bg-white rounded-[12px] ring-1 ring-black/8 shadow-2xl z-20">
+                      <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-[#86868B] bg-[#FAFAFA] border-b border-black/5">Clients existants</div>
+                      {clientSuggestions.map((c: any, i: number) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onMouseDown={(e) => { e.preventDefault(); selectExistingClient(c); }}
+                          className="w-full text-left px-3 py-2.5 hover:bg-[#FAFAFA] border-b border-black/5 last:border-0"
+                        >
+                          <div className="text-[13.5px] font-semibold text-[#1D1D1F]">{c.name || '(sans nom)'}</div>
+                          <div className="text-[11.5px] text-[#86868B]">
+                            {c.email}{c.company ? ' · ' + c.company : ''}{c.lastQuoteRef ? ' · ' + c.lastQuoteRef : ''}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <Input label="Email *" type="email" value={q.client.email} onChange={(v) => setQ({ ...q, client: { ...q.client, email: v } })} />
                 <Input label="Entreprise" value={q.client.company} onChange={(v) => setQ({ ...q, client: { ...q.client, company: v } })} />
                 <PhoneInput label="Téléphone" value={q.client.phone} onChange={(v) => setQ({ ...q, client: { ...q.client, phone: v } })} />
@@ -922,6 +983,14 @@ function QuoteEditor({
                   onChange={(e) => setQ({ ...q, ciiEligible: e.target.checked })}
                 />
                 <span><strong>Eligible Crédit Impôt Innovation (CII)</strong> - PME française, projet innovant</span>
+              </label>
+              <label className="flex items-center gap-2 mb-3 text-[13px] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={(q as any).autoSendInvoice !== false}
+                  onChange={(e) => setQ({ ...q, autoSendInvoice: e.target.checked } as Quote)}
+                />
+                <span><strong>Envoyer la facture d'acompte automatiquement</strong> au client à l'acceptation du devis (décocher pour envoyer manuellement)</span>
               </label>
               <div className="bg-[#F2EFE9] rounded-[12px] p-4 space-y-1.5 text-[14px]">
                 <div className="flex justify-between"><span>Sous-total HT</span><strong>{fmtMain(q.subtotal)}</strong></div>

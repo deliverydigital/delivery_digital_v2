@@ -130,6 +130,7 @@ Renvoie SEULEMENT le JSON, sans markdown wrapper, sans texte avant/après.`;
   fullPage.metaDescription = parsed.metaDescription || fullPage.metaDescription;
   fullPage.body = parsed.body;
   if (!fullPage.targetKeyword) fullPage.targetKeyword = keyword;
+  fullPage.status = 'draft'; // user doit reviewer avant republish
   await fullPage.save();
 
   return { ok: true, pageId: fullPage._id, slug: fullPage.slug, newTitle: parsed.title };

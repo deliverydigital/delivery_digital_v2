@@ -147,11 +147,11 @@ router.get('/related/:slug', async (req, res) => {
       SeoContent.find(
         { status: 'published', type: 'city-service', country: myCountry, service: myService, slug: { $ne: slug } },
         { slug: 1, title: 1, city: 1 }
-      ).limit(6).lean(),
+      ).limit(12).lean(),
       SeoContent.find(
         { status: 'published', type: 'city-service', country: myCountry, city: myCity, slug: { $ne: slug } },
         { slug: 1, title: 1, service: 1 }
-      ).limit(6).lean(),
+      ).limit(12).lean(),
     ]);
 
     const result = {

@@ -1,8 +1,23 @@
 import express from 'express';
+import nodemailer from 'nodemailer';
 import ChatUser from '../models/ChatUser.js';
 import ProjectChat from '../models/ProjectChat.js';
 
 const router = express.Router();
+
+// Helper SMTP - meme conf que routes/contact.js. On duplique 5 lignes plutot
+// que d'extraire dans un util commun, pour eviter de toucher contact.js qui
+// marche en prod. A factoriser plus tard quand on aura plusieurs routes mail.
+// @author Rabah Ziane - 2026-05-19
+const createTransporter = () => {
+  const port = parseInt(process.env.SMTP_PORT || '587', 10);
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port,
+    secure: port === 465,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+  });
+};
 
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'change-me-admin-secret';
 const requireAdmin = (req, res, next) => {
@@ -66,6 +81,11 @@ router.get('/', requireAdmin, async (req, res) => {
         updatedAt: s.updatedAt,
         createdAt: s.createdAt,
         isActive,
+        // Relance email tracking - badge "Deja relance" + count cote admin.
+        // @author Rabah Ziane - 2026-05-19
+        relancedAt: s.relancedAt || null,
+        relanceCount: s.relanceCount || 0,
+        category: s.category || null,
         user: {
           email: user.email || '',
           name: user.name || '',
@@ -196,6 +216,9 @@ router.get('/:sessionId', requireAdmin, async (req, res) => {
         createdAt: session.createdAt,
         updatedAt: session.updatedAt,
         isActive,
+        // Relance email tracking @author Rabah Ziane - 2026-05-19
+        relancedAt: session.relancedAt || null,
+        relanceCount: session.relanceCount || 0,
       },
       user: user ? {
         _id: String(user._id),
@@ -208,6 +231,96 @@ router.get('/:sessionId', requireAdmin, async (req, res) => {
       } : null,
     });
   } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/* ===========================================================
+   POST /:sessionId/relance
+   Envoie un email de relance au prospect qui a commence a discuter puis a
+   quitte. Personalise avec son prenom + dernier message qu'il a tape (pour
+   ancrer le souvenir et augmenter le taux de retour).
+   Marque la session avec relancedAt + incremente relanceCount.
+   Body optionnel : { message: "texte custom admin" } - sinon template auto.
+   @author Rabah Ziane - 2026-05-19
+   =========================================================== */
+router.post('/:sessionId/relance', requireAdmin, async (req, res) => {
+  try {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      return res.status(500).json({ error: 'SMTP_USER/SMTP_PASS not configured' });
+    }
+    const session = await ProjectChat.findOne({ sessionId: req.params.sessionId });
+    if (!session) return res.status(404).json({ error: 'session not found' });
+
+    // Resolve user (chatUserId d'abord, legacy userId en fallback - meme logique
+    // que GET / list. cf commentaire ligne 30 ci-dessus.)
+    const uid = session.chatUserId || session.userId;
+    if (!uid) return res.status(400).json({ error: 'no user linked to this session' });
+    const user = await ChatUser.findById(uid).lean();
+    if (!user || !user.email) return res.status(400).json({ error: 'user has no email' });
+
+    const lastUserMsg = [...(session.messages || [])].reverse().find((m) => m.role === 'user');
+    const userExcerpt = (lastUserMsg?.content || '').slice(0, 300);
+    const firstName = (user.name || '').split(/\s+/)[0] || 'bonjour';
+    const customBody = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+
+    const subject = `${firstName}, on peut continuer la conversation ?`;
+    const html = `
+      <!DOCTYPE html>
+      <html><head><meta charset="UTF-8"></head>
+      <body style="margin:0;padding:0;background:#F4F5F7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#F4F5F7;padding:40px 16px;">
+          <tr><td align="center">
+            <table role="presentation" cellpadding="0" cellspacing="0" width="560" style="max-width:560px;width:100%;background:#FFFFFF;border-radius:16px;box-shadow:0 2px 12px rgba(17,24,39,0.06);overflow:hidden;">
+              <tr><td style="padding:32px 36px 8px;">
+                <h1 style="margin:0 0 12px;color:#0B1220;font-size:22px;font-weight:700;letter-spacing:-0.01em;">Bonjour ${firstName},</h1>
+                <p style="margin:0 0 18px;color:#374151;font-size:15px;line-height:1.6;">
+                  ${customBody
+                    ? customBody.replace(/\n/g, '<br/>')
+                    : `Vous avez commenc&eacute; une conversation avec nous sur <strong>DELIVERY Digital</strong> mais nous n'avons pas pu finaliser ensemble. Je voulais juste m'assurer que vous aviez bien re&ccedil;u toutes les r&eacute;ponses dont vous aviez besoin.`}
+                </p>
+                ${userExcerpt ? `
+                  <div style="background:#F4F5F7;border-left:3px solid #3B5BFF;border-radius:10px;padding:14px 16px;margin:18px 0;">
+                    <p style="margin:0;color:#6B7280;font-size:12.5px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;">Votre dernier message</p>
+                    <p style="margin:6px 0 0;color:#1F2937;font-size:14px;line-height:1.55;font-style:italic;">&laquo; ${userExcerpt.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]))} &raquo;</p>
+                  </div>
+                ` : ''}
+                <p style="margin:0 0 22px;color:#374151;font-size:15px;line-height:1.6;">
+                  Si vous voulez en discuter, un simple clic suffit :
+                </p>
+                <p style="margin:0 0 26px;text-align:center;">
+                  <a href="https://deliverydigital.fr/discutons" style="display:inline-block;background:#1D1D1F;color:#FFFFFF;text-decoration:none;padding:14px 28px;border-radius:12px;font-size:15px;font-weight:600;">Reprendre la conversation</a>
+                </p>
+                <p style="margin:0 0 8px;color:#6B7280;font-size:13px;line-height:1.55;">
+                  Ou r&eacute;pondez directement &agrave; cet email, je lis tout personnellement.
+                </p>
+              </td></tr>
+              <tr><td style="padding:24px 36px 30px;border-top:1px solid #E5E7EB;">
+                <p style="margin:0;color:#9CA3AF;font-size:12px;line-height:1.5;">
+                  DELIVERY Digital Nice &middot; <a href="https://deliverydigital.fr" style="color:#3B5BFF;text-decoration:none;">deliverydigital.fr</a>
+                </p>
+              </td></tr>
+            </table>
+          </td></tr>
+        </table>
+      </body></html>`;
+
+    const transporter = createTransporter();
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: user.email,
+      subject,
+      html,
+      replyTo: process.env.SMTP_FROM || process.env.SMTP_USER,
+    });
+
+    session.relancedAt = new Date();
+    session.relanceCount = (session.relanceCount || 0) + 1;
+    await session.save();
+
+    res.json({ ok: true, relancedAt: session.relancedAt, relanceCount: session.relanceCount, sentTo: user.email });
+  } catch (e) {
+    console.error('[relance] error', e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -228,6 +341,125 @@ router.get('/:sessionId/since', requireAdmin, async (req, res) => {
     res.json({ messages, updatedAt: session.updatedAt });
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+
+/* POST /:sessionId/manual-message
+   Envoi d'un message manuel par l'admin dans la conversation. Le message est
+   ajoute comme provenant de "assistant" pour que le prospect le voie comme
+   une reponse du conseiller. Active automatiquement humanTakeover.
+   @author Rabah Ziane - 2026-05-21 */
+router.post('/:sessionId/manual-message', requireAdmin, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { content } = req.body || {};
+    if (!content || typeof content !== 'string' || !content.trim()) {
+      return res.status(400).json({ error: 'content required' });
+    }
+    const session = await ProjectChat.findOne({ sessionId });
+    if (!session) return res.status(404).json({ error: 'session not found' });
+
+    session.messages.push({ role: 'assistant', content: content.trim() });
+    session.humanTakeover = true;
+    await session.save();
+    res.json({ ok: true, messages: session.messages, humanTakeover: true });
+  } catch (e) {
+    console.error('[manual-message] error', e);
+    res.status(500).json({ error: 'internal' });
+  }
+});
+
+/* POST /:sessionId/takeover
+   Toggle humanTakeover. Body : { active: true|false }.
+   active=true : le bot IA ne repond plus, l'admin gere a la main.
+   active=false : le bot IA reprend la main automatiquement.
+   @author Rabah Ziane - 2026-05-21 */
+router.post('/:sessionId/takeover', requireAdmin, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { active } = req.body || {};
+    const session = await ProjectChat.findOne({ sessionId });
+    if (!session) return res.status(404).json({ error: 'session not found' });
+    session.humanTakeover = !!active;
+    await session.save();
+    res.json({ ok: true, humanTakeover: session.humanTakeover });
+  } catch (e) {
+    console.error('[takeover] error', e);
+    res.status(500).json({ error: 'internal' });
+  }
+});
+
+
+/* PATCH /:sessionId/messages/:index
+   Modifie le contenu d'un message existant (admin only). Index = position
+   dans le tableau session.messages.
+   @author Rabah Ziane - 2026-05-21 */
+router.patch('/:sessionId/messages/:index', requireAdmin, async (req, res) => {
+  try {
+    const { sessionId, index } = req.params;
+    const i = parseInt(index, 10);
+    const { content } = req.body || {};
+    if (!content || typeof content !== 'string' || !content.trim()) {
+      return res.status(400).json({ error: 'content required' });
+    }
+    const session = await ProjectChat.findOne({ sessionId });
+    if (!session) return res.status(404).json({ error: 'session not found' });
+    if (Number.isNaN(i) || i < 0 || i >= session.messages.length) {
+      return res.status(400).json({ error: 'invalid index' });
+    }
+    session.messages[i].content = content.trim();
+    session.markModified('messages');
+    await session.save();
+    res.json({ ok: true, messages: session.messages });
+  } catch (e) {
+    console.error('[edit-message] error', e);
+    res.status(500).json({ error: 'internal' });
+  }
+});
+
+/* DELETE /:sessionId/messages/:index
+   Supprime un message a l'index donne (admin only).
+   @author Rabah Ziane - 2026-05-21 */
+router.delete('/:sessionId/messages/:index', requireAdmin, async (req, res) => {
+  try {
+    const { sessionId, index } = req.params;
+    const i = parseInt(index, 10);
+    const session = await ProjectChat.findOne({ sessionId });
+    if (!session) return res.status(404).json({ error: 'session not found' });
+    if (Number.isNaN(i) || i < 0 || i >= session.messages.length) {
+      return res.status(400).json({ error: 'invalid index' });
+    }
+    session.messages.splice(i, 1);
+    session.markModified('messages');
+    await session.save();
+    res.json({ ok: true, messages: session.messages });
+  } catch (e) {
+    console.error('[delete-message] error', e);
+    res.status(500).json({ error: 'internal' });
+  }
+});
+
+
+/* PATCH /:sessionId/category
+   Tag admin pour qualifier le prospect : hot | serious | callback | cold | spam | null.
+   @author Rabah Ziane - 2026-05-22 */
+router.patch('/:sessionId/category', requireAdmin, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { category } = req.body || {};
+    const allowed = ['hot', 'serious', 'callback', 'cold', 'spam', null];
+    if (!allowed.includes(category)) {
+      return res.status(400).json({ error: 'invalid category' });
+    }
+    const session = await ProjectChat.findOne({ sessionId });
+    if (!session) return res.status(404).json({ error: 'session not found' });
+    session.category = category;
+    await session.save();
+    res.json({ ok: true, category: session.category });
+  } catch (e) {
+    console.error('[category] error', e);
+    res.status(500).json({ error: 'internal' });
   }
 });
 
