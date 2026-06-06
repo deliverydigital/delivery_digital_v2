@@ -241,10 +241,15 @@ for (const route of seoRoutes) {
 }
 
 // 2) Static : sert tous les assets (CSS, JS, images, favicons, sitemap.xml...).
+// Fichiers uploadés (RIB agences, assets de marque) servis depuis le vrai dossier uploads/.
+// @author Rabah Ziane - 2026-06-05
+app.use('/uploads', express.static(path.resolve(__dirname, '../uploads'), { maxAge: '1h' }));
 app.use(express.static(DIST, { index: false, maxAge: '1h', etag: true }));
 
 // 3) Catch-all SPA : sert index.html pour toute autre route (canonical homepage est OK).
 app.get('*', (req, res) => {
+  // index.html toujours revalidé (évite un index périmé pointant vers un bundle JS supprimé). @Rabah 2026-06-06
+  res.set('Cache-Control', 'no-cache');
   res.status(200).type('html').send(readIndexHtml());
 });
 

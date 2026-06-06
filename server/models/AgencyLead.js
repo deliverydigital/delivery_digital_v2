@@ -13,6 +13,10 @@ const schema = new Schema({
   denom: { type: String, trim: true },
   siret: { type: String, trim: true },
   opco: { type: String, trim: true },
+  addr: { type: String, trim: true }, // adresse établissement (détectée au SIRET) - pour le tampon convention
+  // Suivi / rappel : ce qu'on attend (ex. "courrier AKTO") + date de rappel (notification agence).
+  waitingNote: { type: String, trim: true },
+  reminderAt: { type: Date },
   status: { type: String, enum: ['new', 'verified', 'dossier', 'converted', 'lost'], default: 'new', index: true },
   notes: String,
 }, { timestamps: true });

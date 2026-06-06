@@ -13,7 +13,9 @@ import StickyDiscutonsBar from './components/StickyDiscutonsBar';
 import ProspectAdmin from './components/ProspectAdmin';
 import AdminPanel from './components/AdminPanel';
 import AgenceSpace from './components/AgenceSpace';
+import TrainerSpace from './components/TrainerSpace';
 import AccesPage from './components/AccesPage';
+import ConventionSignPage from './components/ConventionSignPage';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
@@ -40,6 +42,7 @@ function App() {
   const [seoSlug, setSeoSlug] = useState<{ type: 'services' | 'blog'; slug: string } | null>(null);
   const [countryHubCode, setCountryHubCode] = useState<string | null>(null);
   const [accesToken, setAccesToken] = useState<string | null>(null);
+  const [signToken, setSignToken] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = i18n.language === 'fr'
@@ -76,8 +79,13 @@ function App() {
     } else if (pathname.startsWith('/acces/')) {
       setAccesToken(pathname.slice('/acces/'.length).replace(/\/$/, ''));
       setCurrentPage('acces');
+    } else if (pathname.startsWith('/signer/')) {
+      setSignToken(pathname.slice('/signer/'.length).replace(/\/$/, ''));
+      setCurrentPage('signer');
     } else if (pathname === '/agence' || pathname.startsWith('/agence/')) {
       setCurrentPage('agence');
+    } else if (pathname === '/formateur' || pathname.startsWith('/formateur/')) {
+      setCurrentPage('formateur');
     } else if (pathname === '/admin' || pathname.startsWith('/admin/')) {
       setCurrentPage('admin-panel');
     } else if (pathname === '/services' || pathname === '/services/') {
@@ -191,9 +199,19 @@ function App() {
     return <AgenceSpace />;
   }
 
+  // Espace Formateur (login JWT + dashboard)
+  if (currentPage === 'formateur') {
+    return <TrainerSpace />;
+  }
+
   // Page publique : le client transmet ses acces en securite
   if (currentPage === 'acces' && accesToken) {
     return <AccesPage token={accesToken} />;
+  }
+
+  // Page publique : le client lit et signe sa convention au doigt
+  if (currentPage === 'signer' && signToken) {
+    return <ConventionSignPage token={signToken} />;
   }
 
   // Services hub - liste pays

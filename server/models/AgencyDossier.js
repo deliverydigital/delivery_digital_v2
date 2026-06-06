@@ -16,10 +16,21 @@ const schema = new Schema({
   leadId: { type: Schema.Types.ObjectId, ref: 'AgencyLead' },
   denom: String, siret: String, opco: String, addr: String, clientEmail: String,
   formationTitle: String, sessionName: String,
+  sessionStart: Date, sessionEnd: Date, // début / fin de formation
   salaries: { type: [salarySchema], default: [] },
   signedBy: String, signedFunction: String, signedIp: String,
+  signatureDataUrl: String, // image PNG de la signature manuscrite du client (au doigt)
+  signedRemote: Boolean,     // true = signe a distance via lien, false/absent = en personne
+  signedAt: Date,            // date de signature de la convention par le client
   amountHT: { type: Number, default: 0 }, // montant HT du dossier (525 € x stagiaires)
   // Pipeline jusqu'au paiement (mis a jour par l'admin DD au fil du dossier OPCO)
   status: { type: String, enum: ['transmitted', 'instruction', 'accepted', 'scheduled', 'completed', 'invoiced', 'paid', 'rejected'], default: 'transmitted', index: true },
+  // Encaissement de la commission agence : l'admin DD marque opcoPaid quand l'OPCO a reglé
+  // (-> fonds disponibles cote agence) ; l'agence envoie un ordre d'encaissement (+ sa facture) ;
+  // l'admin fait le virement et passe le statut a 'paid'. @author Rabah Ziane - 2026-06-02
+  opcoPaid: { type: Boolean, default: false },
+  opcoPaidAt: Date,
+  encashRequestedAt: Date,
+  invoiceNumber: String,
 }, { timestamps: true });
 export default mongoose.models.AgencyDossier || mongoose.model('AgencyDossier', schema);

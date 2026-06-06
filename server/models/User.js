@@ -18,6 +18,13 @@ const userSchema = new Schema({
     type: String,
     required: true
   },
+  // Copie chiffree (AES) du mot de passe en clair des comptes AGENCE, pour permettre au
+  // superadmin de le RE-AFFICHER sans le changer ("Renvoyer accès"). select:false = jamais
+  // renvoye sauf demande explicite. @author Rabah Ziane - 2026-06-06
+  agencyPwEnc: {
+    type: String,
+    select: false
+  },
   name: {
     type: String,
     required: true,
@@ -72,6 +79,9 @@ const userSchema = new Schema({
   },
   // True quand le superadmin a valide infos entreprise + RIB + contrat.
   onboardingValidated: { type: Boolean, default: false },
+  // === Champs FORMATEUR (role 'trainer') === @author Rabah Ziane - 2026-06-06
+  hourlyRate: { type: Number, default: 0 },
+  trainerSkills: { type: [String], default: [] },
   status: {
     type: String,
     enum: ['active', 'inactive', 'pending', 'suspended'],

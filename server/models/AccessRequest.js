@@ -34,6 +34,7 @@ const accessRequestSchema = new Schema({
   agencyName: String,
   commercialId: { type: Schema.Types.ObjectId, ref: 'User' },
   clientEmail: { type: String, required: true, lowercase: true, trim: true },
+  clientName: { type: String, trim: true },
   label: { type: String, default: 'Accès à votre compte' }, // ce qu'on demande
   status: { type: String, enum: ['pending', 'received', 'cancelled'], default: 'pending', index: true },
   expiresAt: Date,

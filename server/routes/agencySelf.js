@@ -12,9 +12,11 @@ import { User, TrainingProgram } from '../models/index.js';
 import AccessRequest from '../models/AccessRequest.js';
 import AgencyLead from '../models/AgencyLead.js';
 import AgencyDossier from '../models/AgencyDossier.js';
+import ConventionSignRequest from '../models/ConventionSignRequest.js';
 
 const router = express.Router();
 const PUBLIC_BASE = 'https://deliverydigital.fr';
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 function getTransporter() {
   const port = parseInt(process.env.SMTP_PORT || '465', 10);
   return nodemailer.createTransport({ host: process.env.SMTP_HOST || 'ssl0.ovh.net', port, secure: port === 465, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } });
@@ -152,14 +154,19 @@ router.get('/commerciaux', async (req, res) => {
   const list = await User.find({ role: 'agence_commercial', parentAgencyId: c.agencyId }).select('name email status createdAt last_login').sort({ createdAt: -1 }).lean();
   // stats par commercial
   const leads = await AgencyLead.find({ agencyId: c.agencyId }).select('commercialId status').lean();
-  const dossiers = await AgencyDossier.find({ agencyId: c.agencyId }).select('commercialId amountHT status').lean();
+  const dossiers = await AgencyDossier.find({ agencyId: c.agencyId }).select('commercialId leadId amountHT status createdAt').lean();
   const fix = c.me.commissionFix != null ? c.me.commissionFix : 120;
   const pct = c.me.commissionPercent != null ? c.me.commissionPercent : 15;
+  // Fixe (120 €) du une seule fois par client et par an : applique au 1er dossier du client.
+  const sortedAsc = [...dossiers].sort((x, y) => new Date(x.createdAt || 0) - new Date(y.createdAt || 0));
+  const seen = new Set(); const fixIds = new Set();
+  sortedAsc.forEach((d) => { const key = `${String(d.leadId || d._id)}_${new Date(d.createdAt || Date.now()).getFullYear()}`; if (!seen.has(key)) { seen.add(key); fixIds.add(String(d._id)); } });
+  const earn = (d) => Math.round((fixIds.has(String(d._id)) ? fix : 0) + (pct / 100) * (d.amountHT || 0));
   const stats = list.map((co) => {
     const cid = String(co._id);
     const myLeads = leads.filter((l) => String(l.commercialId) === cid);
     const myDoss = dossiers.filter((d) => String(d.commercialId) === cid);
-    const gains = myDoss.reduce((s, d) => s + Math.round(fix + (pct / 100) * (d.amountHT || 0)), 0);
+    const gains = myDoss.reduce((s, d) => s + earn(d), 0);
     return { id: cid, name: co.name, email: co.email, status: co.status, lastLogin: co.last_login, clients: myLeads.length, dossiers: myDoss.length, gains };
   });
   res.json({ ok: true, commerciaux: stats });
@@ -188,7 +195,8 @@ function leadBase(c, r) {
     agencyId: c.agencyId, agencyName: c.isOwner ? c.name : undefined,
     commercialId: c.commercialId || undefined, commercialName: c.isOwner ? undefined : c.name,
     denom: (r.denom || '').trim(), email: (r.email || '').trim().toLowerCase() || undefined,
-    siret: (r.siret || '').replace(/\s/g, '').trim() || undefined, opco: (r.opco || '').trim() || undefined, status: 'new',
+    siret: (r.siret || '').replace(/\s/g, '').trim() || undefined, opco: (r.opco || '').trim() || undefined,
+    addr: (r.addr || '').trim() || undefined, status: 'new',
   };
 }
 router.post('/leads', async (req, res) => {
@@ -211,7 +219,28 @@ router.patch('/leads/:id', async (req, res) => {
   if (!lead) return res.status(404).json({ ok: false, error: 'not_found' });
   if (req.body.status) lead.status = req.body.status;
   if (typeof req.body.notes === 'string') lead.notes = req.body.notes;
+  if (typeof req.body.waitingNote === 'string') lead.waitingNote = req.body.waitingNote.trim() || undefined;
+  if ('reminderAt' in req.body) lead.reminderAt = req.body.reminderAt ? new Date(req.body.reminderAt) : undefined;
   await lead.save();
+  res.json({ ok: true, lead });
+});
+
+// Reaffectation d'un client (et de tous ses dossiers) a un autre commercial.
+// commercialId vide => rattache au proprietaire de l'agence. Owner only. @author Rabah Ziane - 2026-06-04
+router.patch('/leads/:id/assign', async (req, res) => {
+  const c = await ownerOnly(req, res); if (!c) return;
+  const lead = await AgencyLead.findOne({ _id: req.params.id, agencyId: c.agencyId });
+  if (!lead) return res.status(404).json({ ok: false, error: 'not_found' });
+  const commercialId = String(req.body.commercialId || '').trim();
+  if (commercialId) {
+    const u = await User.findOne({ _id: commercialId, role: 'agence_commercial', parentAgencyId: c.agencyId }).select('name').lean();
+    if (!u) return res.status(400).json({ ok: false, error: 'invalid_commercial' });
+    lead.commercialId = u._id; lead.commercialName = u.name;
+  } else {
+    lead.commercialId = undefined; lead.commercialName = undefined; // rattache au proprietaire
+  }
+  await lead.save();
+  await AgencyDossier.updateMany({ agencyId: c.agencyId, leadId: lead._id }, { $set: { commercialId: lead.commercialId || undefined, commercialName: lead.commercialName || undefined } });
   res.json({ ok: true, lead });
 });
 
@@ -221,6 +250,32 @@ router.get('/dossiers', async (req, res) => {
   const q = c.isOwner ? { agencyId: c.agencyId } : { agencyId: c.agencyId, commercialId: c.commercialId };
   const dossiers = await AgencyDossier.find(q).sort({ createdAt: -1 }).lean();
   res.json({ ok: true, dossiers });
+});
+
+// L'agence envoie un ordre d'encaissement (sa facture de commission) une fois que
+// l'OPCO a payé Delivery Digital (fonds disponibles). @author Rabah Ziane - 2026-06-02
+router.post('/dossiers/:id/encash', async (req, res) => {
+  const c = await ownerOnly(req, res); if (!c) return; // commission = proprietaire uniquement
+  const d = await AgencyDossier.findOne({ _id: req.params.id, agencyId: c.agencyId });
+  if (!d) return res.status(404).json({ ok: false, error: 'not_found' });
+  if (!d.opcoPaid) return res.status(400).json({ ok: false, error: 'not_available' });
+  if (d.status === 'paid') return res.status(400).json({ ok: false, error: 'already_paid' });
+  if (!d.invoiceNumber) d.invoiceNumber = 'AGC-' + new Date(d.createdAt || Date.now()).getFullYear() + '-' + String(d._id).slice(-5).toUpperCase();
+  d.encashRequestedAt = new Date();
+  await d.save();
+  // Notifie le superadmin (best effort).
+  try {
+    const to = process.env.ADMIN_EMAIL || 'contact@deliverydigital.fr';
+    const fix = c.me.commissionFix != null ? c.me.commissionFix : 120;
+    const pct = c.me.commissionPercent != null ? c.me.commissionPercent : 15;
+    const commission = Math.round(fix + (pct / 100) * (d.amountHT || 0));
+    await getTransporter().sendMail({
+      from: process.env.SMTP_USER, to,
+      subject: `Ordre d'encaissement ${d.invoiceNumber} - ${c.me.name}`,
+      text: `L'agence ${c.me.name} demande l'encaissement de sa commission.\n\nFacture : ${d.invoiceNumber}\nClient : ${d.denom || '-'}\nDossier : ${d.formationTitle || '-'}\nCommission : ${commission} € TTC\nRIB : ${c.me.iban || '(non renseigne)'} ${c.me.bic || ''}\nTitulaire : ${c.me.accountHolder || c.me.name}\n\nValidez le virement puis passez le dossier en "Payé" dans l'admin.`,
+    });
+  } catch (e) { /* email best effort */ }
+  res.json({ ok: true, invoiceNumber: d.invoiceNumber, encashRequestedAt: d.encashRequestedAt });
 });
 router.post('/transmit-dossier', async (req, res) => {
   const c = await ctx(req);
@@ -234,11 +289,121 @@ router.post('/transmit-dossier', async (req, res) => {
     commercialId: c.commercialId || undefined, commercialName: c.isOwner ? undefined : c.name,
     leadId: b.leadId || undefined, denom: b.denom, siret: b.siret, opco: b.opco, addr: b.addr, clientEmail: b.clientEmail,
     formationTitle: b.formationTitle, sessionName: b.sessionName, salaries,
+    sessionStart: b.startAt ? new Date(b.startAt) : undefined, sessionEnd: b.endAt ? new Date(b.endAt) : undefined,
     signedBy: b.signedBy, signedFunction: b.signedFunction, signedIp: ip,
-    amountHT: 525 * salaries.length, status: 'transmitted',
+    signatureDataUrl: b.signatureDataUrl || undefined, signedRemote: false, signedAt: new Date(),
+    amountHT: b.amountHT != null ? Math.round(Number(b.amountHT)) : 525 * salaries.length, status: 'transmitted',
   });
   if (b.leadId) { try { await AgencyLead.updateOne({ _id: b.leadId, agencyId: c.agencyId }, { status: 'converted' }); } catch { /* */ } }
+  // Notifie le superadmin DD : nouveau dossier OPCO recu (convention signee par le client).
+  try {
+    const to = process.env.ADMIN_EMAIL || 'contact@deliverydigital.fr';
+    const stagiaires = salaries.map((s, i) => `${i + 1}. ${s.firstname} ${s.lastname}${s.email ? ' (' + s.email + ')' : ''}${s.type_contrat ? ' - ' + s.type_contrat : ''}`).join('\n');
+    await getTransporter().sendMail({
+      from: process.env.SMTP_USER, to,
+      subject: `Nouveau dossier OPCO à monter - ${b.denom} (${c.name})`,
+      text: `Convention signée par le client. Dossier à monter auprès de l'OPCO.\n\n`
+        + `Agence : ${c.name}\nBénéficiaire : ${b.denom}\nSIRET : ${b.siret || '-'}\nOPCO : ${b.opco || '-'}\nFormation : ${b.formationTitle || '-'}\nSession : ${b.sessionName || '-'}\n`
+        + `Signé par : ${b.signedBy || '-'}${b.signedFunction ? ' (' + b.signedFunction + ')' : ''}\nMontant : ${525 * salaries.length} € HT\n\nStagiaires (${salaries.length}) :\n${stagiaires}\n\n`
+        + `Ouvrez le dossier dans l'admin (Agences partenaires → Dossiers OPCO) pour voir le détail et télécharger la convention + les stagiaires en PDF.`,
+    });
+  } catch (e) { /* email best effort */ }
   res.json({ ok: true, dossierId: dossier._id });
+});
+
+// Correction d'un dossier deja transmis : l'agence/le commercial modifie les infos
+// (stagiaires, session, formation, signataire) et renvoie. Interdit si deja paye.
+// @author Rabah Ziane - 2026-06-04
+router.patch('/dossiers/:id', async (req, res) => {
+  const c = await ctx(req);
+  const q = c.isOwner ? { _id: req.params.id, agencyId: c.agencyId } : { _id: req.params.id, agencyId: c.agencyId, commercialId: c.commercialId };
+  const d = await AgencyDossier.findOne(q);
+  if (!d) return res.status(404).json({ ok: false, error: 'not_found' });
+  if (d.status === 'paid' || d.status === 'invoiced') return res.status(400).json({ ok: false, error: 'locked' });
+  const b = req.body || {};
+  const salaries = Array.isArray(b.salaries) ? b.salaries.filter((s) => s && s.firstname && s.lastname) : [];
+  if (salaries.length === 0) return res.status(400).json({ ok: false, error: 'salaries_required' });
+  if (b.denom != null) d.denom = b.denom;
+  if (b.siret != null) d.siret = b.siret;
+  if (b.opco != null) d.opco = b.opco;
+  if (b.formationTitle != null) d.formationTitle = b.formationTitle;
+  if (b.sessionName != null) d.sessionName = b.sessionName;
+  if (b.startAt) d.sessionStart = new Date(b.startAt);
+  if (b.endAt) d.sessionEnd = new Date(b.endAt);
+  if (b.signedBy != null) d.signedBy = b.signedBy;
+  if (b.signedFunction != null) d.signedFunction = b.signedFunction;
+  if (b.signatureDataUrl) { d.signatureDataUrl = b.signatureDataUrl; d.signedRemote = false; d.signedAt = new Date(); }
+  d.salaries = salaries;
+  d.amountHT = b.amountHT != null ? Math.round(Number(b.amountHT)) : 525 * salaries.length;
+  if (d.status === 'rejected') d.status = 'transmitted'; // re-soumis pour instruction
+  await d.save();
+  try {
+    const to = process.env.ADMIN_EMAIL || 'contact@deliverydigital.fr';
+    const stagiaires = salaries.map((s, i) => `${i + 1}. ${s.firstname} ${s.lastname}${s.email ? ' (' + s.email + ')' : ''}${s.type_contrat ? ' - ' + s.type_contrat : ''}`).join('\n');
+    await getTransporter().sendMail({
+      from: process.env.SMTP_USER, to,
+      subject: `Dossier OPCO corrigé - ${d.denom} (${c.name})`,
+      text: `Le dossier a été corrigé et renvoyé par ${c.name}.\n\n`
+        + `Bénéficiaire : ${d.denom}\nSIRET : ${d.siret || '-'}\nOPCO : ${d.opco || '-'}\nFormation : ${d.formationTitle || '-'}\nSession : ${d.sessionName || '-'}\n`
+        + `Signé par : ${d.signedBy || '-'}${d.signedFunction ? ' (' + d.signedFunction + ')' : ''}\nMontant : ${d.amountHT} € HT\n\nStagiaires (${salaries.length}) :\n${stagiaires}\n\n`
+        + `Rouvrez le dossier dans l'admin pour voir le détail à jour.`,
+    });
+  } catch (e) { /* email best effort */ }
+  res.json({ ok: true, dossier: d });
+});
+
+// Envoi au client du modele CSV des stagiaires (piece jointe) a remplir et renvoyer. @Rabah 2026-06-04
+router.post('/send-csv-template', async (req, res) => {
+  const c = await ctx(req);
+  const clientEmail = String(req.body.clientEmail || '').trim();
+  if (!clientEmail) return res.status(400).json({ ok: false, error: 'client_email_required' });
+  const denom = (req.body.denom || '').trim();
+  const csv = 'prenom;nom;poste;email;date_naissance;num_secu;contrat;telephone\n'
+    + 'Jean;Dupont;Serveur;jean.dupont@email.fr;15/05/1990;185057511600142;CDI;0612345678\n';
+  try {
+    await getTransporter().sendMail({
+      from: process.env.SMTP_FROM || 'contact@deliverydigital.fr', to: clientEmail, bcc: 'contact@deliverydigital.fr',
+      subject: 'Liste de vos salariés à former - modèle à remplir',
+      html: `<div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f5f5f7;padding:24px"><div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #e5e5ea;border-radius:16px;overflow:hidden"><div style="height:5px;background:#0066CC"></div><div style="padding:22px 26px 6px;text-align:center;border-bottom:1px solid #f0f0f2"><img src="${PUBLIC_BASE}/Logo-DELIVERY-Digital-Neo-sans-Bold%20noir_%202%20copie%205.png" alt="Delivery Digital" style="height:38px;width:auto" /></div><div style="padding:26px"><p style="font-size:14px;color:#3a3a3c;line-height:1.6;margin:0 0 14px">Bonjour,<br><br>Pour inscrire vos salariés à la formation, merci de compléter le <strong>modèle ci-joint</strong> (un salarié par ligne) puis de le renvoyer à ${esc(c.name)}.</p><p style="font-size:13px;color:#3a3a3c;line-height:1.6;margin:0 0 8px">Colonnes : prénom, nom, poste, email, date de naissance, n° de sécurité sociale, type de contrat, téléphone. Vous pouvez l'ouvrir avec Excel, Numbers ou Google Sheets.</p><p style="font-size:12px;color:#86868b;margin:16px 0 0">Delivery Digital · Organisme de formation certifié QUALIOPI</p></div></div></div>`,
+      attachments: [{ filename: 'modele-stagiaires.csv', content: '﻿' + csv, contentType: 'text/csv; charset=utf-8' }],
+    });
+    res.json({ ok: true, sentTo: clientEmail });
+  } catch (e) { res.status(500).json({ ok: false, error: 'send_failed' }); }
+});
+
+// Envoi au client d'un lien de signature de la convention a distance (signature au doigt).
+// Cree une demande ConventionSignRequest + email avec le lien securise. @author Rabah Ziane - 2026-06-04
+router.post('/sign-link', async (req, res) => {
+  const c = await ctx(req);
+  const b = req.body || {};
+  const viaWhatsapp = b.noEmail || b.channel === 'whatsapp';
+  if (!b.clientEmail && !viaWhatsapp) return res.status(400).json({ ok: false, error: 'client_email_required' });
+  if (!b.denom) return res.status(400).json({ ok: false, error: 'denom_required' });
+  const salaries = Array.isArray(b.salaries) ? b.salaries.filter((s) => s && s.firstname && s.lastname) : [];
+  if (salaries.length === 0) return res.status(400).json({ ok: false, error: 'salaries_required' });
+  const token = crypto.randomBytes(24).toString('hex');
+  await ConventionSignRequest.create({
+    token, agencyId: c.agencyId, agencyName: c.name,
+    commercialId: c.commercialId || undefined, commercialName: c.isOwner ? undefined : c.name,
+    leadId: b.leadId || undefined, editDossierId: b.dossierId || undefined,
+    denom: b.denom, siret: b.siret, opco: b.opco, addr: b.addr, clientEmail: b.clientEmail,
+    formationTitle: b.formationTitle, sessionName: b.sessionName,
+    sessionStart: b.startAt ? new Date(b.startAt) : undefined, sessionEnd: b.endAt ? new Date(b.endAt) : undefined,
+    salaries, amountHT: b.amountHT != null ? Math.round(Number(b.amountHT)) : 525 * salaries.length, status: 'pending',
+    expiresAt: new Date(Date.now() + 30 * 86400000),
+  });
+  const link = `${PUBLIC_BASE}/signer/${token}`;
+  // channel 'whatsapp' (ou noEmail) : on ne fait que créer + renvoyer le lien (envoi via WhatsApp côté agence).
+  if (!b.noEmail && b.channel !== 'whatsapp' && b.clientEmail) {
+    try {
+      await getTransporter().sendMail({
+        from: process.env.SMTP_FROM || 'contact@deliverydigital.fr', to: b.clientEmail, bcc: 'contact@deliverydigital.fr',
+        subject: `Signature de votre convention de formation - ${b.denom}`,
+        html: `<div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f5f5f7;padding:24px"><div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #e5e5ea;border-radius:16px;overflow:hidden"><div style="height:5px;background:#0066CC"></div><div style="padding:22px 26px 6px;text-align:center;border-bottom:1px solid #f0f0f2"><img src="${PUBLIC_BASE}/Logo-DELIVERY-Digital-Neo-sans-Bold%20noir_%202%20copie%205.png" alt="Delivery Digital" style="height:38px;width:auto" /></div><div style="padding:26px"><p style="font-size:14px;color:#3a3a3c;line-height:1.6;margin:0 0 16px">Bonjour,<br><br>${esc(c.name)} a préparé votre <strong>convention de formation professionnelle</strong>. Vous pouvez la lire et la signer directement depuis votre téléphone, au doigt, en quelques secondes.</p><a href="${link}" style="display:inline-block;background:#0066CC;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 22px;border-radius:999px">Lire et signer ma convention</a><p style="font-size:12px;color:#86868b;margin:18px 0 0">Lien sécurisé, valable 30 jours. Signature électronique de même valeur juridique qu'une signature manuscrite (Code civil, art. 1367).</p></div><div style="padding:14px 26px;border-top:1px solid #f0f0f2;background:#fafafa"><p style="margin:0;font-size:11px;color:#86868b">Delivery Digital Nice · Organisme de formation certifié QUALIOPI</p></div></div></div>`,
+      });
+    } catch (e) { /* email best effort */ }
+  }
+  res.json({ ok: true, link });
 });
 
 /* === Demandes d'acces client === */
@@ -246,15 +411,16 @@ router.get('/access-requests', async (req, res) => {
   const c = await ctx(req);
   const q = c.isOwner ? { agencyId: c.agencyId } : { agencyId: c.agencyId, commercialId: c.commercialId };
   const rows = await AccessRequest.find(q).sort({ createdAt: -1 }).lean();
-  res.json({ ok: true, requests: rows.map((r) => ({ id: r._id, clientEmail: r.clientEmail, label: r.label, status: r.status, createdAt: r.createdAt, receivedAt: r.receivedAt })) });
+  res.json({ ok: true, requests: rows.map((r) => ({ id: r._id, clientEmail: r.clientEmail, clientName: r.clientName, label: r.label, status: r.status, createdAt: r.createdAt, receivedAt: r.receivedAt })) });
 });
 router.post('/access-requests', async (req, res) => {
   const c = await ctx(req);
   const clientEmail = (req.body.clientEmail || '').trim().toLowerCase();
+  const clientName = (req.body.clientName || '').trim();
   const label = (req.body.label || 'Accès à votre compte').trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) return res.status(400).json({ ok: false, error: 'invalid_client_email' });
   const token = crypto.randomBytes(24).toString('base64url');
-  const cr = await AccessRequest.create({ token, agencyId: c.agencyId, agencyName: c.name, commercialId: c.commercialId || undefined, clientEmail, label, status: 'pending', expiresAt: new Date(Date.now() + 30 * 86400000) });
+  const cr = await AccessRequest.create({ token, agencyId: c.agencyId, agencyName: c.name, commercialId: c.commercialId || undefined, clientEmail, clientName: clientName || undefined, label, status: 'pending', expiresAt: new Date(Date.now() + 30 * 86400000) });
   const url = `${PUBLIC_BASE}/acces/${token}`;
   let emailSent = false;
   try {

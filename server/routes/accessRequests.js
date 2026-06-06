@@ -30,11 +30,22 @@ publicRouter.post('/:token', async (req, res) => {
   if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
   if (r.status === 'cancelled') return res.status(410).json({ ok: false, error: 'cancelled' });
   if (isExpired(r)) return res.status(410).json({ ok: false, error: 'expired' });
+  const { encryptField } = await import('../models/AccessRequest.js');
+  // Cas "code seul" (ex. code de rattachement AKTO recu par courrier) : pas de mot de passe.
+  const code = (req.body.code || '').trim();
+  if (code) {
+    r.status = 'received';
+    r.receivedAt = new Date();
+    r.encLogin = encryptField(code);
+    r.encPassword = undefined;
+    r.encNote = req.body.note ? encryptField(String(req.body.note).trim()) : undefined;
+    await r.save();
+    return res.json({ ok: true });
+  }
   const login = (req.body.login || '').trim();
   const password = (req.body.password || '').trim();
   if (!login) return res.status(400).json({ ok: false, error: 'login_required' });
   if (!password) return res.status(400).json({ ok: false, error: 'password_required' });
-  const { encryptField } = await import('../models/AccessRequest.js');
   r.status = 'received';
   r.receivedAt = new Date();
   r.encLogin = encryptField(login);
@@ -48,7 +59,7 @@ export const adminRouter = express.Router();
 
 adminRouter.get('/', requireAdmin, async (req, res) => {
   const rows = await AccessRequest.find({}).sort({ createdAt: -1 }).lean();
-  res.json({ ok: true, requests: rows.map((r) => ({ id: r._id, agencyName: r.agencyName, clientEmail: r.clientEmail, label: r.label, status: r.status, createdAt: r.createdAt, receivedAt: r.receivedAt })) });
+  res.json({ ok: true, requests: rows.map((r) => ({ id: r._id, agencyName: r.agencyName, clientEmail: r.clientEmail, clientName: r.clientName, label: r.label, status: r.status, createdAt: r.createdAt, receivedAt: r.receivedAt })) });
 });
 
 adminRouter.post('/:id/reveal', requireAdmin, async (req, res) => {
@@ -56,7 +67,7 @@ adminRouter.post('/:id/reveal', requireAdmin, async (req, res) => {
   if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
   if (r.status !== 'received') return res.status(409).json({ ok: false, error: 'not_received' });
   try {
-    res.json({ ok: true, clientEmail: r.clientEmail, label: r.label, login: decryptField(r.encLogin), password: decryptField(r.encPassword), note: r.encNote ? decryptField(r.encNote) : undefined });
+    res.json({ ok: true, clientEmail: r.clientEmail, label: r.label, login: r.encLogin ? decryptField(r.encLogin) : undefined, password: r.encPassword ? decryptField(r.encPassword) : undefined, note: r.encNote ? decryptField(r.encNote) : undefined });
   } catch (e) { res.status(500).json({ ok: false, error: 'decrypt_failed' }); }
 });
 

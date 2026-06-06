@@ -30,8 +30,22 @@ export default function AccesPage({ token }: { token: string }) {
     })();
   }, [token]);
 
+  // Mode "code de rattachement AKTO" : un seul champ (code recu par courrier), pas de mot de passe.
+  const isCode = /rattach|code/i.test(ctx?.label || '');
+
   async function submit() {
     setError(null);
+    if (isCode) {
+      if (!login.trim()) { setError('Indiquez le code de rattachement reçu par courrier.'); return; }
+      setSubmitting(true);
+      try {
+        const r = await fetch(`/api/access-requests/${token}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: login.trim(), note: note.trim() || undefined }) });
+        const j = await r.json();
+        if (!r.ok || !j.ok) { setError(j.error === 'expired' ? 'Ce lien a expiré.' : 'Envoi impossible. Réessayez.'); return; }
+        setDone(true); setLogin(''); setNote('');
+      } catch { setError('Erreur réseau.'); } finally { setSubmitting(false); }
+      return;
+    }
     if (!login.trim()) { setError('Indiquez votre identifiant.'); return; }
     if (!password.trim()) { setError('Indiquez votre mot de passe.'); return; }
     setSubmitting(true);
@@ -54,7 +68,7 @@ export default function AccesPage({ token }: { token: string }) {
   if (status === 'notfound') return <Shell><Msg title="Lien introuvable" text="Ce lien n'existe pas ou a été supprimé." /></Shell>;
   if (status === 'cancelled') return <Shell><Msg title="Demande annulée" text="Cette demande a été annulée. Contactez votre interlocuteur." /></Shell>;
   if (status === 'expired') return <Shell><Msg title="Lien expiré" text="Ce lien a expiré. Demandez-en un nouveau." /></Shell>;
-  if (done || status === 'received') return <Shell><Msg ok title="Accès transmis ✓" text="Merci, vos identifiants ont été transmis de façon chiffrée. Vous pouvez fermer cette page." /></Shell>;
+  if (done || status === 'received') return <Shell><Msg ok title={isCode ? 'Code transmis ✓' : 'Accès transmis ✓'} text={isCode ? 'Merci, votre code de rattachement a été transmis de façon chiffrée à Delivery Digital. Vous pouvez fermer cette page.' : 'Merci, vos identifiants ont été transmis de façon chiffrée. Vous pouvez fermer cette page.'} /></Shell>;
 
   return (
     <Shell>
@@ -62,16 +76,28 @@ export default function AccesPage({ token }: { token: string }) {
         <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#86868B]">Delivery Digital · Accès sécurisé</p>
         <h1 className="text-xl font-bold text-[#1D1D1F] mt-1">{ctx?.label || 'Transmettez vos accès'}</h1>
         {ctx?.agencyName && <p className="text-[13px] text-[#86868B] mt-1">Demandé par {ctx.agencyName}.</p>}
-        <div className="rounded-xl bg-[#34C759]/5 border border-[#34C759]/30 p-3 text-[12px] text-[#1D1D1F] my-4">🔒 Connexion chiffrée (HTTPS). Vos identifiants sont stockés chiffrés (AES-256).</div>
-        <label className="block text-[12px] font-semibold mb-1">Identifiant *</label>
-        <input value={login} onChange={(e) => setLogin(e.target.value)} placeholder="Identifiant / email" className="w-full px-3 py-2.5 rounded-lg border border-black/10 text-[14px] mb-3 focus:outline-none focus:border-black/30" />
-        <label className="block text-[12px] font-semibold mb-1">Mot de passe *</label>
-        <div className="relative mb-3">
-          <input type={show ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mot de passe" className="w-full px-3 py-2.5 pr-16 rounded-lg border border-black/10 text-[14px] focus:outline-none focus:border-black/30" />
-          <button type="button" onClick={() => setShow((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-[11.5px] text-[#86868B]">{show ? 'Masquer' : 'Voir'}</button>
-        </div>
-        <label className="block text-[12px] font-semibold mb-1">Note (facultatif)</label>
-        <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="URL du portail, code client…" className="w-full px-3 py-2.5 rounded-lg border border-black/10 text-[14px] mb-4 focus:outline-none focus:border-black/30" />
+        {isCode ? (
+          <>
+            <div className="rounded-xl bg-[#34C759]/5 border border-[#34C759]/30 p-3 text-[12px] text-[#1D1D1F] my-4">🔒 Connexion chiffrée (HTTPS). Saisissez le code d&apos;activation reçu par courrier d&apos;AKTO.</div>
+            <label className="block text-[12px] font-semibold mb-1">Code de rattachement / d&apos;activation *</label>
+            <input value={login} onChange={(e) => setLogin(e.target.value)} placeholder="Ex. P49J1…" className="w-full px-3 py-2.5 rounded-lg border border-black/10 text-[14px] font-mono tracking-wide mb-3 focus:outline-none focus:border-black/30" />
+            <label className="block text-[12px] font-semibold mb-1">Note (facultatif)</label>
+            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="SIREN, précision…" className="w-full px-3 py-2.5 rounded-lg border border-black/10 text-[14px] mb-4 focus:outline-none focus:border-black/30" />
+          </>
+        ) : (
+          <>
+            <div className="rounded-xl bg-[#34C759]/5 border border-[#34C759]/30 p-3 text-[12px] text-[#1D1D1F] my-4">🔒 Connexion chiffrée (HTTPS). Vos identifiants sont stockés chiffrés (AES-256).</div>
+            <label className="block text-[12px] font-semibold mb-1">Identifiant *</label>
+            <input value={login} onChange={(e) => setLogin(e.target.value)} placeholder="Identifiant / email" className="w-full px-3 py-2.5 rounded-lg border border-black/10 text-[14px] mb-3 focus:outline-none focus:border-black/30" />
+            <label className="block text-[12px] font-semibold mb-1">Mot de passe *</label>
+            <div className="relative mb-3">
+              <input type={show ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mot de passe" className="w-full px-3 py-2.5 pr-16 rounded-lg border border-black/10 text-[14px] focus:outline-none focus:border-black/30" />
+              <button type="button" onClick={() => setShow((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-[11.5px] text-[#86868B]">{show ? 'Masquer' : 'Voir'}</button>
+            </div>
+            <label className="block text-[12px] font-semibold mb-1">Note (facultatif)</label>
+            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="URL du portail, code client…" className="w-full px-3 py-2.5 rounded-lg border border-black/10 text-[14px] mb-4 focus:outline-none focus:border-black/30" />
+          </>
+        )}
         {error && <p className="text-[12.5px] text-[#FF3B30] mb-3">{error}</p>}
         <button onClick={submit} disabled={submitting} className="w-full px-4 py-2.5 rounded-full bg-[#1D1D1F] text-white text-[13px] font-semibold hover:bg-black disabled:opacity-60">{submitting ? 'Envoi sécurisé…' : 'Transmettre en sécurité'}</button>
       </div>

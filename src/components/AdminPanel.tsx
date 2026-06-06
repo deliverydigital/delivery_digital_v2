@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
-import { LayoutDashboard, Users, Sparkles, LogOut, MessageSquare, Loader2, FileText, BarChart3, GraduationCap, FolderOpen, ExternalLink, Building2 } from 'lucide-react';
+import { LayoutDashboard, Users, Sparkles, LogOut, MessageSquare, Loader2, FileText, BarChart3, GraduationCap, FolderOpen, ExternalLink, Building2, UserCog } from 'lucide-react';
 import AIOrb from './AIOrb';
 import AgencyAdmin from './AgencyAdmin';
+import TrainerAdmin from './TrainerAdmin';
+import VideoStudio from './VideoStudio';
 import SeoAdmin from './SeoAdmin';
 import RankingsTab from './admin/RankingsTab';
 import LinkBuildingTab from './admin/LinkBuildingTab';
@@ -16,7 +18,7 @@ const SECRET_KEY = 'dd_seo_admin_secret';
 // Fusion 2026-05-14 (Rabah) : ajout onglets 'formations' (TrainingProgramsManagement)
 // et 'gestion' (lien vers ancien AdminDashboard /?admin=true pour Clients/Projets/Taches
 // en attendant migration complete demain).
-type Section = 'overview' | 'conversations' | 'prospects' | 'quotes' | 'seo' | 'dashboard' | 'formations' | 'gestion' | 'rankings' | 'linkbuilding' | 'agencies';
+type Section = 'overview' | 'conversations' | 'prospects' | 'quotes' | 'seo' | 'dashboard' | 'formations' | 'gestion' | 'rankings' | 'linkbuilding' | 'agencies' | 'trainers' | 'video';
 
 export default function AdminPanel() {
   const [secret, setSecret] = useState<string | null>(() => localStorage.getItem(SECRET_KEY));
@@ -30,6 +32,7 @@ export default function AdminPanel() {
     if (p.startsWith('/admin/dashboard') || p.startsWith('/admin/conversions')) return 'dashboard';
     if (p.startsWith('/admin/formations') || p.startsWith('/admin/training')) return 'formations';
     if (p.startsWith('/admin/gestion') || p.startsWith('/admin/projects') || p.startsWith('/admin/clients')) return 'gestion';
+    if (p.startsWith('/admin/formateurs') || p.startsWith('/admin/trainers')) return 'trainers';
     return 'overview';
   });
   useEffect(() => {
@@ -37,25 +40,31 @@ export default function AdminPanel() {
     window.addEventListener('admin-navigate', handler as any);
     return () => window.removeEventListener('admin-navigate', handler as any);
   }, []);
-  const [stats, setStats] = useState<{ prospects: number; conversations: number; activeConv: number; published: number } | null>(null);
+  const [stats, setStats] = useState<{ prospects: number; conversations: number; activeConv: number; published: number; agencyPending: number; trainerPending: number } | null>(null);
 
   const loadStats = useCallback(async () => {
     if (!secret) return;
     try {
       const opts = { headers: { 'x-admin-secret': secret } };
-      const [pStats, conv, seo] = await Promise.all([
+      const [pStats, conv, seo, agc, trn] = await Promise.all([
         fetch('/api/admin/prospects/stats', opts).then((r) => r.ok ? r.json() : { total: 0 }),
         fetch('/api/admin/conversations', opts).then((r) => r.ok ? r.json() : { stats: { total: 0, active: 0 } }),
         fetch('/api/admin/seo?status=published', opts).then((r) => r.ok ? r.json() : { items: [] }),
+        fetch('/api/admin/agencies/pending-count', opts).then((r) => r.ok ? r.json() : { count: 0 }),
+        fetch('/api/admin/trainers/pending-count', opts).then((r) => r.ok ? r.json() : { count: 0 }),
       ]);
       setStats({
         prospects: pStats.total || 0,
         conversations: conv.stats?.total || 0,
         activeConv: conv.stats?.active || 0,
         published: (seo.items || []).length,
+        agencyPending: agc.count || 0,
+        trainerPending: trn.count || 0,
       });
     } catch {}
   }, [secret]);
+  // Charge les stats au démarrage + rafraîchit le compteur d'actions agence (pastille) toutes les 60s.
+  useEffect(() => { if (!secret) return; loadStats(); const id = setInterval(loadStats, 60000); return () => clearInterval(id); }, [secret, loadStats]);
 
   useEffect(() => {
     if (section === 'overview') {
@@ -117,7 +126,10 @@ export default function AdminPanel() {
           <SideBtn active={section === 'linkbuilding'} icon={<ExternalLink className="h-4 w-4" />} label="Link Building" onClick={() => setSection('linkbuilding')} />
           <SideBtn active={section === 'seo'} icon={<Sparkles className="h-4 w-4" />} label="SEO Content" onClick={() => setSection('seo')} />
           <SideBtn active={section === 'gestion'} icon={<FolderOpen className="h-4 w-4" />} label="Projets & Clients" onClick={() => setSection('gestion')} />
-          <SideBtn active={section === 'agencies'} icon={<Building2 className="h-4 w-4" />} label="Agences" onClick={() => setSection('agencies')} />
+          <SideBtn active={section === 'agencies'} icon={<Building2 className="h-4 w-4" />} label="Agences" badge={stats?.agencyPending || undefined} pulse onClick={() => setSection('agencies')} />
+          <SideBtn active={section === 'trainers'} icon={<UserCog className="h-4 w-4" />} label="Formateurs" badge={stats?.trainerPending || undefined} pulse onClick={() => setSection('trainers')} />
+          {/* Vidéos Hacœur masqué pour l'instant (code conservé, à réactiver plus tard). @Rabah 2026-06-06
+          <SideBtn active={section === 'video'} icon={<Video className="h-4 w-4" />} label="Vidéos Hacœur" onClick={() => setSection('video')} /> */}
         </nav>
 
         <div className="px-4 py-3 border-t border-black/5">
@@ -153,13 +165,15 @@ export default function AdminPanel() {
         {section === 'seo' && <SeoAdmin embedded sharedSecret={secret} />}
         {section === 'formations' && <TrainingProgramsManagement />}
         {section === 'agencies' && <AgencyAdmin secret={secret} />}
+        {section === 'trainers' && <TrainerAdmin secret={secret} />}
+        {section === 'video' && <VideoStudio secret={secret} />}
         {section === 'gestion' && <GestionPlaceholder />}
       </main>
     </div>
   );
 }
 
-function SideBtn({ active, icon, label, badge, onClick }: { active: boolean; icon: React.ReactNode; label: string; badge?: number; onClick: () => void }) {
+function SideBtn({ active, icon, label, badge, pulse, onClick }: { active: boolean; icon: React.ReactNode; label: string; badge?: number; pulse?: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -170,8 +184,9 @@ function SideBtn({ active, icon, label, badge, onClick }: { active: boolean; ico
       {icon}
       <span className="flex-1 text-left">{label}</span>
       {badge !== undefined && badge > 0 && (
-        <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-[#34C759] text-white text-[10px] font-bold">
-          {badge}
+        <span className={`relative inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-white text-[10px] font-bold ${pulse ? 'bg-[#FF3B30]' : 'bg-[#34C759]'}`}>
+          {pulse && <span className="absolute inset-0 rounded-full bg-[#FF3B30] opacity-75 animate-ping" />}
+          <span className="relative">{badge}</span>
         </span>
       )}
     </button>
