@@ -11,6 +11,7 @@ import {
   LogOut, Loader2, CheckCircle2, Clock, CalendarDays, GraduationCap, Wallet,
   ListChecks, Building2, FileSignature, BadgeEuro, MessageCircle, Users, AlertCircle,
   Upload, Send, ChevronLeft, ChevronRight, MapPin, Phone, Mail,
+  X, Download, FileText, Stamp, ShieldCheck, ChevronRight as ArrowRight,
 } from 'lucide-react';
 
 const TOKEN_KEY = 'dd_trainer_token';
@@ -29,7 +30,15 @@ type Trainer = {
   contract: { signed: boolean; signedBy: string; signedFunction: string; signedAt: string | null; validated: boolean };
   onboardingValidated: boolean;
 };
-type Formation = { _id: string; program_id: string; title: string; duration_hours: number; description?: string; category?: string };
+type Formation = {
+  _id: string; program_id: string; title: string; duration_hours: number; description?: string; category?: string;
+  target_audience?: string; objectives?: string[]; training_modalities?: string[]; methods?: string[]; evaluation_methods?: string[];
+  modules?: { title?: string; duration_hours?: number; topics?: string[] }[];
+  prerequisites?: string; accessibility_info?: string; access_delay?: string;
+  price?: number; max_participants?: number; level?: string; certification_type?: string; opco_eligible?: boolean;
+  satisfaction_rate?: number; success_rate?: number; recommendation_rate?: number; attendance_rate?: number;
+  documents?: { title?: string; file_path?: string; document_type?: string }[];
+};
 type Learner = { firstname?: string; lastname?: string; email?: string; phone?: string };
 type Session = {
   _id: string; source: 'opco' | 'manual'; formationTitle?: string; hours?: number;
@@ -127,7 +136,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
       </header>
 
       <main className="max-w-[1080px] mx-auto px-4 sm:px-6 py-6 space-y-5">
-        {!validated && <ActivationBanner trainer={trainer} authJson={authJson} auth={auth} onChanged={loadProfile} />}
+        {!validated && <ActivationBanner trainer={trainer} onGo={() => setTab('profil')} />}
 
         {/* KPIs */}
         <Kpis token={token} hourlyRate={trainer.hourlyRate} validated={validated} />
@@ -193,7 +202,7 @@ function KpiCard({ icon, label, value, accent }: { icon: React.ReactNode; label:
 }
 
 /* ============================ Activation ============================ */
-function ActivationBanner({ trainer, authJson, auth, onChanged }: { trainer: Trainer; authJson: () => any; auth: () => any; onChanged: () => void }) {
+function ActivationBanner({ trainer, onGo }: { trainer: Trainer; onGo: () => void }) {
   const ci = trainer.companyInfo || {};
   const hasCompany = !!(ci.legalName && ci.address);
   const hasRib = !!(trainer.ribPdfUrl && (trainer.iban || (trainer.bankData && Object.keys(trainer.bankData).length)));
@@ -204,24 +213,24 @@ function ActivationBanner({ trainer, authJson, auth, onChanged }: { trainer: Tra
         <AlertCircle className="h-5 w-5 text-[#E5B567] shrink-0 mt-0.5" />
         <div>
           <h2 className="text-[15px] font-bold">Activez votre compte</h2>
-          <p className="text-[13px] text-white/60 mt-0.5">Complétez ces 3 étapes. Votre compte sera activé après validation par Delivery Digital.</p>
+          <p className="text-[13px] text-white/60 mt-0.5">Cliquez sur une étape pour la remplir. Votre compte sera activé après validation par Delivery Digital.</p>
         </div>
       </div>
       <div className="grid sm:grid-cols-3 gap-3">
-        <StepCard n={1} done={hasCompany} title="Informations" icon={<Building2 className="h-4 w-4" />} />
-        <StepCard n={2} done={hasRib} title="RIB (PDF obligatoire)" icon={<Upload className="h-4 w-4" />} />
-        <StepCard n={3} done={hasContract} title="Contrat de prestation" icon={<FileSignature className="h-4 w-4" />} />
+        <StepCard n={1} done={hasCompany} title="Informations" icon={<Building2 className="h-4 w-4" />} onClick={onGo} />
+        <StepCard n={2} done={hasRib} title="RIB (PDF obligatoire)" icon={<Upload className="h-4 w-4" />} onClick={onGo} />
+        <StepCard n={3} done={hasContract} title="Contrat de prestation" icon={<FileSignature className="h-4 w-4" />} onClick={onGo} />
       </div>
-      <p className="text-[12px] text-white/45 mt-4">Rendez-vous dans l'onglet <strong className="text-white/70">Mon compte</strong> pour renseigner ces éléments.</p>
     </section>
   );
 }
-function StepCard({ n, done, title, icon }: { n: number; done: boolean; title: string; icon: React.ReactNode }) {
+function StepCard({ n, done, title, icon, onClick }: { n: number; done: boolean; title: string; icon: React.ReactNode; onClick: () => void }) {
   return (
-    <div className={`rounded-xl border p-3 flex items-center gap-3 ${done ? 'border-[#3DD68C]/40 bg-[#3DD68C]/5' : 'border-white/10 bg-[#0E0F13]'}`}>
-      <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-[12px] font-bold ${done ? 'bg-[#3DD68C] text-black' : 'text-white'}`} style={done ? undefined : { background: BLUE }}>{done ? '✓' : n}</span>
-      <div className="flex items-center gap-1.5 text-[13px] font-semibold">{icon}{title}</div>
-    </div>
+    <button onClick={onClick} className={`w-full text-left rounded-xl border p-3 flex items-center gap-3 transition-colors hover:border-white/30 ${done ? 'border-[#3DD68C]/40 bg-[#3DD68C]/5' : 'border-white/10 bg-[#0E0F13]'}`}>
+      <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-[12px] font-bold shrink-0 ${done ? 'bg-[#3DD68C] text-black' : 'text-white'}`} style={done ? undefined : { background: BLUE }}>{done ? '✓' : n}</span>
+      <div className="flex items-center gap-1.5 text-[13px] font-semibold flex-1">{icon}{title}</div>
+      <ArrowRight className="h-4 w-4 text-white/30" />
+    </button>
   );
 }
 
@@ -347,25 +356,31 @@ function Info({ icon, label, value }: { icon: React.ReactNode; label: string; va
 }
 
 /* ============================ Disponibilités ============================ */
+type Slot = { from: string; to: string };
+type Unav = { id: string; day: string; kind: 'full' | 'am' | 'pm' | 'hours'; hours: Slot[]; label?: string };
+const KIND_LABEL: Record<string, string> = { full: 'Journée entière', am: 'Matin', pm: 'Après-midi', hours: 'Créneaux' };
+function unavSummary(u: Unav) {
+  if (u.kind === 'hours') return (u.hours || []).map((h) => `${h.from}-${h.to}`).join(', ') || 'Créneaux';
+  return KIND_LABEL[u.kind] || 'Journée entière';
+}
+
 function DispoTab({ auth, authJson }: { auth: () => any; authJson: () => any }) {
-  const [days, setDays] = useState<{ id: string; day: string; label: string }[]>([]);
+  const [days, setDays] = useState<Unav[]>([]);
   const [cursor, setCursor] = useState(() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; });
-  const [busy, setBusy] = useState(false);
+  const [editDay, setEditDay] = useState<{ iso: string; current: Unav | null } | null>(null);
   const load = useCallback(async () => {
     const j = await fetch('/api/trainer/self/availability', { headers: auth() }).then((r) => r.json());
-    setDays(j.days || []);
+    setDays((j.days || []).map((d: any) => ({ ...d, kind: d.kind || 'full', hours: d.hours || [] })));
   }, [auth]);
   useEffect(() => { load(); }, [load]);
-  const blocked = useMemo(() => new Set(days.map((d) => d.day)), [days]);
-  const toggle = async (iso: string) => {
-    if (busy) return; setBusy(true);
-    try {
-      const existing = days.find((d) => d.day === iso);
-      if (existing) { await fetch(`/api/trainer/self/availability/${existing.id}`, { method: 'DELETE', headers: auth() }); }
-      else { await fetch('/api/trainer/self/availability', { method: 'POST', headers: authJson(), body: JSON.stringify({ day: iso }) }); }
-      await load();
-    } finally { setBusy(false); }
+  const byDay = useMemo(() => { const m: Record<string, Unav> = {}; days.forEach((d) => { m[d.day] = d; }); return m; }, [days]);
+
+  const save = async (iso: string, kind: Unav['kind'], hours: Slot[]) => {
+    await fetch('/api/trainer/self/availability', { method: 'POST', headers: authJson(), body: JSON.stringify({ day: iso, kind, hours }) });
+    await load();
   };
+  const remove = async (id: string) => { await fetch(`/api/trainer/self/availability/${id}`, { method: 'DELETE', headers: auth() }); await load(); };
+
   // grille du mois
   const first = new Date(cursor.y, cursor.m, 1);
   const startDow = (first.getDay() + 6) % 7; // lundi=0
@@ -385,36 +400,119 @@ function DispoTab({ auth, authJson }: { auth: () => any; authJson: () => any }) 
             <button onClick={() => setCursor((c) => { const m = c.m + 1; return m > 11 ? { y: c.y + 1, m: 0 } : { y: c.y, m }; })} className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10"><ChevronRight className="h-4 w-4" /></button>
           </div>
         </div>
-        <p className="text-[12.5px] text-white/55 mb-4">Cliquez sur un jour pour le marquer <span className="text-[#FF6B6B] font-semibold">indisponible</span>. On ne vous assignera pas de cours ces jours-là.</p>
+        <p className="text-[12.5px] text-white/55 mb-3">Cliquez sur un jour pour définir votre indisponibilité : <span className="text-white/80 font-semibold">journée entière, matin, après-midi ou créneaux horaires</span>. On ne vous assignera pas de cours sur ces périodes.</p>
+        {/* légende */}
+        <div className="flex items-center gap-3 mb-4 text-[11px] text-white/55 flex-wrap">
+          <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded bg-[#FF6B6B]" /> Journée</span>
+          <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded bg-gradient-to-b from-[#FF6B6B] from-50% to-[#0E0F13] to-50%" /> Matin</span>
+          <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded bg-gradient-to-t from-[#FF6B6B] from-50% to-[#0E0F13] to-50%" /> Après-midi</span>
+          <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded bg-[#E5B567]" /> Créneaux</span>
+        </div>
         <div className="grid grid-cols-7 gap-1.5 text-center">
           {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <div key={i} className="text-[11px] text-white/40 font-semibold py-1">{d}</div>)}
           {cells.map((c, i) => {
             if (c == null) return <div key={i} />;
             const dayIso = iso(c);
-            const isBlocked = blocked.has(dayIso);
+            const u = byDay[dayIso];
             const isPast = dayIso < todayIso;
+            let bg = 'bg-[#0E0F13] hover:bg-white/10 text-white/80';
+            if (u?.kind === 'full') bg = 'bg-[#FF6B6B] text-white';
+            else if (u?.kind === 'am') bg = 'text-white';
+            else if (u?.kind === 'pm') bg = 'text-white';
+            else if (u?.kind === 'hours') bg = 'bg-[#E5B567]/15 text-white border border-[#E5B567]/40';
             return (
-              <button key={i} disabled={isPast} onClick={() => toggle(dayIso)}
-                className={`aspect-square rounded-lg text-[13px] font-medium transition-colors ${isPast ? 'text-white/20 cursor-not-allowed' : isBlocked ? 'bg-[#FF6B6B] text-white' : 'bg-[#0E0F13] hover:bg-white/10 text-white/80'}`}>
-                {c}
+              <button key={i} disabled={isPast} onClick={() => setEditDay({ iso: dayIso, current: u || null })}
+                className={`relative aspect-square rounded-lg text-[13px] font-medium overflow-hidden transition-colors ${isPast ? 'text-white/20 cursor-not-allowed bg-[#0E0F13]' : bg}`}>
+                {u?.kind === 'am' && <span className="absolute inset-x-0 top-0 h-1/2 bg-[#FF6B6B]" />}
+                {u?.kind === 'pm' && <span className="absolute inset-x-0 bottom-0 h-1/2 bg-[#FF6B6B]" />}
+                <span className="relative z-10">{c}</span>
+                {u?.kind === 'hours' && <span className="absolute bottom-0.5 inset-x-0 text-[8px] leading-none text-[#E5B567] font-semibold z-10">{(u.hours || []).length}h</span>}
               </button>
             );
           })}
         </div>
       </section>
       <section className="rounded-2xl bg-[#181A20] border border-white/10 p-5">
-        <h3 className="text-[14px] font-bold mb-3">Jours bloqués</h3>
-        {days.length === 0 ? <p className="text-[13px] text-white/45">Aucun jour bloqué. Vous êtes disponible par défaut.</p> : (
-          <div className="space-y-1.5 max-h-[360px] overflow-auto">
+        <h3 className="text-[14px] font-bold mb-3">Indisponibilités</h3>
+        {days.length === 0 ? <p className="text-[13px] text-white/45">Aucune indisponibilité. Vous êtes disponible par défaut.</p> : (
+          <div className="space-y-1.5 max-h-[420px] overflow-auto">
             {[...days].sort((a, b) => a.day.localeCompare(b.day)).map((d) => (
-              <div key={d.id} className="flex items-center justify-between text-[13px] bg-[#0E0F13] rounded-lg px-3 py-2">
-                <span>{fmtDay(d.day)}</span>
-                <button onClick={() => toggle(d.day)} className="text-[#FF6B6B] text-[12px] hover:underline">Retirer</button>
+              <div key={d.id} className="flex items-center justify-between gap-2 text-[13px] bg-[#0E0F13] rounded-lg px-3 py-2">
+                <div className="min-w-0">
+                  <div className="font-medium">{fmtDay(d.day)}</div>
+                  <div className="text-[11.5px] text-white/45">{unavSummary(d)}</div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => setEditDay({ iso: d.day, current: d })} className="text-white/50 text-[12px] hover:text-white">Modifier</button>
+                  <button onClick={() => remove(d.id)} className="text-[#FF6B6B] text-[12px] hover:underline">Retirer</button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </section>
+      {editDay && <DayAvailabilityModal iso={editDay.iso} current={editDay.current} onClose={() => setEditDay(null)} onSave={async (k, h) => { await save(editDay.iso, k, h); setEditDay(null); }} onRemove={editDay.current ? async () => { await remove(editDay.current!.id); setEditDay(null); } : undefined} />}
+    </div>
+  );
+}
+
+function DayAvailabilityModal({ iso, current, onClose, onSave, onRemove }: { iso: string; current: Unav | null; onClose: () => void; onSave: (kind: Unav['kind'], hours: Slot[]) => void | Promise<void>; onRemove?: () => void | Promise<void> }) {
+  const [kind, setKind] = useState<Unav['kind']>(current?.kind || 'full');
+  const [hours, setHours] = useState<Slot[]>(current?.hours?.length ? current.hours : [{ from: '09:00', to: '12:00' }]);
+  const [busy, setBusy] = useState(false);
+  const label = new Date(iso).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const opts: { k: Unav['kind']; t: string; d: string }[] = [
+    { k: 'full', t: 'Journée entière', d: 'Indisponible toute la journée' },
+    { k: 'am', t: 'Matin', d: 'Indisponible le matin' },
+    { k: 'pm', t: 'Après-midi', d: "Indisponible l'après-midi" },
+    { k: 'hours', t: 'Créneaux horaires', d: 'Choisir des plages précises' },
+  ];
+  const save = async () => {
+    setBusy(true);
+    try {
+      const h = kind === 'hours' ? hours.filter((s) => s.from && s.to && s.from < s.to) : [];
+      await onSave(kind, h);
+    } finally { setBusy(false); }
+  };
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-[#181A20] border border-white/10 rounded-2xl w-full max-w-[420px] p-5 text-white" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-[15px] font-bold capitalize">{label}</h3>
+          <button onClick={onClose} className="text-white/50 hover:text-white text-[18px] leading-none">×</button>
+        </div>
+        <div className="space-y-2 mb-4">
+          {opts.map((o) => (
+            <button key={o.k} onClick={() => setKind(o.k)} className={`w-full text-left px-3.5 py-2.5 rounded-xl border transition-colors ${kind === o.k ? 'border-[#0066CC] bg-[#0066CC]/10' : 'border-white/10 bg-[#0E0F13] hover:border-white/25'}`}>
+              <div className="text-[14px] font-semibold flex items-center gap-2">
+                <span className={`w-3.5 h-3.5 rounded-full border-2 ${kind === o.k ? 'border-[#0066CC] bg-[#0066CC]' : 'border-white/30'}`} />
+                {o.t}
+              </div>
+              <div className="text-[12px] text-white/45 ml-5.5">{o.d}</div>
+            </button>
+          ))}
+        </div>
+        {kind === 'hours' && (
+          <div className="mb-4 space-y-2">
+            {hours.map((s, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input type="time" value={s.from} onChange={(e) => setHours((hs) => hs.map((x, j) => j === i ? { ...x, from: e.target.value } : x))} className="flex-1 px-3 py-2 rounded-lg bg-[#0E0F13] border border-white/10 text-[14px] text-white outline-none" />
+                <span className="text-white/40 text-[13px]">→</span>
+                <input type="time" value={s.to} onChange={(e) => setHours((hs) => hs.map((x, j) => j === i ? { ...x, to: e.target.value } : x))} className="flex-1 px-3 py-2 rounded-lg bg-[#0E0F13] border border-white/10 text-[14px] text-white outline-none" />
+                {hours.length > 1 && <button onClick={() => setHours((hs) => hs.filter((_, j) => j !== i))} className="text-[#FF6B6B] text-[13px] px-1">×</button>}
+              </div>
+            ))}
+            {hours.length < 6 && <button onClick={() => setHours((hs) => [...hs, { from: '14:00', to: '17:00' }])} className="text-[12.5px] text-[#0066CC] hover:underline">+ Ajouter un créneau</button>}
+          </div>
+        )}
+        <div className="flex items-center justify-between gap-2">
+          {onRemove ? <button onClick={onRemove} className="text-[13px] text-[#FF6B6B] hover:underline">Rendre disponible</button> : <span />}
+          <div className="flex gap-2">
+            <button onClick={onClose} className="px-4 py-2 rounded-full text-[13px] text-white/55">Annuler</button>
+            <button onClick={save} disabled={busy} className="px-5 py-2 rounded-full text-white text-[13px] font-semibold disabled:opacity-60" style={{ background: BLUE }}>{busy ? '…' : 'Enregistrer'}</button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -422,21 +520,129 @@ function DispoTab({ auth, authJson }: { auth: () => any; authJson: () => any }) 
 /* ============================ Mes formations ============================ */
 function FormationsTab({ trainer, auth }: { trainer: Trainer; auth: () => any }) {
   const [formations, setFormations] = useState<Formation[] | null>(null);
+  const [detail, setDetail] = useState<Formation | null>(null);
   useEffect(() => { (async () => { const j = await fetch('/api/trainer/self/my-formations', { headers: auth() }).then((r) => r.json()); setFormations(j.formations || []); })(); }, [auth]);
   if (!formations) return <Loading />;
   if (!formations.length) return <Empty icon={<GraduationCap className="h-7 w-7" />} text="Aucune formation rattachée pour l'instant. Delivery Digital vous rattachera aux formations correspondant à vos compétences." />;
   return (
-    <div className="grid sm:grid-cols-2 gap-3">
-      {formations.map((f) => (
-        <section key={f._id} className="rounded-2xl bg-[#181A20] border border-white/10 p-5">
-          <div className="flex items-center gap-2 mb-2"><GraduationCap className="h-4 w-4" style={{ color: BLUE }} /><h3 className="text-[15px] font-semibold">{f.title}</h3></div>
-          {f.description && <p className="text-[13px] text-white/55 leading-relaxed line-clamp-3">{f.description}</p>}
-          <div className="mt-3 flex items-center gap-3 text-[12px] text-white/50">
-            {f.duration_hours ? <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{f.duration_hours} h</span> : null}
-            {trainer.hourlyRate ? <span className="inline-flex items-center gap-1"><BadgeEuro className="h-3.5 w-3.5" />{euro((f.duration_hours || 0) * trainer.hourlyRate)} / session</span> : null}
+    <>
+      <div className="grid sm:grid-cols-2 gap-3">
+        {formations.map((f) => (
+          <button key={f._id} onClick={() => setDetail(f)} className="text-left rounded-2xl bg-[#181A20] border border-white/10 p-5 hover:border-white/25 transition-colors">
+            <div className="flex items-center gap-2 mb-2"><GraduationCap className="h-4 w-4" style={{ color: BLUE }} /><h3 className="text-[15px] font-semibold">{f.title}</h3></div>
+            {f.description && <p className="text-[13px] text-white/55 leading-relaxed line-clamp-3">{f.description}</p>}
+            <div className="mt-3 flex items-center justify-between">
+              <div className="flex items-center gap-3 text-[12px] text-white/50">
+                {f.duration_hours ? <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{f.duration_hours} h</span> : null}
+                {trainer.hourlyRate ? <span className="inline-flex items-center gap-1"><BadgeEuro className="h-3.5 w-3.5" />{euro((f.duration_hours || 0) * trainer.hourlyRate)} / session</span> : null}
+              </div>
+              <span className="text-[12px] font-semibold inline-flex items-center gap-1" style={{ color: BLUE }}>Voir le détail <ArrowRight className="h-3.5 w-3.5" /></span>
+            </div>
+          </button>
+        ))}
+      </div>
+      {detail && <FormationDetailModal f={detail} onClose={() => setDetail(null)} />}
+    </>
+  );
+}
+
+function FormationDetailModal({ f, onClose }: { f: Formation; onClose: () => void }) {
+  // PDF programme : document en base sinon mapping par mots-clés (seuls 2 PDF existent).
+  const docPdf = (f.documents || []).find((d) => d.file_path && /\.pdf$/i.test(d.file_path));
+  const t = `${f.title || ''} ${f.program_id || ''}`.toLowerCase();
+  let pdfUrl: string | null = docPdf?.file_path || null;
+  if (!pdfUrl) {
+    if (/allerg|nutrition/.test(t)) pdfUrl = '/uploads/formations/programme-nutrition-allergenes.pdf';
+    else if (/hygi|s[ée]cur/.test(t)) pdfUrl = '/uploads/formations/programme-hygiene-securite-dd.pdf';
+  }
+  const Card = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <div className="rounded-2xl border border-black/[0.06] bg-white p-5"><h3 className="text-[14px] font-bold text-[#1D1D1F]">{title}</h3><div className="mt-2 text-[13px] text-[#3a3a3c] leading-relaxed">{children}</div></div>
+  );
+  const Bullets = ({ items }: { items: string[] }) => (
+    <ul className="space-y-1.5">{items.map((it, i) => <li key={i} className="flex gap-2"><span className="text-[#86868B] mt-[1px]">•</span><span>{it}</span></li>)}</ul>
+  );
+  const meta: Array<[string, string]> = [
+    ['Durée', `${f.duration_hours || 0}h`],
+    ['Prix', f.price != null ? `${f.price} €` : '-'],
+    ['Participants max', String(f.max_participants || 12)],
+    ["Délai d'accès", f.access_delay || '1 semaine'],
+    ['Certification', f.certification_type || 'Attestation de formation'],
+  ];
+  const ind: Array<[string, number]> = [
+    ['Satisfaction', f.satisfaction_rate || 96],
+    ['Réussite', f.success_rate || 100],
+    ['Recommandation', f.recommendation_rate || 100],
+    ['Présence', f.attendance_rate || 100],
+  ];
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="w-full max-w-4xl my-6 bg-white text-[#1D1D1F] rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 sm:px-8 pt-6 pb-5 border-b border-black/[0.06]">
+          <div className="flex items-start justify-between">
+            <div>
+              {f.category && <p className="text-[11px] uppercase tracking-[0.18em] font-bold text-[#86868B]">{f.category}</p>}
+              <h2 className="text-[22px] sm:text-[26px] font-extrabold leading-tight mt-1.5 pr-6">{f.title}</h2>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {f.level && <span className="px-3 py-1 rounded-full border border-black/10 text-[12px] capitalize">{f.level}</span>}
+                {f.opco_eligible && <span className="px-3 py-1 rounded-full border border-black/10 text-[12px]">OPCO Éligible</span>}
+              </div>
+            </div>
+            <button onClick={onClose} className="inline-flex items-center justify-center h-8 w-8 rounded-full hover:bg-black/[0.05] text-[#86868B]"><X className="h-4 w-4" /></button>
           </div>
-        </section>
-      ))}
+        </div>
+        <div className="px-6 sm:px-8 py-6 max-h-[72vh] overflow-y-auto grid lg:grid-cols-[1fr_300px] gap-6 bg-[#fbfbfd]">
+          <div className="space-y-4 order-2 lg:order-1">
+            {f.description && <Card title="Description"><p>{f.description}</p></Card>}
+            {f.target_audience && <Card title="Public visé"><p>{f.target_audience}</p></Card>}
+            {!!(f.objectives && f.objectives.length) && <Card title="Objectifs pédagogiques"><Bullets items={f.objectives} /></Card>}
+            {!!(f.training_modalities && f.training_modalities.length) && <Card title="Modalités de la formation"><Bullets items={f.training_modalities} /></Card>}
+            {!!(f.methods && f.methods.length) && <Card title="Méthodes mobilisées"><Bullets items={f.methods} /></Card>}
+            {!!(f.evaluation_methods && f.evaluation_methods.length) && <Card title="Méthodes d'évaluation"><Bullets items={f.evaluation_methods} /></Card>}
+            {!!(f.modules && f.modules.length) && (
+              <Card title="Modules de formation">
+                <div className="space-y-2.5">
+                  {f.modules.map((m, i) => (
+                    <div key={i} className="rounded-xl bg-black/[0.03] p-3.5">
+                      <div className="flex items-center justify-between gap-2"><p className="font-semibold text-[13px] text-[#1D1D1F]">{m.title}</p>{m.duration_hours ? <span className="text-[12px] text-[#86868B] flex-shrink-0">{m.duration_hours}h</span> : null}</div>
+                      {!!(m.topics && m.topics.length) && <ul className="mt-1.5 space-y-1">{m.topics.map((p, j) => <li key={j} className="flex gap-2 text-[12.5px]"><span className="text-[#86868B]">-</span><span>{p}</span></li>)}</ul>}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+            {f.prerequisites && <Card title="Prérequis"><p>{f.prerequisites}</p></Card>}
+            {f.accessibility_info && <Card title="Accessibilité"><p>{f.accessibility_info}</p></Card>}
+            {pdfUrl && (
+              <Card title="Documents">
+                <a href={pdfUrl} target="_blank" rel="noreferrer" download className="flex items-center gap-3 rounded-xl border border-black/[0.08] px-3.5 py-3 hover:bg-black/[0.02] transition">
+                  <span className="inline-flex h-9 w-9 rounded-lg bg-[#0066CC]/10 text-[#0066CC] items-center justify-center"><FileText className="h-4 w-4" /></span>
+                  <span className="min-w-0 flex-1"><span className="block font-semibold text-[13px] text-[#1D1D1F]">Programme détaillé</span><span className="block text-[11.5px] text-[#86868B]">PDF - Contenu complet</span></span>
+                  <Download className="h-4 w-4 text-[#86868B]" />
+                </a>
+              </Card>
+            )}
+          </div>
+          <div className="order-1 lg:order-2">
+            <div className="lg:sticky lg:top-0 rounded-2xl border border-black/[0.06] bg-white p-5">
+              <div className="divide-y divide-black/[0.06]">
+                {meta.map(([k, v]) => (
+                  <div key={k} className="flex items-center justify-between py-2 text-[12.5px]"><span className="text-[#86868B]">{k}</span><span className="font-semibold text-[#1D1D1F] text-right">{v}</span></div>
+                ))}
+              </div>
+              <p className="text-[10px] uppercase tracking-wider font-bold text-[#86868B] mt-4 mb-2">Indicateurs</p>
+              <div className="space-y-2.5">
+                {ind.map(([k, v]) => (
+                  <div key={k}>
+                    <div className="flex items-center justify-between text-[12px]"><span className="text-[#3a3a3c]">{k}</span><span className="font-semibold">{v}%</span></div>
+                    <div className="mt-1 h-1.5 rounded-full bg-black/[0.06] overflow-hidden"><div className="h-full bg-[#0066CC]" style={{ width: `${v}%` }} /></div>
+                  </div>
+                ))}
+              </div>
+              {pdfUrl && <a href={pdfUrl} target="_blank" rel="noreferrer" download className="mt-4 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#1D1D1F] text-white text-[13px] font-semibold hover:bg-black"><Download className="h-4 w-4" /> Télécharger le programme</a>}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -658,32 +864,145 @@ function RibForm({ trainer, authJson, onChanged }: { trainer: Trainer; authJson:
 
 function ContractForm({ trainer, authJson, onChanged }: { trainer: Trainer; authJson: () => any; onChanged: () => void }) {
   const signed = !!(trainer.contract && trainer.contract.signed);
-  const [signedBy, setSignedBy] = useState(trainer.contract?.signedBy || trainer.name);
-  const [func, setFunc] = useState(trainer.contract?.signedFunction || 'Formateur');
-  const [accept, setAccept] = useState(false); const [busy, setBusy] = useState(false);
-  const sign = async () => { setBusy(true); try { await fetch('/api/trainer/self/contract/sign', { method: 'POST', headers: authJson(), body: JSON.stringify({ signedBy, signedFunction: func }) }); onChanged(); } finally { setBusy(false); } };
-  const inp = 'w-full px-3 py-2.5 rounded-xl bg-[#0E0F13] border border-white/10 text-[14px] text-white placeholder-white/30 outline-none';
+  const hasCompany = !!(trainer.companyInfo && trainer.companyInfo.legalName);
+  const [open, setOpen] = useState(false);
   return (
     <section className="rounded-2xl bg-[#181A20] border border-white/10 p-5">
       <h2 className="text-[15px] font-bold mb-1 flex items-center gap-2"><FileSignature className="h-4 w-4" style={{ color: BLUE }} /> Contrat de prestation
         {signed && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#3DD68C]/15 text-[#3DD68C]">{trainer.contract?.validated ? 'Validé' : 'Signé'}</span>}</h2>
       {signed ? (
-        <p className="text-[13px] text-white/60 mt-2">Signé par {trainer.contract?.signedBy} ({trainer.contract?.signedFunction}) le {trainer.contract?.signedAt ? new Date(trainer.contract.signedAt).toLocaleDateString('fr-FR') : ''}.</p>
+        <div className="mt-2">
+          <p className="text-[13px] text-white/60 mb-3">Signé par {trainer.contract?.signedBy} ({trainer.contract?.signedFunction}) le {trainer.contract?.signedAt ? new Date(trainer.contract.signedAt).toLocaleDateString('fr-FR') : ''}.{trainer.contract?.validated ? ' Validé par Delivery Digital.' : ' En attente de validation Delivery Digital.'}</p>
+          <button onClick={() => setOpen(true)} className="px-4 py-2 rounded-full bg-white/8 hover:bg-white/12 text-[13px] font-semibold inline-flex items-center gap-1.5"><FileText className="h-4 w-4" /> Voir le contrat</button>
+        </div>
       ) : (
-        <div className="mt-3">
-          <div className="bg-[#0E0F13] border border-white/10 rounded-xl p-4 text-[12.5px] text-white/60 leading-relaxed max-h-[200px] overflow-auto mb-4">
-            <p className="font-semibold text-white/80 mb-2">Contrat de prestation de formation - Delivery Digital</p>
-            <p>Le formateur s'engage à animer les sessions de formation qui lui sont confiées par Delivery Digital, dans le respect des programmes, du référentiel QUALIOPI et des plannings communiqués. La rémunération est fixée au taux horaire négocié, versée après réalisation de chaque session sur présentation de facture. Le formateur s'engage à la confidentialité et à une clause de non-sollicitation directe des clients de Delivery Digital pendant 12 mois. La signature électronique a la même valeur juridique qu'une signature manuscrite (Code civil, art. 1367).</p>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-3 mb-3">
-            <Field label="Signataire"><input className={inp} value={signedBy} onChange={(e) => setSignedBy(e.target.value)} /></Field>
-            <Field label="Fonction"><input className={inp} value={func} onChange={(e) => setFunc(e.target.value)} /></Field>
-          </div>
-          <label className="flex items-center gap-2 text-[13px] text-white/70 mb-3 cursor-pointer"><input type="checkbox" checked={accept} onChange={(e) => setAccept(e.target.checked)} /> J'ai lu et j'accepte le contrat de prestation.</label>
-          <button onClick={sign} disabled={!accept || busy} className="px-5 py-2.5 rounded-full text-white text-[14px] font-semibold disabled:opacity-50" style={{ background: BLUE }}>{busy ? '…' : 'Signer le contrat'}</button>
+        <div className="mt-2">
+          <p className="text-[13px] text-white/55 mb-3">Lisez le contrat de prestation et signez-le en ligne (votre tampon est généré automatiquement depuis vos informations).</p>
+          {!hasCompany && <p className="text-[12.5px] text-[#E5B567] mb-3 inline-flex items-center gap-1.5"><AlertCircle className="h-4 w-4" /> Renseignez d'abord vos informations pour générer le tampon.</p>}
+          <button onClick={() => setOpen(true)} className="px-5 py-2.5 rounded-full text-white text-[14px] font-semibold" style={{ background: BLUE }}>Lire et signer le contrat</button>
         </div>
       )}
+      {open && <TrainerContractModal trainer={trainer} authJson={authJson} onClose={() => setOpen(false)} onSigned={() => { setOpen(false); onChanged(); }} />}
     </section>
+  );
+}
+
+function TrainerStamp({ trainer }: { trainer: Trainer }) {
+  const ci = trainer.companyInfo || {};
+  const name = ci.legalName || trainer.name;
+  const loc = [ci.postalCode, ci.city].filter(Boolean).join(' ');
+  const signedDate = trainer.contract?.signedAt ? new Date(trainer.contract.signedAt).toLocaleDateString('fr-FR') : null;
+  return (
+    <div className="inline-block -rotate-[7deg] select-none" style={{ color: '#1d4ed8' }}>
+      <div className="rounded-md border-2 px-3 py-2 text-center" style={{ borderColor: '#1d4ed8', boxShadow: 'inset 0 0 0 1px rgba(29,78,216,0.25)' }}>
+        <p className="text-[8px] font-bold uppercase tracking-[0.15em] opacity-70">Cachet du formateur</p>
+        <p className="text-[12px] font-extrabold uppercase leading-tight mt-0.5">{name}</p>
+        {ci.regNumber && <p className="text-[8px] font-semibold mt-0.5">SIRET / N° {ci.regNumber}</p>}
+        {loc && <p className="text-[8px] font-medium">{loc}{ci.country ? ` · ${ci.country}` : ''}</p>}
+        {trainer.contract?.signed
+          ? <p className="text-[7.5px] font-bold uppercase tracking-wide mt-1 border-t border-[#1d4ed8]/40 pt-0.5">Signé électroniquement{signedDate ? ` le ${signedDate}` : ''}</p>
+          : <p className="text-[7.5px] font-bold uppercase tracking-wide mt-1 border-t border-[#1d4ed8]/40 pt-0.5 opacity-60">Aperçu - non signé</p>}
+      </div>
+    </div>
+  );
+}
+
+// Contrat de prestation formateur : feuille A4 complète + signature électronique + tampon auto.
+// Même visuel/principe que le contrat agence, adapté au formateur. @author Rabah Ziane · 2026-06-07
+function TrainerContractModal({ trainer, authJson, onClose, onSigned }: { trainer: Trainer; authJson: () => any; onClose: () => void; onSigned: () => void }) {
+  const ci = trainer.companyInfo || {};
+  const who = ci.legalName || trainer.name;
+  const addr = [ci.address, [ci.postalCode, ci.city].filter(Boolean).join(' '), ci.country].filter(Boolean).join(', ');
+  const rep = [ci.repName, ci.repFunction].filter(Boolean).join(', ');
+  const signed = !!trainer.contract?.signed;
+  const today = new Date().toLocaleDateString('fr-FR');
+  const [signFunction, setSignFunction] = useState(trainer.contract?.signedFunction || 'Formateur');
+  const [signing, setSigning] = useState(false);
+  const rate = trainer.hourlyRate ? `${trainer.hourlyRate} €/h` : 'au taux horaire négocié';
+  const sign = async () => {
+    setSigning(true);
+    try { await fetch('/api/trainer/self/contract/sign', { method: 'POST', headers: authJson(), body: JSON.stringify({ signedBy: ci.repName || trainer.name, signedFunction: signFunction }) }); onSigned(); }
+    finally { setSigning(false); }
+  };
+  const C = ({ n, title, children }: { n: number; title: string; children: React.ReactNode }) => (
+    <div className="mt-4"><p className="font-bold text-[12.5px]">Article {n} - {title}</p><p className="text-[12px] leading-relaxed text-[#3a3a3c] mt-1">{children}</p></div>
+  );
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="w-full max-w-3xl my-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-white text-[13px] font-semibold inline-flex items-center gap-1.5"><FileText className="h-4 w-4" /> Contrat de prestation de formation</p>
+          <button onClick={onClose} className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white"><X className="h-4 w-4" /></button>
+        </div>
+        {/* Feuille du contrat */}
+        <div className="bg-white text-[#1D1D1F] rounded-xl shadow-2xl px-8 py-8 sm:px-12 sm:py-10">
+          <div className="flex items-center justify-between border-b border-black/10 pb-4">
+            <div><p className="text-[10px] uppercase tracking-[0.2em] text-[#86868B] font-bold">Delivery Digital</p><h1 className="text-[18px] font-extrabold mt-1">Contrat de prestation de formation</h1><p className="text-[11.5px] text-[#86868B]">Formateur indépendant - organisme certifié QUALIOPI</p></div>
+            <img src={LOGO_URL} alt="Delivery Digital" className="h-9 w-auto" />
+          </div>
+
+          <div className="mt-5 text-[12px] leading-relaxed text-[#3a3a3c]">
+            <p className="font-bold text-[12.5px] text-[#1D1D1F]">Entre les soussignés :</p>
+            <p className="mt-1.5"><strong>Delivery Digital</strong>, organisme de formation, ci-après « la Société », d&apos;une part,</p>
+            <p className="mt-1.5">Et <strong>{who}</strong>{ci.regNumber ? `, immatriculé(e) sous le n° ${ci.regNumber}` : ''}{addr ? `, dont le siège est situé ${addr}` : ''}{rep ? `, représenté(e) par ${rep}` : ''}, ci-après « le Formateur », d&apos;autre part.</p>
+          </div>
+
+          <C n={1} title="Objet">Le présent contrat définit les conditions dans lesquelles le Formateur anime, pour le compte de la Société, les sessions de formation qui lui sont confiées.</C>
+          <C n={2} title="Mission du Formateur">Le Formateur anime les sessions qui lui sont assignées dans le respect des <strong>programmes pédagogiques</strong>, du <strong>référentiel QUALIOPI</strong> et des <strong>plannings communiqués</strong>. Il s&apos;engage à assurer la qualité pédagogique, à émarger les présences et à transmettre les éléments d&apos;évaluation des apprenants.</C>
+          <C n={3} title="Rémunération">La rémunération du Formateur est fixée <strong>{rate}</strong>. Elle est <strong>versée après réalisation effective de chaque session</strong>, sur présentation de facture, par virement sur le compte bancaire renseigné par le Formateur.</C>
+          <C n={4} title="Versement">Les versements sont effectués sur le RIB validé du Formateur. La Société tient à jour, dans l&apos;espace formateur, l&apos;état des sessions et l&apos;historique des paiements.</C>
+          <C n={5} title="Durée">Le contrat prend effet à sa signature électronique pour une durée d&apos;<strong>un (1) an</strong>, renouvelable par tacite reconduction. Chaque partie peut y mettre fin moyennant un préavis écrit de <strong>trente (30) jours</strong>, sans incidence sur les prestations déjà réalisées.</C>
+          <C n={6} title="Confidentialité et données">Le Formateur s&apos;engage à préserver la confidentialité des informations échangées et à traiter les données personnelles des apprenants conformément au RGPD.</C>
+          <C n={7} title="Non-concurrence et non-sollicitation">Pendant la durée du contrat et pendant <strong>douze (12) mois</strong> après son terme, le Formateur s&apos;interdit de <strong>solliciter ou démarcher directement les clients, prospects et apprenants de Delivery Digital</strong> rencontrés dans le cadre de ses missions, ainsi que d&apos;exploiter les méthodes, contenus, outils et données de la Société. Les clients demeurent la clientèle de Delivery Digital.</C>
+          <C n={8} title="Indépendance">Le Formateur agit en toute indépendance. Le présent contrat ne crée aucun lien de subordination ni société de fait entre les parties.</C>
+          <C n={9} title="Validation">La signature électronique du Formateur est soumise à la validation de Delivery Digital, qui vérifie ses informations, son RIB et le présent contrat avant activation du compte.</C>
+
+          {/* Blocs de signature */}
+          <div className="mt-8 grid sm:grid-cols-2 gap-6 border-t border-black/10 pt-6">
+            <div>
+              <p className="text-[11px] uppercase tracking-wider text-[#86868B] font-bold">Pour Delivery Digital</p>
+              <p className="text-[12px] mt-1">Fait à distance, le {today}</p>
+              <div className="mt-3 min-h-[92px] flex items-center gap-3">
+                <img src="/uploads/assets/signature-dd.png" alt="Signature Delivery Digital" className="h-[58px] w-auto mix-blend-multiply" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                <div className="text-center leading-[1.25] text-[#1b1b1b] select-none">
+                  <p className="text-[14px] font-extrabold">DELIVERY Digital Nice</p>
+                  <p className="text-[11px] font-bold">470 promenade des Anglais</p>
+                  <p className="text-[11px] font-bold">06200 Nice • France</p>
+                  <p className="text-[9.5px] mt-1 text-[#3a3a3c]">SIRET 90294519500029 • APE 6201Z</p>
+                  <p className="text-[9.5px] text-[#3a3a3c]">RCS 902 945 195</p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-wider text-[#86868B] font-bold">Pour le Formateur</p>
+              <p className="text-[12px] mt-1">{who}{rep ? ` - ${rep}` : ''}</p>
+              <div className="mt-3 min-h-[88px] flex items-center">
+                {ci.legalName ? <TrainerStamp trainer={trainer} /> : <span className="text-[11.5px] text-[#E5B567]">Renseignez vos informations pour générer le tampon.</span>}
+              </div>
+              {signed && trainer.contract?.signedBy && <p className="text-[11px] text-[#86868B] mt-1">Signataire : {trainer.contract.signedBy}{trainer.contract.signedFunction ? ` (${trainer.contract.signedFunction})` : ''}</p>}
+            </div>
+          </div>
+        </div>
+
+        {/* Barre d'action signature */}
+        <div className="mt-3 bg-[#181A20] border border-white/10 rounded-xl p-4">
+          {signed ? (
+            <p className="text-[12.5px] text-[#3DD68C] inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4" /> Contrat signé{trainer.contract?.signedAt ? ` le ${new Date(trainer.contract.signedAt).toLocaleDateString('fr-FR')}` : ''}. {trainer.contract?.validated ? 'Validé par Delivery Digital.' : 'En attente de validation Delivery Digital.'}</p>
+          ) : !ci.legalName ? (
+            <p className="text-[12.5px] text-[#E5B567]">Renseignez d&apos;abord vos informations (plus haut) avant de signer.</p>
+          ) : (
+            <div className="flex flex-wrap items-end gap-3">
+              <div>
+                <label className="block text-[10.5px] uppercase tracking-wider text-white/40 mb-1">Votre fonction</label>
+                <input value={signFunction} onChange={(e) => setSignFunction(e.target.value)} placeholder="Formateur, gérant…" className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC]" />
+              </div>
+              <button onClick={sign} disabled={signing} className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-[#3DD68C] text-black text-[12.5px] font-semibold hover:brightness-110 disabled:opacity-60"><Stamp className="h-3.5 w-3.5" /> {signing ? 'Signature…' : 'Signer et apposer mon tampon'}</button>
+              <p className="text-[11px] text-white/40 self-center">Votre tampon est généré automatiquement.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

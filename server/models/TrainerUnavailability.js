@@ -9,6 +9,9 @@ const { Schema } = mongoose;
 const schema = new Schema({
   trainerId: { type: Schema.Types.ObjectId, ref: 'User', index: true, required: true },
   day: { type: String, required: true }, // 'YYYY-MM-DD'
+  // Granularité : journée entière / matin / après-midi / créneaux horaires précis.
+  kind: { type: String, enum: ['full', 'am', 'pm', 'hours'], default: 'full' },
+  hours: { type: [{ from: String, to: String }], default: [] }, // créneaux 'HH:MM' si kind='hours'
   label: { type: String, default: '' },
 }, { timestamps: true });
 schema.index({ trainerId: 1, day: 1 }, { unique: true });

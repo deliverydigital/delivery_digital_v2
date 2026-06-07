@@ -126,17 +126,26 @@ router.get('/my-formations', async (req, res) => {
 // === Disponibilités (jours bloqués personnels) ===
 router.get('/availability', async (req, res) => {
   const rows = await TrainerUnavailability.find({ trainerId: req.user.id }).sort({ day: 1 }).lean();
-  res.json({ ok: true, days: rows.map((r) => ({ id: r._id, day: r.day, label: r.label || '' })) });
+  res.json({ ok: true, days: rows.map((r) => ({ id: r._id, day: r.day, kind: r.kind || 'full', hours: r.hours || [], label: r.label || '' })) });
 });
 router.post('/availability', async (req, res) => {
   const day = String(req.body.day || '').trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return res.status(400).json({ ok: false, error: 'invalid_day' });
+  const kind = ['full', 'am', 'pm', 'hours'].includes(req.body.kind) ? req.body.kind : 'full';
+  // Créneaux 'HH:MM'-'HH:MM' valides uniquement, max 6 par jour.
+  let hours = [];
+  if (kind === 'hours' && Array.isArray(req.body.hours)) {
+    hours = req.body.hours
+      .filter((h) => h && /^\d{2}:\d{2}$/.test(h.from) && /^\d{2}:\d{2}$/.test(h.to) && h.from < h.to)
+      .map((h) => ({ from: h.from, to: h.to }))
+      .slice(0, 6);
+  }
   const row = await TrainerUnavailability.findOneAndUpdate(
     { trainerId: req.user.id, day },
-    { $set: { label: (req.body.label || '').trim() } },
+    { $set: { kind, hours, label: (req.body.label || '').trim() } },
     { upsert: true, new: true },
   );
-  res.json({ ok: true, day: { id: row._id, day: row.day, label: row.label || '' } });
+  res.json({ ok: true, day: { id: row._id, day: row.day, kind: row.kind, hours: row.hours, label: row.label || '' } });
 });
 router.delete('/availability/:id', async (req, res) => {
   await TrainerUnavailability.deleteOne({ _id: req.params.id, trainerId: req.user.id });
