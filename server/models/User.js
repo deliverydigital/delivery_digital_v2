@@ -82,6 +82,13 @@ const userSchema = new Schema({
   // === Champs FORMATEUR (role 'trainer') === @author Rabah Ziane - 2026-06-06
   hourlyRate: { type: Number, default: 0 },
   trainerSkills: { type: [String], default: [] },
+  // Préférences de rappel configurables par le formateur. @author Rabah Ziane - 2026-06-07
+  reminderPrefs: {
+    course48: { type: Boolean, default: true },
+    course24: { type: Boolean, default: true },
+    course1: { type: Boolean, default: true },
+    weeklyAvailability: { type: Boolean, default: true },
+  },
   status: {
     type: String,
     enum: ['active', 'inactive', 'pending', 'suspended'],

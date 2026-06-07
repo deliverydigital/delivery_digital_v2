@@ -24,6 +24,7 @@ type TabKey = 'cours' | 'dispo' | 'formations' | 'fonds' | 'instructions' | 'pro
 type Trainer = {
   id: string; name: string; email: string; phone: string;
   hourlyRate: number; trainerSkills: string[];
+  reminderPrefs?: { course48: boolean; course24: boolean; course1: boolean; weeklyAvailability: boolean };
   iban: string; bic: string; accountHolder: string; bankCountry: string; bankData: any;
   ribPdfUrl: string; bankValidated: boolean;
   companyInfo: any;
@@ -139,7 +140,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
         {!validated && <ActivationBanner trainer={trainer} onGo={() => setTab('profil')} />}
 
         {/* KPIs */}
-        <Kpis token={token} hourlyRate={trainer.hourlyRate} validated={validated} />
+        <Kpis token={token} hourlyRate={trainer.hourlyRate} validated={validated} onNav={setTab} />
 
         {/* Tabs */}
         <nav className="flex gap-1.5 overflow-x-auto pb-1">
@@ -158,7 +159,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
         </nav>
 
         {tab === 'cours' && <SessionsTab token={token} auth={auth} authJson={authJson} />}
-        {tab === 'dispo' && <DispoTab auth={auth} authJson={authJson} />}
+        {tab === 'dispo' && <DispoTab auth={auth} authJson={authJson} trainer={trainer} onChanged={loadProfile} />}
         {tab === 'formations' && <FormationsTab trainer={trainer} auth={auth} />}
         {tab === 'fonds' && <FondsTab trainer={trainer} auth={auth} authJson={authJson} validated={validated} />}
         {tab === 'instructions' && <InstructionsTab auth={auth} />}
@@ -169,7 +170,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
 }
 
 /* ============================ KPIs ============================ */
-function Kpis({ token, hourlyRate, validated }: { token: string; hourlyRate: number; validated: boolean }) {
+function Kpis({ token, hourlyRate, validated, onNav }: { token: string; hourlyRate: number; validated: boolean; onNav: (t: TabKey) => void }) {
   const [data, setData] = useState<{ upcoming: number; available: number } | null>(null);
   useEffect(() => {
     (async () => {
@@ -186,18 +187,18 @@ function Kpis({ token, hourlyRate, validated }: { token: string; hourlyRate: num
   }, [token]);
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-      <KpiCard icon={<BadgeEuro className="h-4 w-4" />} label="Taux horaire négocié" value={hourlyRate ? `${hourlyRate} €/h` : '-'} accent={BLUE} />
-      <KpiCard icon={<Clock className="h-4 w-4" />} label="Cours à venir" value={data ? String(data.upcoming) : '…'} accent="#E5B567" />
-      <KpiCard icon={<Wallet className="h-4 w-4" />} label="Fonds disponibles" value={data ? euro(data.available) : '…'} accent="#3DD68C" />
+      <KpiCard icon={<BadgeEuro className="h-4 w-4" />} label="Taux horaire négocié" value={hourlyRate ? `${hourlyRate} €/h` : '-'} accent={BLUE} onClick={() => onNav('formations')} />
+      <KpiCard icon={<Clock className="h-4 w-4" />} label="Cours à venir" value={data ? String(data.upcoming) : '…'} accent="#E5B567" onClick={() => onNav('cours')} />
+      <KpiCard icon={<Wallet className="h-4 w-4" />} label="Fonds disponibles" value={data ? euro(data.available) : '…'} accent="#3DD68C" onClick={() => onNav('fonds')} />
     </div>
   );
 }
-function KpiCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent: string }) {
+function KpiCard({ icon, label, value, accent, onClick }: { icon: React.ReactNode; label: string; value: string; accent: string; onClick?: () => void }) {
   return (
-    <div className="rounded-2xl bg-[#181A20] border border-white/10 p-4">
+    <button onClick={onClick} className="text-left rounded-2xl bg-[#181A20] border border-white/10 p-4 transition-colors hover:border-white/25">
       <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-white/45 font-semibold mb-2" style={{ color: accent }}>{icon}{label}</div>
       <div className="text-[24px] font-bold">{value}</div>
-    </div>
+    </button>
   );
 }
 
@@ -364,7 +365,7 @@ function unavSummary(u: Unav) {
   return KIND_LABEL[u.kind] || 'Journée entière';
 }
 
-function DispoTab({ auth, authJson }: { auth: () => any; authJson: () => any }) {
+function DispoTab({ auth, authJson, trainer, onChanged }: { auth: () => any; authJson: () => any; trainer: Trainer; onChanged: () => void }) {
   const [days, setDays] = useState<Unav[]>([]);
   const [cursor, setCursor] = useState(() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; });
   const [editDay, setEditDay] = useState<{ iso: string; current: Unav | null } | null>(null);
@@ -390,7 +391,9 @@ function DispoTab({ auth, authJson }: { auth: () => any; authJson: () => any }) 
   const iso = (d: number) => `${cursor.y}-${String(cursor.m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   const todayIso = new Date().toISOString().slice(0, 10);
   return (
-    <div className="grid lg:grid-cols-[1fr_300px] gap-4">
+    <div className="space-y-4">
+      <RemindersCard trainer={trainer} authJson={authJson} onChanged={onChanged} />
+      <div className="grid lg:grid-cols-[1fr_300px] gap-4">
       <section className="rounded-2xl bg-[#181A20] border border-white/10 p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[15px] font-bold">Mes disponibilités</h2>
@@ -452,7 +455,38 @@ function DispoTab({ auth, authJson }: { auth: () => any; authJson: () => any }) 
         )}
       </section>
       {editDay && <DayAvailabilityModal iso={editDay.iso} current={editDay.current} onClose={() => setEditDay(null)} onSave={async (k, h) => { await save(editDay.iso, k, h); setEditDay(null); }} onRemove={editDay.current ? async () => { await remove(editDay.current!.id); setEditDay(null); } : undefined} />}
+      </div>
     </div>
+  );
+}
+
+function RemindersCard({ trainer, authJson, onChanged }: { trainer: Trainer; authJson: () => any; onChanged: () => void }) {
+  const p = trainer.reminderPrefs || { course48: true, course24: true, course1: true, weeklyAvailability: true };
+  const [prefs, setPrefs] = useState(p);
+  const [saving, setSaving] = useState(false);
+  const update = async (next: typeof prefs) => {
+    setPrefs(next); setSaving(true);
+    try { await fetch('/api/trainer/self/reminder-prefs', { method: 'POST', headers: authJson(), body: JSON.stringify(next) }); onChanged(); } finally { setSaving(false); }
+  };
+  const Row = ({ k, title, desc }: { k: keyof typeof prefs; title: string; desc: string }) => (
+    <div className="flex items-center justify-between gap-3 py-2">
+      <div className="min-w-0"><div className="text-[13.5px] font-medium">{title}</div><div className="text-[12px] text-white/45">{desc}</div></div>
+      <button onClick={() => update({ ...prefs, [k]: !prefs[k] })} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${prefs[k] ? 'bg-[#3DD68C]' : 'bg-white/15'}`}>
+        <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${prefs[k] ? 'translate-x-5' : ''}`} />
+      </button>
+    </div>
+  );
+  return (
+    <section className="rounded-2xl bg-[#181A20] border border-white/10 p-5">
+      <div className="flex items-center gap-2 mb-1"><AlertCircle className="h-4 w-4" style={{ color: BLUE }} /><h2 className="text-[15px] font-bold">Mes rappels</h2>{saving && <span className="text-[11px] text-white/40">enregistrement…</span>}</div>
+      <p className="text-[12.5px] text-white/55 mb-2">Choisissez les rappels que vous souhaitez recevoir par email.</p>
+      <div className="divide-y divide-white/5">
+        <Row k="course48" title="Rappel 48h avant un cours" desc="2 jours avant le début de la session" />
+        <Row k="course24" title="Rappel 24h avant un cours" desc="La veille de la session" />
+        <Row k="course1" title="Rappel 1h avant un cours" desc="Juste avant le début" />
+        <Row k="weeklyAvailability" title="Rappel des disponibilités (vendredi)" desc="Chaque vendredi, pour la semaine suivante" />
+      </div>
+    </section>
   );
 }
 

@@ -63,7 +63,13 @@ const schema = new Schema({
 
   // Notifications / rappels
   assignedNotifiedAt: Date,    // email "nouveau cours" envoyé au formateur
-  reminderSentAt: Date,        // rappel J-2 envoyé
+  reminderSentAt: Date,        // (legacy) dernier rappel envoyé
+  // Rappels automatiques avant le cours (un seul envoi par palier). @Rabah 2026-06-07
+  reminders: {
+    h48: { type: Boolean, default: false },
+    h24: { type: Boolean, default: false },
+    h1: { type: Boolean, default: false },
+  },
 
   notes: String,
 }, { timestamps: true });

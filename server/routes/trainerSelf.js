@@ -37,6 +37,12 @@ router.get('/profile', async (req, res) => {
       id: u._id, name: u.name, email: u.email, phone: u.phone || '',
       hourlyRate: u.hourlyRate || 0,
       trainerSkills: u.trainerSkills || [],
+      reminderPrefs: {
+        course48: u.reminderPrefs?.course48 !== false,
+        course24: u.reminderPrefs?.course24 !== false,
+        course1: u.reminderPrefs?.course1 !== false,
+        weeklyAvailability: u.reminderPrefs?.weeklyAvailability !== false,
+      },
       iban: u.iban || '', bic: u.bic || '', accountHolder: u.accountHolder || '',
       bankCountry: u.bankCountry || 'FR', bankData: u.bankData || {},
       ribPdfUrl: u.ribPdfUrl || '', bankValidated: !!u.bankValidated,
@@ -109,6 +115,20 @@ router.post('/contract/sign', async (req, res) => {
   u.onboardingValidated = false;
   await u.save();
   res.json({ ok: true, contract: u.contract });
+});
+
+// Préférences de rappel (le formateur active/désactive ses rappels).
+router.post('/reminder-prefs', async (req, res) => {
+  const u = await User.findById(req.user.id);
+  const b = req.body || {};
+  u.reminderPrefs = {
+    course48: b.course48 !== false,
+    course24: b.course24 !== false,
+    course1: b.course1 !== false,
+    weeklyAvailability: b.weeklyAvailability !== false,
+  };
+  await u.save();
+  res.json({ ok: true, reminderPrefs: u.reminderPrefs });
 });
 
 // === Catalogue + formations rattachées ===

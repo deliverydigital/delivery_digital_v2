@@ -189,6 +189,19 @@ router.get('/sessions', requireAdmin, async (req, res) => {
   res.json({ ok: true, sessions });
 });
 
+// Détail complet d'une session : cours + formateur + (si OPCO) dossier + agence + apprenants.
+router.get('/sessions/:id/detail', requireAdmin, async (req, res) => {
+  const s = await TrainerSession.findById(req.params.id).lean();
+  if (!s) return res.status(404).json({ ok: false, error: 'not_found' });
+  const trainer = await User.findById(s.trainerId).select('name email phone hourlyRate companyInfo iban bic accountHolder onboardingValidated trainerSkills').lean();
+  let dossier = null, agency = null;
+  if (s.dossierId) {
+    dossier = await AgencyDossier.findById(s.dossierId).lean();
+    if (dossier?.agencyId) agency = await User.findById(dossier.agencyId).select('name email phone companyInfo commissionFix commissionPercent').lean();
+  }
+  res.json({ ok: true, session: s, trainer, dossier, agency });
+});
+
 // Dossiers OPCO assignables (pour rattacher un formateur à un cours déjà monté).
 router.get('/dossiers', requireAdmin, async (req, res) => {
   const dossiers = await AgencyDossier.find({}).select('denom formationTitle sessionName sessionStart sessionEnd salaries clientEmail addr status').sort({ createdAt: -1 }).limit(500).lean();

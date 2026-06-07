@@ -220,6 +220,7 @@ function SessionsAdmin({ hdr, hdrJson }: { hdr: any; hdrJson: any }) {
   const [dossiers, setDossiers] = useState<Dossier[]>([]);
   const [formations, setFormations] = useState<Formation[]>([]);
   const [assign, setAssign] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const load = useCallback(async () => {
     const [s, t, d, c] = await Promise.all([
       fetch('/api/admin/trainers/sessions', { headers: hdr }).then((r) => r.json()),
@@ -251,15 +252,90 @@ function SessionsAdmin({ hdr, hdrJson }: { hdr: any; hdrJson: any }) {
       )}
 
       {sessions.length === 0 ? <Empty text="Aucun cours. Assignez un formateur à un dossier OPCO ou créez une session." /> : (
-        <div className="space-y-2">{sessions.map((s) => <SessionAdminRow key={s._id} s={s} hdrJson={hdrJson} onChanged={load} />)}</div>
+        <div className="space-y-2">{sessions.map((s) => <SessionAdminRow key={s._id} s={s} hdrJson={hdrJson} onChanged={load} onOpen={() => setDetailId(s._id)} />)}</div>
       )}
 
       {assign && <AssignModal trainers={trainers} dossiers={dossiers} formations={formations} hdrJson={hdrJson} onClose={() => setAssign(false)} onDone={() => { setAssign(false); load(); }} />}
+      {detailId && <SessionDetailModal id={detailId} hdr={hdr} onClose={() => setDetailId(null)} />}
     </div>
   );
 }
 
-function SessionAdminRow({ s, hdrJson, onChanged }: { s: Session; hdrJson: any; onChanged: () => void }) {
+function SessionDetailModal({ id, hdr, onClose }: { id: string; hdr: any; onClose: () => void }) {
+  const [data, setData] = useState<any>(null);
+  useEffect(() => { (async () => { const j = await fetch(`/api/admin/trainers/sessions/${id}/detail`, { headers: hdr }).then((r) => r.json()); setData(j); })(); }, [id, hdr]);
+  const fmtDT = (d?: string) => d ? new Date(d).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+  const s = data?.session, t = data?.trainer, dos = data?.dossier, ag = data?.agency;
+  const Row = ({ k, v }: { k: string; v: any }) => (v != null && v !== '') ? <div className="flex justify-between gap-3 py-1.5 text-[13px]"><span className="text-[#86868B]">{k}</span><span className="font-medium text-[#1D1D1F] text-right">{v}</span></div> : null;
+  const Sec = ({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) => (
+    <div className="bg-[#F5F5F7] rounded-xl p-4"><div className="flex items-center gap-1.5 text-[12px] font-bold text-[#1D1D1F] uppercase tracking-wide mb-2">{icon}{title}</div>{children}</div>
+  );
+  const learners = (s?.learners && s.learners.length ? s.learners : (dos?.salaries || [])) as any[];
+  return (
+    <Modal onClose={onClose} title="Détail du cours" wide>
+      {!data ? <Loading /> : !s ? <Empty text="Introuvable." /> : (
+        <div className="space-y-3 max-h-[70vh] overflow-auto">
+          <Sec icon={<ListChecks className="h-3.5 w-3.5" />} title="Cours">
+            <Row k="Formation" v={s.formationTitle} />
+            <Row k="Statut" v={s.status} />
+            <Row k="Origine" v={s.source === 'opco' ? 'Dossier OPCO' : 'Manuel'} />
+            <Row k="Date" v={fmtDT(s.sessionStart)} />
+            <Row k="Fin" v={s.sessionEnd ? fmtDT(s.sessionEnd) : null} />
+            <Row k="Durée" v={s.hours ? `${s.hours} h` : null} />
+            <Row k="Lieu" v={`${s.location || '-'}${s.addr ? ' · ' + s.addr : ''}`} />
+            <Row k="Rémunération" v={s.payAmount ? `${euro(s.payAmount)} (${s.hours || 0}h × ${s.hourlyRate || 0}€)` : null} />
+            <Row k="Facture" v={s.invoiceNumber} />
+            <Row k="Groupe WhatsApp" v={s.whatsappGroupCreated ? 'Créé' + (s.whatsappGroupLink ? ' · ' + s.whatsappGroupLink : '') : 'Non créé'} />
+            <Row k="Responsable pédago" v={s.pedagoName ? `${s.pedagoName}${s.pedagoPhone ? ' · ' + s.pedagoPhone : ''}` : null} />
+            <Row k="Notes" v={s.notes} />
+          </Sec>
+          <Sec icon={<Users className="h-3.5 w-3.5" />} title="Formateur">
+            <Row k="Nom" v={t?.name} />
+            <Row k="Email" v={t?.email} />
+            <Row k="Téléphone" v={t?.phone} />
+            <Row k="Taux horaire" v={t?.hourlyRate ? `${t.hourlyRate} €/h` : null} />
+            <Row k="Compte activé" v={t?.onboardingValidated ? 'Oui' : 'Non'} />
+            <Row k="Société" v={t?.companyInfo?.legalName} />
+            <Row k="RIB" v={t?.iban ? `${t.iban}${t.bic ? ' · ' + t.bic : ''}` : null} />
+          </Sec>
+          <Sec icon={<Building2 className="h-3.5 w-3.5" />} title="Client">
+            <Row k="Bénéficiaire" v={s.clientName || dos?.denom} />
+            <Row k="Email" v={s.clientEmail || dos?.clientEmail} />
+            <Row k="SIRET" v={dos?.siret} />
+            <Row k="Adresse" v={s.addr || dos?.addr} />
+            <Row k="OPCO" v={dos?.opco} />
+          </Sec>
+          {ag && (
+            <Sec icon={<Building2 className="h-3.5 w-3.5" />} title="Agence partenaire">
+              <Row k="Agence" v={ag.name || dos?.agencyName} />
+              <Row k="Email" v={ag.email} />
+              <Row k="Téléphone" v={ag.phone} />
+              <Row k="Société" v={ag.companyInfo?.legalName} />
+              {dos?.commercialName && <Row k="Commercial" v={dos.commercialName} />}
+              <Row k="Montant dossier" v={dos?.amountHT ? euro(dos.amountHT) + ' HT' : null} />
+            </Sec>
+          )}
+          <Sec icon={<Users className="h-3.5 w-3.5" />} title={`Apprenants (${learners.length})`}>
+            {learners.length === 0 ? <p className="text-[13px] text-[#86868B]">Aucun apprenant renseigné.</p> : (
+              <div className="space-y-1">
+                {learners.map((l, i) => (
+                  <div key={i} className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[13px] bg-white rounded-lg px-3 py-2">
+                    <span className="font-medium text-[#1D1D1F]">{[l.firstname, l.lastname].filter(Boolean).join(' ') || 'Apprenant'}</span>
+                    {l.poste && <span className="text-[#86868B]">{l.poste}</span>}
+                    {(l.telephone || l.phone) && <span className="text-[#86868B]">{l.telephone || l.phone}</span>}
+                    {l.email && <span className="text-[#86868B]">{l.email}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </Sec>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+function SessionAdminRow({ s, hdrJson, onChanged, onOpen }: { s: Session; hdrJson: any; onChanged: () => void; onOpen: () => void }) {
   const [busy, setBusy] = useState(false);
   const statusMeta: Record<string, { label: string; cls: string }> = {
     scheduled: { label: 'Planifié', cls: 'bg-[#0066CC]/10 text-[#0066CC]' },
@@ -272,7 +348,7 @@ function SessionAdminRow({ s, hdrJson, onChanged }: { s: Session; hdrJson: any; 
   const markDone = async (done: boolean) => { setBusy(true); try { await fetch(`/api/admin/trainers/sessions/${s._id}/done`, { method: 'POST', headers: hdrJson, body: JSON.stringify({ done }) }); onChanged(); } finally { setBusy(false); } };
   return (
     <div className="bg-white rounded-2xl ring-1 ring-black/5 p-4 flex items-center justify-between gap-3" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-      <div className="min-w-0">
+      <button type="button" onClick={onOpen} className="min-w-0 text-left hover:opacity-80 transition-opacity">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[14px] font-semibold text-[#1D1D1F]">{s.formationTitle || 'Formation'}</span>
           <span className={`${PILL} ${sm.cls}`}>{sm.label}</span>
@@ -285,7 +361,7 @@ function SessionAdminRow({ s, hdrJson, onChanged }: { s: Session; hdrJson: any; 
           <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />{fmtDate(s.sessionStart)}</span>
           <span>{s.hours || 0}h{s.payAmount ? ' · ' + euro(s.payAmount) : ''}</span>
         </div>
-      </div>
+      </button>
       <div className="flex items-center gap-2 shrink-0">
         {s.status === 'scheduled' && <button onClick={() => markDone(true)} disabled={busy} className="px-4 py-1.5 rounded-full bg-[#34C759] text-white text-[12.5px] font-semibold disabled:opacity-60">Marquer réalisée</button>}
         {s.status === 'done' && <button onClick={() => markDone(false)} disabled={busy} className="px-4 py-1.5 rounded-full bg-black/5 text-[#86868B] text-[12.5px] font-semibold">Annuler « réalisée »</button>}
