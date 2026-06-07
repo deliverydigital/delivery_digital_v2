@@ -137,7 +137,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
       </header>
 
       <main className="max-w-[1080px] mx-auto px-4 sm:px-6 py-6 space-y-5">
-        {!validated && <ActivationBanner trainer={trainer} onGo={() => setTab('profil')} />}
+        {!validated && <ActivationBanner trainer={trainer} active={tab === 'profil'} onGo={() => setTab(tab === 'profil' ? 'cours' : 'profil')} />}
 
         {/* KPIs */}
         <Kpis token={token} hourlyRate={trainer.hourlyRate} validated={validated} onNav={setTab} />
@@ -203,7 +203,7 @@ function KpiCard({ icon, label, value, accent, onClick }: { icon: React.ReactNod
 }
 
 /* ============================ Activation ============================ */
-function ActivationBanner({ trainer, onGo }: { trainer: Trainer; onGo: () => void }) {
+function ActivationBanner({ trainer, active, onGo }: { trainer: Trainer; active: boolean; onGo: () => void }) {
   const ci = trainer.companyInfo || {};
   const hasCompany = !!(ci.legalName && ci.address);
   const hasRib = !!(trainer.ribPdfUrl && (trainer.iban || (trainer.bankData && Object.keys(trainer.bankData).length)));
@@ -214,23 +214,23 @@ function ActivationBanner({ trainer, onGo }: { trainer: Trainer; onGo: () => voi
         <AlertCircle className="h-5 w-5 text-[#E5B567] shrink-0 mt-0.5" />
         <div>
           <h2 className="text-[15px] font-bold">Activez votre compte</h2>
-          <p className="text-[13px] text-white/60 mt-0.5">Cliquez sur une étape pour la remplir. Votre compte sera activé après validation par Delivery Digital.</p>
+          <p className="text-[13px] text-white/60 mt-0.5">Cliquez sur une étape pour l'ouvrir, recliquez pour la refermer. Votre compte sera activé après validation par Delivery Digital.</p>
         </div>
       </div>
       <div className="grid sm:grid-cols-3 gap-3">
-        <StepCard n={1} done={hasCompany} title="Informations" icon={<Building2 className="h-4 w-4" />} onClick={onGo} />
-        <StepCard n={2} done={hasRib} title="RIB (PDF obligatoire)" icon={<Upload className="h-4 w-4" />} onClick={onGo} />
-        <StepCard n={3} done={hasContract} title="Contrat de prestation" icon={<FileSignature className="h-4 w-4" />} onClick={onGo} />
+        <StepCard n={1} done={hasCompany} active={active} title="Informations" icon={<Building2 className="h-4 w-4" />} onClick={onGo} />
+        <StepCard n={2} done={hasRib} active={active} title="RIB (PDF obligatoire)" icon={<Upload className="h-4 w-4" />} onClick={onGo} />
+        <StepCard n={3} done={hasContract} active={active} title="Contrat de prestation" icon={<FileSignature className="h-4 w-4" />} onClick={onGo} />
       </div>
     </section>
   );
 }
-function StepCard({ n, done, title, icon, onClick }: { n: number; done: boolean; title: string; icon: React.ReactNode; onClick: () => void }) {
+function StepCard({ n, done, active, title, icon, onClick }: { n: number; done: boolean; active: boolean; title: string; icon: React.ReactNode; onClick: () => void }) {
   return (
-    <button onClick={onClick} className={`w-full text-left rounded-xl border p-3 flex items-center gap-3 transition-colors hover:border-white/30 ${done ? 'border-[#3DD68C]/40 bg-[#3DD68C]/5' : 'border-white/10 bg-[#0E0F13]'}`}>
+    <button onClick={onClick} className={`w-full text-left rounded-xl border p-3 flex items-center gap-3 transition-colors ${active ? 'border-[#0066CC] bg-[#0066CC]/10' : done ? 'border-[#3DD68C]/40 bg-[#3DD68C]/5 hover:border-white/30' : 'border-white/10 bg-[#0E0F13] hover:border-white/30'}`}>
       <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-[12px] font-bold shrink-0 ${done ? 'bg-[#3DD68C] text-black' : 'text-white'}`} style={done ? undefined : { background: BLUE }}>{done ? '✓' : n}</span>
       <div className="flex items-center gap-1.5 text-[13px] font-semibold flex-1">{icon}{title}</div>
-      <ArrowRight className="h-4 w-4 text-white/30" />
+      <ArrowRight className={`h-4 w-4 text-white/30 transition-transform ${active ? 'rotate-90' : ''}`} />
     </button>
   );
 }
