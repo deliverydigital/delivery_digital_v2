@@ -40,24 +40,42 @@ function html(name, weekLabel) {
   </div></div></div>`;
 }
 
+// Jour (0=dim..6=sam) + heure courants à Paris (le serveur est en UTC).
+function parisNow() {
+  const p = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', weekday: 'short', hour: '2-digit', hour12: false }).formatToParts(new Date());
+  const wd = p.find((x) => x.type === 'weekday')?.value;
+  const hr = parseInt(p.find((x) => x.type === 'hour')?.value || '0', 10);
+  const map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return { day: map[wd] ?? 5, hour: hr };
+}
+
 async function run() {
   await mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
+  const { day: pDay, hour: pHour } = parisNow();
   const trainers = await User.find({ role: 'trainer', status: 'active' }).select('name email onboardingValidated reminderPrefs').lean();
   const weekLabel = nextWeekLabel();
   const tx = DRY ? null : transporter();
-  let sent = 0;
+  let matched = 0, sent = 0;
   for (const t of trainers) {
-    if (!t.email) continue;
-    if (!t.onboardingValidated) continue; // uniquement comptes activés
-    if (t.reminderPrefs?.weeklyAvailability === false) continue; // désactivé par le formateur
-    console.log(`${DRY ? '[DRY] ' : ''}weekly -> ${t.email}`);
+    if (!t.email || !t.onboardingValidated) continue;
+    const rp = t.reminderPrefs || {};
+    if (rp.weeklyAvailability === false) continue; // désactivé par le formateur
+    const day = rp.weeklyDay != null ? rp.weeklyDay : 5;
+    const hour = rp.weeklyHour != null ? rp.weeklyHour : 10;
+    // En DRY on ignore le filtre jour/heure pour pouvoir tester à tout moment.
+    if (!DRY && !(day === pDay && hour === pHour)) continue;
+    // Anti-doublon : déjà envoyé il y a moins de 6 jours.
+    if (!DRY && rp.weeklyLastSent && (Date.now() - new Date(rp.weeklyLastSent).getTime()) < 6 * 86400000) continue;
+    matched++;
+    console.log(`${DRY ? '[DRY] ' : ''}weekly -> ${t.email} (jour=${day} ${hour}h)`);
     if (!DRY) {
       try { await tx.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER || 'contact@deliverydigital.fr', to: t.email, subject: `Vos disponibilités pour la semaine prochaine (${weekLabel})`, html: html(t.name, weekLabel) }); }
       catch (e) { console.error('mail fail', t.email, e.message); continue; }
+      await User.updateOne({ _id: t._id }, { $set: { 'reminderPrefs.weeklyLastSent': new Date() } });
     }
     sent++;
   }
-  console.log(`${DRY ? '[DRY] ' : ''}weekly done: trainers=${trainers.length} sent=${sent}`);
+  console.log(`${DRY ? '[DRY] ' : ''}weekly done: parisDay=${pDay} parisHour=${pHour} matched=${matched} sent=${sent}`);
   await mongoose.disconnect();
 }
 

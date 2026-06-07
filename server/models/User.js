@@ -88,6 +88,9 @@ const userSchema = new Schema({
     course24: { type: Boolean, default: true },
     course1: { type: Boolean, default: true },
     weeklyAvailability: { type: Boolean, default: true },
+    weeklyDay: { type: Number, default: 5 },
+    weeklyHour: { type: Number, default: 10 },
+    weeklyLastSent: { type: Date },
   },
   status: {
     type: String,

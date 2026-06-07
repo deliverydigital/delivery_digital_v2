@@ -42,6 +42,8 @@ router.get('/profile', async (req, res) => {
         course24: u.reminderPrefs?.course24 !== false,
         course1: u.reminderPrefs?.course1 !== false,
         weeklyAvailability: u.reminderPrefs?.weeklyAvailability !== false,
+        weeklyDay: u.reminderPrefs?.weeklyDay != null ? u.reminderPrefs.weeklyDay : 5,
+        weeklyHour: u.reminderPrefs?.weeklyHour != null ? u.reminderPrefs.weeklyHour : 10,
       },
       iban: u.iban || '', bic: u.bic || '', accountHolder: u.accountHolder || '',
       bankCountry: u.bankCountry || 'FR', bankData: u.bankData || {},
@@ -121,14 +123,20 @@ router.post('/contract/sign', async (req, res) => {
 router.post('/reminder-prefs', async (req, res) => {
   const u = await User.findById(req.user.id);
   const b = req.body || {};
+  const prev = u.reminderPrefs || {};
+  const day = Number.isFinite(+b.weeklyDay) ? Math.min(6, Math.max(0, Math.round(+b.weeklyDay))) : (prev.weeklyDay != null ? prev.weeklyDay : 5);
+  const hour = Number.isFinite(+b.weeklyHour) ? Math.min(23, Math.max(0, Math.round(+b.weeklyHour))) : (prev.weeklyHour != null ? prev.weeklyHour : 10);
   u.reminderPrefs = {
     course48: b.course48 !== false,
     course24: b.course24 !== false,
     course1: b.course1 !== false,
     weeklyAvailability: b.weeklyAvailability !== false,
+    weeklyDay: day,
+    weeklyHour: hour,
+    weeklyLastSent: prev.weeklyLastSent, // préservé
   };
   await u.save();
-  res.json({ ok: true, reminderPrefs: u.reminderPrefs });
+  res.json({ ok: true, reminderPrefs: { course48: u.reminderPrefs.course48, course24: u.reminderPrefs.course24, course1: u.reminderPrefs.course1, weeklyAvailability: u.reminderPrefs.weeklyAvailability, weeklyDay: u.reminderPrefs.weeklyDay, weeklyHour: u.reminderPrefs.weeklyHour } });
 });
 
 // === Catalogue + formations rattachées ===

@@ -24,7 +24,7 @@ type TabKey = 'cours' | 'dispo' | 'formations' | 'fonds' | 'instructions' | 'pro
 type Trainer = {
   id: string; name: string; email: string; phone: string;
   hourlyRate: number; trainerSkills: string[];
-  reminderPrefs?: { course48: boolean; course24: boolean; course1: boolean; weeklyAvailability: boolean };
+  reminderPrefs?: { course48: boolean; course24: boolean; course1: boolean; weeklyAvailability: boolean; weeklyDay?: number; weeklyHour?: number };
   iban: string; bic: string; accountHolder: string; bankCountry: string; bankData: any;
   ribPdfUrl: string; bankValidated: boolean;
   companyInfo: any;
@@ -460,22 +460,33 @@ function DispoTab({ auth, authJson, trainer, onChanged }: { auth: () => any; aut
   );
 }
 
+const WEEK_DAYS: [number, string][] = [[1, 'lundi'], [2, 'mardi'], [3, 'mercredi'], [4, 'jeudi'], [5, 'vendredi'], [6, 'samedi'], [0, 'dimanche']];
 function RemindersCard({ trainer, authJson, onChanged }: { trainer: Trainer; authJson: () => any; onChanged: () => void }) {
-  const p = trainer.reminderPrefs || { course48: true, course24: true, course1: true, weeklyAvailability: true };
-  const [prefs, setPrefs] = useState(p);
+  const rp = trainer.reminderPrefs || {};
+  const [prefs, setPrefs] = useState({
+    course48: rp.course48 !== false, course24: rp.course24 !== false, course1: rp.course1 !== false,
+    weeklyAvailability: rp.weeklyAvailability !== false,
+    weeklyDay: rp.weeklyDay != null ? rp.weeklyDay : 5,
+    weeklyHour: rp.weeklyHour != null ? rp.weeklyHour : 10,
+  });
   const [saving, setSaving] = useState(false);
   const update = async (next: typeof prefs) => {
     setPrefs(next); setSaving(true);
     try { await fetch('/api/trainer/self/reminder-prefs', { method: 'POST', headers: authJson(), body: JSON.stringify(next) }); onChanged(); } finally { setSaving(false); }
   };
-  const Row = ({ k, title, desc }: { k: keyof typeof prefs; title: string; desc: string }) => (
+  const Toggle = ({ on, onClick }: { on: boolean; onClick: () => void }) => (
+    <button onClick={onClick} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${on ? 'bg-[#3DD68C]' : 'bg-white/15'}`}>
+      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${on ? 'translate-x-5' : ''}`} />
+    </button>
+  );
+  const Row = ({ k, title, desc }: { k: 'course48' | 'course24' | 'course1'; title: string; desc: string }) => (
     <div className="flex items-center justify-between gap-3 py-2">
       <div className="min-w-0"><div className="text-[13.5px] font-medium">{title}</div><div className="text-[12px] text-white/45">{desc}</div></div>
-      <button onClick={() => update({ ...prefs, [k]: !prefs[k] })} className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${prefs[k] ? 'bg-[#3DD68C]' : 'bg-white/15'}`}>
-        <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${prefs[k] ? 'translate-x-5' : ''}`} />
-      </button>
+      <Toggle on={prefs[k]} onClick={() => update({ ...prefs, [k]: !prefs[k] })} />
     </div>
   );
+  const dayName = (WEEK_DAYS.find(([v]) => v === prefs.weeklyDay) || [5, 'vendredi'])[1];
+  const sel = 'px-2.5 py-1.5 rounded-lg bg-[#0E0F13] border border-white/10 text-[13px] text-white outline-none';
   return (
     <section className="rounded-2xl bg-[#181A20] border border-white/10 p-5">
       <div className="flex items-center gap-2 mb-1"><AlertCircle className="h-4 w-4" style={{ color: BLUE }} /><h2 className="text-[15px] font-bold">Mes rappels</h2>{saving && <span className="text-[11px] text-white/40">enregistrement…</span>}</div>
@@ -484,7 +495,25 @@ function RemindersCard({ trainer, authJson, onChanged }: { trainer: Trainer; aut
         <Row k="course48" title="Rappel 48h avant un cours" desc="2 jours avant le début de la session" />
         <Row k="course24" title="Rappel 24h avant un cours" desc="La veille de la session" />
         <Row k="course1" title="Rappel 1h avant un cours" desc="Juste avant le début" />
-        <Row k="weeklyAvailability" title="Rappel des disponibilités (vendredi)" desc="Chaque vendredi, pour la semaine suivante" />
+        <div className="py-2">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0"><div className="text-[13.5px] font-medium">Rappel des disponibilités</div><div className="text-[12px] text-white/45">Chaque {dayName} à {String(prefs.weeklyHour).padStart(2, '0')}h, pour la semaine suivante</div></div>
+            <Toggle on={prefs.weeklyAvailability} onClick={() => update({ ...prefs, weeklyAvailability: !prefs.weeklyAvailability })} />
+          </div>
+          {prefs.weeklyAvailability && (
+            <div className="flex items-center gap-2 mt-3 flex-wrap">
+              <span className="text-[12px] text-white/45">Quand :</span>
+              <select className={sel} value={prefs.weeklyDay} onChange={(e) => update({ ...prefs, weeklyDay: Number(e.target.value) })}>
+                {WEEK_DAYS.map(([v, n]) => <option key={v} value={v} className="bg-[#181A20] capitalize">{n}</option>)}
+              </select>
+              <span className="text-[12px] text-white/45">à</span>
+              <select className={sel} value={prefs.weeklyHour} onChange={(e) => update({ ...prefs, weeklyHour: Number(e.target.value) })}>
+                {Array.from({ length: 24 }, (_, h) => <option key={h} value={h} className="bg-[#181A20]">{String(h).padStart(2, '0')}:00</option>)}
+              </select>
+              <span className="text-[11px] text-white/35">(heure de Paris)</span>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
