@@ -325,4 +325,12 @@ router.post('/:id/api-key', requireAdmin, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Suppression DOUCE d'un dossier (superadmin) : hidden=true, pas de DELETE en base (réversible).
+// @author Rabah Ziane - 2026-06-09
+router.delete('/dossiers/:id', requireAdmin, async (req, res) => {
+  const d = await AgencyDossier.findByIdAndUpdate(req.params.id, { hidden: true }, { new: true });
+  if (!d) return res.status(404).json({ error: 'not_found' });
+  res.json({ ok: true });
+});
+
 export default router;

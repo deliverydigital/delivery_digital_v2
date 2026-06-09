@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Building2, Loader2, Plus, RefreshCw, Copy, KeyRound, Eye, EyeOff, X, Mail } from 'lucide-react';
+import { Building2, Loader2, Plus, RefreshCw, Copy, KeyRound, Eye, EyeOff, X, Mail, Trash2 } from 'lucide-react';
 
 /**
  * Admin - gestion des agences partenaires (deliverydigital.fr).
@@ -90,6 +90,13 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
   async function markOpcoPaid(id: string, opcoPaid: boolean) {
     setDossiers((prev) => prev.map((d) => d._id === id ? { ...d, opcoPaid } : d));
     await fetch(`/api/admin/agencies/dossiers/${id}/opco-paid`, { method: 'POST', headers: headers(), body: JSON.stringify({ opcoPaid }) });
+  }
+  // Suppression DOUCE d'un dossier (superadmin) : hidden=true, pas de DELETE en base (réversible).
+  // @author Rabah Ziane · 2026-06-09
+  async function deleteDossier(d: AdminDossier) {
+    if (!confirm(`Supprimer le dossier de « ${d.denom || 'ce client'} » ?\n\nIl disparaît de la liste (suppression douce, réversible).`)) return;
+    setDossiers((prev) => prev.filter((x) => x._id !== d._id));
+    await fetch(`/api/admin/agencies/dossiers/${d._id}`, { method: 'DELETE', headers: headers() });
   }
   async function paySelected() {
     const ids = [...selDoss];
@@ -595,10 +602,13 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
                                 </select>
                               </td>
                               <td className="px-3 py-2.5">
-                                {d.status === 'paid' ? <span className="text-[#34C759] text-[11.5px]">Payé ✓</span>
-                                  : d.encashRequestedAt ? <button onClick={() => setFactureDossier(d)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#FF9F0A] text-white text-[11px] font-semibold">Ordre reçu · voir facture</button>
-                                  : d.opcoPaid ? <span className="text-[11.5px] text-[#0A84FF]">Fonds dispo · attente agence</span>
-                                  : <button onClick={() => markOpcoPaid(d._id, true)} className="px-2.5 py-1 rounded-md border border-black/10 text-[11px] hover:bg-black/[0.03]">Marquer OPCO payé</button>}
+                                <div className="flex items-center gap-2">
+                                  {d.status === 'paid' ? <span className="text-[#34C759] text-[11.5px]">Payé ✓</span>
+                                    : d.encashRequestedAt ? <button onClick={() => setFactureDossier(d)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#FF9F0A] text-white text-[11px] font-semibold">Ordre reçu · voir facture</button>
+                                    : d.opcoPaid ? <span className="text-[11.5px] text-[#0A84FF]">Fonds dispo · attente agence</span>
+                                    : <button onClick={() => markOpcoPaid(d._id, true)} className="px-2.5 py-1 rounded-md border border-black/10 text-[11px] hover:bg-black/[0.03]">Marquer OPCO payé</button>}
+                                  <button onClick={() => deleteDossier(d)} title="Supprimer ce dossier (réversible)" className="ml-auto text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded p-1"><Trash2 className="h-3.5 w-3.5" /></button>
+                                </div>
                               </td>
                             </tr>
                           ))}
