@@ -187,7 +187,7 @@ router.post('/commerciaux', async (req, res) => {
 router.get('/leads', async (req, res) => {
   const c = await ctx(req);
   const q = c.isOwner ? { agencyId: c.agencyId } : { agencyId: c.agencyId, commercialId: c.commercialId };
-  const leads = await AgencyLead.find(q).sort({ createdAt: -1 }).lean();
+  const leads = await AgencyLead.find({ ...q, hidden: { $ne: true } }).sort({ createdAt: -1 }).lean();
   res.json({ ok: true, leads });
 });
 function leadBase(c, r) {
@@ -244,11 +244,24 @@ router.patch('/leads/:id/assign', async (req, res) => {
   res.json({ ok: true, lead });
 });
 
+// Suppression DOUCE d'un client : masque le lead + ses dossiers (hidden=true), pas de DELETE
+// en base (réversible). @author Rabah Ziane - 2026-06-09
+router.delete('/leads/:id', async (req, res) => {
+  const c = await ctx(req);
+  const q = c.isOwner ? { _id: req.params.id, agencyId: c.agencyId } : { _id: req.params.id, agencyId: c.agencyId, commercialId: c.commercialId };
+  const lead = await AgencyLead.findOne(q);
+  if (!lead) return res.status(404).json({ ok: false, error: 'not_found' });
+  lead.hidden = true;
+  await lead.save();
+  await AgencyDossier.updateMany({ agencyId: c.agencyId, leadId: lead._id }, { $set: { hidden: true } });
+  res.json({ ok: true });
+});
+
 /* === Dossiers OPCO === */
 router.get('/dossiers', async (req, res) => {
   const c = await ctx(req);
   const q = c.isOwner ? { agencyId: c.agencyId } : { agencyId: c.agencyId, commercialId: c.commercialId };
-  const dossiers = await AgencyDossier.find(q).sort({ createdAt: -1 }).lean();
+  const dossiers = await AgencyDossier.find({ ...q, hidden: { $ne: true } }).sort({ createdAt: -1 }).lean();
   res.json({ ok: true, dossiers });
 });
 

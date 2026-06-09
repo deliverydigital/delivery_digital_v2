@@ -159,7 +159,7 @@ router.post('/:id/send-welcome', requireAdmin, async (req, res) => {
 
 // Dossiers OPCO transmis par les agences (recus cote DD) + commission a verser + RIB.
 router.get('/dossiers', requireAdmin, async (req, res) => {
-  const dossiers = await AgencyDossier.find({}).sort({ createdAt: -1 }).lean();
+  const dossiers = await AgencyDossier.find({ hidden: { $ne: true } }).sort({ createdAt: -1 }).lean();
   const ids = [...new Set(dossiers.map((d) => String(d.agencyId)))];
   const agencies = await User.find({ _id: { $in: ids } }).select('name iban bic accountHolder commissionFix commissionPercent').lean();
   const am = {};
@@ -194,7 +194,7 @@ router.get('/stats', requireAdmin, async (req, res) => {
       User.countDocuments({ role: 'agence_commercial' }),
       AgencyLead.countDocuments({}),
     ]);
-    const dossiers = await AgencyDossier.find({}).select('status amountHT salaries createdAt agencyId leadId').lean();
+    const dossiers = await AgencyDossier.find({ hidden: { $ne: true } }).select('status amountHT salaries createdAt agencyId leadId').lean();
     const ids = [...new Set(dossiers.map((d) => String(d.agencyId)))];
     const ags = await User.find({ _id: { $in: ids } }).select('commissionFix commissionPercent').lean();
     const am = {}; ags.forEach((a) => { am[String(a._id)] = a; });
@@ -232,7 +232,7 @@ router.get('/commerciaux', requireAdmin, async (req, res) => {
 // Liste détaillée des clients (leads) : agence, commercial, OPCO, statut.
 router.get('/clients', requireAdmin, async (req, res) => {
   try {
-    const leads = await AgencyLead.find({}).select('denom email opco siret agencyId agencyName commercialName status createdAt').sort({ createdAt: -1 }).limit(1000).lean();
+    const leads = await AgencyLead.find({ hidden: { $ne: true } }).select('denom email opco siret agencyId agencyName commercialName status createdAt').sort({ createdAt: -1 }).limit(1000).lean();
     const ag = await User.find({ _id: { $in: [...new Set(leads.map((l) => String(l.agencyId)).filter(Boolean))] } }).select('name').lean();
     const am = {}; ag.forEach((a) => { am[String(a._id)] = a.name; });
     res.json({ ok: true, clients: leads.map((l) => ({ id: l._id, denom: l.denom, email: l.email, opco: l.opco, siret: l.siret, agence: am[String(l.agencyId)] || l.agencyName || '-', commercial: l.commercialName || '', status: l.status, createdAt: l.createdAt })) });
@@ -243,7 +243,7 @@ router.get('/clients', requireAdmin, async (req, res) => {
 // traiter (transmis) + ordres d'encaissement recus non payes. @author Rabah Ziane - 2026-06-04
 router.get('/pending-count', requireAdmin, async (req, res) => {
   try {
-    const dossiers = await AgencyDossier.find({}).select('status encashRequestedAt').lean();
+    const dossiers = await AgencyDossier.find({ hidden: { $ne: true } }).select('status encashRequestedAt').lean();
     const newDossiers = dossiers.filter((d) => d.status === 'transmitted').length;
     const encash = dossiers.filter((d) => d.encashRequestedAt && d.status !== 'paid').length;
     res.json({ ok: true, count: newDossiers + encash, newDossiers, encash });

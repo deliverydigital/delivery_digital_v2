@@ -19,5 +19,6 @@ const schema = new Schema({
   reminderAt: { type: Date },
   status: { type: String, enum: ['new', 'verified', 'dossier', 'converted', 'lost'], default: 'new', index: true },
   notes: String,
+  hidden: { type: Boolean, default: false }, // suppression douce (masqué de la liste)
 }, { timestamps: true });
 export default mongoose.models.AgencyLead || mongoose.model('AgencyLead', schema);

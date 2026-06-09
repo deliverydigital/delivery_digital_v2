@@ -32,5 +32,6 @@ const schema = new Schema({
   opcoPaidAt: Date,
   encashRequestedAt: Date,
   invoiceNumber: String,
+  hidden: { type: Boolean, default: false }, // suppression douce (masqué de la liste)
 }, { timestamps: true });
 export default mongoose.models.AgencyDossier || mongoose.model('AgencyDossier', schema);

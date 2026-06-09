@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, Fragment } from 'react';
-import { Building2, Loader2, LogOut, Copy, Eye, EyeOff, KeyRound, Plus, FileText, ShieldCheck, Users, FolderCheck, Search, Wallet, X, Stamp, PenLine, Download, ExternalLink, Clock, Mail, Send, CheckCircle2, ArrowRight, Inbox } from 'lucide-react';
+import { Building2, Loader2, LogOut, Copy, Eye, EyeOff, KeyRound, Plus, FileText, ShieldCheck, Users, FolderCheck, Search, Wallet, X, Stamp, PenLine, Download, ExternalLink, Clock, Mail, Send, CheckCircle2, ArrowRight, Inbox, Trash2 } from 'lucide-react';
 import FormationWizardModal from './FormationWizardModal';
 import type { TransmitPayload, WizardEmployer } from './FormationWizardModal';
 import { FORMATIONS } from '../lib/formationCatalog';
@@ -597,6 +597,18 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     } finally { setAssigningLead(null); }
   }
 
+  // Retire un client (et ses dossiers) de la liste. Suppression DOUCE côté serveur (hidden=true,
+  // réversible) - ne supprime PAS en base. @author Rabah Ziane · 2026-06-09
+  async function deleteLead(lead: Lead) {
+    if (!confirm(`Retirer « ${lead.denom || 'ce client'} » et son dossier de votre liste ?\n\nLe client disparaît de votre espace (action réversible côté Delivery Digital).`)) return;
+    try {
+      const r = await fetch(`/api/agency/self/leads/${lead._id}`, { method: 'DELETE', headers: auth() });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && j.ok !== false) load();
+      else alert('Erreur : ' + (j.error || 'suppression impossible'));
+    } catch { alert('Erreur réseau.'); }
+  }
+
   // Crée le lien de signature (sans email) et ouvre WhatsApp avec le message pré-rempli. @Rabah 2026-06-05
   async function sendSignLinkWhatsapp(lead: Lead, p: TransmitPayload) {
     setSendingWhatsapp(true);
@@ -1113,6 +1125,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                             {dos && <button onClick={() => setOpenTimeline((v) => v === l._id ? null : l._id)} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11.5px] whitespace-nowrap ${openTimeline === l._id ? 'bg-[#0066CC]/15 border-[#0066CC]/40 text-[#4da3ff]' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}><Clock className="h-3.5 w-3.5" /> Suivi</button>}
                             {dos && dos.status !== 'paid' && dos.status !== 'invoiced' && <button onClick={() => setEditDossier({ lead: l, dossier: dos })} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11.5px] whitespace-nowrap" title="Corriger ce dossier déjà transmis et le renvoyer"><PenLine className="h-3.5 w-3.5" /> Modifier</button>}
                             <button onClick={() => setDossierLead(l)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11.5px] whitespace-nowrap"><FileText className="h-3.5 w-3.5" /> {dos ? 'Nouveau dossier' : 'Dossier OPCO'}</button>
+                            <button onClick={() => deleteLead(l)} title="Retirer ce client / dossier" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FF453A]/10 hover:bg-[#FF453A]/20 border border-[#FF453A]/30 text-[#FF6B6B] text-[11.5px] whitespace-nowrap"><Trash2 className="h-3.5 w-3.5" /> Supprimer</button>
                             {acc !== 'received' && <button onClick={() => setAccessLead(l)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11.5px] whitespace-nowrap"><KeyRound className="h-3.5 w-3.5" /> {acc === 'pending' ? 'Accès OPCO · en cours' : 'Accès OPCO'}</button>}
                           </div>
                         </td>
