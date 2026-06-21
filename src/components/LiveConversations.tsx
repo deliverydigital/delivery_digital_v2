@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2, Search, RefreshCw, X as XIcon, Mail, Phone, Building2,
   MessageSquare, Circle, ChevronRight, User as UserIcon, Globe, Clock,
-  Languages, Send, CheckCircle2, FileText,
+  Languages, Send, CheckCircle2, FileText, Download,
 } from 'lucide-react';
 
 // Ouvre Google Translate web dans un nouvel onglet pour traduire un message
@@ -258,6 +258,7 @@ function ConversationDrawer({
   // Generation de devis a partir de la conversation (Claude). @Rabah 2026-06-02
   const [quoteState, setQuoteState] = useState<'idle' | 'generating' | 'done' | 'error'>('idle');
   const [quoteMsg, setQuoteMsg] = useState<string>('');
+  const [quoteToken, setQuoteToken] = useState<string>('');
 
   // Reprise main par conseiller (mode humain) : permet de taper un message
   // manuel envoye au prospect. Active humanTakeover cote serveur, qui empeche
@@ -352,6 +353,7 @@ function ConversationDrawer({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
       setQuoteState('done');
+      setQuoteToken(data.item?.publicToken || '');
       setQuoteMsg(`Devis ${data.item?.ref || ''} créé en brouillon — retrouvez-le dans la section Devis pour l’ajuster et l’envoyer.`);
       setTimeout(() => setQuoteState('idle'), 8000);
     } catch (e: any) {
@@ -360,6 +362,135 @@ function ConversationDrawer({
       setTimeout(() => setQuoteState('idle'), 6000);
     }
   }, [sessionId, secret, quoteState]);
+
+  // Telecharge la conversation en PDF brande DELIVERY Digital (infos prospect + echange). @Rabah 2026-06-16
+  const downloadConversation = useCallback(async () => {
+    if (!session) return;
+    const _conv = (session.messages || []).map((m) => m.content || '').join(' ');
+    const _pm = _conv.match(/(\+?\d[\d().\-\s]{7,}\d)/);
+    const phone = (user?.phone || (_pm ? _pm[1].trim() : '')) || '';
+    const clean = (s: any) => String(s ?? '').replace(/[—–]/g, '-');
+    try {
+      const { jsPDF } = await import('jspdf');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const W = pdf.internal.pageSize.getWidth();
+      const H = pdf.internal.pageSize.getHeight();
+      const M = 15;
+      const navy: [number, number, number] = [11, 31, 58];
+      const orange: [number, number, number] = [255, 153, 0];
+      const gray: [number, number, number] = [110, 116, 124];
+
+      let headerBottom = 24;
+      try {
+        const logo = await new Promise<{ data: string; w: number; h: number }>((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'Anonymous';
+          img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = img.width; c.height = img.height;
+            const x = c.getContext('2d');
+            if (!x) return reject(new Error('ctx'));
+            x.drawImage(img, 0, 0);
+            resolve({ data: c.toDataURL('image/png'), w: img.width, h: img.height });
+          };
+          img.onerror = reject;
+          img.src = encodeURI('/Logo-DELIVERY-Digital-Neo-sans-Bold noir_ 2 copie 5.png');
+        });
+        const lw = 48; const lh = lw * (logo.h / logo.w);
+        pdf.addImage(logo.data, 'PNG', M, 12, lw, lh);
+        headerBottom = 12 + lh + 4;
+      } catch {
+        pdf.setFont('helvetica', 'bold'); pdf.setFontSize(18); pdf.setTextColor(navy[0], navy[1], navy[2]);
+        pdf.text('DELIVERY Digital', M, 22); headerBottom = 28;
+      }
+
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(15); pdf.setTextColor(navy[0], navy[1], navy[2]);
+      pdf.text('Conversation prospect', M, headerBottom + 6);
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(gray[0], gray[1], gray[2]);
+      pdf.text(clean('Exporte le ' + new Date().toLocaleString('fr-FR')), W - M, headerBottom + 6, { align: 'right' });
+      pdf.setDrawColor(orange[0], orange[1], orange[2]); pdf.setLineWidth(1);
+      pdf.line(M, headerBottom + 10, W - M, headerBottom + 10);
+
+      let y = headerBottom + 20;
+
+      const info = [
+        user?.name && ('Nom : ' + user.name),
+        user?.email && ('Email : ' + user.email),
+        phone && ('Telephone : ' + phone),
+        user?.company && ('Entreprise : ' + user.company),
+        user?.country && ('Pays : ' + user.country),
+        session?.category && ('Categorie : ' + session.category),
+      ].filter(Boolean) as string[];
+      const infoH = 10 + info.length * 6;
+      pdf.setFillColor(245, 245, 247);
+      pdf.roundedRect(M, y, W - 2 * M, infoH, 2, 2, 'F');
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11); pdf.setTextColor(navy[0], navy[1], navy[2]);
+      pdf.text('Informations prospect', M + 4, y + 7);
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10); pdf.setTextColor(40, 40, 40);
+      info.forEach((line, i) => pdf.text(clean(line), M + 4, y + 14 + i * 6));
+      y += infoH + 8;
+
+      const maxW = W - 2 * M - 8;
+      (session.messages || []).forEach((m) => {
+        const who = m.role === 'assistant' ? 'DELIVERY Digital' : (user?.name || 'Prospect');
+        const lines = pdf.splitTextToSize(clean(m.content), maxW);
+        const blockH = 9 + lines.length * 5;
+        if (y + blockH > H - 18) { pdf.addPage(); y = 20; }
+        if (m.role === 'assistant') pdf.setFillColor(245, 245, 247); else pdf.setFillColor(238, 243, 251);
+        pdf.roundedRect(M, y, W - 2 * M, blockH, 2, 2, 'F');
+        pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.setTextColor(gray[0], gray[1], gray[2]);
+        pdf.text(clean(who), M + 4, y + 5);
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10); pdf.setTextColor(30, 30, 30);
+        pdf.text(lines, M + 4, y + 11);
+        y += blockH + 4;
+      });
+
+      const pages = pdf.getNumberOfPages();
+      for (let p = 1; p <= pages; p++) {
+        pdf.setPage(p);
+        pdf.setDrawColor(225, 225, 225); pdf.setLineWidth(0.3); pdf.line(M, H - 14, W - M, H - 14);
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.setTextColor(gray[0], gray[1], gray[2]);
+        pdf.text(clean('DELIVERY Digital - deliverydigital.fr'), M, H - 9);
+        pdf.text('Page ' + p + '/' + pages, W - M, H - 9, { align: 'right' });
+      }
+
+      pdf.save('conversation-' + String(user?.name || user?.email || 'prospect').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.pdf');
+    } catch (e) {
+      console.error('PDF conversation error', e);
+      alert('Erreur lors de la generation du PDF');
+    }
+  }, [session, user]);
+
+  // Envoie au partenaire/agence (WhatsApp ou Email) : coordonnees prospect + lien devis. @Rabah 2026-06-16
+  const sendToAgency = useCallback((channel: 'whatsapp' | 'email') => {
+    if (!session) return;
+    const _conv = (session.messages || []).map((m) => m.content || '').join(' ');
+    const _pm = _conv.match(/(\+?\d[\d().\-\s]{7,}\d)/);
+    const phone = (user?.phone || (_pm ? _pm[1].trim() : '')) || '';
+    let devisUrl = quoteToken ? `https://deliverydigital.fr/devis/${quoteToken}` : '';
+    if (!devisUrl) devisUrl = (window.prompt('Lien du devis a transmettre (optionnel) :', '') || '').trim();
+    const lines = [
+      'Nouveau prospect a contacter (DELIVERY Digital)',
+      '',
+      user?.name && ('Nom : ' + user.name),
+      user?.email && ('Email : ' + user.email),
+      phone && ('Telephone : ' + phone),
+      user?.company && ('Entreprise : ' + user.company),
+      user?.country && ('Pays : ' + user.country),
+      session?.category && ('Categorie : ' + session.category),
+      devisUrl ? '' : undefined,
+      devisUrl ? ('Devis : ' + devisUrl) : undefined,
+      '',
+      'Merci de recontacter ce prospect. Le detail de la conversation est dans le PDF telechargeable.',
+    ].filter((x) => x !== false && x !== undefined) as string[];
+    const text = lines.join('\n');
+    if (channel === 'whatsapp') {
+      window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    } else {
+      const subject = 'Prospect a contacter' + (user?.name ? ' - ' + user.name : '');
+      window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(text);
+    }
+  }, [session, user, quoteToken]);
 
   const editMessageAt = useCallback(async (i: number, current: string) => {
     const next = window.prompt('Modifier le message :', current);
@@ -490,6 +621,30 @@ function ConversationDrawer({
             )}
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Bouton Telecharger la conversation (infos prospect + echange) */}
+            <button
+              onClick={downloadConversation}
+              disabled={!session?.messages?.length}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold bg-white text-[#1D1D1F] border border-black/10 hover:border-black/20 disabled:opacity-50 transition"
+              title="Télécharger la conversation (avec les infos du prospect)"
+            >
+              <Download className="h-3.5 w-3.5" /> Télécharger
+            </button>
+            {/* Envoyer a l'agence (WhatsApp / Email) : coordonnees prospect + lien devis */}
+            <button
+              onClick={() => sendToAgency('whatsapp')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold bg-[#25D366] text-white hover:bg-[#1ebe5d] transition"
+              title="Envoyer le prospect + devis a l'agence par WhatsApp"
+            >
+              <MessageSquare className="h-3.5 w-3.5" /> Agence WhatsApp
+            </button>
+            <button
+              onClick={() => sendToAgency('email')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold bg-white text-[#1D1D1F] border border-black/10 hover:border-black/20 transition"
+              title="Envoyer le prospect + devis a l'agence par email"
+            >
+              <Mail className="h-3.5 w-3.5" /> Agence Email
+            </button>
             {/* Bouton Generer un devis - lit la conversation et cree un brouillon de devis. */}
             <button
               onClick={generateQuote}

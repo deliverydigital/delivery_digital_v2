@@ -37,6 +37,7 @@ router.get('/profile', async (req, res) => {
       id: u._id, name: u.name, email: u.email, phone: u.phone || '',
       hourlyRate: u.hourlyRate || 0,
       trainerSkills: u.trainerSkills || [],
+      recurringAvailability: { days: u.recurringAvailability?.days || [], slots: u.recurringAvailability?.slots || [] },
       reminderPrefs: {
         course48: u.reminderPrefs?.course48 !== false,
         course24: u.reminderPrefs?.course24 !== false,
@@ -178,6 +179,26 @@ router.post('/availability', async (req, res) => {
 router.delete('/availability/:id', async (req, res) => {
   await TrainerUnavailability.deleteOne({ _id: req.params.id, trainerId: req.user.id });
   res.json({ ok: true });
+});
+
+// === Disponibilités RÉCURRENTES (jours de semaine + créneaux d'1h) === @author Rabah Ziane - 2026-06-19
+// Sanitise des jours 0-6 (uniques) et des créneaux 'HH:MM'-'HH:MM' valides (from < to, max 8).
+function sanitizeRecurring(body) {
+  const days = Array.isArray(body.days)
+    ? [...new Set(body.days.map((d) => Number(d)).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort((a, b) => a - b)
+    : [];
+  const slots = Array.isArray(body.slots)
+    ? body.slots
+        .filter((s) => s && /^\d{2}:\d{2}$/.test(s.from) && /^\d{2}:\d{2}$/.test(s.to) && s.from < s.to)
+        .map((s) => ({ from: s.from, to: s.to }))
+        .slice(0, 8)
+    : [];
+  return { days, slots };
+}
+router.put('/recurring-availability', async (req, res) => {
+  const recurringAvailability = sanitizeRecurring(req.body || {});
+  await User.updateOne({ _id: req.user.id }, { $set: { recurringAvailability } });
+  res.json({ ok: true, recurringAvailability });
 });
 
 // === Mes cours / sessions ===

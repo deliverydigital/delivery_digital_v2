@@ -9,8 +9,10 @@ const salarySchema = new Schema({
   type_contrat: String, date_naissance: String, num_secu: String, telephone: String,
 }, { _id: false });
 const schema = new Schema({
-  agencyId: { type: Schema.Types.ObjectId, ref: 'User', index: true, required: true },
+  // agencyId optionnel : dossier monté directement par Delivery Digital (DDN), sans agence. @Rabah 2026-06-21
+  agencyId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
   agencyName: String,
+  mountedByAdmin: { type: Boolean, default: false }, // monté depuis l'espace DDN (super admin) au lieu d'une agence
   commercialId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
   commercialName: String,
   leadId: { type: Schema.Types.ObjectId, ref: 'AgencyLead' },

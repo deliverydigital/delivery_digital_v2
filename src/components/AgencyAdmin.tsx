@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Building2, Loader2, Plus, RefreshCw, Copy, KeyRound, Eye, EyeOff, X, Mail, Trash2 } from 'lucide-react';
+import { Building2, Loader2, Plus, RefreshCw, Copy, KeyRound, Eye, EyeOff, X, Mail, Trash2, FileSignature, Send } from 'lucide-react';
+import { FORMATIONS } from '../lib/formationCatalog';
 
 /**
  * Admin - gestion des agences partenaires (deliverydigital.fr).
@@ -22,8 +23,11 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
   const [pct, setPct] = useState('15');
   const [creating, setCreating] = useState(false);
   type AdminSalarie = { firstname?: string; lastname?: string; email?: string; poste?: string; type_contrat?: string; date_naissance?: string; num_secu?: string; telephone?: string };
-  type AdminDossier = { _id: string; agencyName?: string; commercialName?: string; denom?: string; siret?: string; opco?: string; addr?: string; clientEmail?: string; formationTitle?: string; sessionName?: string; sessionStart?: string; sessionEnd?: string; salaries?: AdminSalarie[]; signedBy?: string; signedFunction?: string; signedIp?: string; signatureDataUrl?: string; signedRemote?: boolean; signedAt?: string; amountHT?: number; status: string; createdAt?: string; updatedAt?: string; commission?: number; agencyIban?: string; agencyBic?: string; agencyHolder?: string; opcoPaid?: boolean; encashRequestedAt?: string | null; invoiceNumber?: string };
+  type AdminDossier = { _id: string; agencyName?: string; mountedByAdmin?: boolean; commercialName?: string; denom?: string; siret?: string; opco?: string; addr?: string; clientEmail?: string; formationTitle?: string; sessionName?: string; sessionStart?: string; sessionEnd?: string; salaries?: AdminSalarie[]; signedBy?: string; signedFunction?: string; signedIp?: string; signatureDataUrl?: string; signedRemote?: boolean; signedAt?: string; amountHT?: number; status: string; createdAt?: string; updatedAt?: string; commission?: number; agencyIban?: string; agencyBic?: string; agencyHolder?: string; opcoPaid?: boolean; encashRequestedAt?: string | null; invoiceNumber?: string };
+  type SignRequest = { id: string; token: string; denom?: string; siret?: string; opco?: string; clientEmail?: string; managerEmail?: string; recipient?: string; agencyName?: string; formationTitle?: string; sessionName?: string; salaries?: number; amountHT?: number; link: string; createdAt?: string; expiresAt?: string; expired?: boolean };
   const [dossiers, setDossiers] = useState<AdminDossier[]>([]);
+  const [signRequests, setSignRequests] = useState<SignRequest[]>([]);
+  const [showMount, setShowMount] = useState(false);
   const [factureDossier, setFactureDossier] = useState<AdminDossier | null>(null);
   const [viewDossier, setViewDossier] = useState<AdminDossier | null>(null);
   const [selDoss, setSelDoss] = useState<Set<string>>(new Set());
@@ -48,7 +52,9 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
   const [showCommerciaux, setShowCommerciaux] = useState(false);
   const [commerciauxList, setCommerciauxList] = useState<{ id: string; name: string; email: string; agence: string; status: string; dossiers: number }[]>([]);
   const [showClients, setShowClients] = useState(false);
-  const [clientsList, setClientsList] = useState<{ id: string; denom: string; email?: string; opco?: string; agence: string; commercial?: string; status: string }[]>([]);
+  const [clientsList, setClientsList] = useState<{ id: string; denom: string; email?: string; accountantEmail?: string; managerEmail?: string; siret?: string; opco?: string; agence: string; commercial?: string; status: string }[]>([]);
+  const [editClient, setEditClient] = useState<{ id: string; denom: string; email: string; accountantEmail: string; managerEmail: string; siret: string; opco: string } | null>(null); // édition client côté admin. @Rabah 2026-06-18
+  const [savingClient, setSavingClient] = useState(false);
   const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   const headers = useCallback(() => ({ 'x-admin-secret': secret || '', 'Content-Type': 'application/json' }), [secret]);
@@ -63,10 +69,16 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
       if (ar.ok) setAccessReqs(ar.requests || []);
       const dj = await fetch('/api/admin/agencies/dossiers', { headers: { 'x-admin-secret': secret || '' } }).then((x) => x.json()).catch(() => ({}));
       if (dj.ok) setDossiers(dj.dossiers || []);
+      // Dossiers montés par DDN en attente de validation client. @Rabah 2026-06-21
+      const sr = await fetch('/api/admin/agencies/sign-requests', { headers: { 'x-admin-secret': secret || '' } }).then((x) => x.json()).catch(() => ({}));
+      if (sr.ok) setSignRequests(sr.requests || []);
       const uj = await fetch('/api/admin/agencies/unavailabilities', { headers: { 'x-admin-secret': secret || '' } }).then((x) => x.json()).catch(() => ({}));
       if (uj.ok) setUnavail(uj.days || []);
       const sj = await fetch('/api/admin/agencies/stats', { headers: { 'x-admin-secret': secret || '' } }).then((x) => x.json()).catch(() => ({}));
       if (sj.ok) setStats(sj);
+      // Clients (leads) créés par les agences : affichés en section sur la page admin. @Rabah 2026-06-19
+      const cj = await fetch('/api/admin/agencies/clients', { headers: { 'x-admin-secret': secret || '' } }).then((x) => x.json()).catch(() => ({}));
+      if (cj.ok) setClientsList(cj.clients || []);
     } finally { setLoading(false); }
   }, [secret]);
 
@@ -97,6 +109,17 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
     if (!confirm(`Supprimer le dossier de « ${d.denom || 'ce client'} » ?\n\nIl disparaît de la liste (suppression douce, réversible).`)) return;
     setDossiers((prev) => prev.filter((x) => x._id !== d._id));
     await fetch(`/api/admin/agencies/dossiers/${d._id}`, { method: 'DELETE', headers: headers() });
+  }
+  // Relancer / annuler une demande de validation client (dossier monté par DDN). @Rabah 2026-06-21
+  async function resendSignRequest(id: string) {
+    const r = await fetch(`/api/admin/agencies/sign-requests/${id}/resend`, { method: 'POST', headers: headers() });
+    const j = await r.json();
+    alert(j.ok ? `✓ Lien renvoyé à ${j.sentTo}.` : 'Erreur : ' + (j.error || 'envoi impossible'));
+  }
+  async function cancelSignRequest(id: string) {
+    if (!confirm('Annuler cette demande de validation ? Le lien envoyé au client ne sera plus valable.')) return;
+    setSignRequests((p) => p.filter((s) => s.id !== id));
+    await fetch(`/api/admin/agencies/sign-requests/${id}/cancel`, { method: 'POST', headers: headers() });
   }
   async function paySelected() {
     const ids = [...selDoss];
@@ -169,6 +192,20 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
     setShowClients(true);
     const j = await fetch('/api/admin/agencies/clients', { headers: headers() }).then((r) => r.json()).catch(() => ({}));
     if (j.ok) setClientsList(j.clients || []);
+  }
+
+  // Enregistre la modification d'un client (nom + emails + SIRET + OPCO) côté superadmin. @Rabah 2026-06-18
+  async function saveClient() {
+    if (!editClient) return;
+    setSavingClient(true);
+    try {
+      const r = await fetch(`/api/admin/agencies/clients/${editClient.id}`, { method: 'PATCH', headers: headers(), body: JSON.stringify({ denom: editClient.denom, email: editClient.email, accountantEmail: editClient.accountantEmail, managerEmail: editClient.managerEmail, siret: editClient.siret, opco: editClient.opco }) });
+      const j = await r.json();
+      if (j.ok) {
+        setClientsList((list) => list.map((c) => c.id === editClient.id ? { ...c, denom: editClient.denom, email: editClient.email, accountantEmail: editClient.accountantEmail, managerEmail: editClient.managerEmail, siret: editClient.siret, opco: editClient.opco } : c));
+        setEditClient(null);
+      } else alert('Erreur : ' + (j.error || 'enregistrement impossible'));
+    } finally { setSavingClient(false); }
   }
 
   async function regeneratePw(id: string) {
@@ -256,10 +293,33 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
             <div className="flex items-center justify-between px-5 py-3 border-b border-black/10"><h3 className="text-[15px] font-bold">Clients ({clientsList.length})</h3><button onClick={() => setShowClients(false)} className="h-8 w-8 rounded-full hover:bg-black/[0.05] inline-flex items-center justify-center"><X className="h-4 w-4" /></button></div>
             <div className="max-h-[64vh] overflow-y-auto">
               {clientsList.length === 0 ? <p className="px-5 py-8 text-center text-[13px] text-[#86868B]">Aucun client.</p> : (
-                <table className="w-full text-[12.5px]"><thead className="text-[#86868B] text-[10px] uppercase tracking-wider"><tr className="border-b border-black/5"><th className="text-left px-5 py-2.5">Client</th><th className="text-left px-5 py-2.5">OPCO</th><th className="text-left px-5 py-2.5">Agence</th><th className="text-left px-5 py-2.5">Commercial</th><th className="text-left px-5 py-2.5">Statut</th></tr></thead>
-                  <tbody className="divide-y divide-black/5">{clientsList.map((c) => (<tr key={c.id} className="hover:bg-black/[0.02]"><td className="px-5 py-2.5"><p className="font-medium text-[#1D1D1F]">{c.denom || '-'}</p><p className="text-[#86868B] text-[11px]">{c.email || c.siret || ''}</p></td><td className="px-5 py-2.5 text-[#86868B]">{c.opco || '-'}</td><td className="px-5 py-2.5 text-[#86868B]">{c.agence}</td><td className="px-5 py-2.5 text-[#86868B]">{c.commercial || '—'}</td><td className="px-5 py-2.5">{c.status}</td></tr>))}</tbody>
+                <table className="w-full text-[12.5px]"><thead className="text-[#86868B] text-[10px] uppercase tracking-wider"><tr className="border-b border-black/5"><th className="text-left px-5 py-2.5">Client</th><th className="text-left px-5 py-2.5">Emails (compta / gérant)</th><th className="text-left px-5 py-2.5">OPCO</th><th className="text-left px-5 py-2.5">Agence</th><th className="text-left px-5 py-2.5">Commercial</th><th className="text-left px-5 py-2.5">Statut</th><th className="text-right px-5 py-2.5">Action</th></tr></thead>
+                  <tbody className="divide-y divide-black/5">{clientsList.map((c) => (<tr key={c.id} className="hover:bg-black/[0.02]"><td className="px-5 py-2.5"><p className="font-medium text-[#1D1D1F]">{c.denom || '-'}</p><p className="text-[#86868B] text-[11px]">{c.email || c.siret || ''}</p></td><td className="px-5 py-2.5 text-[#86868B] text-[11px]"><p>{c.accountantEmail ? `Compta : ${c.accountantEmail}` : '—'}</p><p>{c.managerEmail ? `Gérant : ${c.managerEmail}` : '—'}</p></td><td className="px-5 py-2.5 text-[#86868B]">{c.opco || '-'}</td><td className="px-5 py-2.5 text-[#86868B]">{c.agence}</td><td className="px-5 py-2.5 text-[#86868B]">{c.commercial || '—'}</td><td className="px-5 py-2.5">{c.status}</td><td className="px-5 py-2.5 text-right"><button onClick={() => setEditClient({ id: c.id, denom: c.denom || '', email: c.email || '', accountantEmail: c.accountantEmail || '', managerEmail: c.managerEmail || '', siret: c.siret || '', opco: c.opco || '' })} className="px-3 py-1 rounded-lg border border-black/10 text-[11.5px] font-medium hover:bg-black/[0.04]">Modifier</button></td></tr>))}</tbody>
                 </table>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Édition d'un client (superadmin) : nom + emails + SIRET + OPCO. @Rabah 2026-06-18 */}
+      {editClient && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto" onClick={() => setEditClient(null)}>
+          <div className="w-full max-w-md my-10 bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3 border-b border-black/10"><h3 className="text-[15px] font-bold">Modifier le client</h3><button onClick={() => setEditClient(null)} className="h-8 w-8 rounded-full hover:bg-black/[0.05] inline-flex items-center justify-center"><X className="h-4 w-4" /></button></div>
+            <div className="px-5 py-5 space-y-3">
+              <div><label className="block text-[11px] uppercase tracking-wider font-bold text-[#86868B] mb-1">Nom du client</label><input value={editClient.denom} onChange={(e) => setEditClient({ ...editClient, denom: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-black/10 text-[13px] focus:outline-none focus:border-black/30" /></div>
+              <div><label className="block text-[11px] uppercase tracking-wider font-bold text-[#86868B] mb-1">Email principal</label><input type="email" value={editClient.email} onChange={(e) => setEditClient({ ...editClient, email: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-black/10 text-[13px] focus:outline-none focus:border-black/30" /></div>
+              <div><label className="block text-[11px] uppercase tracking-wider font-bold text-[#86868B] mb-1">Email comptable</label><input type="email" value={editClient.accountantEmail} onChange={(e) => setEditClient({ ...editClient, accountantEmail: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-black/10 text-[13px] focus:outline-none focus:border-black/30" /></div>
+              <div><label className="block text-[11px] uppercase tracking-wider font-bold text-[#86868B] mb-1">Email gérant (signature convention)</label><input type="email" value={editClient.managerEmail} onChange={(e) => setEditClient({ ...editClient, managerEmail: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-black/10 text-[13px] focus:outline-none focus:border-black/30" /><p className="text-[10.5px] text-[#86868B] mt-1">La convention est envoyée au gérant si renseigné, sinon à l&apos;email principal.</p></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="block text-[11px] uppercase tracking-wider font-bold text-[#86868B] mb-1">SIRET</label><input value={editClient.siret} onChange={(e) => setEditClient({ ...editClient, siret: e.target.value })} inputMode="numeric" className="w-full px-3 py-2 rounded-lg border border-black/10 text-[13px] font-mono focus:outline-none focus:border-black/30" /></div>
+                <div><label className="block text-[11px] uppercase tracking-wider font-bold text-[#86868B] mb-1">OPCO</label><input value={editClient.opco} onChange={(e) => setEditClient({ ...editClient, opco: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-black/10 text-[13px] focus:outline-none focus:border-black/30" /></div>
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <button onClick={() => setEditClient(null)} className="px-4 py-2 rounded-lg border border-black/10 text-[12.5px]">Annuler</button>
+                <button onClick={saveClient} disabled={savingClient} className="px-4 py-2 rounded-lg bg-[#0066CC] text-white text-[12.5px] font-semibold hover:bg-[#0077ED] disabled:opacity-60">{savingClient ? 'Enregistrement…' : 'Enregistrer'}</button>
+              </div>
             </div>
           </div>
         </div>
@@ -555,8 +615,48 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
         </div>
       )}
 
+      {/* Monter un dossier OPCO en interne (DDN) : le client valide depuis son côté via lien sécurisé.
+          Pour les clients qui ne veulent pas confier leurs accès OPCO. @Rabah 2026-06-21 */}
+      <div id="sec-mount" className="scroll-mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
+        <div className="px-5 py-3 border-b border-black/10 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <FileSignature className="h-4 w-4 text-[#0066CC]" />
+            <h3 className="font-semibold text-[14px]">Monter un dossier (Delivery Digital)</h3>
+            {signRequests.length > 0 && <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FF9F0A] text-white text-[11px] font-bold">{signRequests.length} en attente de validation</span>}
+          </div>
+          <button onClick={() => setShowMount(true)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0066CC] text-white text-[12.5px] font-semibold hover:bg-[#0077ED]"><Plus className="h-3.5 w-3.5" /> Monter un dossier</button>
+        </div>
+        <div className="px-5 py-3 text-[12.5px] text-[#86868B] border-b border-black/5">Pour les clients qui ne veulent pas donner leurs accès OPCO : vous montez le dossier ici, le client reçoit un lien sécurisé et <strong>valide en signant</strong> sa convention. Le dossier apparaît ensuite dans « Dossiers OPCO reçus ».</div>
+        {signRequests.length === 0 ? (
+          <p className="px-5 py-6 text-center text-[13px] text-[#86868B]">Aucun dossier en attente de validation client.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-[12.5px]">
+              <thead className="text-[#86868B] text-[10px] uppercase tracking-wider"><tr className="border-b border-black/5"><th className="text-left px-5 py-2.5">Client</th><th className="text-left px-5 py-2.5">Formation</th><th className="text-left px-5 py-2.5">Destinataire</th><th className="text-left px-5 py-2.5">Agence</th><th className="text-left px-5 py-2.5">Envoyé le</th><th className="text-right px-5 py-2.5">Actions</th></tr></thead>
+              <tbody className="divide-y divide-black/5">{signRequests.map((s) => (
+                <tr key={s.id} className="hover:bg-black/[0.02] align-top">
+                  <td className="px-5 py-2.5"><p className="font-medium text-[#1D1D1F]">{s.denom || '-'}</p><p className="text-[#86868B] text-[11px]">{(s.salaries || 0)} stagiaire(s) · {(s.amountHT || 0).toLocaleString('fr-FR')} € HT</p></td>
+                  <td className="px-5 py-2.5 text-[#86868B]">{s.formationTitle || '-'}</td>
+                  <td className="px-5 py-2.5 text-[#86868B] text-[11px]">{s.recipient || '-'}</td>
+                  <td className="px-5 py-2.5 text-[#86868B]">{s.agencyName || <span className="text-[#0066CC]">DDN direct</span>}</td>
+                  <td className="px-5 py-2.5 text-[#86868B] text-[11px]">{s.createdAt ? new Date(s.createdAt).toLocaleDateString('fr-FR') : '-'}{s.expired && <span className="block text-[#FF3B30]">expiré</span>}</td>
+                  <td className="px-5 py-2.5 text-right whitespace-nowrap">
+                    <button onClick={() => navigator.clipboard?.writeText(s.link)} title="Copier le lien" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-black/10 text-[11px] mr-1.5 hover:bg-black/[0.03]"><Copy className="h-3 w-3" /> Lien</button>
+                    <button onClick={() => resendSignRequest(s.id)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#0066CC] text-white text-[11px] font-semibold mr-1.5"><Send className="h-3 w-3" /> Relancer</button>
+                    <button onClick={() => cancelSignRequest(s.id)} title="Annuler la demande" className="text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded p-1"><Trash2 className="h-3.5 w-3.5" /></button>
+                  </td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Modal : monter un dossier (DDN) */}
+      {showMount && <MountDossierModal agencies={list} headers={headers} onClose={() => setShowMount(false)} onDone={() => { setShowMount(false); load(); }} />}
+
       {/* Dossiers OPCO recus : statut jusqu'au paiement + versement commission (multi-select) */}
-      <div className="rounded-2xl bg-white border border-black/10 overflow-hidden">
+      <div id="sec-dossiers" className="scroll-mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
         <div className="px-5 py-3 border-b border-black/10 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-[14px]">Dossiers OPCO reçus</h3>
@@ -575,7 +675,7 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
             {(() => {
               // Regroupement par agence : on voit tout par agence (totaux + RIB + dossiers).
               const groups = new Map<string, typeof dossiers>();
-              dossiers.forEach((d) => { const k = d.agencyName || '—'; if (!groups.has(k)) groups.set(k, []); groups.get(k)!.push(d); });
+              dossiers.forEach((d) => { const k = d.agencyName || 'Delivery Digital (direct)'; if (!groups.has(k)) groups.set(k, []); groups.get(k)!.push(d); });
               return [...groups.entries()].map(([agencyName, ds]) => {
                 const total = ds.reduce((s, d) => s + (d.commission || 0), 0);
                 const due = ds.filter((d) => d.status !== 'paid').reduce((s, d) => s + (d.commission || 0), 0);
@@ -593,7 +693,7 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
                           {ds.map((d) => (
                             <tr key={d._id} className={`hover:bg-black/[0.02] ${selDoss.has(d._id) ? 'bg-[#34C759]/5' : ''}`}>
                               <td className="px-3 py-2.5"><input type="checkbox" checked={selDoss.has(d._id)} onChange={() => toggleSel(d._id)} /></td>
-                              <td className="px-3 py-2.5"><button onClick={() => setViewDossier(d)} className="text-left"><p className="font-semibold text-[#1D1D1F] underline decoration-dotted underline-offset-2 hover:text-[#0A84FF]">{d.denom || 'Client'}</p><p className="text-[#86868B] text-[11px]">{d.formationTitle} · {(d.salaries || []).length} stagiaire(s)</p></button></td>
+                              <td className="px-3 py-2.5"><button onClick={() => setViewDossier(d)} className="text-left"><p className="font-semibold text-[#1D1D1F] underline decoration-dotted underline-offset-2 hover:text-[#0A84FF]">{d.denom || 'Client'}{d.mountedByAdmin && <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full bg-[#0066CC]/10 text-[#0066CC] text-[9.5px] font-bold align-middle">Monté DDN</span>}</p><p className="text-[#86868B] text-[11px]">{d.formationTitle} · {(d.salaries || []).length} stagiaire(s)</p></button></td>
                               <td className="px-3 py-2.5">{(d.amountHT || 0).toLocaleString('fr-FR')} €</td>
                               <td className="px-3 py-2.5 font-semibold text-[#1D1D1F]">{(d.commission || 0).toLocaleString('fr-FR')} €</td>
                               <td className="px-3 py-2.5">
@@ -651,6 +751,33 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
           )}
           {unavail.length === 0 && <p className="text-[12.5px] text-[#86868B] mt-3">Aucun jour bloqué : toutes les sessions lun→sam sont proposées.</p>}
         </div>
+      </div>
+
+      {/* Clients (leads) enregistres par les agences - affiches directement sur la page admin. @Rabah 2026-06-19 */}
+      <div className="rounded-2xl bg-white border border-black/10 overflow-hidden">
+        <div className="px-5 py-3 border-b border-black/10"><h3 className="font-semibold text-[14px]">Clients enregistrés par les agences ({clientsList.length})</h3><p className="text-[12px] text-[#86868B] mt-0.5">Tous les clients créés par les agences et commerciaux. Modifiez le nom ou les e-mails (comptable / gérant) si besoin.</p></div>
+        {clientsList.length === 0 ? (
+          <p className="px-5 py-8 text-center text-[13px] text-[#86868B]">Aucun client enregistré pour l'instant.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-[12.5px]">
+              <thead className="text-[#86868B] text-[10px] uppercase tracking-wider">
+                <tr className="border-b border-black/5"><th className="text-left px-5 py-2.5">Client</th><th className="text-left px-5 py-2.5">Emails (compta / gérant)</th><th className="text-left px-5 py-2.5">OPCO</th><th className="text-left px-5 py-2.5">Agence</th><th className="text-left px-5 py-2.5">Commercial</th><th className="text-left px-5 py-2.5">Statut</th><th className="text-right px-5 py-2.5">Action</th></tr>
+              </thead>
+              <tbody className="divide-y divide-black/5">{clientsList.map((c) => (
+                <tr key={c.id} className="hover:bg-black/[0.02] align-top">
+                  <td className="px-5 py-2.5"><p className="font-medium text-[#1D1D1F]">{c.denom || '-'}</p><p className="text-[#86868B] text-[11px]">{c.email || c.siret || ''}</p></td>
+                  <td className="px-5 py-2.5 text-[#86868B] text-[11px]"><p>{c.accountantEmail ? `Compta : ${c.accountantEmail}` : '-'}</p><p>{c.managerEmail ? `Gérant : ${c.managerEmail}` : '-'}</p></td>
+                  <td className="px-5 py-2.5 text-[#86868B]">{c.opco || '-'}</td>
+                  <td className="px-5 py-2.5 text-[#86868B]">{c.agence}</td>
+                  <td className="px-5 py-2.5 text-[#86868B]">{c.commercial || '-'}</td>
+                  <td className="px-5 py-2.5">{c.status}</td>
+                  <td className="px-5 py-2.5 text-right"><button onClick={() => setEditClient({ id: c.id, denom: c.denom || '', email: c.email || '', accountantEmail: c.accountantEmail || '', managerEmail: c.managerEmail || '', siret: c.siret || '', opco: c.opco || '' })} className="px-3 py-1 rounded-lg border border-black/10 text-[11.5px] font-medium hover:bg-black/[0.04]">Modifier</button></td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Acces clients recus (demandes envoyees par les agences) */}
@@ -866,4 +993,163 @@ function printConvention(d: PrintDossier) {
       <div><p class="muted">Pour le bénéficiaire</p><p><b>${esc(d.denom)}</b></p><p>${esc(d.signedBy || '')}${d.signedFunction ? ' (' + esc(d.signedFunction) + ')' : ''}</p>${clientSig}<p class="muted" style="font-size:10px">Signé électroniquement${d.signedRemote ? ' à distance' : ''}${d.signedIp ? ' · IP ' + esc(d.signedIp) : ''} · le ${dateSign}</p></div>
       <div><p class="muted">Pour l'organisme de formation</p><p><b>DELIVERY Digital Nice</b></p><img src="https://deliverydigital.fr/uploads/assets/signature-dd.png" alt="Signature" style="max-height:48px;margin-top:6px" onerror="this.style.display='none'" /><p class="muted" style="font-size:10px">Signé · le ${dateSign}</p></div>
     </div>`);
+}
+
+/* ============================================================================
+ * Monter un dossier OPCO depuis l'espace DDN (super admin).
+ * Le client validera depuis son côté via le lien sécurisé /signer/{token}.
+ * Agence optionnelle (commission si rattachée, sinon dossier 100% DDN).
+ * @author Rabah Ziane · 2026-06-21
+ * ========================================================================== */
+type MountAgency = { _id: string; name: string };
+type MountSalarie = { firstname: string; lastname: string; email: string; poste: string };
+function MountDossierModal({ agencies, headers, onClose, onDone }: { agencies: MountAgency[]; headers: () => Record<string, string>; onClose: () => void; onDone: () => void }) {
+  const [agencyId, setAgencyId] = useState('');
+  const [denom, setDenom] = useState('');
+  const [siret, setSiret] = useState('');
+  const [opco, setOpco] = useState('');
+  const [addr, setAddr] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [managerEmail, setManagerEmail] = useState('');
+  const [formationId, setFormationId] = useState('');
+  const [formationTitle, setFormationTitle] = useState('');
+  const [sessionName, setSessionName] = useState('');
+  const [startAt, setStartAt] = useState('');
+  const [endAt, setEndAt] = useState('');
+  const [salaries, setSalaries] = useState<MountSalarie[]>([{ firstname: '', lastname: '', email: '', poste: '' }]);
+  const [amountHT, setAmountHT] = useState('');
+  const [sendNow, setSendNow] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const [result, setResult] = useState<{ link: string; emailSent: boolean; recipient: string } | null>(null);
+
+  const nbSal = salaries.filter((s) => s.firstname && s.lastname).length;
+  const selForm = FORMATIONS.find((f) => f.id === formationId);
+  // Montant auto : prix HT de la formation × nb stagiaires (modifiable). 525 € par défaut.
+  const autoAmount = (selForm?.priceHT || 525) * Math.max(1, nbSal);
+  const effectiveAmount = amountHT !== '' ? Number(amountHT) : autoAmount;
+
+  const onPickFormation = (id: string) => {
+    setFormationId(id);
+    const f = FORMATIONS.find((x) => x.id === id);
+    if (f) { setFormationTitle(f.title); setAmountHT(''); }
+  };
+  const setSal = (i: number, k: keyof MountSalarie, v: string) => setSalaries((arr) => arr.map((s, j) => j === i ? { ...s, [k]: v } : s));
+  const addSal = () => setSalaries((arr) => [...arr, { firstname: '', lastname: '', email: '', poste: '' }]);
+  const rmSal = (i: number) => setSalaries((arr) => arr.length > 1 ? arr.filter((_, j) => j !== i) : arr);
+
+  const inp = 'w-full px-3 py-2 rounded-lg border border-black/10 text-[13px] focus:outline-none focus:border-black/30';
+  const lbl = 'block text-[11px] uppercase tracking-wider font-bold text-[#86868B] mb-1';
+
+  const submit = async () => {
+    setErr('');
+    if (!denom.trim()) { setErr('Le nom du client est requis.'); return; }
+    const recipient = (managerEmail || clientEmail).trim();
+    if (!recipient) { setErr('Un email (gérant ou principal) est requis pour envoyer le lien de validation.'); return; }
+    const sal = salaries.filter((s) => s.firstname.trim() && s.lastname.trim());
+    if (sal.length === 0) { setErr('Ajoutez au moins un stagiaire (prénom + nom).'); return; }
+    setBusy(true);
+    try {
+      const r = await fetch('/api/admin/agencies/dossiers/mount', {
+        method: 'POST', headers: headers(),
+        body: JSON.stringify({
+          agencyId: agencyId || undefined, denom: denom.trim(), siret: siret.trim() || undefined, opco: opco.trim() || undefined, addr: addr.trim() || undefined,
+          clientEmail: clientEmail.trim() || undefined, managerEmail: managerEmail.trim() || undefined,
+          formationTitle: formationTitle.trim() || (selForm?.title) || undefined, sessionName: sessionName.trim() || undefined,
+          startAt: startAt || undefined, endAt: endAt || undefined,
+          salaries: sal, amountHT: effectiveAmount, noEmail: !sendNow,
+        }),
+      });
+      const j = await r.json();
+      if (!j.ok) { setErr(j.error === 'client_email_required' ? 'Email client requis.' : j.error === 'salaries_required' ? 'Au moins un stagiaire requis.' : (j.error || 'Erreur')); return; }
+      setResult({ link: j.link, emailSent: j.emailSent, recipient: j.recipient });
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="w-full max-w-2xl my-8 bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-black/10">
+          <div><p className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#86868B]">Dossier monté par Delivery Digital</p><h3 className="text-[15px] font-bold text-[#1D1D1F]">Monter un dossier OPCO</h3></div>
+          <button onClick={onClose} className="h-8 w-8 rounded-full hover:bg-black/[0.05] inline-flex items-center justify-center"><X className="h-4 w-4" /></button>
+        </div>
+
+        {result ? (
+          <div className="px-5 py-6 space-y-4">
+            <div className="rounded-xl border-2 border-[#34C759]/40 bg-[#34C759]/5 p-4 text-[13px]">
+              <p className="font-semibold text-[#1D1D1F]">Dossier monté ✓</p>
+              <p className="text-[#3a3a3c] mt-1">{result.emailSent ? <>Un email de validation a été envoyé à <strong>{result.recipient}</strong>. Le client valide en signant sa convention.</> : <>Lien de validation généré (email non envoyé). Transmettez-le au client :</>}</p>
+              <div className="mt-2 flex items-center gap-2">
+                <code className="flex-1 px-2 py-1.5 rounded-md bg-white border border-black/10 text-[11.5px] break-all">{result.link}</code>
+                <button onClick={() => navigator.clipboard?.writeText(result.link)} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-[#1D1D1F] text-white text-[11.5px]"><Copy className="h-3 w-3" /> Copier</button>
+              </div>
+            </div>
+            <p className="text-[12px] text-[#86868B]">Tant que le client n'a pas validé, le dossier reste dans « En attente de validation client ». Après signature, il bascule dans « Dossiers OPCO reçus ».</p>
+            <div className="flex justify-end"><button onClick={onDone} className="px-4 py-2 rounded-full bg-[#0066CC] text-white text-[12.5px] font-semibold hover:bg-[#0077ED]">Terminé</button></div>
+          </div>
+        ) : (
+          <div className="px-5 py-5 space-y-4 max-h-[68vh] overflow-y-auto">
+            <div>
+              <label className={lbl}>Agence rattachée (optionnel)</label>
+              <select value={agencyId} onChange={(e) => setAgencyId(e.target.value)} className={inp}>
+                <option value="">Aucune - dossier 100% Delivery Digital</option>
+                {agencies.map((a) => <option key={a._id} value={a._id}>{a.name}</option>)}
+              </select>
+              <p className="text-[10.5px] text-[#86868B] mt-1">Si une agence est choisie, sa commission s'applique normalement. Sinon, dossier en direct (sans commission).</p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div><label className={lbl}>Nom du client *</label><input value={denom} onChange={(e) => setDenom(e.target.value)} className={inp} placeholder="Raison sociale" /></div>
+              <div><label className={lbl}>SIRET</label><input value={siret} onChange={(e) => setSiret(e.target.value)} inputMode="numeric" className={`${inp} font-mono`} /></div>
+              <div><label className={lbl}>OPCO</label><input value={opco} onChange={(e) => setOpco(e.target.value)} className={inp} placeholder="AKTO, OPCO EP…" /></div>
+              <div><label className={lbl}>Adresse</label><input value={addr} onChange={(e) => setAddr(e.target.value)} className={inp} /></div>
+              <div><label className={lbl}>Email principal</label><input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} className={inp} /></div>
+              <div><label className={lbl}>Email gérant (signataire)</label><input type="email" value={managerEmail} onChange={(e) => setManagerEmail(e.target.value)} className={inp} /></div>
+            </div>
+            <p className="text-[10.5px] text-[#86868B] -mt-2">Le lien de validation est envoyé au gérant si renseigné, sinon à l'email principal.</p>
+
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
+                <label className={lbl}>Formation</label>
+                <select value={formationId} onChange={(e) => onPickFormation(e.target.value)} className={inp}>
+                  <option value="">Choisir au catalogue ou saisir un titre…</option>
+                  {FORMATIONS.map((f) => <option key={f.id} value={f.id}>{f.title} ({f.hours}h · {f.priceHT}€)</option>)}
+                </select>
+              </div>
+              <div className="sm:col-span-2"><label className={lbl}>Titre (si hors catalogue)</label><input value={formationTitle} onChange={(e) => setFormationTitle(e.target.value)} className={inp} /></div>
+              <div><label className={lbl}>Nom de session</label><input value={sessionName} onChange={(e) => setSessionName(e.target.value)} className={inp} placeholder="Session 1…" /></div>
+              <div><label className={lbl}>Montant HT (€)</label><input type="number" value={amountHT} onChange={(e) => setAmountHT(e.target.value)} placeholder={String(autoAmount)} className={inp} /><p className="text-[10.5px] text-[#86868B] mt-1">Auto : {autoAmount.toLocaleString('fr-FR')} € ({selForm?.priceHT || 525} € × {Math.max(1, nbSal)})</p></div>
+              <div><label className={lbl}>Début</label><input type="date" value={startAt} onChange={(e) => setStartAt(e.target.value)} className={inp} /></div>
+              <div><label className={lbl}>Fin</label><input type="date" value={endAt} onChange={(e) => setEndAt(e.target.value)} className={inp} /></div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2"><label className={lbl + ' mb-0'}>Stagiaires *</label><button onClick={addSal} className="inline-flex items-center gap-1 text-[11.5px] text-[#0066CC] font-semibold"><Plus className="h-3.5 w-3.5" /> Ajouter</button></div>
+              <div className="space-y-2">
+                {salaries.map((s, i) => (
+                  <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center">
+                    <input value={s.firstname} onChange={(e) => setSal(i, 'firstname', e.target.value)} placeholder="Prénom" className={inp} />
+                    <input value={s.lastname} onChange={(e) => setSal(i, 'lastname', e.target.value)} placeholder="Nom" className={inp} />
+                    <input value={s.email} onChange={(e) => setSal(i, 'email', e.target.value)} placeholder="Email (optionnel)" className={inp} />
+                    <button onClick={() => rmSal(i)} className="text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded p-1.5" title="Retirer"><Trash2 className="h-3.5 w-3.5" /></button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" checked={sendNow} onChange={(e) => setSendNow(e.target.checked)} className="w-4 h-4" />
+              <span className="inline-flex items-center gap-1.5 text-[12.5px] text-[#3a3a3c]"><Mail className="h-3.5 w-3.5 text-[#86868B]" /> Envoyer tout de suite le lien de validation au client</span>
+            </label>
+
+            {err && <p className="text-[12.5px] text-[#FF3B30]">{err}</p>}
+            <div className="flex justify-end gap-2 pt-1">
+              <button onClick={onClose} className="px-4 py-2 rounded-full border border-black/10 text-[12.5px]">Annuler</button>
+              <button onClick={submit} disabled={busy} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0066CC] text-white text-[12.5px] font-semibold hover:bg-[#0077ED] disabled:opacity-60">{busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileSignature className="h-3.5 w-3.5" />} Monter et envoyer au client</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

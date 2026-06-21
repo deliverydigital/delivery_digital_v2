@@ -12,6 +12,8 @@ interface Quote {
   _id: string;
   ref: string;
   client: Client;
+  agencyName?: string;      // attribution : devis monté par une agence partenaire (revente IT)
+  commercialName?: string;  // sous-commercial de l'agence, le cas échéant
   title: string;
   intro?: string;
   lines: Line[];
@@ -249,7 +251,7 @@ export default function QuoteAdmin({ secret }: { secret: string }) {
                 <tr key={q._id} className="border-b border-black/5 last:border-0 hover:bg-[#FAFAFA] cursor-pointer" onClick={() => setEditing(q)}>
                   <td className="px-4 py-3 font-mono text-[12px] text-[#1D1D1F]">{q.ref}</td>
                   <td className="px-3 py-3">
-                    <div className="font-semibold text-[#1D1D1F]">{q.client.name}</div>
+                    <div className="font-semibold text-[#1D1D1F] flex items-center gap-1.5">{q.client.name}{q.agencyName && <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-[#0066CC]/10 text-[#0066CC] text-[9.5px] font-bold" title={`Devis monté par l'agence ${q.agencyName}${q.commercialName ? ' · ' + q.commercialName : ''}`}>Agence : {q.agencyName}{q.commercialName ? ` · ${q.commercialName}` : ''}</span>}</div>
                     <div className="text-[11.5px] text-[#86868B]">{q.client.company || q.client.email}</div>
                   </td>
                   <td className="px-3 py-3 text-[#1D1D1F] truncate max-w-[200px]">{q.title}</td>

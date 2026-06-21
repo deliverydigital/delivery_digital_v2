@@ -82,6 +82,12 @@ const userSchema = new Schema({
   // === Champs FORMATEUR (role 'trainer') === @author Rabah Ziane - 2026-06-06
   hourlyRate: { type: Number, default: 0 },
   trainerSkills: { type: [String], default: [] },
+  // Disponibilités RÉCURRENTES du formateur : jours de semaine travaillés (0=dim ... 6=sam) +
+  // créneaux horaires d'1h. Sert à générer les sessions assignables. @author Rabah Ziane - 2026-06-19
+  recurringAvailability: {
+    days: { type: [Number], default: [] }, // 1=lun ... 6=sam
+    slots: { type: [{ from: String, to: String }], default: [] }, // ex. [{from:'16:00',to:'17:00'}]
+  },
   // Préférences de rappel configurables par le formateur. @author Rabah Ziane - 2026-06-07
   reminderPrefs: {
     course48: { type: Boolean, default: true },

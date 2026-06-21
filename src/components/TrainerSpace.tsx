@@ -24,6 +24,7 @@ type TabKey = 'cours' | 'dispo' | 'formations' | 'fonds' | 'instructions' | 'pro
 type Trainer = {
   id: string; name: string; email: string; phone: string;
   hourlyRate: number; trainerSkills: string[];
+  recurringAvailability?: { days: number[]; slots: { from: string; to: string }[] };
   reminderPrefs?: { course48: boolean; course24: boolean; course1: boolean; weeklyAvailability: boolean; weeklyDay?: number; weeklyHour?: number };
   iban: string; bic: string; accountHolder: string; bankCountry: string; bankData: any;
   ribPdfUrl: string; bankValidated: boolean;
@@ -360,6 +361,11 @@ function Info({ icon, label, value }: { icon: React.ReactNode; label: string; va
 type Slot = { from: string; to: string };
 type Unav = { id: string; day: string; kind: 'full' | 'am' | 'pm' | 'hours'; hours: Slot[]; label?: string };
 const KIND_LABEL: Record<string, string> = { full: 'Journée entière', am: 'Matin', pm: 'Après-midi', hours: 'Créneaux' };
+// Dispos récurrentes : jours de semaine (0=dim ... 6=sam) + créneaux d'1h sélectionnables. @Rabah 2026-06-19
+const REC_WEEKDAYS: { n: number; l: string }[] = [{ n: 1, l: 'Lun' }, { n: 2, l: 'Mar' }, { n: 3, l: 'Mer' }, { n: 4, l: 'Jeu' }, { n: 5, l: 'Ven' }, { n: 6, l: 'Sam' }, { n: 0, l: 'Dim' }];
+const REC_HOUR_SLOTS: Slot[] = Array.from({ length: 13 }, (_, i) => { const h = 8 + i; return { from: `${String(h).padStart(2, '0')}:00`, to: `${String(h + 1).padStart(2, '0')}:00` }; }); // 8h-9h ... 20h-21h
+const slotKey = (s: Slot) => `${s.from}-${s.to}`;
+const slotShort = (s: Slot) => `${parseInt(s.from, 10)}h-${parseInt(s.to, 10)}h`;
 function unavSummary(u: Unav) {
   if (u.kind === 'hours') return (u.hours || []).map((h) => `${h.from}-${h.to}`).join(', ') || 'Créneaux';
   return KIND_LABEL[u.kind] || 'Journée entière';
@@ -369,6 +375,21 @@ function DispoTab({ auth, authJson, trainer, onChanged }: { auth: () => any; aut
   const [days, setDays] = useState<Unav[]>([]);
   const [cursor, setCursor] = useState(() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; });
   const [editDay, setEditDay] = useState<{ iso: string; current: Unav | null } | null>(null);
+  // Dispos récurrentes (jours + créneaux d'1h). @Rabah 2026-06-19
+  const [recDays, setRecDays] = useState<number[]>(trainer.recurringAvailability?.days || []);
+  const [recSlots, setRecSlots] = useState<Slot[]>(trainer.recurringAvailability?.slots || []);
+  const [savingRec, setSavingRec] = useState(false);
+  const [recSaved, setRecSaved] = useState(false);
+  const toggleRecDay = (n: number) => setRecDays((d) => d.includes(n) ? d.filter((x) => x !== n) : [...d, n].sort((a, b) => a - b));
+  const toggleRecSlot = (s: Slot) => setRecSlots((arr) => arr.some((x) => slotKey(x) === slotKey(s)) ? arr.filter((x) => slotKey(x) !== slotKey(s)) : [...arr, s].sort((a, b) => a.from.localeCompare(b.from)));
+  const saveRec = async () => {
+    setSavingRec(true); setRecSaved(false);
+    try {
+      const r = await fetch('/api/trainer/self/recurring-availability', { method: 'PUT', headers: authJson(), body: JSON.stringify({ days: recDays, slots: recSlots }) });
+      const j = await r.json();
+      if (j.ok) { setRecSaved(true); onChanged(); } else alert('Erreur : ' + (j.error || 'enregistrement impossible'));
+    } finally { setSavingRec(false); }
+  };
   const load = useCallback(async () => {
     const j = await fetch('/api/trainer/self/availability', { headers: auth() }).then((r) => r.json());
     setDays((j.days || []).map((d: any) => ({ ...d, kind: d.kind || 'full', hours: d.hours || [] })));
@@ -392,6 +413,28 @@ function DispoTab({ auth, authJson, trainer, onChanged }: { auth: () => any; aut
   const todayIso = new Date().toISOString().slice(0, 10);
   return (
     <div className="space-y-4">
+      {/* Disponibilités récurrentes : jours de semaine + créneaux d'1h. @Rabah 2026-06-19 */}
+      <section className="rounded-2xl bg-[#181A20] border border-white/10 p-5">
+        <h2 className="text-[15px] font-bold">Mes disponibilités récurrentes</h2>
+        <p className="text-[12.5px] text-white/55 mt-1 mb-4">Indiquez les jours et les créneaux d'1h où vous pouvez animer une visioconférence. C'est sur cette base que les sessions vous sont proposées.</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-white/45 mb-2">Jours</p>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {REC_WEEKDAYS.map((d) => (
+            <button key={d.n} type="button" onClick={() => toggleRecDay(d.n)} className={`px-3 py-1.5 rounded-lg border text-[12.5px] font-semibold transition ${recDays.includes(d.n) ? 'border-[#3DD68C] bg-[#3DD68C]/15 text-[#3DD68C]' : 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10'}`}>{d.l}</button>
+          ))}
+        </div>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-white/45 mb-2">Créneaux d'1h</p>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {REC_HOUR_SLOTS.map((s) => (
+            <button key={slotKey(s)} type="button" onClick={() => toggleRecSlot(s)} className={`px-3 py-1.5 rounded-lg border text-[12px] transition ${recSlots.some((x) => slotKey(x) === slotKey(s)) ? 'border-[#3DD68C] bg-[#3DD68C]/15 text-[#3DD68C]' : 'border-white/10 bg-white/5 text-white/55 hover:bg-white/10'}`}>{slotShort(s)}</button>
+          ))}
+        </div>
+        <div className="flex items-center gap-3">
+          <button onClick={saveRec} disabled={savingRec} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0066CC] text-white text-[12.5px] font-semibold hover:bg-[#0077ED] disabled:opacity-60">{savingRec ? 'Enregistrement…' : 'Enregistrer mes créneaux'}</button>
+          {recSaved && !savingRec && <span className="text-[12px] text-[#3DD68C]">Créneaux enregistrés ✓</span>}
+          <span className="text-[11.5px] text-white/40">{recDays.length} jour(s) · {recSlots.length} créneau(x)</span>
+        </div>
+      </section>
       <RemindersCard trainer={trainer} authJson={authJson} onChanged={onChanged} />
       <div className="grid lg:grid-cols-[1fr_300px] gap-4">
       <section className="rounded-2xl bg-[#181A20] border border-white/10 p-5">

@@ -22,7 +22,10 @@ const MARKETS = {
   mc: { gl: 'fr', hl: 'fr', google: 'google.fr', location: 'Monaco' },
 };
 
-import { scrapeGoogleSerp } from "./googleScraper.js";
+// Import LAZY : googleScraper -> playwright-core (dépendance optionnelle non installée sur ce
+// serveur). Un import statique fait planter tout le backend au boot si playwright-core manque.
+// On charge donc le module seulement quand le provider 'playwright' est réellement utilisé,
+// comme le fait déjà server/routes/backlinks.js. @author Rabah Ziane - 2026-06-18
 
 export function isSerpConfigured() {
   return true; // playwright fallback toujours dispo
@@ -108,6 +111,9 @@ export async function querySerp(keyword, market = 'fr', n = 10) {
     return r.ok ? { ...r, provider: 'google-cse' } : r;
   }
   if (provider === 'playwright') {
+    let scrapeGoogleSerp;
+    try { ({ scrapeGoogleSerp } = await import('./googleScraper.js')); }
+    catch (e) { return { ok: false, status: 'playwright_unavailable', message: e.message }; }
     const r = await scrapeGoogleSerp(keyword, market, n);
     return r.ok ? { ...r, provider: 'playwright' } : r;
   }

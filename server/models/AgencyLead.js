@@ -10,6 +10,11 @@ const schema = new Schema({
   commercialId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
   commercialName: String,
   email: { type: String, lowercase: true, trim: true },
+  // Emails dédiés (optionnels) : comptable du client + gérant (signataire de la convention).
+  // La convention de formation est envoyée au gérant si renseigné, sinon à l'email principal.
+  // @author Rabah Ziane - 2026-06-18
+  accountantEmail: { type: String, lowercase: true, trim: true },
+  managerEmail: { type: String, lowercase: true, trim: true },
   denom: { type: String, trim: true },
   siret: { type: String, trim: true },
   opco: { type: String, trim: true },
@@ -17,6 +22,11 @@ const schema = new Schema({
   // Suivi / rappel : ce qu'on attend (ex. "courrier AKTO") + date de rappel (notification agence).
   waitingNote: { type: String, trim: true },
   reminderAt: { type: Date },
+  // Suivi annuel : le client a-t-il deja fait une formation financee cette annee ?
+  // Si non -> budget OPCO disponible a 100% pour l'annee en cours. @author Rabah Ziane - 2026-06-18
+  formationDoneThisYear: { type: Boolean, default: false },
+  // Nombre de salaries de l'ENTREPRISE cliente (distinct de dossier.salaries = stagiaires inscrits).
+  companyEmployees: { type: Number },
   status: { type: String, enum: ['new', 'verified', 'dossier', 'converted', 'lost'], default: 'new', index: true },
   notes: String,
   hidden: { type: Boolean, default: false }, // suppression douce (masqué de la liste)

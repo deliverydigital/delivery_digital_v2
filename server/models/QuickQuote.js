@@ -23,6 +23,12 @@ const quickQuoteSchema = new Schema({
 
   prospectId: { type: Schema.Types.ObjectId, ref: 'Prospect' },
 
+  // Attribution : devis monté par une agence partenaire (revente de services IT). Sinon = Delivery Digital. @Rabah 2026-06-21
+  agencyId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
+  agencyName: { type: String, trim: true },
+  commercialId: { type: Schema.Types.ObjectId, ref: 'User' },
+  commercialName: { type: String, trim: true },
+
   title: { type: String, default: 'Devis projet sur mesure', trim: true },
   intro: { type: String, default: '', trim: true },
   lines: { type: [lineSchema], default: [] },

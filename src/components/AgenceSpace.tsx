@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, Fragment } from 'react';
-import { Building2, Loader2, LogOut, Copy, Eye, EyeOff, KeyRound, Plus, FileText, ShieldCheck, Users, FolderCheck, Search, Wallet, X, Stamp, PenLine, Download, ExternalLink, Clock, Mail, Send, CheckCircle2, ArrowRight, Inbox } from 'lucide-react';
+import { Building2, Loader2, LogOut, Copy, Eye, EyeOff, KeyRound, Plus, FileText, ShieldCheck, Users, FolderCheck, Search, Wallet, X, Stamp, PenLine, Download, ExternalLink, Clock, Mail, Send, CheckCircle2, ArrowRight, Inbox, Trash2, Cpu } from 'lucide-react';
 import FormationWizardModal from './FormationWizardModal';
 import type { TransmitPayload, WizardEmployer } from './FormationWizardModal';
 import { FORMATIONS } from '../lib/formationCatalog';
@@ -217,9 +217,9 @@ const BANK_FIELDS_BY_COUNTRY: Record<string, { key: string; label: string; mono?
 };
 function bankFieldsFor(country: string) { return BANK_FIELDS_BY_COUNTRY[country] || IBAN_FIELDS; }
 type Commercial = { id: string; name: string; email: string; status?: string; clients: number; dossiers: number; gains: number };
-type Lead = { _id: string; email?: string; denom?: string; siret?: string; opco?: string; addr?: string; status: string; createdAt?: string; commercialId?: string; commercialName?: string; waitingNote?: string; reminderAt?: string | null };
+type Lead = { _id: string; email?: string; accountantEmail?: string; managerEmail?: string; denom?: string; siret?: string; opco?: string; addr?: string; status: string; createdAt?: string; commercialId?: string; commercialName?: string; waitingNote?: string; reminderAt?: string | null; formationDoneThisYear?: boolean; companyEmployees?: number };
 type DossierSalarie = { firstname?: string; lastname?: string; email?: string; poste?: string; type_contrat?: string; date_naissance?: string; num_secu?: string; telephone?: string };
-type Dossier = { _id: string; leadId?: string; denom?: string; siret?: string; opco?: string; addr?: string; formationTitle?: string; sessionName?: string; sessionStart?: string; sessionEnd?: string; amountHT?: number; status: string; createdAt?: string; updatedAt?: string; opcoPaid?: boolean; opcoPaidAt?: string | null; encashRequestedAt?: string | null; invoiceNumber?: string; signedBy?: string; signedFunction?: string; salaries?: DossierSalarie[] };
+type Dossier = { _id: string; leadId?: string; mountedByAdmin?: boolean; denom?: string; siret?: string; opco?: string; addr?: string; formationTitle?: string; sessionName?: string; sessionStart?: string; sessionEnd?: string; amountHT?: number; status: string; createdAt?: string; updatedAt?: string; opcoPaid?: boolean; opcoPaidAt?: string | null; encashRequestedAt?: string | null; invoiceNumber?: string; signedBy?: string; signedFunction?: string; salaries?: DossierSalarie[] };
 type Period = 'day' | 'week' | 'month' | 'all';
 const PERIOD_MS: Record<Period, number> = { day: 86400000, week: 7 * 86400000, month: 30 * 86400000, all: Infinity };
 const PERIOD_LABEL: Record<Period, string> = { day: 'Jour', week: 'Semaine', month: 'Mois', all: 'Tout' };
@@ -339,8 +339,12 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
   const [showCreate, setShowCreate] = useState(false);
   const [denom, setDenom] = useState('');
   const [email, setEmail] = useState('');
+  const [accountantEmail, setAccountantEmail] = useState(''); // email comptable du client
+  const [managerEmail, setManagerEmail] = useState(''); // email gérant (destinataire convention)
   const [siret, setSiret] = useState('');
   const [opco, setOpco] = useState('OPCO EP');
+  const [companyEmployees, setCompanyEmployees] = useState(''); // nombre de salariés de l'entreprise cliente
+  const [formationDoneThisYear, setFormationDoneThisYear] = useState(false); // formation déjà effectuée cette année ?
   const [detectedAddr, setDetectedAddr] = useState(''); // adresse établissement détectée (pour le tampon convention)
   const [creating, setCreating] = useState(false);
   const [detectMsg, setDetectMsg] = useState('');
@@ -557,9 +561,9 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     if (!denom.trim()) { alert('Nom du client requis.'); return; }
     setCreating(true);
     try {
-      const r = await fetch('/api/agency/self/leads', { method: 'POST', headers: authJson(), body: JSON.stringify({ denom: denom.trim(), email: email.trim(), siret: siret.trim(), opco: opco.trim(), addr: detectedAddr.trim() || undefined }) });
+      const r = await fetch('/api/agency/self/leads', { method: 'POST', headers: authJson(), body: JSON.stringify({ denom: denom.trim(), email: email.trim(), accountantEmail: accountantEmail.trim() || undefined, managerEmail: managerEmail.trim() || undefined, siret: siret.trim(), opco: opco.trim(), addr: detectedAddr.trim() || undefined, companyEmployees: companyEmployees.trim() || undefined, formationDoneThisYear }) });
       const j = await r.json();
-      if (j.ok) { setDenom(''); setEmail(''); setSiret(''); setShowCreate(false); load(); }
+      if (j.ok) { setDenom(''); setEmail(''); setAccountantEmail(''); setManagerEmail(''); setSiret(''); setCompanyEmployees(''); setFormationDoneThisYear(false); setShowCreate(false); load(); }
     } finally { setCreating(false); }
   }
 
@@ -578,9 +582,11 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     } finally { setAskingOpco(null); }
   }
 
-  // Enregistre le suivi/rappel d'un client (note "ce qu'on attend" + date de rappel). @Rabah 2026-06-05
-  async function saveReminder(leadId: string, waitingNote: string, reminderAt: string | null) {
-    const r = await fetch(`/api/agency/self/leads/${leadId}`, { method: 'PATCH', headers: authJson(), body: JSON.stringify({ waitingNote, reminderAt }) });
+  // Enregistre le suivi/rappel d'un client (note "ce qu'on attend" + date de rappel + suivi annuel
+  // : effectif entreprise + formation déjà effectuée) ET les infos client modifiables (nom, emails,
+  // SIRET, OPCO). @Rabah 2026-06-05 / maj 2026-06-18
+  async function saveReminder(leadId: string, waitingNote: string, reminderAt: string | null, extra: { formationDoneThisYear: boolean; companyEmployees: string; denom: string; email: string; accountantEmail: string; managerEmail: string; siret: string; opco: string }) {
+    const r = await fetch(`/api/agency/self/leads/${leadId}`, { method: 'PATCH', headers: authJson(), body: JSON.stringify({ waitingNote, reminderAt, formationDoneThisYear: extra.formationDoneThisYear, companyEmployees: extra.companyEmployees.trim() || null, denom: extra.denom, email: extra.email, accountantEmail: extra.accountantEmail, managerEmail: extra.managerEmail, siret: extra.siret, opco: extra.opco }) });
     const j = await r.json();
     if (j.ok) { setReminderLead(null); load(); }
     else alert('Erreur : ' + (j.error || 'enregistrement impossible'));
@@ -602,7 +608,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     setSendingWhatsapp(true);
     try {
       const sessionName = `Formation · ${p.startAt ? new Date(p.startAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'à confirmer'}`;
-      const r = await fetch('/api/agency/self/sign-link', { method: 'POST', headers: authJson(), body: JSON.stringify({ channel: 'whatsapp', noEmail: true, dossierId: editDossier?.dossier._id, leadId: lead._id, denom: lead.denom, siret: lead.siret, opco: lead.opco, addr: lead.addr, clientEmail: lead.email, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, amountHT: p.amountHT }) });
+      const r = await fetch('/api/agency/self/sign-link', { method: 'POST', headers: authJson(), body: JSON.stringify({ channel: 'whatsapp', noEmail: true, dossierId: editDossier?.dossier._id, leadId: lead._id, denom: lead.denom, siret: lead.siret, opco: lead.opco, addr: lead.addr, clientEmail: lead.email, managerEmail: lead.managerEmail, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, amountHT: p.amountHT }) });
       const j = await r.json();
       if (!j.ok || !j.link) { alert('Erreur : ' + (j.error === 'salaries_required' ? 'ajoutez au moins un stagiaire' : j.error || 'lien impossible')); return; }
       const phone = (window.prompt('Numéro WhatsApp du client (format international, ex. 33612345678).\nLaissez vide pour choisir le contact dans WhatsApp :', '') || '').replace(/\D/g, '');
@@ -804,6 +810,9 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
             ))}
           </div>
         </section>
+
+        {/* Services informatiques : devis IT (revente prestations Delivery Digital). @Rabah 2026-06-21 */}
+        <DevisITSection auth={auth} authJson={authJson} isOwner={isOwner} fix={fix} pct={pct} />
 
         {/* Arguments de vente - 2 formations (toggle), à reprendre face au client */}
         {(() => {
@@ -1031,6 +1040,19 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                 <input value={siret} onChange={(e) => setSiret(e.target.value)} placeholder="SIRET (détection auto OPCO)" inputMode="numeric" className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 font-mono focus:outline-none focus:border-[#0066CC]" />
                 <input value={opco} onChange={(e) => setOpco(e.target.value)} placeholder="OPCO" className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC]" />
               </div>
+              {/* Emails dédiés : comptable + gérant (signataire de la convention). @Rabah 2026-06-18 */}
+              <div className="grid sm:grid-cols-2 gap-3 mt-3">
+                <input type="email" value={accountantEmail} onChange={(e) => setAccountantEmail(e.target.value)} placeholder="Email comptable (optionnel)" className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC]" />
+                <input type="email" value={managerEmail} onChange={(e) => setManagerEmail(e.target.value)} placeholder="Email gérant - signature convention (optionnel)" className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC]" />
+              </div>
+              {/* Suivi : effectif entreprise + formation déjà effectuée cette année (sinon budget OPCO dispo 100%). @Rabah 2026-06-18 */}
+              <div className="grid sm:grid-cols-4 gap-3 mt-3">
+                <input value={companyEmployees} onChange={(e) => setCompanyEmployees(e.target.value.replace(/[^0-9]/g, ''))} placeholder="Nombre de salariés" inputMode="numeric" className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC]" />
+                <label className="sm:col-span-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white/80 cursor-pointer">
+                  <input type="checkbox" checked={formationDoneThisYear} onChange={(e) => setFormationDoneThisYear(e.target.checked)} className="accent-[#0066CC]" />
+                  Formation déjà effectuée cette année <span className="text-white/40">(sinon budget OPCO disponible à 100%)</span>
+                </label>
+              </div>
               {(detecting || detectMsg) && <p className="text-[11.5px] text-[#3DD68C] mt-2">{detecting ? 'Détection en cours…' : detectMsg}</p>}
               <div className="flex gap-2 mt-3">
                 <button onClick={createLead} disabled={creating} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0066CC] text-white text-[12.5px] font-semibold hover:bg-[#0077ED] disabled:opacity-60">{creating ? 'Ajout…' : 'Créer le client'}</button>
@@ -1059,7 +1081,24 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2.5">
                             <span className="inline-flex h-8 w-8 rounded-full bg-gradient-to-br from-[#0066CC] to-[#2997FF] items-center justify-center text-[12px] font-bold flex-shrink-0">{initial}</span>
-                            <div className="min-w-0"><p className="font-semibold truncate">{l.denom || 'Client'}</p><p className="text-white/40 text-[11.5px] truncate">{[l.email, l.opco && `OPCO ${l.opco}`].filter(Boolean).join(' · ') || l.siret || '-'}</p></div>
+                            <div className="min-w-0">
+                              <p className="font-semibold truncate">{l.denom || 'Client'}</p>
+                              <p className="text-white/40 text-[11.5px] truncate">{[l.email, l.opco && `OPCO ${l.opco}`].filter(Boolean).join(' · ') || l.siret || '-'}</p>
+                              {/* Suivi : effectif + budget OPCO de l'année (100% dispo si aucune formation faite). @Rabah 2026-06-18 */}
+                              <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                {l.companyEmployees != null && <span className="inline-flex items-center gap-1 text-[10.5px] text-white/50"><Users className="h-3 w-3" /> {l.companyEmployees} salarié{l.companyEmployees > 1 ? 's' : ''}</span>}
+                                {l.formationDoneThisYear
+                                  ? <span className="inline-flex px-1.5 py-0.5 rounded-full text-[10px] border border-[#E5B567]/30 text-[#E5B567] bg-[#E5B567]/10">Formation faite cette année</span>
+                                  : <span className="inline-flex px-1.5 py-0.5 rounded-full text-[10px] border border-[#3DD68C]/30 text-[#3DD68C] bg-[#3DD68C]/10">Budget OPCO 100% dispo</span>}
+                              </div>
+                              {/* Emails dédiés comptable / gérant si renseignés. @Rabah 2026-06-18 */}
+                              {(l.accountantEmail || l.managerEmail) && (
+                                <div className="flex flex-col gap-0.5 mt-1">
+                                  {l.accountantEmail && <span className="inline-flex items-center gap-1 text-[10.5px] text-white/45 truncate"><Mail className="h-3 w-3 flex-shrink-0" /> Compta : {l.accountantEmail}</span>}
+                                  {l.managerEmail && <span className="inline-flex items-center gap-1 text-[10.5px] text-white/45 truncate"><Mail className="h-3 w-3 flex-shrink-0" /> Gérant : {l.managerEmail}</span>}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </td>
                         {isOwner && (
@@ -1083,6 +1122,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                           {dos && dm ? (
                             <div className="min-w-[140px]">
                               <span className={`inline-flex px-2 py-0.5 rounded-full text-[10.5px] border ${dm.cls}`}>{dm.label}</span>
+                              {dos.mountedByAdmin && <span className="ml-1 inline-flex px-1.5 py-0.5 rounded-full text-[9.5px] border border-[#2997FF]/30 text-[#2997FF] bg-[#2997FF]/10" title="Dossier monté par Delivery Digital">Monté par DD</span>}
                               <div className="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden"><div className="h-full bg-[#3DD68C]" style={{ width: `${Math.round((dm.step / DOSSIER_TOTAL_STEPS) * 100)}%` }} /></div>
                               <p className="text-white/40 text-[10.5px] mt-1">{(dos.amountHT || 0).toLocaleString('fr-FR')} € HT</p>
                             </div>
@@ -1355,7 +1395,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
               setSendingSignLink(true);
               try {
                 const sessionName = `Formation · ${p.startAt ? new Date(p.startAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'à confirmer'}`;
-                const r = await fetch('/api/agency/self/sign-link', { method: 'POST', headers: authJson(), body: JSON.stringify({ leadId: dossierLead._id, denom: dossierLead.denom, siret: dossierLead.siret, opco: dossierLead.opco, addr: dossierLead.addr, clientEmail: dossierLead.email, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, amountHT: p.amountHT }) });
+                const r = await fetch('/api/agency/self/sign-link', { method: 'POST', headers: authJson(), body: JSON.stringify({ leadId: dossierLead._id, denom: dossierLead.denom, siret: dossierLead.siret, opco: dossierLead.opco, addr: dossierLead.addr, clientEmail: dossierLead.email, managerEmail: dossierLead.managerEmail, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, amountHT: p.amountHT }) });
                 const j = await r.json();
                 if (j.ok) { setDossierLead(null); load(); alert(`✓ Lien de signature envoyé à ${dossierLead.email}. Le client lit la convention et signe au doigt depuis son téléphone ; le dossier sera transmis automatiquement à sa signature.`); }
                 else alert('Erreur : ' + (j.error === 'salaries_required' ? 'ajoutez au moins un stagiaire' : j.error || 'envoi impossible'));
@@ -1402,7 +1442,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
               try {
                 const sessionName = `Formation · ${p.startAt ? new Date(p.startAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'à confirmer'}`;
                 // dossierId : la signature à distance mettra à jour CE dossier (pas de doublon).
-                const r = await fetch('/api/agency/self/sign-link', { method: 'POST', headers: authJson(), body: JSON.stringify({ dossierId: editDossier.dossier._id, leadId: editDossier.lead._id, denom: editDossier.dossier.denom || editDossier.lead.denom, siret: editDossier.dossier.siret || editDossier.lead.siret, opco: editDossier.dossier.opco || editDossier.lead.opco, addr: editDossier.dossier.addr || editDossier.lead.addr, clientEmail: editDossier.lead.email, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, amountHT: p.amountHT }) });
+                const r = await fetch('/api/agency/self/sign-link', { method: 'POST', headers: authJson(), body: JSON.stringify({ dossierId: editDossier.dossier._id, leadId: editDossier.lead._id, denom: editDossier.dossier.denom || editDossier.lead.denom, siret: editDossier.dossier.siret || editDossier.lead.siret, opco: editDossier.dossier.opco || editDossier.lead.opco, addr: editDossier.dossier.addr || editDossier.lead.addr, clientEmail: editDossier.lead.email, managerEmail: editDossier.lead.managerEmail, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, amountHT: p.amountHT }) });
                 const j = await r.json();
                 if (j.ok) { setEditDossier(null); load(); alert(`✓ Lien de signature envoyé à ${editDossier.lead.email}. À sa signature, ce dossier sera mis à jour avec la convention corrigée.`); }
                 else alert('Erreur : ' + (j.error === 'salaries_required' ? 'ajoutez au moins un stagiaire' : j.error || 'envoi impossible'));
@@ -1443,18 +1483,27 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
       )}
 
       {reminderLead && (
-        <ReminderModal lead={reminderLead} onSave={(note, when) => saveReminder(reminderLead._id, note, when)} onClose={() => setReminderLead(null)} />
+        <ReminderModal lead={reminderLead} onSave={(note, when, extra) => saveReminder(reminderLead._id, note, when, extra)} onClose={() => setReminderLead(null)} />
       )}
     </main>
   );
 }
 
-// Modal de suivi / rappel d'un client : "ce qu'on attend" (modifiable) + date de rappel
-// (heure française). Sert à se notifier de rappeler le client. @author Rabah Ziane - 2026-06-05
-function ReminderModal({ lead, onSave, onClose }: { lead: Lead; onSave: (note: string, when: string | null) => void; onClose: () => void }) {
+// Modal de suivi / rappel d'un client : infos client modifiables (nom, emails, SIRET, OPCO) +
+// "ce qu'on attend" + date de rappel (heure française) + suivi annuel. @author Rabah Ziane - 2026-06-05
+function ReminderModal({ lead, onSave, onClose }: { lead: Lead; onSave: (note: string, when: string | null, extra: { formationDoneThisYear: boolean; companyEmployees: string; denom: string; email: string; accountantEmail: string; managerEmail: string; siret: string; opco: string }) => void; onClose: () => void }) {
   const toLocalInput = (iso?: string | null) => { if (!iso) return ''; const d = new Date(iso); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
   const [note, setNote] = useState(lead.waitingNote || '');
   const [when, setWhen] = useState(toLocalInput(lead.reminderAt));
+  const [formationDone, setFormationDone] = useState(!!lead.formationDoneThisYear); // formation déjà faite cette année ?
+  const [employees, setEmployees] = useState(lead.companyEmployees != null ? String(lead.companyEmployees) : ''); // effectif entreprise
+  // Infos client modifiables après création (nom, emails, SIRET, OPCO). @Rabah 2026-06-18
+  const [denom, setDenom] = useState(lead.denom || '');
+  const [email, setEmail] = useState(lead.email || '');
+  const [accountantEmail, setAccountantEmail] = useState(lead.accountantEmail || '');
+  const [managerEmail, setManagerEmail] = useState(lead.managerEmail || '');
+  const [siret, setSiret] = useState(lead.siret || '');
+  const [opco, setOpco] = useState(lead.opco || '');
   const PRESETS = ['En attente du courrier AKTO', 'En attente du code OPCO', 'Rappeler le client', 'En attente création compte OPCO'];
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto" onClick={onClose}>
@@ -1464,6 +1513,19 @@ function ReminderModal({ lead, onSave, onClose }: { lead: Lead; onSave: (note: s
           <button onClick={onClose} className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-white/10 hover:bg-white/20"><X className="h-4 w-4" /></button>
         </div>
         <div className="px-5 py-5 space-y-4">
+          {/* Infos client modifiables (nom, emails, SIRET, OPCO). @Rabah 2026-06-18 */}
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5 space-y-2.5">
+            <p className="text-[11px] uppercase tracking-wider font-bold text-white/40">Informations client</p>
+            <input value={denom} onChange={(e) => setDenom(e.target.value)} placeholder="Nom du client" className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC]" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email principal" className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC]" />
+            <input type="email" value={accountantEmail} onChange={(e) => setAccountantEmail(e.target.value)} placeholder="Email comptable (optionnel)" className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC]" />
+            <input type="email" value={managerEmail} onChange={(e) => setManagerEmail(e.target.value)} placeholder="Email gérant - signature convention (optionnel)" className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC]" />
+            <p className="text-[10.5px] text-white/35">La convention est envoyée au gérant si renseigné, sinon à l&apos;email principal.</p>
+            <div className="grid grid-cols-2 gap-2.5">
+              <input value={siret} onChange={(e) => setSiret(e.target.value)} placeholder="SIRET" inputMode="numeric" className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 font-mono focus:outline-none focus:border-[#0066CC]" />
+              <input value={opco} onChange={(e) => setOpco(e.target.value)} placeholder="OPCO" className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC]" />
+            </div>
+          </div>
           <div>
             <label className="block text-[11px] uppercase tracking-wider font-bold text-white/40 mb-1.5">Ce que l&apos;on attend</label>
             <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Ex. En attente du courrier AKTO" className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC]" />
@@ -1474,9 +1536,21 @@ function ReminderModal({ lead, onSave, onClose }: { lead: Lead; onSave: (note: s
             <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white focus:outline-none focus:border-[#0066CC] [color-scheme:dark]" />
             {when && <button onClick={() => setWhen('')} className="mt-1.5 text-[11.5px] text-white/50 hover:text-white/80 underline">Retirer le rappel</button>}
           </div>
+          {/* Suivi annuel : effectif entreprise + formation déjà effectuée cette année (sinon budget OPCO 100%). @Rabah 2026-06-18 */}
+          <div>
+            <label className="block text-[11px] uppercase tracking-wider font-bold text-white/40 mb-1.5">Nombre de salariés de l&apos;entreprise</label>
+            <input value={employees} onChange={(e) => setEmployees(e.target.value.replace(/[^0-9]/g, ''))} inputMode="numeric" placeholder="Ex. 12" className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC]" />
+          </div>
+          <div>
+            <label className="flex items-center gap-2 text-[13px] text-white/80 cursor-pointer">
+              <input type="checkbox" checked={formationDone} onChange={(e) => setFormationDone(e.target.checked)} className="accent-[#0066CC]" />
+              Formation déjà effectuée cette année
+            </label>
+            <p className={`text-[11.5px] mt-1.5 ${formationDone ? 'text-[#E5B567]' : 'text-[#3DD68C]'}`}>{formationDone ? 'Budget OPCO de l’année déjà entamé.' : 'Budget OPCO disponible à 100% pour l’année en cours.'}</p>
+          </div>
           <div className="flex justify-end gap-2 pt-1">
             <button onClick={onClose} className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[12.5px]">Annuler</button>
-            <button onClick={() => onSave(note.trim(), when ? new Date(when).toISOString() : null)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0066CC] hover:bg-[#0077ED] text-white text-[12.5px] font-semibold"><Clock className="h-4 w-4" /> Enregistrer</button>
+            <button onClick={() => onSave(note.trim(), when ? new Date(when).toISOString() : null, { formationDoneThisYear: formationDone, companyEmployees: employees, denom: denom.trim(), email: email.trim(), accountantEmail: accountantEmail.trim(), managerEmail: managerEmail.trim(), siret: siret.trim(), opco: opco.trim() })} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0066CC] hover:bg-[#0077ED] text-white text-[12.5px] font-semibold"><Clock className="h-4 w-4" /> Enregistrer</button>
           </div>
         </div>
       </div>
@@ -1998,6 +2072,263 @@ function Kpi({ icon, label, value, accent, suffix, onClick }: { icon: React.Reac
       </div>
       <p className="text-[28px] font-bold leading-none mt-2">{value.toLocaleString('fr-FR')}{suffix || ''}</p>
       {onClick && <p className="text-[11px] text-white/30 mt-2 inline-flex items-center gap-1">Voir le détail ›</p>}
+    </div>
+  );
+}
+
+/* ============================================================================
+ * Services informatiques : devis IT revendus par l'agence (moteur QuickQuote).
+ * L'agence crée un devis depuis le catalogue, l'envoie au client (lien /devis/:token),
+ * le client accepte/signe en ligne. Commission identique aux dossiers OPCO (fix + %).
+ * @author Rabah Ziane · 2026-06-21
+ * ========================================================================== */
+type CatalogItem = { id: string; category: string; label: string; defaultPrice: number; unit: string; description?: string };
+type QuoteLine = { description: string; details?: string; quantity: number; unit: string; unitPrice: number };
+type ITQuote = {
+  _id: string; ref?: string; status: string; title?: string; publicToken?: string;
+  client?: { name?: string; email?: string; company?: string; phone?: string; address?: string };
+  lines?: QuoteLine[]; total?: number; totalTTC?: number; taxRate?: number; currency?: string;
+  commercialName?: string; createdAt?: string; sentAt?: string; acceptedAt?: string;
+};
+const QUOTE_STATUS: Record<string, { label: string; cls: string }> = {
+  draft: { label: 'Brouillon', cls: 'bg-white/10 text-white/60' },
+  sent: { label: 'Envoyé', cls: 'bg-[#0066CC]/15 text-[#7FB3FF]' },
+  viewed: { label: 'Vu par le client', cls: 'bg-[#A78BFA]/15 text-[#A78BFA]' },
+  accepted: { label: 'Accepté ✓', cls: 'bg-[#3DD68C]/15 text-[#3DD68C]' },
+  rejected: { label: 'Refusé', cls: 'bg-[#FF6B6B]/15 text-[#FF6B6B]' },
+  expired: { label: 'Expiré', cls: 'bg-white/10 text-white/40' },
+};
+
+function DevisITSection({ auth, authJson, isOwner, fix, pct }: { auth: () => any; authJson: () => any; isOwner: boolean; fix: number; pct: number }) {
+  const [quotes, setQuotes] = useState<ITQuote[] | null>(null);
+  const [catalog, setCatalog] = useState<CatalogItem[]>([]);
+  const [builder, setBuilder] = useState<ITQuote | 'new' | null>(null);
+  const [showArgs, setShowArgs] = useState(false);
+  const load = useCallback(async () => {
+    const j = await fetch('/api/agency/quotes', { headers: auth() }).then((r) => r.json()).catch(() => ({}));
+    setQuotes(j.items || []);
+  }, [auth]);
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => { fetch('/api/agency/quotes/catalog', { headers: auth() }).then((r) => r.json()).then((j) => setCatalog(j.catalog || [])).catch(() => {}); }, [auth]);
+
+  const euro = (n: number, c = 'EUR') => (n || 0).toLocaleString('fr-FR') + ' ' + (c === 'EUR' ? '€' : c);
+  // Commission estimée sur un devis accepté (même barème que les dossiers OPCO).
+  const commissionOf = (q: ITQuote) => Math.round((fix || 0) + ((pct || 0) / 100) * (q.total || 0));
+
+  return (
+    <section className="rounded-2xl bg-[#181A20] border border-white/10 overflow-hidden">
+      <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <span className="inline-flex h-9 w-9 rounded-xl bg-[#0066CC]/15 items-center justify-center"><Cpu className="h-5 w-5 text-[#7FB3FF]" /></span>
+          <div>
+            <h2 className="text-[15px] font-bold">Services informatiques</h2>
+            <p className="text-[12px] text-white/50">Revendez sites web, apps, logiciels, SEO, IA… Créez un devis et envoyez-le au client en un clic.</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowArgs((v) => !v)} className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[12.5px]">{showArgs ? 'Masquer' : 'Arguments de vente'}</button>
+          <button onClick={() => setBuilder('new')} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0066CC] text-white text-[12.5px] font-semibold hover:bg-[#0077ED]"><Plus className="h-3.5 w-3.5" /> Nouveau devis</button>
+        </div>
+      </div>
+
+      {isOwner && <div className="px-5 py-2.5 bg-[#3DD68C]/[0.06] border-b border-white/10 text-[12px] text-[#3DD68C]">Commission services IT : <strong>{(fix || 0).toLocaleString('fr-FR')} € + {pct || 0}%</strong> du montant HT, versée quand le client accepte et règle (même barème que les dossiers).</div>}
+
+      {showArgs && <ITSalesArguments />}
+
+      {/* Liste des devis */}
+      {!quotes ? (
+        <div className="px-5 py-10 text-center text-white/40"><Loader2 className="h-5 w-5 animate-spin inline" /></div>
+      ) : quotes.length === 0 ? (
+        <p className="px-5 py-10 text-center text-[13px] text-white/40">Aucun devis pour l'instant. Cliquez sur « Nouveau devis » pour proposer un service informatique à un client.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-[12.5px]">
+            <thead className="text-white/40 text-[10px] uppercase tracking-wider"><tr className="border-b border-white/5"><th className="text-left px-5 py-2.5">Client</th><th className="text-left px-5 py-2.5">Devis</th><th className="text-left px-5 py-2.5">Montant</th><th className="text-left px-5 py-2.5">Statut</th>{isOwner && <th className="text-left px-5 py-2.5">Commission</th>}<th className="text-right px-5 py-2.5">Actions</th></tr></thead>
+            <tbody className="divide-y divide-white/5">
+              {quotes.map((q) => {
+                const sm = QUOTE_STATUS[q.status] || QUOTE_STATUS.draft;
+                const link = q.publicToken ? `https://deliverydigital.fr/devis/${q.publicToken}` : '';
+                return (
+                  <tr key={q._id} className="hover:bg-white/[0.02] align-top">
+                    <td className="px-5 py-3"><p className="font-semibold">{q.client?.name || 'Client'}</p><p className="text-white/40 text-[11.5px]">{q.client?.company || q.client?.email || ''}</p>{!isOwner && q.commercialName && <p className="text-white/30 text-[10.5px]">{q.commercialName}</p>}</td>
+                    <td className="px-5 py-3"><p className="font-mono text-[11.5px] text-white/70">{q.ref || '-'}</p><p className="text-white/40 text-[11px]">{q.title}</p></td>
+                    <td className="px-5 py-3"><p className="font-semibold">{euro(q.total || 0, q.currency)}</p><p className="text-white/40 text-[10.5px]">{euro(q.totalTTC || 0, q.currency)} TTC</p></td>
+                    <td className="px-5 py-3"><span className={`inline-flex px-2 py-0.5 rounded-full text-[10.5px] ${sm.cls}`}>{sm.label}</span></td>
+                    {isOwner && <td className="px-5 py-3">{q.status === 'accepted' ? <span className="text-[#3DD68C] font-semibold">{euro(commissionOf(q))}</span> : <span className="text-white/30">-</span>}</td>}
+                    <td className="px-5 py-3 text-right whitespace-nowrap">
+                      {(q.status === 'draft' || q.status === 'sent') && <button onClick={() => setBuilder(q)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] mr-1.5"><PenLine className="h-3 w-3" /> Modifier</button>}
+                      {link && <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] mr-1.5"><ExternalLink className="h-3 w-3" /> Voir</a>}
+                      {link && <button onClick={() => { navigator.clipboard?.writeText(link); alert('Lien du devis copié.'); }} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-[11px]"><Copy className="h-3 w-3" /></button>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {builder && <ITQuoteBuilder initial={builder === 'new' ? null : builder} catalog={catalog} authJson={authJson} onClose={() => setBuilder(null)} onSaved={() => { setBuilder(null); load(); }} />}
+    </section>
+  );
+}
+
+// Arguments de vente services informatiques (à reprendre face au client).
+function ITSalesArguments() {
+  const piliers = [
+    { t: 'Sur mesure, pas de template', p: ['Code propriétaire 100% adapté au métier du client', 'Pas d\'abonnement SaaS bloquant, le client est propriétaire', 'Évolutif : on ajoute des fonctions au fil de l\'eau'] },
+    { t: 'Stack moderne & rapide', p: ['React / Node / Cloud AWS, performances et SEO au top', 'Paiement en ligne (Stripe, Apple/Google Pay) intégré', 'Sécurité et sauvegardes incluses'] },
+    { t: 'IA intégrée', p: ['Chatbot Claude, recherche documentaire (RAG), OCR/Vision', 'Automatisation de tâches répétitives', 'Avantage concurrentiel concret pour le client'] },
+    { t: 'Financement & crédit d\'impôt', p: ['Projets innovants éligibles au Crédit Impôt Innovation (20%)', 'Paiement en plusieurs fois (acompte + solde)', 'Devis clair, facture d\'acompte automatique'] },
+  ];
+  const pitch = `Delivery Digital développe des solutions informatiques sur mesure : sites web, e-commerce, applications mobiles, logiciels métier (CRM/ERP), SEO, et intégrations IA.
+
+Pourquoi nous :
+- Sur mesure, code propriétaire, le client reste propriétaire (pas d'abonnement bloquant)
+- Stack moderne (React/Node/Cloud), paiement en ligne intégré, sécurité incluse
+- IA intégrée (chatbot, RAG, OCR) pour un vrai avantage concurrentiel
+- Projets innovants éligibles au Crédit Impôt Innovation (20%), paiement en plusieurs fois`;
+  return (
+    <div className="px-5 py-4 bg-white/[0.02] border-b border-white/10">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <h3 className="text-[13px] font-bold inline-flex items-center gap-1.5"><Cpu className="h-4 w-4 text-[#7FB3FF]" /> Arguments de vente - services informatiques</h3>
+        <button onClick={() => { navigator.clipboard?.writeText(pitch); alert('Pitch copié - prêt à coller dans un email ou un message au client.'); }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11.5px]"><Copy className="h-3.5 w-3.5" /> Copier le pitch</button>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-3">
+        {piliers.map((pi) => (
+          <div key={pi.t} className="rounded-xl bg-[#0E0F13] border border-white/10 p-3.5">
+            <p className="text-[13px] font-semibold mb-1.5">{pi.t}</p>
+            <ul className="space-y-1">{pi.p.map((x) => <li key={x} className="text-[12px] text-white/60 flex gap-1.5"><span className="text-[#3DD68C]">✓</span>{x}</li>)}</ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Constructeur de devis IT (création / édition) - réutilise le catalogue serveur.
+function ITQuoteBuilder({ initial, catalog, authJson, onClose, onSaved }: { initial: ITQuote | null; catalog: CatalogItem[]; authJson: () => any; onClose: () => void; onSaved: () => void }) {
+  const [client, setClient] = useState({ name: '', email: '', company: '', phone: '', address: '', ...(initial?.client || {}) });
+  const [title, setTitle] = useState(initial?.title || 'Devis services informatiques');
+  const [taxRate, setTaxRate] = useState(initial?.taxRate != null ? initial.taxRate : 20);
+  const [lines, setLines] = useState<QuoteLine[]>(initial?.lines?.length ? initial.lines.map((l) => ({ description: l.description, details: l.details || '', quantity: l.quantity || 1, unit: l.unit || 'forfait', unitPrice: l.unitPrice || 0 })) : []);
+  const [autoSendInvoice, setAutoSendInvoice] = useState(initial ? (initial as any).autoSendInvoice !== false : true);
+  const [pickCat, setPickCat] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  const inp = 'w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC]';
+  const setLine = (i: number, k: keyof QuoteLine, v: any) => setLines((arr) => arr.map((l, j) => j === i ? { ...l, [k]: v } : l));
+  const rmLine = (i: number) => setLines((arr) => arr.filter((_, j) => j !== i));
+  const addCustom = () => setLines((arr) => [...arr, { description: '', details: '', quantity: 1, unit: 'forfait', unitPrice: 0 }]);
+  const addFromCatalog = (id: string) => {
+    const it = catalog.find((c) => c.id === id); if (!it) return;
+    setLines((arr) => [...arr, { description: it.label, details: it.description || '', quantity: 1, unit: it.unit || 'forfait', unitPrice: it.defaultPrice || 0 }]);
+    setPickCat('');
+  };
+  const subtotal = lines.reduce((s, l) => s + (l.quantity || 0) * (l.unitPrice || 0), 0);
+  const tax = Math.round(subtotal * (taxRate / 100));
+  const ttc = subtotal + tax;
+  const euro = (n: number) => (n || 0).toLocaleString('fr-FR') + ' €';
+
+  const save = async (thenSend: boolean) => {
+    setErr('');
+    if (!client.name?.trim() || !client.email?.trim()) { setErr('Nom et email du client requis.'); return; }
+    if (lines.length === 0 || lines.some((l) => !l.description?.trim())) { setErr('Ajoutez au moins une ligne (avec une description).'); return; }
+    setBusy(true);
+    try {
+      const body = { client, title, taxRate, lines, autoSendInvoice };
+      let id = initial?._id;
+      if (id) {
+        await fetch(`/api/agency/quotes/${id}`, { method: 'PATCH', headers: authJson(), body: JSON.stringify(body) });
+      } else {
+        const j = await fetch('/api/agency/quotes', { method: 'POST', headers: authJson(), body: JSON.stringify(body) }).then((r) => r.json());
+        if (j.error) { setErr(j.error); setBusy(false); return; }
+        id = j.item?._id;
+      }
+      if (thenSend && id) {
+        const s = await fetch(`/api/agency/quotes/${id}/send`, { method: 'POST', headers: authJson(), body: '{}' }).then((r) => r.json());
+        if (s.error) { setErr('Devis enregistré mais envoi impossible : ' + s.error); setBusy(false); return; }
+        alert('Devis envoyé au client ✓');
+      }
+      onSaved();
+    } finally { setBusy(false); }
+  };
+
+  const cats = [...new Set(catalog.map((c) => c.category))];
+  return (
+    <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="w-full max-w-2xl my-8 bg-[#181A20] border border-white/10 rounded-2xl shadow-2xl overflow-hidden text-white" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
+          <h3 className="text-[15px] font-bold">{initial ? 'Modifier le devis' : 'Nouveau devis - services informatiques'}</h3>
+          <button onClick={onClose} className="h-8 w-8 rounded-full hover:bg-white/10 inline-flex items-center justify-center"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="px-5 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
+          {/* Client */}
+          <div className="grid sm:grid-cols-2 gap-3">
+            <input className={inp} placeholder="Nom du client *" value={client.name} onChange={(e) => setClient({ ...client, name: e.target.value })} />
+            <input className={inp} type="email" placeholder="Email du client *" value={client.email} onChange={(e) => setClient({ ...client, email: e.target.value })} />
+            <input className={inp} placeholder="Société" value={client.company} onChange={(e) => setClient({ ...client, company: e.target.value })} />
+            <input className={inp} placeholder="Téléphone" value={client.phone} onChange={(e) => setClient({ ...client, phone: e.target.value })} />
+          </div>
+          <input className={inp} placeholder="Titre du devis" value={title} onChange={(e) => setTitle(e.target.value)} />
+
+          {/* Lignes */}
+          <div>
+            <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+              <p className="text-[12px] font-bold uppercase tracking-wider text-white/45">Prestations</p>
+              <div className="flex items-center gap-2">
+                <select value={pickCat} onChange={(e) => addFromCatalog(e.target.value)} className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[12px] text-white focus:outline-none max-w-[260px]">
+                  <option value="">+ Ajouter depuis le catalogue…</option>
+                  {cats.map((cat) => (
+                    <optgroup key={cat} label={cat}>
+                      {catalog.filter((c) => c.category === cat).map((c) => <option key={c.id} value={c.id}>{c.label} - {c.defaultPrice}€</option>)}
+                    </optgroup>
+                  ))}
+                </select>
+                <button onClick={addCustom} className="inline-flex items-center gap-1 text-[12px] text-[#7FB3FF] font-semibold"><Plus className="h-3.5 w-3.5" /> Ligne libre</button>
+              </div>
+            </div>
+            {lines.length === 0 ? <p className="text-[12.5px] text-white/40 py-3">Ajoutez des prestations depuis le catalogue ou en lignes libres.</p> : (
+              <div className="space-y-2">
+                {lines.map((l, i) => (
+                  <div key={i} className="rounded-xl bg-[#0E0F13] border border-white/10 p-2.5">
+                    <div className="flex gap-2 items-start">
+                      <input className={inp} placeholder="Description *" value={l.description} onChange={(e) => setLine(i, 'description', e.target.value)} />
+                      <button onClick={() => rmLine(i)} className="text-[#FF6B6B] hover:bg-[#FF6B6B]/10 rounded p-2 mt-0.5" title="Retirer"><Trash2 className="h-3.5 w-3.5" /></button>
+                    </div>
+                    <input className={`${inp} mt-2`} placeholder="Détails (optionnel)" value={l.details} onChange={(e) => setLine(i, 'details', e.target.value)} />
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      <div><span className="text-[10px] text-white/40">Quantité</span><input type="number" className={inp} value={l.quantity} onChange={(e) => setLine(i, 'quantity', Number(e.target.value))} /></div>
+                      <div><span className="text-[10px] text-white/40">Unité</span><input className={inp} value={l.unit} onChange={(e) => setLine(i, 'unit', e.target.value)} /></div>
+                      <div><span className="text-[10px] text-white/40">Prix HT (€)</span><input type="number" className={inp} value={l.unitPrice} onChange={(e) => setLine(i, 'unitPrice', Number(e.target.value))} /></div>
+                    </div>
+                    <p className="text-[11px] text-white/45 mt-1.5 text-right">Sous-total ligne : {euro((l.quantity || 0) * (l.unitPrice || 0))}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Totaux + TVA */}
+          <div className="flex items-center justify-between gap-3 flex-wrap rounded-xl bg-[#0E0F13] border border-white/10 p-3.5">
+            <label className="text-[12px] text-white/60 inline-flex items-center gap-2">TVA % <input type="number" className="w-16 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white focus:outline-none" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} /></label>
+            <div className="text-right text-[13px]"><p className="text-white/60">Total HT : <strong className="text-white">{euro(subtotal)}</strong></p><p className="text-white/40 text-[12px]">TVA : {euro(tax)} · <strong className="text-white">TTC {euro(ttc)}</strong></p></div>
+          </div>
+
+          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <input type="checkbox" checked={autoSendInvoice} onChange={(e) => setAutoSendInvoice(e.target.checked)} className="w-4 h-4 accent-[#0066CC]" />
+            <span className="text-[12.5px] text-white/70">Envoyer automatiquement la facture d'acompte au client après acceptation</span>
+          </label>
+
+          {err && <p className="text-[12.5px] text-[#FF6B6B]">{err}</p>}
+        </div>
+        <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-white/10">
+          <button onClick={onClose} className="px-4 py-2 rounded-full border border-white/10 text-[12.5px] text-white/70">Annuler</button>
+          <button onClick={() => save(false)} disabled={busy} className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/15 text-white text-[12.5px] font-semibold disabled:opacity-60">{busy ? '…' : 'Enregistrer'}</button>
+          <button onClick={() => save(true)} disabled={busy} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0066CC] text-white text-[12.5px] font-semibold hover:bg-[#0077ED] disabled:opacity-60">{busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />} Enregistrer & envoyer</button>
+        </div>
+      </div>
     </div>
   );
 }

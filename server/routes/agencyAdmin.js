@@ -14,6 +14,7 @@ import { User } from '../models/index.js';
 import AgencyDossier from '../models/AgencyDossier.js';
 import AgencyLead from '../models/AgencyLead.js';
 import FormationUnavailability from '../models/FormationUnavailability.js';
+import ConventionSignRequest from '../models/ConventionSignRequest.js';
 import { encryptField, decryptField } from '../models/AccessRequest.js';
 
 const router = express.Router();
@@ -167,7 +168,8 @@ router.get('/dossiers', requireAdmin, async (req, res) => {
   // Le fixe (120 €) n'est du qu'UNE FOIS par client et par an (par agence) : il s'applique
   // au 1er dossier d'un client dans l'annee ; les suivants ne touchent que le %.
   // @author Rabah Ziane - 2026-06-02
-  const sortedAsc = [...dossiers].sort((x, y) => new Date(x.createdAt || 0) - new Date(y.createdAt || 0));
+  // Le fixe ne s'applique qu'aux dossiers rattachés à une agence (les dossiers DDN-direct n'ont pas de commission). @Rabah 2026-06-21
+  const sortedAsc = [...dossiers].filter((d) => d.agencyId).sort((x, y) => new Date(x.createdAt || 0) - new Date(y.createdAt || 0));
   const seenClientYear = new Set();
   const fixDossierIds = new Set();
   sortedAsc.forEach((d) => {
@@ -176,6 +178,8 @@ router.get('/dossiers', requireAdmin, async (req, res) => {
     if (!seenClientYear.has(key)) { seenClientYear.add(key); fixDossierIds.add(String(d._id)); }
   });
   const out = dossiers.map((d) => {
+    // Dossier monté en direct par DDN (sans agence) : aucune commission à verser.
+    if (!d.agencyId) return { ...d, commission: 0, commissionFixApplied: false, agencyIban: '', agencyBic: '', agencyHolder: '' };
     const a = am[String(d.agencyId)] || {};
     const fix = a.commissionFix != null ? a.commissionFix : 120;
     const pct = a.commissionPercent != null ? a.commissionPercent : 15;
@@ -199,15 +203,16 @@ router.get('/stats', requireAdmin, async (req, res) => {
     const ags = await User.find({ _id: { $in: ids } }).select('commissionFix commissionPercent').lean();
     const am = {}; ags.forEach((a) => { am[String(a._id)] = a; });
     // Fixe (120 €) compté une seule fois par client et par an (cf GET /dossiers).
-    const sortedAsc = [...dossiers].sort((x, y) => new Date(x.createdAt || 0) - new Date(y.createdAt || 0));
+    const sortedAsc = [...dossiers].filter((d) => d.agencyId).sort((x, y) => new Date(x.createdAt || 0) - new Date(y.createdAt || 0));
     const seen = new Set(), fixIds = new Set();
     sortedAsc.forEach((d) => { const y = new Date(d.createdAt || Date.now()).getFullYear(); const k = `${d.agencyId}_${d.leadId || d._id}_${y}`; if (!seen.has(k)) { seen.add(k); fixIds.add(String(d._id)); } });
     let volumeHT = 0, stagiaires = 0, due = 0, paid = 0, transmitted = 0;
     for (const d of dossiers) {
-      const a = am[String(d.agencyId)] || {};
-      const fix = a.commissionFix != null ? a.commissionFix : 120;
-      const pct = a.commissionPercent != null ? a.commissionPercent : 15;
-      const commission = Math.round((fixIds.has(String(d._id)) ? fix : 0) + (pct / 100) * (d.amountHT || 0));
+      // Dossier DDN-direct (sans agence) : pas de commission. @Rabah 2026-06-21
+      const a = d.agencyId ? (am[String(d.agencyId)] || {}) : null;
+      const fix = a && a.commissionFix != null ? a.commissionFix : 120;
+      const pct = a && a.commissionPercent != null ? a.commissionPercent : 15;
+      const commission = !a ? 0 : Math.round((fixIds.has(String(d._id)) ? fix : 0) + (pct / 100) * (d.amountHT || 0));
       volumeHT += d.amountHT || 0;
       stagiaires += (d.salaries || []).length;
       if (d.status === 'paid') paid += commission; else due += commission;
@@ -232,10 +237,28 @@ router.get('/commerciaux', requireAdmin, async (req, res) => {
 // Liste détaillée des clients (leads) : agence, commercial, OPCO, statut.
 router.get('/clients', requireAdmin, async (req, res) => {
   try {
-    const leads = await AgencyLead.find({ hidden: { $ne: true } }).select('denom email opco siret agencyId agencyName commercialName status createdAt').sort({ createdAt: -1 }).limit(1000).lean();
+    const leads = await AgencyLead.find({ hidden: { $ne: true } }).select('denom email accountantEmail managerEmail opco siret agencyId agencyName commercialName status createdAt').sort({ createdAt: -1 }).limit(1000).lean();
     const ag = await User.find({ _id: { $in: [...new Set(leads.map((l) => String(l.agencyId)).filter(Boolean))] } }).select('name').lean();
     const am = {}; ag.forEach((a) => { am[String(a._id)] = a.name; });
-    res.json({ ok: true, clients: leads.map((l) => ({ id: l._id, denom: l.denom, email: l.email, opco: l.opco, siret: l.siret, agence: am[String(l.agencyId)] || l.agencyName || '-', commercial: l.commercialName || '', status: l.status, createdAt: l.createdAt })) });
+    res.json({ ok: true, clients: leads.map((l) => ({ id: l._id, denom: l.denom, email: l.email, accountantEmail: l.accountantEmail || '', managerEmail: l.managerEmail || '', opco: l.opco, siret: l.siret, agence: am[String(l.agencyId)] || l.agencyName || '-', commercial: l.commercialName || '', status: l.status, createdAt: l.createdAt })) });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// Modification d'un client (lead) côté superadmin : nom + emails (principal/comptable/gérant)
+// + SIRET + OPCO. Permet de corriger une adresse e-mail avant l'envoi de la convention.
+// @author Rabah Ziane - 2026-06-18
+router.patch('/clients/:id', requireAdmin, async (req, res) => {
+  try {
+    const lead = await AgencyLead.findById(req.params.id);
+    if (!lead) return res.status(404).json({ ok: false, error: 'not_found' });
+    if (typeof req.body.denom === 'string' && req.body.denom.trim()) lead.denom = req.body.denom.trim();
+    if (typeof req.body.email === 'string') lead.email = req.body.email.trim().toLowerCase() || undefined;
+    if (typeof req.body.accountantEmail === 'string') lead.accountantEmail = req.body.accountantEmail.trim().toLowerCase() || undefined;
+    if (typeof req.body.managerEmail === 'string') lead.managerEmail = req.body.managerEmail.trim().toLowerCase() || undefined;
+    if (typeof req.body.siret === 'string') lead.siret = req.body.siret.replace(/\s/g, '').trim() || undefined;
+    if (typeof req.body.opco === 'string') lead.opco = req.body.opco.trim() || undefined;
+    await lead.save();
+    res.json({ ok: true, client: { id: lead._id, denom: lead.denom, email: lead.email, accountantEmail: lead.accountantEmail || '', managerEmail: lead.managerEmail || '', opco: lead.opco, siret: lead.siret } });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
@@ -246,7 +269,9 @@ router.get('/pending-count', requireAdmin, async (req, res) => {
     const dossiers = await AgencyDossier.find({ hidden: { $ne: true } }).select('status encashRequestedAt').lean();
     const newDossiers = dossiers.filter((d) => d.status === 'transmitted').length;
     const encash = dossiers.filter((d) => d.encashRequestedAt && d.status !== 'paid').length;
-    res.json({ ok: true, count: newDossiers + encash, newDossiers, encash });
+    // Dossiers montés par DDN en attente de validation client. @Rabah 2026-06-21
+    const pendingValidation = await ConventionSignRequest.countDocuments({ mountedByAdmin: true, status: 'pending' });
+    res.json({ ok: true, count: newDossiers + encash + pendingValidation, newDossiers, encash, pendingValidation });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
@@ -330,6 +355,93 @@ router.post('/:id/api-key', requireAdmin, async (req, res) => {
 router.delete('/dossiers/:id', requireAdmin, async (req, res) => {
   const d = await AgencyDossier.findByIdAndUpdate(req.params.id, { hidden: true }, { new: true });
   if (!d) return res.status(404).json({ error: 'not_found' });
+  res.json({ ok: true });
+});
+
+/* ===================== Dossiers montés par DDN (super admin) =====================
+ * Certains clients ne veulent pas confier leurs accès OPCO. DDN monte alors le dossier
+ * depuis l'admin et envoie au client un lien sécurisé pour qu'il VALIDE (lise + signe la
+ * convention au doigt). À la signature, le dossier OPCO est créé (réutilise conventionSign).
+ * Agence optionnelle : si fournie, la commission s'applique ; sinon dossier 100% DDN.
+ * @author Rabah Ziane · 2026-06-21 */
+
+// Envoi au client du lien de validation/signature d'un dossier monté par DDN.
+function clientSignEmail({ recipient, link, denom }) {
+  return {
+    from: process.env.SMTP_FROM || process.env.SMTP_USER || 'contact@deliverydigital.fr', to: recipient, bcc: 'contact@deliverydigital.fr',
+    subject: `Validez votre convention de formation - ${denom}`,
+    html: emailShell(`<p style="font-size:14px;color:#3a3a3c;line-height:1.6;margin:0 0 16px">Bonjour,<br><br>Delivery Digital a préparé votre <strong>convention de formation professionnelle</strong>. Pour finaliser votre dossier de financement, il vous suffit de la <strong>lire et de la valider</strong> en la signant au doigt depuis votre téléphone, en quelques secondes.</p>
+      <a href="${link}" style="display:inline-block;background:${DD_BLUE};color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 22px;border-radius:999px">Lire et valider ma convention</a>
+      <p style="font-size:12px;color:#86868b;margin:18px 0 0">Lien sécurisé, valable 30 jours. Signature électronique de même valeur juridique qu'une signature manuscrite (Code civil, art. 1367).</p>`),
+  };
+}
+
+router.post('/dossiers/mount', requireAdmin, async (req, res) => {
+  try {
+    const b = req.body || {};
+    const managerEmail = (b.managerEmail || '').trim().toLowerCase();
+    const recipient = managerEmail || (b.clientEmail || '').trim().toLowerCase();
+    if (!recipient) return res.status(400).json({ ok: false, error: 'client_email_required' });
+    if (!b.denom) return res.status(400).json({ ok: false, error: 'denom_required' });
+    const salaries = Array.isArray(b.salaries) ? b.salaries.filter((s) => s && s.firstname && s.lastname) : [];
+    if (salaries.length === 0) return res.status(400).json({ ok: false, error: 'salaries_required' });
+    // Agence optionnelle : si fournie, on récupère son nom pour l'affichage.
+    let agencyId, agencyName;
+    if (b.agencyId) {
+      const ag = await User.findOne({ _id: b.agencyId, role: 'agence' }).select('name').lean();
+      if (!ag) return res.status(400).json({ ok: false, error: 'invalid_agency' });
+      agencyId = ag._id; agencyName = ag.name;
+    }
+    const token = crypto.randomBytes(24).toString('hex');
+    await ConventionSignRequest.create({
+      token, mountedByAdmin: true, agencyId, agencyName,
+      leadId: b.leadId || undefined, editDossierId: b.dossierId || undefined,
+      denom: b.denom, siret: b.siret, opco: b.opco, addr: b.addr,
+      clientEmail: (b.clientEmail || '').trim().toLowerCase() || undefined, managerEmail: managerEmail || undefined,
+      formationTitle: b.formationTitle, sessionName: b.sessionName,
+      sessionStart: b.startAt ? new Date(b.startAt) : undefined, sessionEnd: b.endAt ? new Date(b.endAt) : undefined,
+      salaries, amountHT: b.amountHT != null ? Math.round(Number(b.amountHT)) : 525 * salaries.length, status: 'pending',
+      expiresAt: new Date(Date.now() + 30 * 86400000),
+    });
+    const link = `${PUBLIC_BASE}/signer/${token}`;
+    let emailSent = false;
+    if (!b.noEmail) { try { await getTransporter().sendMail(clientSignEmail({ recipient, link, denom: b.denom })); emailSent = true; } catch { /* best effort */ } }
+    res.json({ ok: true, link, emailSent, recipient });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// Demandes de validation client EN ATTENTE (montées par DDN, pas encore signées).
+router.get('/sign-requests', requireAdmin, async (req, res) => {
+  const rows = await ConventionSignRequest.find({ mountedByAdmin: true, status: 'pending' }).sort({ createdAt: -1 }).limit(500).lean();
+  const out = rows.map((r) => ({
+    id: r._id, token: r.token, denom: r.denom, siret: r.siret, opco: r.opco,
+    clientEmail: r.clientEmail || '', managerEmail: r.managerEmail || '', recipient: r.managerEmail || r.clientEmail || '',
+    agencyName: r.agencyName || '', formationTitle: r.formationTitle, sessionName: r.sessionName,
+    salaries: (r.salaries || []).length, amountHT: r.amountHT,
+    link: `${PUBLIC_BASE}/signer/${r.token}`, createdAt: r.createdAt, expiresAt: r.expiresAt,
+    expired: r.expiresAt && new Date(r.expiresAt).getTime() < Date.now(),
+  }));
+  res.json({ ok: true, requests: out });
+});
+
+// Relancer (renvoyer) le lien de validation au client.
+router.post('/sign-requests/:id/resend', requireAdmin, async (req, res) => {
+  const r = await ConventionSignRequest.findById(req.params.id);
+  if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+  if (r.status !== 'pending') return res.status(409).json({ ok: false, error: 'not_pending' });
+  const recipient = r.managerEmail || r.clientEmail;
+  if (!recipient) return res.status(400).json({ ok: false, error: 'no_recipient' });
+  const link = `${PUBLIC_BASE}/signer/${r.token}`;
+  try { await getTransporter().sendMail(clientSignEmail({ recipient, link, denom: r.denom })); } catch (e) { return res.status(500).json({ ok: false, error: 'send_failed' }); }
+  res.json({ ok: true, sentTo: recipient });
+});
+
+// Annuler une demande de validation en attente.
+router.post('/sign-requests/:id/cancel', requireAdmin, async (req, res) => {
+  const r = await ConventionSignRequest.findById(req.params.id);
+  if (!r) return res.status(404).json({ ok: false, error: 'not_found' });
+  r.status = 'cancelled';
+  await r.save();
   res.json({ ok: true });
 });
 

@@ -79,7 +79,7 @@ function genPassword(len = 12) {
 router.get('/', requireAdmin, async (req, res) => {
   try {
     const list = await User.find({ role: 'trainer' })
-      .select('email name phone status hourlyRate trainerSkills createdAt last_login iban bic accountHolder bankCountry bankData ribPdfUrl bankValidated companyInfo contract onboardingValidated')
+      .select('email name phone status hourlyRate trainerSkills recurringAvailability createdAt last_login iban bic accountHolder bankCountry bankData ribPdfUrl bankValidated companyInfo contract onboardingValidated')
       .sort({ createdAt: -1 }).lean();
     res.json({ trainers: list });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -158,6 +158,20 @@ router.post('/:id/skills', requireAdmin, async (req, res) => {
   await u.save();
   res.json({ ok: true, trainerSkills: u.trainerSkills });
 });
+// Dispos récurrentes (jours 0-6 + créneaux d'1h) définies par le superadmin. @author Rabah Ziane - 2026-06-19
+router.post('/:id/recurring-availability', requireAdmin, async (req, res) => {
+  const u = await User.findOne({ _id: req.params.id, role: 'trainer' });
+  if (!u) return res.status(404).json({ error: 'not_found' });
+  const days = Array.isArray(req.body.days)
+    ? [...new Set(req.body.days.map((d) => Number(d)).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort((a, b) => a - b)
+    : [];
+  const slots = Array.isArray(req.body.slots)
+    ? req.body.slots.filter((s) => s && /^\d{2}:\d{2}$/.test(s.from) && /^\d{2}:\d{2}$/.test(s.to) && s.from < s.to).map((s) => ({ from: s.from, to: s.to })).slice(0, 8)
+    : [];
+  u.recurringAvailability = { days, slots };
+  await u.save();
+  res.json({ ok: true, recurringAvailability: u.recurringAvailability });
+});
 
 router.post('/:id/validate-bank', requireAdmin, async (req, res) => {
   const u = await User.findById(req.params.id);
@@ -230,6 +244,50 @@ async function notifyAssigned(trainer, s) {
   } catch (e) { /* email best effort */ }
 }
 
+// Notifie le formateur qu'un cours a été REPORTÉ (best effort). @Rabah 2026-06-21
+async function notifyRescheduled(trainer, s, oldStart) {
+  try {
+    if (!trainer?.email) return;
+    const fmt = (d) => d ? new Date(d).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'à planifier';
+    await getTransporter().sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER || 'contact@deliverydigital.fr', to: trainer.email, bcc: 'contact@deliverydigital.fr',
+      subject: `Cours reporté - ${s.formationTitle || 'Formation'}`,
+      html: emailShell(`<p style="font-size:15px;color:#1d1d1f;margin:0 0 12px">Bonjour ${esc(trainer.name)},</p>
+        <p style="font-size:14px;color:#3a3a3c;line-height:1.6;margin:0 0 14px">La date de l'un de vos cours a été <strong>modifiée</strong> :</p>
+        <div style="background:#f5f5f7;border:1px solid #e5e5ea;border-radius:12px;padding:14px 16px;margin:0 0 16px;font-size:14px;color:#1d1d1f">
+          <p style="margin:0 0 4px"><strong>Formation :</strong> ${esc(s.formationTitle || '-')}</p>
+          <p style="margin:0 0 4px"><strong>Client :</strong> ${esc(s.clientName || '-')}</p>
+          <p style="margin:0 0 4px;color:#86868b;text-decoration:line-through"><strong>Ancienne date :</strong> ${esc(fmt(oldStart))}</p>
+          <p style="margin:0;color:#0066CC"><strong>Nouvelle date :</strong> ${esc(fmt(s.sessionStart))}</p>
+        </div>
+        <p style="font-size:13px;color:#3a3a3c;line-height:1.6;margin:0 0 16px">Merci de prendre note de ce changement. Le détail reste disponible dans votre espace.</p>
+        <a href="${PUBLIC_BASE}/formateur" style="display:inline-block;background:${DD_BLUE};color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:999px">Voir mon cours</a>`),
+    });
+  } catch (e) { /* email best effort */ }
+}
+
+// Notifie le formateur qu'un cours a été ANNULÉ (best effort). @Rabah 2026-06-21
+async function notifyCancelled(trainer, s, reason) {
+  try {
+    if (!trainer?.email) return;
+    const when = s.sessionStart ? new Date(s.sessionStart).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'à planifier';
+    await getTransporter().sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER || 'contact@deliverydigital.fr', to: trainer.email, bcc: 'contact@deliverydigital.fr',
+      subject: `Cours annulé - ${s.formationTitle || 'Formation'}`,
+      html: emailShell(`<p style="font-size:15px;color:#1d1d1f;margin:0 0 12px">Bonjour ${esc(trainer.name)},</p>
+        <p style="font-size:14px;color:#3a3a3c;line-height:1.6;margin:0 0 14px">L'un de vos cours a été <strong>annulé</strong> :</p>
+        <div style="background:#f5f5f7;border:1px solid #e5e5ea;border-radius:12px;padding:14px 16px;margin:0 0 16px;font-size:14px;color:#1d1d1f">
+          <p style="margin:0 0 4px"><strong>Formation :</strong> ${esc(s.formationTitle || '-')}</p>
+          <p style="margin:0 0 4px"><strong>Client :</strong> ${esc(s.clientName || '-')}</p>
+          <p style="margin:0"><strong>Date prévue :</strong> ${esc(when)}</p>
+        </div>
+        ${reason ? `<p style="font-size:13px;color:#3a3a3c;line-height:1.6;margin:0 0 16px"><strong>Motif :</strong> ${esc(reason)}</p>` : ''}
+        <p style="font-size:13px;color:#3a3a3c;line-height:1.6;margin:0 0 16px">Vous n'avez plus rien à préparer pour cette session. Nous reviendrons vers vous pour vos prochains cours.</p>
+        <a href="${PUBLIC_BASE}/formateur" style="display:inline-block;background:${DD_BLUE};color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:999px">Accéder à mon espace</a>`),
+    });
+  } catch (e) { /* email best effort */ }
+}
+
 // Création d'une session manuelle.
 router.post('/sessions', requireAdmin, async (req, res) => {
   const b = req.body || {};
@@ -276,10 +334,14 @@ router.post('/sessions/from-dossier', requireAdmin, async (req, res) => {
 });
 
 // MAJ session (date, lieu, responsable pédago, notes...).
+// notify=true envoie un email au formateur : "reporté" si la date change, "annulé" si status->cancelled. @Rabah 2026-06-21
 router.patch('/sessions/:id', requireAdmin, async (req, res) => {
   const s = await TrainerSession.findById(req.params.id);
   if (!s) return res.status(404).json({ ok: false, error: 'not_found' });
   const b = req.body || {};
+  // État avant modification pour détecter report (date) et annulation (status).
+  const oldStart = s.sessionStart;
+  const wasCancelled = s.status === 'cancelled';
   for (const k of ['formationTitle', 'clientName', 'clientEmail', 'location', 'addr', 'pedagoName', 'pedagoPhone', 'notes']) {
     if (b[k] != null) s[k] = b[k];
   }
@@ -288,6 +350,14 @@ router.patch('/sessions/:id', requireAdmin, async (req, res) => {
   if (b.endAt) s.sessionEnd = new Date(b.endAt);
   if (b.status && ['scheduled', 'cancelled'].includes(b.status)) s.status = b.status;
   await s.save();
+  // Email best effort au formateur si demandé.
+  if (b.notify) {
+    const dateChanged = b.startAt && (!oldStart || new Date(b.startAt).getTime() !== new Date(oldStart).getTime());
+    const justCancelled = s.status === 'cancelled' && !wasCancelled;
+    const trainer = await User.findById(s.trainerId).select('name email').lean();
+    if (justCancelled) notifyCancelled(trainer, s, b.reason);
+    else if (dateChanged) notifyRescheduled(trainer, s, oldStart);
+  }
   res.json({ ok: true, session: s });
 });
 

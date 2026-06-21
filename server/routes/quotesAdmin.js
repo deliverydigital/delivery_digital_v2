@@ -5,9 +5,10 @@ import PDFDocument from 'pdfkit';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { QuickQuote } from '../models/index.js';
+import { QuickQuote, User } from '../models/index.js';
 import ProjectChat from '../models/ProjectChat.js';
 import ChatUser from '../models/ChatUser.js';
+import { authenticate } from '../middleware/auth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Logo pour PDF (resolu depuis server/routes/ vers public/). Meme image que celle servie en URL au HTML.
@@ -77,75 +78,74 @@ router.get('/exchange-rate', requireAdmin, async (req, res) => {
   }
 });
 
-router.get('/catalog', requireAdmin, (req, res) => {
-  res.json({
-    catalog: [
+// Catalogue de services IT, partagé entre l'admin et l'espace agence (revente). @Rabah 2026-06-21
+const SERVICE_CATALOG = [
       // Web
-      { id: 'site-vitrine', category: 'Web', label: 'Site vitrine sur mesure', defaultPrice: 990, unit: 'forfait', description: 'Site corporate sur mesure (5-8 pages), responsive, optimise SEO de base.' },
-      { id: 'site-saas', category: 'Web', label: 'Plateforme SaaS / dashboard', defaultPrice: 18000, unit: 'forfait', description: 'Application web complete : auth, dashboard, base de donnees, deploiement.' },
-      { id: 'site-ecommerce', category: 'Web', label: 'E-commerce sur mesure', defaultPrice: 12000, unit: 'forfait', description: 'Boutique en ligne complete : catalogue, panier, checkout, gestion commandes, espace admin.' },
-      { id: 'refonte', category: 'Web', label: 'Refonte de site existant', defaultPrice: 8500, unit: 'forfait', description: 'Reprise, migration, modernisation d\'un site existant.' },
+      { id: 'site-vitrine', category: 'Web', label: 'Site vitrine sur mesure', defaultPrice: 890, unit: 'forfait', description: 'Site corporate sur mesure (5-8 pages), responsive, optimise SEO de base.' },
+      { id: 'site-saas', category: 'Web', label: 'Plateforme SaaS / dashboard', defaultPrice: 9500, unit: 'forfait', description: 'Application web complete : auth, dashboard, base de donnees, deploiement.' },
+      { id: 'site-ecommerce', category: 'Web', label: 'E-commerce sur mesure', defaultPrice: 5900, unit: 'forfait', description: 'Boutique en ligne complete : catalogue, panier, checkout, gestion commandes, espace admin.' },
+      { id: 'refonte', category: 'Web', label: 'Refonte de site existant', defaultPrice: 3500, unit: 'forfait', description: 'Reprise, migration, modernisation d\'un site existant.' },
 
       // Mobile
-      { id: 'app-mobile', category: 'Mobile', label: 'Application mobile iOS + Android', defaultPrice: 15000, unit: 'forfait', description: 'App mobile native (React Native), 2 stores, notifications, base de donnees. Design non inclus (a chiffrer en sus si besoin).' },
-      { id: 'app-mobile-mvp', category: 'Mobile', label: 'MVP application mobile (1 plateforme)', defaultPrice: 12000, unit: 'forfait', description: 'Version minimale viable iOS OU Android, 5-7 ecrans cles, deploiement TestFlight ou interne.' },
-      { id: 'pwa', category: 'Mobile', label: 'Progressive Web App (PWA)', defaultPrice: 6500, unit: 'forfait', description: 'Application web installable, offline, notifications push - alternative legere aux apps natives.' },
+      { id: 'app-mobile', category: 'Mobile', label: 'Application mobile iOS + Android', defaultPrice: 8500, unit: 'forfait', description: 'App mobile native (React Native), 2 stores, notifications, base de donnees. Design non inclus (a chiffrer en sus si besoin).' },
+      { id: 'app-mobile-mvp', category: 'Mobile', label: 'MVP application mobile (1 plateforme)', defaultPrice: 5500, unit: 'forfait', description: 'Version minimale viable iOS OU Android, 5-7 ecrans cles, deploiement TestFlight ou interne.' },
+      { id: 'pwa', category: 'Mobile', label: 'Progressive Web App (PWA)', defaultPrice: 3500, unit: 'forfait', description: 'Application web installable, offline, notifications push - alternative legere aux apps natives.' },
 
       // Logiciels metier
-      { id: 'crm-sur-mesure', category: 'Logiciels', label: 'CRM sur mesure', defaultPrice: 22000, unit: 'forfait', description: 'Pipeline ventes, gestion contacts, tasks, automatisations, export.' },
-      { id: 'erp-modulaire', category: 'Logiciels', label: 'ERP modulaire', defaultPrice: 35000, unit: 'forfait', description: 'Stock, achats, ventes, comptabilite, RH - modules selon vos besoins.' },
-      { id: 'plateforme-b2b', category: 'Logiciels', label: 'Plateforme B2B / marketplace', defaultPrice: 28000, unit: 'forfait', description: 'Multi-vendeurs, gestion produits, commissions, paiements split.' },
-      { id: 'gestion-projet', category: 'Logiciels', label: 'Outil de gestion de projet interne', defaultPrice: 14000, unit: 'forfait', description: 'Planning, taches, equipes, suivi temps, rapports.' },
+      { id: 'crm-sur-mesure', category: 'Logiciels', label: 'CRM sur mesure', defaultPrice: 7500, unit: 'forfait', description: 'Pipeline ventes, gestion contacts, tasks, automatisations, export.' },
+      { id: 'erp-modulaire', category: 'Logiciels', label: 'ERP modulaire', defaultPrice: 12000, unit: 'forfait', description: 'Stock, achats, ventes, comptabilite, RH - modules selon vos besoins.' },
+      { id: 'plateforme-b2b', category: 'Logiciels', label: 'Plateforme B2B / marketplace', defaultPrice: 11000, unit: 'forfait', description: 'Multi-vendeurs, gestion produits, commissions, paiements split.' },
+      { id: 'gestion-projet', category: 'Logiciels', label: 'Outil de gestion de projet interne', defaultPrice: 5500, unit: 'forfait', description: 'Planning, taches, equipes, suivi temps, rapports.' },
 
       // Paiement
       { id: 'stripe-integration', category: 'Paiement', label: 'Integration Stripe (paiement par carte)', defaultPrice: 300, unit: 'forfait', description: 'Stripe Checkout ou Stripe Elements, gestion paiement unique, webhooks, page succes/echec.' },
       { id: 'stripe-subscription', category: 'Paiement', label: 'Stripe abonnements (SaaS)', defaultPrice: 500, unit: 'forfait', description: 'Stripe Billing : abonnements recurrents, plans tarifaires, customer portal, webhooks, gestion echec paiement.' },
-      { id: 'stripe-marketplace', category: 'Paiement', label: 'Stripe Connect (marketplace)', defaultPrice: 5500, unit: 'forfait', description: 'Stripe Connect Express, paiements split entre vendeurs, KYC, payouts automatiques.' },
+      { id: 'stripe-marketplace', category: 'Paiement', label: 'Stripe Connect (marketplace)', defaultPrice: 2500, unit: 'forfait', description: 'Stripe Connect Express, paiements split entre vendeurs, KYC, payouts automatiques.' },
       { id: 'apple-google-pay', category: 'Paiement', label: 'Apple Pay + Google Pay', defaultPrice: 300, unit: 'forfait', description: 'Activation Apple Pay (iOS/Safari) et Google Pay (Android/Chrome) sur votre site. Verification domaine, certificats, integration boutons natifs.' },
-      { id: 'paypal-integration', category: 'Paiement', label: 'Integration PayPal', defaultPrice: 1200, unit: 'forfait', description: 'Bouton PayPal, gestion ordre + capture, webhooks IPN.' },
-      { id: 'paiement-multi', category: 'Paiement', label: 'Multi-providers (Stripe + PayPal + Apple/Google Pay)', defaultPrice: 4500, unit: 'forfait', description: 'Couverture complete des moyens de paiement modernes, abstraction propre cote backend.' },
+      { id: 'paypal-integration', category: 'Paiement', label: 'Integration PayPal', defaultPrice: 690, unit: 'forfait', description: 'Bouton PayPal, gestion ordre + capture, webhooks IPN.' },
+      { id: 'paiement-multi', category: 'Paiement', label: 'Multi-providers (Stripe + PayPal + Apple/Google Pay)', defaultPrice: 1900, unit: 'forfait', description: 'Couverture complete des moyens de paiement modernes, abstraction propre cote backend.' },
 
       // SEO / Marketing
-      { id: 'seo-audit', category: 'SEO', label: 'Audit SEO complet', defaultPrice: 1500, unit: 'forfait', description: 'Audit technique, contenu, backlinks, analyse concurrentielle, recommandations priorisees.' },
-      { id: 'seo-onpage', category: 'SEO', label: 'Optimisation SEO on-page', defaultPrice: 2500, unit: 'forfait', description: 'Meta tags, Schema.org JSON-LD, sitemap, robots, headings, alt images, vitesse, Core Web Vitals.' },
-      { id: 'seo-articles-pack-10', category: 'SEO', label: 'Pack 10 articles SEO longue traine', defaultPrice: 1800, unit: 'forfait', description: '10 articles 1200-1800 mots, optimises mots-cles cibles, brief + redaction + integration.' },
-      { id: 'seo-articles-pack-30', category: 'SEO', label: 'Pack 30 articles SEO longue traine', defaultPrice: 4500, unit: 'forfait', description: '30 articles, ciblage longue traine, redaction qualifiee + IA, integration.' },
-      { id: 'seo-pages-villes', category: 'SEO', label: 'Pages programmatiques service x ville', defaultPrice: 3500, unit: 'pack 50 pages', description: 'Generation de pages SEO ciblees par ville (ex: 50 pages : 5 services x 10 villes), Schema.org, indexation Search Console.' },
-      { id: 'seo-pages-pays', category: 'SEO', label: 'Pages SEO multi-pays', defaultPrice: 6500, unit: 'pack 100 pages', description: '100 pages SEO ciblant differents pays/marches (international), traduction multi-langue, hreflang.' },
-      { id: 'seo-monthly', category: 'SEO', label: 'Suivi SEO mensuel', defaultPrice: 1200, unit: 'mois', description: 'Monitoring positions, ajustements, 4 articles/mois, rapport mensuel, optimisations continues.' },
-      { id: 'seo-geo', category: 'SEO', label: 'GEO (Generative Engine Optimization)', defaultPrice: 2500, unit: 'forfait', description: 'Optimisation pour les moteurs IA (ChatGPT, Perplexity, Claude, Google AI Overviews) : llms.txt, robots.txt bots IA, contenu citable, FAQ Schema.' },
+      { id: 'seo-audit', category: 'SEO', label: 'Audit SEO complet', defaultPrice: 690, unit: 'forfait', description: 'Audit technique, contenu, backlinks, analyse concurrentielle, recommandations priorisees.' },
+      { id: 'seo-onpage', category: 'SEO', label: 'Optimisation SEO on-page', defaultPrice: 990, unit: 'forfait', description: 'Meta tags, Schema.org JSON-LD, sitemap, robots, headings, alt images, vitesse, Core Web Vitals.' },
+      { id: 'seo-articles-pack-10', category: 'SEO', label: 'Pack 10 articles SEO longue traine', defaultPrice: 690, unit: 'forfait', description: '10 articles 1200-1800 mots, optimises mots-cles cibles, brief + redaction + integration.' },
+      { id: 'seo-articles-pack-30', category: 'SEO', label: 'Pack 30 articles SEO longue traine', defaultPrice: 1700, unit: 'forfait', description: '30 articles, ciblage longue traine, redaction qualifiee + IA, integration.' },
+      { id: 'seo-pages-villes', category: 'SEO', label: 'Pages programmatiques service x ville', defaultPrice: 1500, unit: 'pack 50 pages', description: 'Generation de pages SEO ciblees par ville (ex: 50 pages : 5 services x 10 villes), Schema.org, indexation Search Console.' },
+      { id: 'seo-pages-pays', category: 'SEO', label: 'Pages SEO multi-pays', defaultPrice: 2900, unit: 'pack 100 pages', description: '100 pages SEO ciblant differents pays/marches (international), traduction multi-langue, hreflang.' },
+      { id: 'seo-monthly', category: 'SEO', label: 'Suivi SEO mensuel', defaultPrice: 590, unit: 'mois', description: 'Monitoring positions, ajustements, 4 articles/mois, rapport mensuel, optimisations continues.' },
+      { id: 'seo-geo', category: 'SEO', label: 'GEO (Generative Engine Optimization)', defaultPrice: 990, unit: 'forfait', description: 'Optimisation pour les moteurs IA (ChatGPT, Perplexity, Claude, Google AI Overviews) : llms.txt, robots.txt bots IA, contenu citable, FAQ Schema.' },
 
       // Cloud / Infra
-      { id: 'cloud-setup', category: 'Cloud', label: 'Mise en place Cloud / DevOps', defaultPrice: 4500, unit: 'forfait', description: 'AWS, CI/CD, monitoring, scalabilite, securite, backups.' },
-      { id: 'migration-cloud', category: 'Cloud', label: 'Migration vers le cloud', defaultPrice: 7500, unit: 'forfait', description: 'Migration depuis hebergement existant vers AWS/GCP/Azure, zero downtime, rollback safe.' },
-      { id: 'infra-as-code', category: 'Cloud', label: 'Infrastructure as Code (Terraform)', defaultPrice: 6000, unit: 'forfait', description: 'Codification de l\'infra, deploiement reproductible, environnements dev/staging/prod.' },
+      { id: 'cloud-setup', category: 'Cloud', label: 'Mise en place Cloud / DevOps', defaultPrice: 1900, unit: 'forfait', description: 'AWS, CI/CD, monitoring, scalabilite, securite, backups.' },
+      { id: 'migration-cloud', category: 'Cloud', label: 'Migration vers le cloud', defaultPrice: 2900, unit: 'forfait', description: 'Migration depuis hebergement existant vers AWS/GCP/Azure, zero downtime, rollback safe.' },
+      { id: 'infra-as-code', category: 'Cloud', label: 'Infrastructure as Code (Terraform)', defaultPrice: 2500, unit: 'forfait', description: 'Codification de l\'infra, deploiement reproductible, environnements dev/staging/prod.' },
 
       // IA
-      { id: 'ia-chatbot', category: 'IA', label: 'Chatbot / agent IA Claude', defaultPrice: 6500, unit: 'forfait', description: 'Chatbot Claude branche sur vos donnees, conversation, qualification leads, contexte personnalise.' },
-      { id: 'ia-rag', category: 'IA', label: 'Recherche IA sur vos documents (RAG)', defaultPrice: 8500, unit: 'forfait', description: 'Vectorisation, indexation, recherche semantique, reponses sourcees sur votre base documentaire.' },
-      { id: 'ia-vision', category: 'IA', label: 'Analyse d\'images / documents par IA', defaultPrice: 5500, unit: 'forfait', description: 'OCR, classification, extraction structuree (factures, BL, contrats), Claude Vision.' },
-      { id: 'ia-automation', category: 'IA', label: 'Automatisations IA workflow', defaultPrice: 7500, unit: 'forfait', description: 'Workflow IA dans vos outils (n8n, Zapier custom, AWS Step Functions), bots metiers.' },
+      { id: 'ia-chatbot', category: 'IA', label: 'Chatbot / agent IA Claude', defaultPrice: 2900, unit: 'forfait', description: 'Chatbot Claude branche sur vos donnees, conversation, qualification leads, contexte personnalise.' },
+      { id: 'ia-rag', category: 'IA', label: 'Recherche IA sur vos documents (RAG)', defaultPrice: 3900, unit: 'forfait', description: 'Vectorisation, indexation, recherche semantique, reponses sourcees sur votre base documentaire.' },
+      { id: 'ia-vision', category: 'IA', label: 'Analyse d\'images / documents par IA', defaultPrice: 2500, unit: 'forfait', description: 'OCR, classification, extraction structuree (factures, BL, contrats), Claude Vision.' },
+      { id: 'ia-automation', category: 'IA', label: 'Automatisations IA workflow', defaultPrice: 2900, unit: 'forfait', description: 'Workflow IA dans vos outils (n8n, Zapier custom, AWS Step Functions), bots metiers.' },
 
       // Design
-      { id: 'design-ui-ux', category: 'Design', label: 'Design UI / UX', defaultPrice: 3500, unit: 'forfait', description: 'Maquettes Figma, prototype clickable, design system, parcours utilisateurs.' },
-      { id: 'design-system', category: 'Design', label: 'Design system complet', defaultPrice: 5500, unit: 'forfait', description: 'Tokens, composants, theming, documentation Figma + code (React).' },
-      { id: 'logo-brand', category: 'Design', label: 'Identite visuelle (logo + charte)', defaultPrice: 2500, unit: 'forfait', description: 'Logo, palette, typographies, declinaisons, charte graphique exportable.' },
+      { id: 'design-ui-ux', category: 'Design', label: 'Design UI / UX', defaultPrice: 1500, unit: 'forfait', description: 'Maquettes Figma, prototype clickable, design system, parcours utilisateurs.' },
+      { id: 'design-system', category: 'Design', label: 'Design system complet', defaultPrice: 2500, unit: 'forfait', description: 'Tokens, composants, theming, documentation Figma + code (React).' },
+      { id: 'logo-brand', category: 'Design', label: 'Identite visuelle (logo + charte)', defaultPrice: 890, unit: 'forfait', description: 'Logo, palette, typographies, declinaisons, charte graphique exportable.' },
 
       // Integrations / API
-      { id: 'integration-api', category: 'Integrations', label: 'Integration API / connecteur', defaultPrice: 3500, unit: 'forfait', description: 'Connexion entre vos outils existants, automatisation des flux de donnees.' },
-      { id: 'webhook-system', category: 'Integrations', label: 'Systeme de webhooks', defaultPrice: 2500, unit: 'forfait', description: 'Production et consommation de webhooks, reliabilite (retry, dead letter), securite signatures.' },
+      { id: 'integration-api', category: 'Integrations', label: 'Integration API / connecteur', defaultPrice: 1200, unit: 'forfait', description: 'Connexion entre vos outils existants, automatisation des flux de donnees.' },
+      { id: 'webhook-system', category: 'Integrations', label: 'Systeme de webhooks', defaultPrice: 900, unit: 'forfait', description: 'Production et consommation de webhooks, reliabilite (retry, dead letter), securite signatures.' },
 
       // Acquisition / Outbound
-      { id: 'outbound-platform', category: 'Acquisition', label: 'Plateforme prospection outbound (scraping + cold email auto)', defaultPrice: 12000, unit: 'forfait', description: 'Crawler de prospects par secteur/zone (LinkedIn, Sirene, annuaires), enrichissement contacts (email + telephone), sequences de cold email automatisees, suivi (ouvertures, clics, reponses), warmup boites, gestion blacklist + desinscriptions RGPD, dashboard de pilotage.' },
-      { id: 'outbound-campaign-monthly', category: 'Acquisition', label: 'Gestion campagne outbound mensuelle', defaultPrice: 1500, unit: 'mois', description: 'Operation mensuelle : extraction prospects cibles, redaction sequences IA, lancement, monitoring, ajustements A/B, reporting hebdomadaire. Boites SMTP cote client.' },
-      { id: 'outbound-enrichment', category: 'Acquisition', label: 'Pack enrichissement 1000 prospects', defaultPrice: 800, unit: 'pack 1000', description: 'Verification email (bounce check), recuperation telephone direct, profil LinkedIn, taille entreprise, CA. Fichier CSV livre.' },
+      { id: 'outbound-platform', category: 'Acquisition', label: 'Plateforme prospection outbound (scraping + cold email auto)', defaultPrice: 4900, unit: 'forfait', description: 'Crawler de prospects par secteur/zone (LinkedIn, Sirene, annuaires), enrichissement contacts (email + telephone), sequences de cold email automatisees, suivi (ouvertures, clics, reponses), warmup boites, gestion blacklist + desinscriptions RGPD, dashboard de pilotage.' },
+      { id: 'outbound-campaign-monthly', category: 'Acquisition', label: 'Gestion campagne outbound mensuelle', defaultPrice: 690, unit: 'mois', description: 'Operation mensuelle : extraction prospects cibles, redaction sequences IA, lancement, monitoring, ajustements A/B, reporting hebdomadaire. Boites SMTP cote client.' },
+      { id: 'outbound-enrichment', category: 'Acquisition', label: 'Pack enrichissement 1000 prospects', defaultPrice: 390, unit: 'pack 1000', description: 'Verification email (bounce check), recuperation telephone direct, profil LinkedIn, taille entreprise, CA. Fichier CSV livre.' },
 
       // Autres
-      { id: 'audit-tech', category: 'Audit', label: 'Audit technique', defaultPrice: 1500, unit: 'forfait', description: 'Revue complete du code, securite, performance, recommandations.' },
-      { id: 'audit-securite', category: 'Audit', label: 'Audit securite', defaultPrice: 2500, unit: 'forfait', description: 'OWASP Top 10, pentest leger, recommandations.' },
-      { id: 'maintenance', category: 'Maintenance', label: 'Maintenance mensuelle', defaultPrice: 800, unit: 'mois', description: 'Mises a jour, surveillance, corrections de bugs, evolutions mineures.' },
-      { id: 'support-prio', category: 'Maintenance', label: 'Support prioritaire (SLA 4h)', defaultPrice: 1500, unit: 'mois', description: 'Reponse sous 4h ouvrees, hotline, resolution des incidents critiques.' },
-      { id: 'formation-team', category: 'Formation', label: 'Formation equipe technique', defaultPrice: 1200, unit: 'jour', description: 'Formation sur mesure pour vos equipes (React, Node, AWS, ...).' },
+      { id: 'audit-tech', category: 'Audit', label: 'Audit technique', defaultPrice: 690, unit: 'forfait', description: 'Revue complete du code, securite, performance, recommandations.' },
+      { id: 'audit-securite', category: 'Audit', label: 'Audit securite', defaultPrice: 1200, unit: 'forfait', description: 'OWASP Top 10, pentest leger, recommandations.' },
+      { id: 'maintenance', category: 'Maintenance', label: 'Maintenance mensuelle', defaultPrice: 290, unit: 'mois', description: 'Mises a jour, surveillance, corrections de bugs, evolutions mineures.' },
+      { id: 'support-prio', category: 'Maintenance', label: 'Support prioritaire (SLA 4h)', defaultPrice: 690, unit: 'mois', description: 'Reponse sous 4h ouvrees, hotline, resolution des incidents critiques.' },
+      { id: 'formation-team', category: 'Formation', label: 'Formation equipe technique', defaultPrice: 690, unit: 'jour', description: 'Formation sur mesure pour vos equipes (React, Node, AWS, ...).' },
 
       // Regie / Jour de dev
       { id: 'jour-dev', category: 'Regie', label: 'Jour de developpement', defaultPrice: 330, unit: 'jour', description: 'Prestation de developpement au jour, sur mesure selon besoin client. Pour ajustements, evolutions ponctuelles ou support technique.' },
@@ -154,8 +154,9 @@ router.get('/catalog', requireAdmin, (req, res) => {
       // Champs promo : originalPriceTTC + promoExpiry (date YYYY-MM-DD inclus).
       // Si presents, le rendu du devis et de la facture affichent le tarif initial barre + mention "OFFRE PROMO jusqu'au ...".
       { id: 'rd-info', category: 'R&D', label: 'Prestation R&D informatique', defaultPrice: 125, unit: 'jour', originalPriceTTC: 330, promoExpiry: '2026-05-24', description: 'Prestations de recherche et développement (R&D) informatique dans le cadre du projet HiPe Kids, incluant des travaux de conception, développement expérimental et résolution de verrous techniques.' },
-    ],
-  });
+];
+router.get('/catalog', requireAdmin, (req, res) => {
+  res.json({ catalog: SERVICE_CATALOG });
 });
 
 /* ===========================================================
@@ -331,19 +332,19 @@ router.post('/', requireAdmin, async (req, res) => {
    est cree en brouillon -> retrouvable dans la section Devis pour envoi.
    @author Rabah Ziane - 2026-06-02
    =========================================================== */
-const CATALOG_FOR_AI = `Web : Site vitrine 990€ | Plateforme SaaS/dashboard 18000€ | E-commerce 12000€ | Refonte 8500€
-Mobile : App iOS+Android 15000€ | MVP mobile 1 plateforme 12000€ | PWA 6500€
-Logiciels : CRM 22000€ | ERP modulaire 35000€ | Marketplace B2B 28000€ | Outil gestion projet 14000€
-Paiement : Stripe 300€ | Stripe abonnements 500€ | Stripe Connect marketplace 5500€ | Apple/Google Pay 300€ | PayPal 1200€ | Multi-providers 4500€
-SEO : Audit 1500€ | On-page 2500€ | Pack 10 articles 1800€ | Pack 30 articles 4500€ | Pages villes (50) 3500€ | Pages pays (100) 6500€ | Suivi mensuel 1200€/mois | GEO 2500€
-Cloud : Setup DevOps 4500€ | Migration cloud 7500€ | Infra as Code 6000€
-IA : Chatbot Claude 6500€ | RAG documents 8500€ | Vision/OCR 5500€ | Automatisation workflow 7500€
-Design : UI/UX 3500€ | Design system 5500€ | Logo + charte 2500€
-Integrations : API/connecteur 3500€ | Systeme webhooks 2500€
-Acquisition : Plateforme outbound 12000€ | Campagne mensuelle 1500€/mois | Enrichissement 1000 prospects 800€
-Audit : Technique 1500€ | Securite 2500€
-Maintenance : Mensuelle 800€/mois | Support SLA 4h 1500€/mois
-Formation : Equipe technique 1200€/jour
+const CATALOG_FOR_AI = `Web : Site vitrine 890€ | Plateforme SaaS/dashboard 9500€ | E-commerce 5900€ | Refonte 3500€
+Mobile : App iOS+Android 8500€ | MVP mobile 1 plateforme 5500€ | PWA 3500€
+Logiciels : CRM 7500€ | ERP modulaire 12000€ | Marketplace B2B 11000€ | Outil gestion projet 5500€
+Paiement : Stripe 300€ | Stripe abonnements 500€ | Stripe Connect marketplace 2500€ | Apple/Google Pay 300€ | PayPal 690€ | Multi-providers 1900€
+SEO : Audit 690€ | On-page 990€ | Pack 10 articles 690€ | Pack 30 articles 1700€ | Pages villes (50) 1500€ | Pages pays (100) 2900€ | Suivi mensuel 590€/mois | GEO 990€
+Cloud : Setup DevOps 1900€ | Migration cloud 2900€ | Infra as Code 2500€
+IA : Chatbot Claude 2900€ | RAG documents 3900€ | Vision/OCR 2500€ | Automatisation workflow 2900€
+Design : UI/UX 1500€ | Design system 2500€ | Logo + charte 890€
+Integrations : API/connecteur 1200€ | Systeme webhooks 900€
+Acquisition : Plateforme outbound 4900€ | Campagne mensuelle 690€/mois | Enrichissement 1000 prospects 390€
+Audit : Technique 690€ | Securite 1200€
+Maintenance : Mensuelle 290€/mois | Support SLA 4h 690€/mois
+Formation : Equipe technique 690€/jour
 Regie : Jour de developpement 330€/jour`;
 
 router.post('/from-conversation', requireAdmin, async (req, res) => {
@@ -1417,5 +1418,123 @@ publicRouter.post('/:token/reject', async (req, res) => {
   }
 });
 
+/* ===========================================================
+   Espace AGENCE : revente de services informatiques (devis).
+   Auth JWT (role agence / agence_commercial), scopé à l'agence.
+   Réutilise le moteur de devis (catalogue, rendu HTML, email, facture d'acompte).
+   Monté sur /api/agency/quotes. @author Rabah Ziane - 2026-06-21
+   =========================================================== */
+const agencyRouter = express.Router();
+agencyRouter.use(authenticate, (req, res, next) => {
+  if (!req.user) return res.status(401).json({ error: 'unauthenticated' });
+  if (req.user.role !== 'agence' && req.user.role !== 'agence_commercial') return res.status(403).json({ error: 'not_agence' });
+  next();
+});
+async function quoteCtx(req) {
+  const me = await User.findById(req.user.id).lean();
+  const isOwner = me.role === 'agence';
+  return {
+    me, isOwner,
+    agencyId: isOwner ? String(me._id) : String(me.parentAgencyId || me._id),
+    commercialId: isOwner ? null : String(me._id),
+    name: me.name,
+  };
+}
+// Filtre : le propriétaire voit tous les devis de l'agence ; le commercial uniquement les siens.
+function quoteScope(c) {
+  return c.isOwner ? { agencyId: c.agencyId } : { agencyId: c.agencyId, commercialId: c.commercialId };
+}
+
+agencyRouter.get('/catalog', (req, res) => res.json({ catalog: SERVICE_CATALOG }));
+
+agencyRouter.get('/', async (req, res) => {
+  try {
+    const c = await quoteCtx(req);
+    const items = await QuickQuote.find(quoteScope(c)).sort({ createdAt: -1 }).limit(200).lean();
+    res.json({ items });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+agencyRouter.get('/:id', async (req, res) => {
+  try {
+    const c = await quoteCtx(req);
+    const item = await QuickQuote.findOne({ _id: req.params.id, ...quoteScope(c) }).lean();
+    if (!item) return res.status(404).json({ error: 'not_found' });
+    res.json({ item });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+agencyRouter.post('/', async (req, res) => {
+  try {
+    const c = await quoteCtx(req);
+    const b = req.body || {};
+    // Champs autorisés à la création par l'agence (pas de statut ni d'attribution falsifiables).
+    const allowed = ['client', 'title', 'intro', 'lines', 'taxRate', 'validUntil', 'notes', 'currency', 'secondaryCurrency', 'secondaryRate', 'discountType', 'discountValue', 'language', 'paymentSchedule', 'autoSendInvoice'];
+    const data = {};
+    for (const k of allowed) if (k in b) data[k] = b[k];
+    data.issuer = 'fr'; // les agences revendent au nom de Delivery Digital Nice (France)
+    data.agencyId = c.agencyId;
+    data.agencyName = c.isOwner ? c.name : undefined;
+    data.commercialId = c.commercialId || undefined;
+    data.commercialName = c.isOwner ? undefined : c.name;
+    const quote = await QuickQuote.create(data);
+    res.json({ item: quote });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+agencyRouter.patch('/:id', async (req, res) => {
+  try {
+    const c = await quoteCtx(req);
+    const item = await QuickQuote.findOne({ _id: req.params.id, ...quoteScope(c) });
+    if (!item) return res.status(404).json({ error: 'not_found' });
+    if (item.status !== 'draft' && item.status !== 'sent') return res.status(409).json({ error: 'locked' });
+    const allowed = ['client', 'title', 'intro', 'lines', 'taxRate', 'validUntil', 'notes', 'currency', 'secondaryCurrency', 'secondaryRate', 'discountType', 'discountValue', 'language', 'paymentSchedule', 'autoSendInvoice'];
+    for (const k of allowed) if (k in req.body) item[k] = req.body[k];
+    await item.save();
+    res.json({ item });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+agencyRouter.delete('/:id', async (req, res) => {
+  try {
+    const c = await quoteCtx(req);
+    const item = await QuickQuote.findOne({ _id: req.params.id, ...quoteScope(c) });
+    if (!item) return res.status(404).json({ error: 'not_found' });
+    if (item.status !== 'draft') return res.status(409).json({ error: 'only_draft' });
+    await item.deleteOne();
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+agencyRouter.post('/:id/send', async (req, res) => {
+  try {
+    const c = await quoteCtx(req);
+    const quote = await QuickQuote.findOne({ _id: req.params.id, ...quoteScope(c) });
+    if (!quote) return res.status(404).json({ error: 'not_found' });
+    if (!quote.client?.email) return res.status(400).json({ error: 'client_email_required' });
+    const transporter = getTransporter();
+    const html = renderHtml(quote, { publicView: false });
+    const publicLink = `${PUBLIC_BASE}/devis/${quote.publicToken}`;
+    const L = getLabels(quote.language || 'fr');
+    const A = ACCEPT_LABELS[(quote.language || 'fr').toLowerCase()] || ACCEPT_LABELS.fr;
+    const ctaBlock = `
+      <div style="text-align:center;margin:24px 0 8px;padding:0 20px;">
+        <a href="${publicLink}#accept" style="display:inline-block;padding:16px 36px;background:#1D1D1F;color:#fff;text-decoration:none;border-radius:999px;font-weight:600;font-size:16px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;">${A.accept}</a>
+      </div>
+      <p style="text-align:center;font-size:12px;color:#86868B;padding:0 20px 24px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;">
+        ${A.actionHelp}<br/>
+        <a href="${publicLink}" style="color:#86868B;text-decoration:underline;">${publicLink}</a>
+      </p>`;
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || 'contact@deliverydigital.fr',
+      to: quote.client.email, bcc: 'contact@deliverydigital.fr',
+      subject: L.subject(quote.ref), html: html + ctaBlock,
+    });
+    quote.status = 'sent'; quote.sentAt = new Date();
+    await quote.save();
+    res.json({ item: quote, publicLink });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 export default router;
-export { publicRouter as publicQuotesRouter };
+export { publicRouter as publicQuotesRouter, agencyRouter as agencyQuotesRouter };

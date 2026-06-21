@@ -13,6 +13,7 @@ import AccessRequest from '../models/AccessRequest.js';
 import AgencyLead from '../models/AgencyLead.js';
 import AgencyDossier from '../models/AgencyDossier.js';
 import ConventionSignRequest from '../models/ConventionSignRequest.js';
+import { autoAssignTrainerToDossier } from '../lib/trainerAssign.js';
 
 const router = express.Router();
 const PUBLIC_BASE = 'https://deliverydigital.fr';
@@ -195,8 +196,12 @@ function leadBase(c, r) {
     agencyId: c.agencyId, agencyName: c.isOwner ? c.name : undefined,
     commercialId: c.commercialId || undefined, commercialName: c.isOwner ? undefined : c.name,
     denom: (r.denom || '').trim(), email: (r.email || '').trim().toLowerCase() || undefined,
+    accountantEmail: (r.accountantEmail || '').trim().toLowerCase() || undefined,
+    managerEmail: (r.managerEmail || '').trim().toLowerCase() || undefined,
     siret: (r.siret || '').replace(/\s/g, '').trim() || undefined, opco: (r.opco || '').trim() || undefined,
     addr: (r.addr || '').trim() || undefined, status: 'new',
+    formationDoneThisYear: r.formationDoneThisYear === true || r.formationDoneThisYear === 'true',
+    companyEmployees: r.companyEmployees != null && r.companyEmployees !== '' ? Number(r.companyEmployees) : undefined,
   };
 }
 router.post('/leads', async (req, res) => {
@@ -219,8 +224,18 @@ router.patch('/leads/:id', async (req, res) => {
   if (!lead) return res.status(404).json({ ok: false, error: 'not_found' });
   if (req.body.status) lead.status = req.body.status;
   if (typeof req.body.notes === 'string') lead.notes = req.body.notes;
+  // Modification des infos client (nom + emails + SIRET + OPCO) après création. @author Rabah Ziane - 2026-06-18
+  if (typeof req.body.denom === 'string' && req.body.denom.trim()) lead.denom = req.body.denom.trim();
+  if (typeof req.body.email === 'string') lead.email = req.body.email.trim().toLowerCase() || undefined;
+  if (typeof req.body.accountantEmail === 'string') lead.accountantEmail = req.body.accountantEmail.trim().toLowerCase() || undefined;
+  if (typeof req.body.managerEmail === 'string') lead.managerEmail = req.body.managerEmail.trim().toLowerCase() || undefined;
+  if (typeof req.body.siret === 'string') lead.siret = req.body.siret.replace(/\s/g, '').trim() || undefined;
+  if (typeof req.body.opco === 'string') lead.opco = req.body.opco.trim() || undefined;
   if (typeof req.body.waitingNote === 'string') lead.waitingNote = req.body.waitingNote.trim() || undefined;
   if ('reminderAt' in req.body) lead.reminderAt = req.body.reminderAt ? new Date(req.body.reminderAt) : undefined;
+  // Suivi annuel + effectif entreprise (cf AgencyLead). @author Rabah Ziane - 2026-06-18
+  if ('formationDoneThisYear' in req.body) lead.formationDoneThisYear = req.body.formationDoneThisYear === true || req.body.formationDoneThisYear === 'true';
+  if ('companyEmployees' in req.body) lead.companyEmployees = req.body.companyEmployees != null && req.body.companyEmployees !== '' ? Number(req.body.companyEmployees) : undefined;
   await lead.save();
   res.json({ ok: true, lead });
 });
@@ -295,6 +310,8 @@ router.post('/transmit-dossier', async (req, res) => {
     amountHT: b.amountHT != null ? Math.round(Number(b.amountHT)) : 525 * salaries.length, status: 'transmitted',
   });
   if (b.leadId) { try { await AgencyLead.updateOne({ _id: b.leadId, agencyId: c.agencyId }, { status: 'converted' }); } catch { /* */ } }
+  // Auto-assignation du formateur dispo -> le cours apparaît dans son espace + superadmin. @Rabah 2026-06-19
+  try { await autoAssignTrainerToDossier(dossier); } catch { /* best effort */ }
   // Notifie le superadmin DD : nouveau dossier OPCO recu (convention signee par le client).
   try {
     const to = process.env.ADMIN_EMAIL || 'contact@deliverydigital.fr';
@@ -377,7 +394,10 @@ router.post('/sign-link', async (req, res) => {
   const c = await ctx(req);
   const b = req.body || {};
   const viaWhatsapp = b.noEmail || b.channel === 'whatsapp';
-  if (!b.clientEmail && !viaWhatsapp) return res.status(400).json({ ok: false, error: 'client_email_required' });
+  // Destinataire de la convention : le gérant signataire en priorité, sinon l'email principal. @Rabah 2026-06-18
+  const managerEmail = (b.managerEmail || '').trim().toLowerCase();
+  const recipient = managerEmail || (b.clientEmail || '').trim().toLowerCase();
+  if (!recipient && !viaWhatsapp) return res.status(400).json({ ok: false, error: 'client_email_required' });
   if (!b.denom) return res.status(400).json({ ok: false, error: 'denom_required' });
   const salaries = Array.isArray(b.salaries) ? b.salaries.filter((s) => s && s.firstname && s.lastname) : [];
   if (salaries.length === 0) return res.status(400).json({ ok: false, error: 'salaries_required' });
@@ -386,7 +406,7 @@ router.post('/sign-link', async (req, res) => {
     token, agencyId: c.agencyId, agencyName: c.name,
     commercialId: c.commercialId || undefined, commercialName: c.isOwner ? undefined : c.name,
     leadId: b.leadId || undefined, editDossierId: b.dossierId || undefined,
-    denom: b.denom, siret: b.siret, opco: b.opco, addr: b.addr, clientEmail: b.clientEmail,
+    denom: b.denom, siret: b.siret, opco: b.opco, addr: b.addr, clientEmail: b.clientEmail, managerEmail: managerEmail || undefined,
     formationTitle: b.formationTitle, sessionName: b.sessionName,
     sessionStart: b.startAt ? new Date(b.startAt) : undefined, sessionEnd: b.endAt ? new Date(b.endAt) : undefined,
     salaries, amountHT: b.amountHT != null ? Math.round(Number(b.amountHT)) : 525 * salaries.length, status: 'pending',
@@ -394,10 +414,10 @@ router.post('/sign-link', async (req, res) => {
   });
   const link = `${PUBLIC_BASE}/signer/${token}`;
   // channel 'whatsapp' (ou noEmail) : on ne fait que créer + renvoyer le lien (envoi via WhatsApp côté agence).
-  if (!b.noEmail && b.channel !== 'whatsapp' && b.clientEmail) {
+  if (!b.noEmail && b.channel !== 'whatsapp' && recipient) {
     try {
       await getTransporter().sendMail({
-        from: process.env.SMTP_FROM || 'contact@deliverydigital.fr', to: b.clientEmail, bcc: 'contact@deliverydigital.fr',
+        from: process.env.SMTP_FROM || 'contact@deliverydigital.fr', to: recipient, bcc: 'contact@deliverydigital.fr',
         subject: `Signature de votre convention de formation - ${b.denom}`,
         html: `<div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f5f5f7;padding:24px"><div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #e5e5ea;border-radius:16px;overflow:hidden"><div style="height:5px;background:#0066CC"></div><div style="padding:22px 26px 6px;text-align:center;border-bottom:1px solid #f0f0f2"><img src="${PUBLIC_BASE}/Logo-DELIVERY-Digital-Neo-sans-Bold%20noir_%202%20copie%205.png" alt="Delivery Digital" style="height:38px;width:auto" /></div><div style="padding:26px"><p style="font-size:14px;color:#3a3a3c;line-height:1.6;margin:0 0 16px">Bonjour,<br><br>${esc(c.name)} a préparé votre <strong>convention de formation professionnelle</strong>. Vous pouvez la lire et la signer directement depuis votre téléphone, au doigt, en quelques secondes.</p><a href="${link}" style="display:inline-block;background:#0066CC;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 22px;border-radius:999px">Lire et signer ma convention</a><p style="font-size:12px;color:#86868b;margin:18px 0 0">Lien sécurisé, valable 30 jours. Signature électronique de même valeur juridique qu'une signature manuscrite (Code civil, art. 1367).</p></div><div style="padding:14px 26px;border-top:1px solid #f0f0f2;background:#fafafa"><p style="margin:0;font-size:11px;color:#86868b">Delivery Digital Nice · Organisme de formation certifié QUALIOPI</p></div></div></div>`,
       });

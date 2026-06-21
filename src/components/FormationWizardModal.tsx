@@ -131,11 +131,17 @@ export default function FormationWizardModal({
   const [tab, setTab] = useState<WizardTab>("intro");
   const [introAck, setIntroAck] = useState(false);
 
-  // Indisponibilites posees par le superadmin (jours 'YYYY-MM-DD' bloques). @Rabah 2026-06-04
+  // Indisponibilites superadmin + formateurs actifs (nom + creneaux recurrents) + creneaux deja
+  // reserves. Sert a nommer le formateur, exclure les creneaux complets. @Rabah 2026-06-04 / 2026-06-19
   const [blockedDays, setBlockedDays] = useState<Set<string>>(new Set());
+  type WizTrainer = { id: string; name: string; email?: string; days: number[]; slots: { from: string; to: string }[] };
+  const [trainers, setTrainers] = useState<WizTrainer[]>([]);
+  const [bookedSlots, setBookedSlots] = useState<Record<string, Record<string, number>>>({});
   useEffect(() => {
-    fetch('/api/formation-availability').then((r) => r.ok ? r.json() : { days: [] }).then((j) => {
+    fetch('/api/formation-availability').then((r) => r.ok ? r.json() : {}).then((j) => {
       if (Array.isArray(j.days)) setBlockedDays(new Set(j.days));
+      if (Array.isArray(j.trainers)) setTrainers(j.trainers);
+      if (j.booked && typeof j.booked === 'object') setBookedSlots(j.booked);
     }).catch(() => {});
   }, []);
 
@@ -172,8 +178,41 @@ export default function FormationWizardModal({
   }, [initial, blockedDays]);
   const [selectedSlotId, setSelectedSlotId] = useState<string>(initial?.session ? "orig" : "");
   const selectedSlot = sessionSlots.find((s) => s.id === selectedSlotId);
-  const startAt = selectedSlot ? selectedSlot.startDate.toISOString() : "";
-  const endAt = selectedSlot ? selectedSlot.endDate.toISOString() : "";
+  // Créneau visio (1h/jour) choisi par le client : le formateur est dispo sur les 2. @Rabah 2026-06-19
+  const VISIO_SLOTS = [{ key: 'a', startH: 16, endH: 17, label: '16h-17h' }, { key: 'b', startH: 17, endH: 18, label: '17h-18h' }] as const;
+  const [visioSlot, setVisioSlot] = useState<'a' | 'b'>('a');
+  const visio = VISIO_SLOTS.find((v) => v.key === visioSlot) || VISIO_SLOTS[0];
+  const atHour = (d: Date, h: number) => { const x = new Date(d); x.setHours(h, 0, 0, 0); return x; };
+  // L'horaire des sessions reflète le créneau visio choisi (1h/jour : 16h-17h ou 17h-18h).
+  const startAt = selectedSlot ? atHour(selectedSlot.startDate, visio.startH).toISOString() : "";
+  const endAt = selectedSlot ? atHour(selectedSlot.endDate, visio.endH).toISOString() : "";
+  // Formateur(s) dispo + disponibilité réelle d'une fenêtre pour un créneau. @Rabah 2026-06-19
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+  const trainersForSlot = (startH: number) => trainers.filter((t) => t.slots.some((s) => s.from === `${pad2(startH)}:00`));
+  // Formateur affiché (créneau choisi) ; fallback : 1er formateur actif.
+  const slotTrainer = trainersForSlot(visio.startH)[0] || trainers[0] || null;
+  const trainerName = slotTrainer?.name || '';
+  const trainerEmail = slotTrainer?.email || '';
+  // Formateur dispo sur LES DEUX créneaux (pour le texte d'aide de la case).
+  const bothSlotTrainer = trainers.find((t) => VISIO_SLOTS.every((v) => t.slots.some((s) => s.from === `${pad2(v.startH)}:00`)));
+  // Une fenêtre 3 jours est-elle dispo pour ce créneau ? (capacité formateurs - réservations). @Rabah 2026-06-19
+  const windowAvailable = (start: Date, startH: number) => {
+    if (!trainers.length) return true; // pas de données formateurs -> ne bloque pas
+    const from = `${pad2(startH)}:00`;
+    const wds = [0, 1, 2].map((k) => { const d = new Date(start); d.setDate(d.getDate() + k); return d.getDay(); });
+    const capacity = trainers.filter((t) => t.slots.some((s) => s.from === from) && wds.every((wd) => t.days.includes(wd))).length;
+    if (capacity === 0) return false;
+    const dates = [0, 1, 2].map((k) => { const d = new Date(start); d.setDate(d.getDate() + k); return dayKey(d); });
+    const maxBooked = Math.max(0, ...dates.map((dk) => bookedSlots[dk]?.[from] || 0));
+    return capacity - maxBooked > 0;
+  };
+  // Si le créneau choisi rend la session sélectionnée complète, on la déselectionne. @Rabah 2026-06-19
+  useEffect(() => {
+    if (!selectedSlotId || selectedSlotId === 'orig') return;
+    const s = sessionSlots.find((x) => x.id === selectedSlotId);
+    if (s && !windowAvailable(s.startDate, visio.startH)) setSelectedSlotId("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visioSlot, trainers, bookedSlots]);
 
   const [formatType] = useState("Visioconférence");
   const [size, setSize] = useState<CompanySize>(initial?.size || "tpe");
@@ -401,20 +440,34 @@ export default function FormationWizardModal({
                           const isSelected = s.id === selectedSlotId;
                           const dayRange = `${s.startDate.toLocaleDateString("fr-FR", { weekday: "short" })} → ${s.endDate.toLocaleDateString("fr-FR", { weekday: "short" })}`;
                           const dateRange = `${s.startDate.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })} → ${s.endDate.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}`;
+                          // Dispo réelle pour le créneau choisi (capacité formateur - réservations). 'orig' = session déjà choisie (correction). @Rabah 2026-06-19
+                          const avail = s.id === 'orig' ? true : windowAvailable(s.startDate, visio.startH);
                           return (
-                            <button key={s.id} type="button" onClick={() => setSelectedSlotId(s.id)} className={`text-left px-4 py-3.5 rounded-xl border-2 transition relative ${isSelected ? "border-green bg-green/5 shadow-sm" : "border-ink-100 bg-white hover:border-ink-300"}`}>
-                              {isSelected && <span className="absolute top-2.5 right-2.5 inline-flex w-5 h-5 rounded-full bg-green text-paper items-center justify-center"><Check size={11} strokeWidth={3} /></span>}
+                            <button key={s.id} type="button" disabled={!avail} onClick={() => avail && setSelectedSlotId(s.id)} className={`text-left px-4 py-3.5 rounded-xl border-2 transition relative ${!avail ? "border-ink-100 bg-paper2/40 opacity-55 cursor-not-allowed" : isSelected ? "border-green bg-green/5 shadow-sm" : "border-ink-100 bg-white hover:border-ink-300"}`}>
+                              {isSelected && avail && <span className="absolute top-2.5 right-2.5 inline-flex w-5 h-5 rounded-full bg-green text-paper items-center justify-center"><Check size={11} strokeWidth={3} /></span>}
                               <p className="text-[10.5px] uppercase tracking-widest font-bold text-ink-500">{dayRange}</p>
                               <p className="h-display text-[15px] mt-1 text-ink-900">{dateRange}</p>
-                              <p className="text-[11.5px] text-ink-500 mt-0.5">9h00 → 17h00 · 21h total</p>
+                              <p className="text-[11.5px] text-ink-500 mt-0.5">1h visio ({visio.label}) + 6h en situation de travail/jour · 21h total</p>
                               <div className="mt-2">
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green/10 text-green border border-green/30 text-[10.5px] h-display"><span className="w-1.5 h-1.5 rounded-full bg-green" />Disponible</span>
+                                {avail
+                                  ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green/10 text-green border border-green/30 text-[10.5px] h-display"><span className="w-1.5 h-1.5 rounded-full bg-green" />Disponible</span>
+                                  : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber/10 text-amber border border-amber/30 text-[10.5px] h-display"><span className="w-1.5 h-1.5 rounded-full bg-amber" />Complet ({visio.label})</span>}
                               </div>
                             </button>
                           );
                         })}
                       </div>
                     )}
+                    {/* Créneau visio (1h/jour) au choix : formateur dispo sur les 2. @Rabah 2026-06-19 */}
+                    <div className="mt-3">
+                      <p className="text-[10.5px] font-bold uppercase tracking-widest text-ink-700 mb-2">Créneau visio (1h/jour)</p>
+                      <div className="inline-flex gap-2">
+                        {VISIO_SLOTS.map((v) => (
+                          <button key={v.key} type="button" onClick={() => setVisioSlot(v.key)} className={`px-3.5 py-2 rounded-xl border-2 text-[12.5px] h-display transition ${visioSlot === v.key ? "border-green bg-green/5 text-ink-900" : "border-ink-100 bg-white text-ink-700 hover:border-ink-300"}`}>{v.label}</button>
+                        ))}
+                      </div>
+                      <p className="text-[11px] text-ink-500 mt-1.5">Le client choisit son créneau d&apos;1h - {(bothSlotTrainer?.name || trainerName) ? <strong className="text-ink-700">{bothSlotTrainer?.name || trainerName}</strong> : 'notre formateur'} {bothSlotTrainer ? 'est disponible sur les deux' : 'assure ce créneau'}.</p>
+                    </div>
                   </div>
                   <div>
                     <p className="text-[10.5px] font-bold uppercase tracking-widest text-ink-700 mb-2">Format</p>
@@ -539,10 +592,12 @@ export default function FormationWizardModal({
                     formationTitle={formation.title}
                     formationSummary={formation.summary}
                     selectedSalaries={filledSalaries}
-                    startDate={selectedSlot?.startDate}
-                    endDate={selectedSlot?.endDate}
+                    startDate={selectedSlot ? atHour(selectedSlot.startDate, visio.startH) : undefined}
+                    endDate={selectedSlot ? atHour(selectedSlot.endDate, visio.endH) : undefined}
                     unitPriceHT={perStagiaire || FORMATION_TARIFS.unitPriceHT}
                     beneficiaireSignature={signatureDataUrl}
+                    trainerName={trainerName}
+                    trainerEmail={trainerEmail}
                   />
                   <div className="rounded-xl bg-paper2/60 border border-ink-100 p-3 text-[12px] text-ink-600">
                     Le <strong>client (restaurateur)</strong> signe ci-dessous. Si le client n&apos;est pas avec vous, utilisez « Envoyer le lien au client » en bas.
@@ -648,15 +703,18 @@ function SignatureBox({ label, stampName, stampSiret, stampLine3, signatureDataU
     </div>
   );
 }
-export function ConventionPreview({ beneficiaire, beneficiaireSiret, beneficiaireAddress, formationTitle, formationSummary, selectedSalaries, startDate, endDate, unitPriceHT, beneficiaireSignature }: {
+export function ConventionPreview({ beneficiaire, beneficiaireSiret, beneficiaireAddress, formationTitle, formationSummary, selectedSalaries, startDate, endDate, unitPriceHT, beneficiaireSignature, trainerName, trainerEmail }: {
   beneficiaire: string; beneficiaireSiret: string; beneficiaireAddress?: string; formationTitle: string; formationSummary?: string;
   selectedSalaries: Array<{ firstname: string; lastname: string; type_contrat?: string }>;
-  startDate?: Date; endDate?: Date; unitPriceHT: number; beneficiaireSignature?: string;
+  startDate?: Date; endDate?: Date; unitPriceHT: number; beneficiaireSignature?: string; trainerName?: string; trainerEmail?: string;
 }) {
   const today = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
   const nbStagiaires = selectedSalaries.length;
   const totalHT = unitPriceHT * Math.max(1, nbStagiaires);
   const dateRange = startDate && endDate ? `Du ${startDate.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })} au ${endDate.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}` : "(dates à confirmer)";
+  // Créneau visio (1h/jour) dérivé de l'heure de début : 16h-17h ou 17h-18h. @Rabah 2026-06-19
+  const vh = startDate ? startDate.getHours() : 16;
+  const visioWindow = `${vh}h-${vh + 1}h`;
   const beneficiaireSiretFmt = (beneficiaireSiret || "").replace(/(\d{3})(\d{3})(\d{3})(\d{0,5})/, "$1 $2 $3 $4").trim();
   return (
     <div className="rounded-2xl bg-white border border-ink-100 overflow-hidden">
@@ -694,11 +752,11 @@ export function ConventionPreview({ beneficiaire, beneficiaireSiret, beneficiair
           <p className="mt-2"><strong>Période prévisionnelle :</strong> {dateRange}</p>
         </Article>
         <Article num={2} title="NATURE ET LOGISTIQUE DE L'ACTION">
-          <p>Action réalisée en distanciel et en INTRA entreprise. Durée : 3 jours dissociés soit 21h. Séances de 10h00 à 17h00 en distanciel (Développement durable, Hygiène en cuisine, Sécurité en cuisine).</p>
+          <p>Action réalisée en distanciel et en INTRA entreprise. Durée : 3 jours dissociés soit 21h. Chaque jour : 1h de visioconférence (créneau {visioWindow}) + 6h en situation de travail (Développement durable, Hygiène en cuisine, Sécurité en cuisine).</p>
           <p className="mt-1"><strong>Prérequis des apprenants avant la formation :</strong> Aucun.</p>
         </Article>
         <Article num={3} title="LES FORMATEURS DE L'ACTION">
-          <p>La formation sera assurée par <strong>Asma SOUALMI</strong> (dietlivry@gmail.com) : elle conçoit des ressources pédagogiques (supports, questionnaires) et anime des formations en visioconférence, en français et en anglais. Pédagogie interactive, structurée et axée sur la mise en situation professionnelle.</p>
+          <p>La formation sera assurée par <strong>{trainerName || 'Asma SOUALMI'}</strong>{(trainerEmail || (!trainerName)) ? ` (${trainerEmail || 'dietlivry@gmail.com'})` : ''} : conception de ressources pédagogiques (supports, questionnaires) et animation de formations en visioconférence, en français et en anglais. Pédagogie interactive, structurée et axée sur la mise en situation professionnelle.</p>
         </Article>
         <Article num={4} title="ENGAGEMENTS DE PARTICIPATION">
           <p>Le bénéficiaire s&apos;engage à assurer la présence des participants aux dates, lieux et heures prévues. Les participants sont désignés par la direction de la société. Il s&apos;agit de :</p>

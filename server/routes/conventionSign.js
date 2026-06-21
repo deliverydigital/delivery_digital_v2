@@ -10,6 +10,7 @@ import nodemailer from 'nodemailer';
 import ConventionSignRequest from '../models/ConventionSignRequest.js';
 import AgencyDossier from '../models/AgencyDossier.js';
 import AgencyLead from '../models/AgencyLead.js';
+import { autoAssignTrainerToDossier } from '../lib/trainerAssign.js';
 
 export const publicRouter = express.Router();
 
@@ -58,6 +59,7 @@ publicRouter.post('/:token', async (req, res) => {
       dossier.signedBy = signedBy; dossier.signedFunction = signedFunction; dossier.signedIp = ip;
       dossier.signatureDataUrl = signatureDataUrl; dossier.signedRemote = true; dossier.signedAt = new Date();
       dossier.amountHT = amountHT;
+      if (r.mountedByAdmin) dossier.mountedByAdmin = true;
       if (dossier.status === 'rejected') dossier.status = 'transmitted';
       await dossier.save();
     } else { dossier = null; } // dossier introuvable ou verrouille -> on cree
@@ -72,21 +74,24 @@ publicRouter.post('/:token', async (req, res) => {
       sessionStart: r.sessionStart, sessionEnd: r.sessionEnd, salaries: r.salaries,
       signedBy, signedFunction, signedIp: ip,
       signatureDataUrl, signedRemote: true, signedAt: new Date(),
-      amountHT, status: 'transmitted',
+      amountHT, status: 'transmitted', mountedByAdmin: !!r.mountedByAdmin,
     });
   }
   r.status = 'signed'; r.signedBy = signedBy; r.signedFunction = signedFunction;
   r.signatureDataUrl = signatureDataUrl; r.signedIp = ip; r.signedAt = new Date(); r.dossierId = dossier._id;
   await r.save();
   if (r.leadId) { try { await AgencyLead.updateOne({ _id: r.leadId, agencyId: r.agencyId }, { status: 'converted' }); } catch { /* */ } }
+  // Auto-assignation du formateur dispo -> cours visible dans son espace + superadmin. @Rabah 2026-06-19
+  try { await autoAssignTrainerToDossier(dossier); } catch { /* best effort */ }
   try {
     const to = process.env.ADMIN_EMAIL || 'contact@deliverydigital.fr';
     const stagiaires = (r.salaries || []).map((s, i) => `${i + 1}. ${s.firstname} ${s.lastname}${s.email ? ' (' + s.email + ')' : ''}${s.type_contrat ? ' - ' + s.type_contrat : ''}`).join('\n');
+    const origine = r.agencyName || (r.mountedByAdmin ? 'Delivery Digital (monté en interne)' : 'Delivery Digital');
     await getTransporter().sendMail({
       from: process.env.SMTP_USER, to,
-      subject: `Nouveau dossier OPCO a monter - ${r.denom} (${r.agencyName})`,
+      subject: `Nouveau dossier OPCO a monter - ${r.denom} (${origine})`,
       text: `Convention signee a distance par le client. Dossier a monter aupres de l'OPCO.\n\n`
-        + `Agence : ${r.agencyName}\nBeneficiaire : ${r.denom}\nSIRET : ${r.siret || '-'}\nOPCO : ${r.opco || '-'}\nFormation : ${r.formationTitle || '-'}\nSession : ${r.sessionName || '-'}\n`
+        + `Origine : ${origine}\nBeneficiaire : ${r.denom}\nSIRET : ${r.siret || '-'}\nOPCO : ${r.opco || '-'}\nFormation : ${r.formationTitle || '-'}\nSession : ${r.sessionName || '-'}\n`
         + `Signe par : ${signedBy}${signedFunction ? ' (' + signedFunction + ')' : ''}\nMontant : ${r.amountHT} EUR HT\n\nStagiaires (${(r.salaries || []).length}) :\n${stagiaires}\n\n`
         + `Ouvrez le dossier dans l'admin (Agences partenaires -> Dossiers OPCO).`,
     });

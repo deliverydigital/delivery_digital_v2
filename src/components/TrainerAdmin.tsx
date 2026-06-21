@@ -9,11 +9,21 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Loader2, Plus, Mail, KeyRound, CheckCircle2, X, BadgeEuro, GraduationCap,
   Wallet, ListChecks, MessageCircle, Send, Trash2, Edit3, Users, CalendarDays, Building2,
+  ChevronLeft, ChevronRight, Clock, CalendarClock, Ban, List,
 } from 'lucide-react';
 
 const PILL = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12.5px] font-semibold';
 const euro = (n: number) => (n || 0).toLocaleString('fr-FR') + ' €';
 const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+const fmtTime = (d?: string) => d ? new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '-';
+// Statut de session partagé entre la liste et le calendrier.
+const STATUS_META: Record<string, { label: string; cls: string }> = {
+  scheduled: { label: 'Planifié', cls: 'bg-[#0066CC]/10 text-[#0066CC]' },
+  done: { label: 'Réalisé · encaissable', cls: 'bg-[#34C759]/12 text-[#1a8a3b]' },
+  encashRequested: { label: 'Encaissement demandé', cls: 'bg-[#FF9F0A]/12 text-[#b5740a]' },
+  paid: { label: 'Payé', cls: 'bg-black/5 text-[#86868B]' },
+  cancelled: { label: 'Annulé', cls: 'bg-[#FF3B30]/10 text-[#FF3B30]' },
+};
 
 type Trainer = {
   _id: string; name: string; email: string; phone?: string; status: string;
@@ -24,8 +34,9 @@ type Trainer = {
 type Formation = { _id: string; program_id: string; title: string; duration_hours: number };
 type Dossier = { _id: string; denom?: string; formationTitle?: string; sessionStart?: string; salaries?: any[]; status?: string };
 type Session = {
-  _id: string; source: string; trainerName?: string; formationTitle?: string; clientName?: string;
-  hours?: number; hourlyRate?: number; payAmount?: number; status: string; sessionStart?: string;
+  _id: string; source: string; trainerId?: string; trainerName?: string; formationTitle?: string; clientName?: string;
+  hours?: number; hourlyRate?: number; payAmount?: number; status: string; sessionStart?: string; sessionEnd?: string;
+  location?: string; addr?: string;
   doneAt?: string; invoiceNumber?: string; learners?: any[]; whatsappGroupCreated?: boolean;
 };
 
@@ -221,6 +232,8 @@ function SessionsAdmin({ hdr, hdrJson }: { hdr: any; hdrJson: any }) {
   const [formations, setFormations] = useState<Formation[]>([]);
   const [assign, setAssign] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [view, setView] = useState<'list' | 'calendar'>('calendar');
+  const [manage, setManage] = useState<Session | null>(null);
   const load = useCallback(async () => {
     const [s, t, d, c] = await Promise.all([
       fetch('/api/admin/trainers/sessions', { headers: hdr }).then((r) => r.json()),
@@ -235,7 +248,13 @@ function SessionsAdmin({ hdr, hdrJson }: { hdr: any; hdrJson: any }) {
   const encashOrders = sessions.filter((s) => s.status === 'encashRequested');
   return (
     <div className="space-y-4">
-      <button onClick={() => setAssign(true)} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1D1D1F] text-white text-[14px] font-semibold"><Plus className="h-4 w-4" /> Assigner un cours</button>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <button onClick={() => setAssign(true)} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1D1D1F] text-white text-[14px] font-semibold"><Plus className="h-4 w-4" /> Assigner un cours</button>
+        <div className="inline-flex gap-1 bg-white rounded-full p-1 ring-1 ring-black/5">
+          <button onClick={() => setView('calendar')} className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12.5px] font-semibold ${view === 'calendar' ? 'bg-[#1D1D1F] text-white' : 'text-[#86868B]'}`}><CalendarDays className="h-3.5 w-3.5" /> Calendrier</button>
+          <button onClick={() => setView('list')} className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12.5px] font-semibold ${view === 'list' ? 'bg-[#1D1D1F] text-white' : 'text-[#86868B]'}`}><List className="h-3.5 w-3.5" /> Liste</button>
+        </div>
+      </div>
 
       {encashOrders.length > 0 && (
         <section className="bg-white rounded-2xl ring-1 ring-[#FF9F0A]/30 p-4">
@@ -251,13 +270,175 @@ function SessionsAdmin({ hdr, hdrJson }: { hdr: any; hdrJson: any }) {
         </section>
       )}
 
-      {sessions.length === 0 ? <Empty text="Aucun cours. Assignez un formateur à un dossier OPCO ou créez une session." /> : (
-        <div className="space-y-2">{sessions.map((s) => <SessionAdminRow key={s._id} s={s} hdrJson={hdrJson} onChanged={load} onOpen={() => setDetailId(s._id)} />)}</div>
+      {sessions.length === 0 ? <Empty text="Aucun cours. Assignez un formateur à un dossier OPCO ou créez une session." /> : view === 'calendar' ? (
+        <SessionsCalendar sessions={sessions} onOpen={(s) => setDetailId(s._id)} onManage={(s) => setManage(s)} />
+      ) : (
+        <div className="space-y-2">{sessions.map((s) => <SessionAdminRow key={s._id} s={s} hdrJson={hdrJson} onChanged={load} onOpen={() => setDetailId(s._id)} onManage={() => setManage(s)} />)}</div>
       )}
 
       {assign && <AssignModal trainers={trainers} dossiers={dossiers} formations={formations} hdrJson={hdrJson} onClose={() => setAssign(false)} onDone={() => { setAssign(false); load(); }} />}
       {detailId && <SessionDetailModal id={detailId} hdr={hdr} onClose={() => setDetailId(null)} />}
+      {manage && <ManageSessionModal s={manage} hdrJson={hdrJson} onClose={() => setManage(null)} onDone={() => { setManage(null); load(); }} />}
     </div>
+  );
+}
+
+/* ===================== Calendrier des cours (mois) ===================== */
+const SESSION_DOT: Record<string, string> = {
+  scheduled: 'bg-[#0066CC]', done: 'bg-[#34C759]', encashRequested: 'bg-[#FF9F0A]', paid: 'bg-[#86868B]', cancelled: 'bg-[#FF3B30]',
+};
+function SessionsCalendar({ sessions, onOpen, onManage }: { sessions: Session[]; onOpen: (s: Session) => void; onManage: (s: Session) => void }) {
+  const [cursor, setCursor] = useState(() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; });
+  const [daySel, setDaySel] = useState<string | null>(null);
+  // Index des sessions par jour (YYYY-MM-DD) à partir de sessionStart.
+  const byDay = useMemo(() => {
+    const m: Record<string, Session[]> = {};
+    sessions.forEach((s) => { if (!s.sessionStart) return; const k = new Date(s.sessionStart).toISOString().slice(0, 10); (m[k] ||= []).push(s); });
+    return m;
+  }, [sessions]);
+  const first = new Date(cursor.y, cursor.m, 1);
+  const startDow = (first.getDay() + 6) % 7; // lundi=0
+  const nbDays = new Date(cursor.y, cursor.m + 1, 0).getDate();
+  const cells: (number | null)[] = [...Array(startDow).fill(null), ...Array.from({ length: nbDays }, (_, i) => i + 1)];
+  const monthName = first.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  const iso = (d: number) => `${cursor.y}-${String(cursor.m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const selList = daySel ? (byDay[daySel] || []) : [];
+  return (
+    <div className="grid lg:grid-cols-[1fr_320px] gap-4">
+      <section className="bg-white rounded-2xl ring-1 ring-black/5 p-5" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-[15px] font-bold text-[#1D1D1F] capitalize">{monthName}</h3>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setCursor((c) => { const m = c.m - 1; return m < 0 ? { y: c.y - 1, m: 11 } : { y: c.y, m }; })} className="p-1.5 rounded-lg bg-[#F5F5F7] hover:bg-black/5 text-[#1D1D1F]"><ChevronLeft className="h-4 w-4" /></button>
+            <button onClick={() => { const d = new Date(); setCursor({ y: d.getFullYear(), m: d.getMonth() }); }} className="px-3 py-1.5 rounded-lg bg-[#F5F5F7] hover:bg-black/5 text-[12px] font-semibold text-[#1D1D1F]">Aujourd'hui</button>
+            <button onClick={() => setCursor((c) => { const m = c.m + 1; return m > 11 ? { y: c.y + 1, m: 0 } : { y: c.y, m }; })} className="p-1.5 rounded-lg bg-[#F5F5F7] hover:bg-black/5 text-[#1D1D1F]"><ChevronRight className="h-4 w-4" /></button>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 mb-3 text-[11px] text-[#86868B] flex-wrap">
+          <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#0066CC]" /> Planifié</span>
+          <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#34C759]" /> Réalisé</span>
+          <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#FF9F0A]" /> Encaissement</span>
+          <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-[#FF3B30]" /> Annulé</span>
+        </div>
+        <div className="grid grid-cols-7 gap-1.5 text-center">
+          {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <div key={i} className="text-[11px] text-[#86868B] font-semibold py-1">{d}</div>)}
+          {cells.map((c, i) => {
+            if (c == null) return <div key={i} />;
+            const dayIso = iso(c);
+            const list = byDay[dayIso] || [];
+            const isToday = dayIso === todayIso;
+            const isSel = dayIso === daySel;
+            return (
+              <button key={i} onClick={() => setDaySel(list.length ? dayIso : null)} disabled={!list.length}
+                className={`relative min-h-[58px] rounded-xl p-1.5 text-left transition-colors ${isSel ? 'ring-2 ring-[#0066CC] bg-[#0066CC]/5' : list.length ? 'bg-[#F5F5F7] hover:bg-black/5' : 'bg-[#FAFAFA] cursor-default'}`}>
+                <span className={`text-[12px] font-semibold ${isToday ? 'text-[#0066CC]' : 'text-[#1D1D1F]'}`}>{c}</span>
+                {isToday && <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-[#0066CC] align-middle" />}
+                <div className="mt-1 space-y-0.5">
+                  {list.slice(0, 2).map((s) => (
+                    <div key={s._id} className="flex items-center gap-1 text-[9.5px] text-[#1D1D1F] truncate">
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${SESSION_DOT[s.status] || SESSION_DOT.scheduled}`} />
+                      <span className="truncate">{s.trainerName || s.formationTitle || 'Cours'}</span>
+                    </div>
+                  ))}
+                  {list.length > 2 && <div className="text-[9px] text-[#86868B]">+{list.length - 2} autre(s)</div>}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+      <section className="bg-white rounded-2xl ring-1 ring-black/5 p-5" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <h3 className="text-[14px] font-bold text-[#1D1D1F] mb-3">{daySel ? new Date(daySel + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Sélectionnez un jour'}</h3>
+        {!daySel ? <p className="text-[13px] text-[#86868B]">Cliquez sur un jour du calendrier pour voir les cours et les reporter ou annuler.</p> : selList.length === 0 ? <p className="text-[13px] text-[#86868B]">Aucun cours ce jour.</p> : (
+          <div className="space-y-2.5">
+            {selList.map((s) => {
+              const sm = STATUS_META[s.status] || STATUS_META.scheduled;
+              const canManage = s.status === 'scheduled' || s.status === 'cancelled';
+              return (
+                <div key={s._id} className="bg-[#F5F5F7] rounded-xl p-3">
+                  <button onClick={() => onOpen(s)} className="w-full text-left">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[13px] font-semibold text-[#1D1D1F]">{s.formationTitle || 'Formation'}</span>
+                      <span className={`${PILL} ${sm.cls}`}>{sm.label}</span>
+                    </div>
+                    <div className="text-[12px] text-[#86868B] mt-1 flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" />{s.trainerName}</span>
+                      {s.clientName && <span className="inline-flex items-center gap-1"><Building2 className="h-3 w-3" />{s.clientName}</span>}
+                      <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{fmtTime(s.sessionStart)}</span>
+                    </div>
+                  </button>
+                  {canManage && (
+                    <div className="mt-2">
+                      <button onClick={() => onManage(s)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1D1D1F] text-white text-[12px] font-semibold"><CalendarClock className="h-3.5 w-3.5" /> Reporter / Annuler</button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+/* ===================== Reporter / Annuler un cours (+ email formateur) ===================== */
+function ManageSessionModal({ s, hdrJson, onClose, onDone }: { s: Session; hdrJson: any; onClose: () => void; onDone: () => void }) {
+  const toLocalInput = (d?: string) => { if (!d) return ''; const dt = new Date(d); const off = dt.getTimezoneOffset(); return new Date(dt.getTime() - off * 60000).toISOString().slice(0, 16); };
+  const [tab, setTab] = useState<'reschedule' | 'cancel'>('reschedule');
+  const [startAt, setStartAt] = useState(toLocalInput(s.sessionStart));
+  const [endAt, setEndAt] = useState(toLocalInput(s.sessionEnd));
+  const [reason, setReason] = useState('');
+  const [notify, setNotify] = useState(true);
+  const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
+  const inp = 'w-full px-3 py-2.5 rounded-xl bg-[#F5F5F7] text-[14px] text-[#1D1D1F] outline-none';
+  const reschedule = async () => {
+    if (!startAt) { setErr('Choisissez une nouvelle date.'); return; }
+    setBusy(true); setErr('');
+    try {
+      await fetch(`/api/admin/trainers/sessions/${s._id}`, { method: 'PATCH', headers: hdrJson, body: JSON.stringify({ startAt: new Date(startAt).toISOString(), endAt: endAt ? new Date(endAt).toISOString() : undefined, status: 'scheduled', notify }) });
+      onDone();
+    } finally { setBusy(false); }
+  };
+  const cancel = async () => {
+    setBusy(true); setErr('');
+    try {
+      await fetch(`/api/admin/trainers/sessions/${s._id}`, { method: 'PATCH', headers: hdrJson, body: JSON.stringify({ status: 'cancelled', reason, notify }) });
+      onDone();
+    } finally { setBusy(false); }
+  };
+  const NotifyToggle = () => (
+    <label className="flex items-center gap-2.5 mt-3 cursor-pointer select-none">
+      <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="w-4 h-4 accent-[#0066CC]" />
+      <span className="inline-flex items-center gap-1.5 text-[13px] text-[#1D1D1F]"><Mail className="h-3.5 w-3.5 text-[#86868B]" /> Envoyer un email au formateur {s.trainerName ? `(${s.trainerName})` : ''}</span>
+    </label>
+  );
+  return (
+    <Modal onClose={onClose} title={s.formationTitle || 'Gérer le cours'}>
+      <div className="text-[12.5px] text-[#86868B] mb-4">{s.clientName ? s.clientName + ' · ' : ''}{fmtDate(s.sessionStart)}</div>
+      <div className="flex gap-1.5 mb-4">
+        <button onClick={() => setTab('reschedule')} className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold ${tab === 'reschedule' ? 'bg-[#1D1D1F] text-white' : 'bg-[#F5F5F7] text-[#86868B]'}`}><CalendarClock className="h-3.5 w-3.5" /> Reporter</button>
+        <button onClick={() => setTab('cancel')} className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold ${tab === 'cancel' ? 'bg-[#FF3B30] text-white' : 'bg-[#F5F5F7] text-[#86868B]'}`}><Ban className="h-3.5 w-3.5" /> Annuler</button>
+      </div>
+      {tab === 'reschedule' ? (
+        <div className="space-y-3">
+          <label className="block"><span className="text-[12px] font-semibold text-[#1D1D1F]">Nouvelle date & heure de début</span><input className={inp} type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} /></label>
+          <label className="block"><span className="text-[12px] font-semibold text-[#1D1D1F]">Fin (optionnel)</span><input className={inp} type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} /></label>
+          <NotifyToggle />
+          {err && <p className="text-[13px] text-[#FF3B30]">{err}</p>}
+          <button onClick={reschedule} disabled={busy} className="w-full px-5 py-3 rounded-full bg-[#1D1D1F] text-white text-[14px] font-semibold disabled:opacity-60">{busy ? <Loader2 className="h-4 w-4 animate-spin inline" /> : 'Reporter le cours'}</button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-[13px] text-[#86868B]">Le cours passera au statut <strong className="text-[#FF3B30]">Annulé</strong>. Vous pourrez le reprogrammer ensuite si besoin.</p>
+          <label className="block"><span className="text-[12px] font-semibold text-[#1D1D1F]">Motif (optionnel, inclus dans l'email)</span><textarea className={`${inp} min-h-[80px]`} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ex : report demandé par le client, effectif insuffisant…" /></label>
+          <NotifyToggle />
+          {err && <p className="text-[13px] text-[#FF3B30]">{err}</p>}
+          <button onClick={cancel} disabled={busy} className="w-full px-5 py-3 rounded-full bg-[#FF3B30] text-white text-[14px] font-semibold disabled:opacity-60">{busy ? <Loader2 className="h-4 w-4 animate-spin inline" /> : 'Confirmer l\'annulation'}</button>
+        </div>
+      )}
+    </Modal>
   );
 }
 
@@ -335,16 +516,9 @@ function SessionDetailModal({ id, hdr, onClose }: { id: string; hdr: any; onClos
   );
 }
 
-function SessionAdminRow({ s, hdrJson, onChanged, onOpen }: { s: Session; hdrJson: any; onChanged: () => void; onOpen: () => void }) {
+function SessionAdminRow({ s, hdrJson, onChanged, onOpen, onManage }: { s: Session; hdrJson: any; onChanged: () => void; onOpen: () => void; onManage: () => void }) {
   const [busy, setBusy] = useState(false);
-  const statusMeta: Record<string, { label: string; cls: string }> = {
-    scheduled: { label: 'Planifié', cls: 'bg-[#0066CC]/10 text-[#0066CC]' },
-    done: { label: 'Réalisé · encaissable', cls: 'bg-[#34C759]/12 text-[#1a8a3b]' },
-    encashRequested: { label: 'Encaissement demandé', cls: 'bg-[#FF9F0A]/12 text-[#b5740a]' },
-    paid: { label: 'Payé', cls: 'bg-black/5 text-[#86868B]' },
-    cancelled: { label: 'Annulé', cls: 'bg-[#FF3B30]/10 text-[#FF3B30]' },
-  };
-  const sm = statusMeta[s.status] || statusMeta.scheduled;
+  const sm = STATUS_META[s.status] || STATUS_META.scheduled;
   const markDone = async (done: boolean) => { setBusy(true); try { await fetch(`/api/admin/trainers/sessions/${s._id}/done`, { method: 'POST', headers: hdrJson, body: JSON.stringify({ done }) }); onChanged(); } finally { setBusy(false); } };
   return (
     <div className="bg-white rounded-2xl ring-1 ring-black/5 p-4 flex items-center justify-between gap-3" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
@@ -363,6 +537,7 @@ function SessionAdminRow({ s, hdrJson, onChanged, onOpen }: { s: Session; hdrJso
         </div>
       </button>
       <div className="flex items-center gap-2 shrink-0">
+        {(s.status === 'scheduled' || s.status === 'cancelled') && <button onClick={onManage} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#F5F5F7] text-[#1D1D1F] text-[12.5px] font-semibold"><CalendarClock className="h-3.5 w-3.5" /> Reporter / Annuler</button>}
         {s.status === 'scheduled' && <button onClick={() => markDone(true)} disabled={busy} className="px-4 py-1.5 rounded-full bg-[#34C759] text-white text-[12.5px] font-semibold disabled:opacity-60">Marquer réalisée</button>}
         {s.status === 'done' && <button onClick={() => markDone(false)} disabled={busy} className="px-4 py-1.5 rounded-full bg-black/5 text-[#86868B] text-[12.5px] font-semibold">Annuler « réalisée »</button>}
         {s.status === 'encashRequested' && <button onClick={async () => { setBusy(true); try { await fetch(`/api/admin/trainers/sessions/${s._id}/pay`, { method: 'POST', headers: hdrJson, body: '{}' }); onChanged(); } finally { setBusy(false); } }} className="px-4 py-1.5 rounded-full bg-[#34C759] text-white text-[12.5px] font-semibold">Marquer payé</button>}
