@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Building2, Loader2, Plus, RefreshCw, Copy, KeyRound, Eye, EyeOff, X, Mail, Trash2, FileSignature, Send } from 'lucide-react';
+import { useEffect, useState, useCallback, Fragment } from 'react';
+import { Building2, Loader2, Plus, RefreshCw, Copy, KeyRound, Eye, EyeOff, X, Mail, Trash2, FileSignature, Send, Check, Clock } from 'lucide-react';
+import DossierTasks, { type DossierTask } from './DossierTasks';
 import { FORMATIONS } from '../lib/formationCatalog';
 
 /**
@@ -9,7 +10,7 @@ import { FORMATIONS } from '../lib/formationCatalog';
  */
 type CompanyInfo = { legalName?: string; regNumber?: string; vatNumber?: string; address?: string; city?: string; postalCode?: string; country?: string; repName?: string; repFunction?: string };
 type Contract = { signed?: boolean; signedBy?: string; signedFunction?: string; signedAt?: string | null; validated?: boolean };
-type Agency = { _id: string; email: string; name: string; phone?: string; status?: string; apiKey?: string; createdAt?: string; last_login?: string; iban?: string; bic?: string; accountHolder?: string; bankCountry?: string; bankData?: Record<string, string>; ribPdfUrl?: string; bankValidated?: boolean; companyInfo?: CompanyInfo; contract?: Contract; onboardingValidated?: boolean; commissionFix?: number; commissionPercent?: number };
+type Agency = { _id: string; email: string; name: string; phone?: string; status?: string; apiKey?: string; createdAt?: string; last_login?: string; iban?: string; bic?: string; accountHolder?: string; bankCountry?: string; bankData?: Record<string, string>; ribPdfUrl?: string; bankValidated?: boolean; companyInfo?: CompanyInfo; contract?: Contract; onboardingValidated?: boolean; commissionFix?: number; commissionPercent?: number; pyemesCode?: string };
 type EmailPreview = { to: string; subject: string; html: string };
 type Created = { id: string; email: string; name: string; password: string; apiKey: string; emailPreview?: EmailPreview };
 
@@ -23,13 +24,25 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
   const [pct, setPct] = useState('15');
   const [creating, setCreating] = useState(false);
   type AdminSalarie = { firstname?: string; lastname?: string; email?: string; poste?: string; type_contrat?: string; date_naissance?: string; num_secu?: string; telephone?: string };
-  type AdminDossier = { _id: string; agencyName?: string; mountedByAdmin?: boolean; commercialName?: string; denom?: string; siret?: string; opco?: string; addr?: string; clientEmail?: string; formationTitle?: string; sessionName?: string; sessionStart?: string; sessionEnd?: string; salaries?: AdminSalarie[]; signedBy?: string; signedFunction?: string; signedIp?: string; signatureDataUrl?: string; signedRemote?: boolean; signedAt?: string; amountHT?: number; status: string; createdAt?: string; updatedAt?: string; commission?: number; agencyIban?: string; agencyBic?: string; agencyHolder?: string; opcoPaid?: boolean; encashRequestedAt?: string | null; invoiceNumber?: string };
+  type AdminDossier = { _id: string; agencyName?: string; mountedByAdmin?: boolean; commercialName?: string; denom?: string; siret?: string; opco?: string; addr?: string; clientEmail?: string; formationTitle?: string; sessionName?: string; sessionStart?: string; sessionEnd?: string; salaries?: AdminSalarie[]; signedBy?: string; signedFunction?: string; signedIp?: string; signatureDataUrl?: string; signedRemote?: boolean; signedAt?: string; amountHT?: number; status: string; createdAt?: string; updatedAt?: string; commission?: number; agencyIban?: string; agencyBic?: string; agencyHolder?: string; opcoPaid?: boolean; encashRequestedAt?: string | null; invoiceNumber?: string; aktoAttached?: boolean; aktoAttachedAt?: string; salariesPending?: boolean; trainerName?: string; trainerEmail?: string; tasks?: DossierTask[]; amountOpco?: number; commissionFixAmount?: number; commissionPctAmount?: number; commissionBase?: number; paymentOrders?: PaymentOrder[] };
+  type PaymentOrder = { _id: string; part: 'fixe' | 'pourcentage'; montant: number; avance?: boolean; note?: string; createdAt?: string };
+  type GenOrder = { _id: string; ref: string; agencyName?: string; totalCommission?: number; pdfUrl?: string; sentAt?: string; paidAt?: string; ccAgency?: boolean; createdAt?: string; updatedAt?: string; lines?: { denom?: string; month?: string; total?: number }[] };
+  const pdfHref = (o: { pdfUrl?: string; updatedAt?: string }) => `${o.pdfUrl || ''}?v=${o.updatedAt ? Date.parse(o.updatedAt) : ''}`;
   type SignRequest = { id: string; token: string; denom?: string; siret?: string; opco?: string; clientEmail?: string; managerEmail?: string; recipient?: string; agencyName?: string; formationTitle?: string; sessionName?: string; salaries?: number; amountHT?: number; link: string; createdAt?: string; expiresAt?: string; expired?: boolean };
   const [dossiers, setDossiers] = useState<AdminDossier[]>([]);
   const [signRequests, setSignRequests] = useState<SignRequest[]>([]);
   const [showMount, setShowMount] = useState(false);
   const [factureDossier, setFactureDossier] = useState<AdminDossier | null>(null);
   const [viewDossier, setViewDossier] = useState<AdminDossier | null>(null);
+  // Édition convention (formation + prix/stagiaire + formateur) dans la fiche dossier. @Rabah 2026-07-17
+  const [convFormation, setConvFormation] = useState('');
+  const [convPrice, setConvPrice] = useState('');
+  const [convTrainer, setConvTrainer] = useState('');
+  const [convTrainerEmail, setConvTrainerEmail] = useState('');
+  const [savingConv, setSavingConv] = useState(false);
+  const [trainers, setTrainers] = useState<Array<{ name?: string; email?: string; status?: string }>>([]); // formateurs inscrits. @Rabah 2026-07-17
+  const [catalog, setCatalog] = useState<Array<{ id: string; title: string; price: number; hours: number; active?: boolean }>>([]); // catalogue complet des formations. @Rabah 2026-07-17
+  const [openDossier, setOpenDossier] = useState<string | null>(null); // ligne "Suivi & tâches" dépliée. @Rabah 2026-07-02
   const [selDoss, setSelDoss] = useState<Set<string>>(new Set());
   const DOSSIER_STATUSES = ['transmitted', 'instruction', 'accepted', 'scheduled', 'completed', 'invoiced', 'paid', 'rejected'];
   const DOSSIER_LABEL: Record<string, string> = { transmitted: 'Transmis', instruction: 'En instruction', accepted: 'Accepté', scheduled: 'Programmé', completed: 'Terminé', invoiced: 'Facturé', paid: 'Payé', rejected: 'Refusé' };
@@ -42,6 +55,7 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
   const [sendingWelcome, setSendingWelcome] = useState(false);
   const [welcomeSent, setWelcomeSent] = useState(false);
   const [previewingAgency, setPreviewingAgency] = useState<string | null>(null); // chargement aperçu depuis la liste
+  const [previewingSpace, setPreviewingSpace] = useState<string | null>(null); // chargement prévisualisation espace agence
   const [revealKey, setRevealKey] = useState<Record<string, boolean>>({});
   const [accessReqs, setAccessReqs] = useState<{ id: string; agencyName?: string; clientEmail: string; clientName?: string; label: string; status: string; receivedAt?: string }[]>([]);
   const [unavail, setUnavail] = useState<{ id: string; day: string; label: string }[]>([]);
@@ -52,9 +66,86 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
   const [showCommerciaux, setShowCommerciaux] = useState(false);
   const [commerciauxList, setCommerciauxList] = useState<{ id: string; name: string; email: string; agence: string; status: string; dossiers: number }[]>([]);
   const [showClients, setShowClients] = useState(false);
-  const [clientsList, setClientsList] = useState<{ id: string; denom: string; email?: string; accountantEmail?: string; managerEmail?: string; siret?: string; opco?: string; agence: string; commercial?: string; status: string }[]>([]);
+  const [clientsList, setClientsList] = useState<{ id: string; denom: string; email?: string; accountantEmail?: string; managerEmail?: string; siret?: string; opco?: string; agence: string; commercial?: string; status: string; createdAt?: string; formationDoneThisYear?: boolean }[]>([]);
   const [editClient, setEditClient] = useState<{ id: string; denom: string; email: string; accountantEmail: string; managerEmail: string; siret: string; opco: string } | null>(null); // édition client côté admin. @Rabah 2026-06-18
   const [savingClient, setSavingClient] = useState(false);
+  // Réglage revente Pyemes d'une agence (code de parrainage + % de commission TTC). @Rabah 2026-08-01
+  const [pyemesEdit, setPyemesEdit] = useState<{ id: string; name: string; code: string; pct: string } | null>(null);
+  const [pyemesSaving, setPyemesSaving] = useState(false);
+  // Feuille de route Pyemes partagee avec l'agence : DD ajoute ses demandes, coche l'avancement et
+  // repond dans le fil. Meme donnee que celle affichee cote agence. @author Rabah Ziane - 2026-08-31
+  type RoadTache = { id: string; from: 'dd' | 'agence'; titre: string; statut: 'a_faire' | 'en_cours' | 'fait'; source?: string; createdAt?: string };
+  type RoadMsg = { id: string; from: 'dd' | 'agence'; auteur?: string; texte: string; image?: string; at?: string };
+  const [roadAgence, setRoadAgence] = useState<{ id: string; name: string } | null>(null);
+  const [roadTaches, setRoadTaches] = useState<RoadTache[]>([]);
+  const [roadMsgs, setRoadMsgs] = useState<RoadMsg[]>([]);
+  const [roadTitre, setRoadTitre] = useState('');
+  const [roadMsg, setRoadMsg] = useState('');
+  const [roadBusy, setRoadBusy] = useState(false);
+  const [roadPiece, setRoadPiece] = useState<File | null>(null); // capture jointe au message
+
+  const appliquerRoad = (j: any) => { if (j?.ok) { setRoadTaches(j.taches || []); setRoadMsgs(j.messages || []); } };
+  // Tant que la fenetre est ouverte : taches ET messages se rafraichissent tout seuls (2 s), pour
+  // voir arriver ce que l'agence ajoute sans recharger. @author Rabah Ziane - 2026-08-31
+  useEffect(() => {
+    if (!roadAgence) return;
+    const t = setInterval(() => {
+      fetch(`/api/admin/agencies/${roadAgence.id}/pyemes/roadmap`, { headers: headers() })
+        .then((r) => r.json()).then(appliquerRoad).catch(() => {});
+    }, 2000);
+    return () => clearInterval(t);
+  }, [roadAgence]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function ouvrirRoadmap(id: string, name: string) {
+    setRoadAgence({ id, name }); setRoadTaches([]); setRoadMsgs([]);
+    const j = await fetch(`/api/admin/agencies/${id}/pyemes/roadmap`, { headers: headers() }).then((r) => r.json()).catch(() => null);
+    appliquerRoad(j);
+  }
+  async function ajouterTacheAdmin() {
+    if (!roadAgence || !roadTitre.trim() || roadBusy) return;
+    setRoadBusy(true);
+    const j = await fetch(`/api/admin/agencies/${roadAgence.id}/pyemes/roadmap`, { method: 'POST', headers: headers(), body: JSON.stringify({ titre: roadTitre.trim() }) }).then((r) => r.json()).catch(() => null);
+    appliquerRoad(j); setRoadTitre(''); setRoadBusy(false);
+  }
+  async function statutTacheAdmin(tid: string, statut: string) {
+    if (!roadAgence) return;
+    const j = await fetch(`/api/admin/agencies/${roadAgence.id}/pyemes/roadmap/${tid}`, { method: 'PATCH', headers: headers(), body: JSON.stringify({ statut }) }).then((r) => r.json()).catch(() => null);
+    appliquerRoad(j);
+  }
+  async function supprimerTacheAdmin(tid: string) {
+    if (!roadAgence) return;
+    const j = await fetch(`/api/admin/agencies/${roadAgence.id}/pyemes/roadmap/${tid}`, { method: 'DELETE', headers: headers() }).then((r) => r.json()).catch(() => null);
+    appliquerRoad(j);
+  }
+  async function envoyerMessageAdmin() {
+    if (!roadAgence || (!roadMsg.trim() && !roadPiece) || roadBusy) return;
+    setRoadBusy(true);
+    // Multipart (texte + capture) : `headers()` pose un Content-Type JSON, on ne le reutilise donc
+    // pas ici - seul le jeton est necessaire. @author Rabah Ziane - 2026-08-31
+    const h = headers() as Record<string, string>;
+    const fd = new FormData();
+    fd.append('texte', roadMsg.trim());
+    if (roadPiece) fd.append('image', roadPiece);
+    const j = await fetch(`/api/admin/agencies/${roadAgence.id}/pyemes/messages`, {
+      method: 'POST',
+      headers: Object.fromEntries(Object.entries(h).filter(([k]) => k.toLowerCase() !== 'content-type')),
+      body: fd,
+    }).then((r) => r.json()).catch(() => null);
+    appliquerRoad(j); setRoadMsg(''); setRoadPiece(null); setRoadBusy(false);
+  }
+
+  async function savePyemes() {
+    if (!pyemesEdit) return;
+    const code = pyemesEdit.code.trim().toUpperCase();
+    if (!code) { alert('Code requis.'); return; }
+    setPyemesSaving(true);
+    try {
+      const r = await fetch(`/api/admin/agencies/${pyemesEdit.id}/pyemes`, { method: 'POST', headers: headers(), body: JSON.stringify({ code, commission_percent: Number(pyemesEdit.pct) || 0 }) });
+      const j = await r.json();
+      if (j.ok) { setList((prev) => prev.map((a) => a._id === pyemesEdit.id ? { ...a, pyemesCode: code } : a)); setPyemesEdit(null); }
+      else alert('Erreur : ' + (j.error || j.detail || 'échec'));
+    } catch { alert('Connexion impossible.'); } finally { setPyemesSaving(false); }
+  }
   const scrollToId = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   const headers = useCallback(() => ({ 'x-admin-secret': secret || '', 'Content-Type': 'application/json' }), [secret]);
@@ -103,6 +194,105 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
     setDossiers((prev) => prev.map((d) => d._id === id ? { ...d, opcoPaid } : d));
     await fetch(`/api/admin/agencies/dossiers/${id}/opco-paid`, { method: 'POST', headers: headers(), body: JSON.stringify({ opcoPaid }) });
   }
+  // Ordres de paiement : enregistrer un versement/avance d'une ou plusieurs parts de commission
+  // (fixe et/ou %). Ne touche pas au contrat. @author Rabah Ziane - 2026-07-29
+  async function addPaymentOrder(id: string, parts: { part: 'fixe' | 'pourcentage'; montant: number }[]) {
+    const r = await fetch(`/api/admin/agencies/dossiers/${id}/payment-order`, { method: 'POST', headers: headers(), body: JSON.stringify({ parts }) }).then((x) => x.json()).catch(() => null);
+    if (r && r.ok) setDossiers((prev) => prev.map((d) => d._id === id ? { ...d, paymentOrders: r.paymentOrders } : d));
+  }
+  async function deletePaymentOrder(id: string, poId: string) {
+    const r = await fetch(`/api/admin/agencies/dossiers/${id}/payment-order/${poId}`, { method: 'DELETE', headers: headers() }).then((x) => x.json()).catch(() => null);
+    if (r && r.ok) setDossiers((prev) => prev.map((d) => d._id === id ? { ...d, paymentOrders: r.paymentOrders } : d));
+  }
+  // Génération d'ordres de paiement (ordre de virement) multi-dossiers + montant OPCO. @Rabah 2026-07-29
+  const [poSel, setPoSel] = useState<Set<string>>(new Set());
+  const [poCcAgency, setPoCcAgency] = useState(false);
+  const [poPreview, setPoPreview] = useState<{ agencyName: string; ds: AdminDossier[] } | null>(null);
+  const [genOrders, setGenOrders] = useState<GenOrder[]>([]);
+  useEffect(() => { void loadGenOrders(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  function togglePoSel(id: string) { setPoSel((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; }); }
+  async function setAmountOpco(id: string, amountOpco: number) {
+    const r = await fetch(`/api/admin/agencies/dossiers/${id}/amount-opco`, { method: 'PATCH', headers: headers(), body: JSON.stringify({ amountOpco }) }).then((x) => x.json()).catch(() => null);
+    if (r && r.ok) load();
+  }
+  async function loadGenOrders() { const r = await fetch('/api/admin/agencies/payment-orders', { headers: headers() }).then((x) => x.json()).catch(() => null); if (r && r.ok) setGenOrders(r.orders || []); }
+  async function markOrderPaid(id: string, paid: boolean) {
+    const r = await fetch(`/api/admin/agencies/payment-orders/${id}/paid`, { method: 'POST', headers: headers(), body: JSON.stringify({ paid }) }).then((x) => x.json()).catch(() => null);
+    if (r && r.ok) setGenOrders((prev) => prev.map((o) => o._id === id ? { ...o, paidAt: r.paidAt } : o));
+  }
+  async function generateOrder(dossierIds: string[], ccAgency: boolean) {
+    const r = await fetch('/api/admin/agencies/payment-orders/generate', { method: 'POST', headers: headers(), body: JSON.stringify({ dossierIds, ccAgency }) }).then((x) => x.json()).catch(() => null);
+    if (r && r.ok) { setPoPreview(null); setPoSel(new Set()); loadGenOrders(); alert(`Ordre ${r.order.ref} généré${r.sent ? ' et envoyé à Delivery Digital' : ' (email non parti, PDF dispo)'}.`); }
+    else alert((r && r.message) || 'Génération impossible.');
+  }
+  const moisLabelFr = (ym?: string) => { const M = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']; const [y, m] = String(ym || '').split('-'); const i = parseInt(m, 10) - 1; return i >= 0 && i < 12 ? `${M[i]} ${y}` : (ym || '—'); };
+  const dossierMonth = (d: AdminDossier) => new Date(d.sessionStart || d.createdAt || Date.now()).toISOString().slice(0, 7);
+  // Montant de l'ordre de virement = ce qui est réellement versé = somme des avances/versements
+  // enregistrés sur le dossier (fixe et/ou %). @Rabah 2026-07-29
+  const aVerser = (d: AdminDossier) => (d.paymentOrders || []).reduce((a, p) => a + p.montant, 0);
+  // Attestations de fin de formation (réussite + vitrophanie QR) : désélection des absents + aperçu
+  // + envoi au client. @Rabah 2026-07-29
+  const [attModal, setAttModal] = useState<AdminDossier | null>(null);
+  const [attPresent, setAttPresent] = useState<Set<number>>(new Set());
+  const [attEmail, setAttEmail] = useState('');
+  const [attResult, setAttResult] = useState<{ attestationUrl?: string; vitrophanieUrl?: string; verifyUrl?: string } | null>(null);
+  const [attBusy, setAttBusy] = useState(false);
+  function openAttestations(d: AdminDossier) { setAttModal(d); setAttPresent(new Set((d.salaries || []).map((_, i) => i))); setAttEmail(d.clientEmail || ''); setAttResult(null); }
+  async function attGenerate(send: boolean) {
+    if (!attModal) return; setAttBusy(true);
+    const r = await fetch(`/api/admin/agencies/dossiers/${attModal._id}/attestations`, { method: 'POST', headers: headers(), body: JSON.stringify({ presentIdx: [...attPresent], clientEmail: attEmail.trim(), send }) }).then((x) => x.json()).catch(() => null);
+    setAttBusy(false);
+    if (r && r.ok) { setAttResult(r); if (send && r.sent) alert('Attestations envoyées au client.'); else if (send) alert("Généré, mais l'email n'est pas parti (vérifiez l'adresse)."); }
+    else alert('Erreur lors de la génération des attestations.');
+  }
+  // Étape "Montage OPCO" : DD a fait le rattachement OPCO (courrier d'activation) et/ou le dossier
+  // attend le CSV des salariés. Visible en lecture seule côté agence. @author Rabah Ziane - 2026-06-24
+  async function setMontage(id: string, patch: { aktoAttached?: boolean; salariesPending?: boolean }) {
+    const apply = (d: AdminDossier) => ({ ...d, ...patch, ...(patch.aktoAttached != null ? { aktoAttachedAt: patch.aktoAttached ? new Date().toISOString() : undefined } : {}) });
+    setDossiers((prev) => prev.map((d) => d._id === id ? apply(d) : d));
+    setViewDossier((v) => v && v._id === id ? apply(v) : v);
+    await fetch(`/api/admin/agencies/dossiers/${id}/montage`, { method: 'POST', headers: headers(), body: JSON.stringify(patch) });
+  }
+  // Pré-remplit les champs éditables (prix/stagiaire + formateur) à l'ouverture d'un dossier. @Rabah 2026-07-17
+  useEffect(() => {
+    if (!viewDossier) return;
+    const n = (viewDossier.salaries || []).length || 1;
+    setConvFormation(viewDossier.formationTitle || '');
+    setConvPrice(String(Math.round((viewDossier.amountHT || 0) / n)));
+    setConvTrainer(viewDossier.trainerName || 'Ziane Rabah');
+    setConvTrainerEmail(viewDossier.trainerEmail || 'contact@deliverydigital.fr');
+  }, [viewDossier]);
+  // Charge formateurs inscrits + catalogue complet des formations (menus de la convention). @Rabah 2026-07-17
+  useEffect(() => {
+    const h = { 'x-admin-secret': secret || '' };
+    fetch('/api/admin/trainers', { headers: h })
+      .then((r) => r.ok ? r.json() : { trainers: [] })
+      .then((j) => setTrainers(Array.isArray(j.trainers) ? j.trainers : []))
+      .catch(() => { /* pas bloquant */ });
+    fetch('/api/admin/agencies/formations', { headers: h })
+      .then((r) => r.ok ? r.json() : { formations: [] })
+      .then((j) => setCatalog(Array.isArray(j.formations) ? j.formations : []))
+      .catch(() => { /* pas bloquant */ });
+  }, [secret]);
+  // Enregistre prix/stagiaire (-> montant HT = prix × nb stagiaires) + formateur, et répercute
+  // sur la convention (le PDF lit le dossier). @author Rabah Ziane - 2026-07-17
+  async function saveConventionFields() {
+    if (!viewDossier) return;
+    const n = (viewDossier.salaries || []).length || 1;
+    const price = Number(convPrice) || 0;
+    const amountHT = Math.round(price * n);
+    setSavingConv(true);
+    try {
+      const r = await fetch(`/api/admin/agencies/dossiers/${viewDossier._id}/convention-fields`, { method: 'POST', headers: headers(), body: JSON.stringify({ amountHT, trainerName: convTrainer.trim(), trainerEmail: convTrainerEmail.trim(), formationTitle: convFormation.trim() }) }).then((x) => x.json());
+      if (r.ok) {
+        const patch = { amountHT: r.amountHT, trainerName: r.trainerName, trainerEmail: r.trainerEmail, formationTitle: r.formationTitle };
+        setViewDossier((v) => v ? { ...v, ...patch } : v);
+        setDossiers((prev) => prev.map((d) => d._id === viewDossier._id ? { ...d, ...patch } : d));
+      } else alert('Erreur : ' + (r.error || 'enregistrement impossible'));
+    } finally { setSavingConv(false); }
+  }
+  // Liste des formations pour le menu : catalogue complet (base) si dispo, sinon repli sur les 2 codées. @Rabah 2026-07-17
+  const formList = catalog.length ? catalog : FORMATIONS.map((f) => ({ id: f.id, title: f.title, price: f.priceHT, hours: f.hours, active: true }));
   // Suppression DOUCE d'un dossier (superadmin) : hidden=true, pas de DELETE en base (réversible).
   // @author Rabah Ziane · 2026-06-09
   async function deleteDossier(d: AdminDossier) {
@@ -208,6 +398,18 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
     } finally { setSavingClient(false); }
   }
 
+  // Prévisualiser le tableau de bord d'une agence : on récupère un JWT agence court (2h) côté
+  // serveur puis on ouvre /agence#preview=<token> dans un nouvel onglet. Le token n'est pas
+  // persisté côté navigateur agence. @author Rabah Ziane - 2026-06-24
+  async function viewAgencySpace(id: string) {
+    setPreviewingSpace(id);
+    try {
+      const r = await fetch(`/api/admin/agencies/${id}/impersonate`, { method: 'POST', headers: headers() });
+      const j = await r.json();
+      if (!j.ok || !j.token) { alert('Erreur : ' + (j.error || 'prévisualisation impossible')); return; }
+      window.open(`/agence#preview=${encodeURIComponent(j.token)}`, '_blank', 'noopener');
+    } catch { alert('Erreur réseau'); } finally { setPreviewingSpace(null); }
+  }
   async function regeneratePw(id: string) {
     if (!confirm("Régénérer le mot de passe de cette agence ? L'ancien ne fonctionnera plus (l'agence devra utiliser le nouveau, affiché ensuite).")) return;
     setRegenAgency(id);
@@ -293,7 +495,7 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
             <div className="flex items-center justify-between px-5 py-3 border-b border-black/10"><h3 className="text-[15px] font-bold">Clients ({clientsList.length})</h3><button onClick={() => setShowClients(false)} className="h-8 w-8 rounded-full hover:bg-black/[0.05] inline-flex items-center justify-center"><X className="h-4 w-4" /></button></div>
             <div className="max-h-[64vh] overflow-y-auto">
               {clientsList.length === 0 ? <p className="px-5 py-8 text-center text-[13px] text-[#86868B]">Aucun client.</p> : (
-                <table className="w-full text-[12.5px]"><thead className="text-[#86868B] text-[10px] uppercase tracking-wider"><tr className="border-b border-black/5"><th className="text-left px-5 py-2.5">Client</th><th className="text-left px-5 py-2.5">Emails (compta / gérant)</th><th className="text-left px-5 py-2.5">OPCO</th><th className="text-left px-5 py-2.5">Agence</th><th className="text-left px-5 py-2.5">Commercial</th><th className="text-left px-5 py-2.5">Statut</th><th className="text-right px-5 py-2.5">Action</th></tr></thead>
+                <table className="w-full text-[12.5px]"><thead className="text-[#86868B] text-[10px] uppercase tracking-wider"><tr className="border-b border-black/5"><th className="text-left px-5 py-2.5">Client</th><th className="text-left px-5 py-2.5">Emails (compta / gérant)</th><th className="text-left px-5 py-2.5">OPCO</th><th className="text-left px-5 py-2.5">Agence</th><th className="text-left px-5 py-2.5">Commercial</th><th className="text-left px-5 py-2.5">Enregistré le</th><th className="text-left px-5 py-2.5">Statut</th><th className="text-right px-5 py-2.5">Action</th></tr></thead>
                   <tbody className="divide-y divide-black/5">{clientsList.map((c) => (<tr key={c.id} className="hover:bg-black/[0.02]"><td className="px-5 py-2.5"><p className="font-medium text-[#1D1D1F]">{c.denom || '-'}</p><p className="text-[#86868B] text-[11px]">{c.email || c.siret || ''}</p></td><td className="px-5 py-2.5 text-[#86868B] text-[11px]"><p>{c.accountantEmail ? `Compta : ${c.accountantEmail}` : '—'}</p><p>{c.managerEmail ? `Gérant : ${c.managerEmail}` : '—'}</p></td><td className="px-5 py-2.5 text-[#86868B]">{c.opco || '-'}</td><td className="px-5 py-2.5 text-[#86868B]">{c.agence}</td><td className="px-5 py-2.5 text-[#86868B]">{c.commercial || '—'}</td><td className="px-5 py-2.5">{c.status}</td><td className="px-5 py-2.5 text-right"><button onClick={() => setEditClient({ id: c.id, denom: c.denom || '', email: c.email || '', accountantEmail: c.accountantEmail || '', managerEmail: c.managerEmail || '', siret: c.siret || '', opco: c.opco || '' })} className="px-3 py-1 rounded-lg border border-black/10 text-[11.5px] font-medium hover:bg-black/[0.04]">Modifier</button></td></tr>))}</tbody>
                 </table>
               )}
@@ -438,6 +640,11 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
                       <button onClick={() => previewResend(a._id)} disabled={previewingAgency === a._id} title="Renvoyer l'email d'accès SANS changer le mot de passe" className="inline-flex items-center gap-1 text-[11.5px] text-[#0066CC] hover:text-[#0077ED] disabled:opacity-50">{previewingAgency === a._id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mail className="h-3.5 w-3.5" />} Renvoyer accès</button>
                       <button onClick={() => regeneratePw(a._id)} disabled={regenAgency === a._id} title="Générer un NOUVEAU mot de passe (l'ancien ne marchera plus)" className="inline-flex items-center gap-1 text-[11.5px] text-[#FF9F0A] hover:text-[#e08e00] disabled:opacity-50">{regenAgency === a._id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />} Régénérer mdp</button>
                       <button onClick={() => regenKey(a._id)} title="Régénérer la clé API" className="inline-flex items-center gap-1 text-[11.5px] text-[#86868B] hover:text-[#1D1D1F]"><KeyRound className="h-3.5 w-3.5" /> Clé</button>
+                      <button onClick={() => viewAgencySpace(a._id)} disabled={previewingSpace === a._id} title="Ouvrir le tableau de bord de l'agence tel qu'elle le voit (prévisualisation)" className="inline-flex items-center gap-1 text-[11.5px] text-[#34C759] hover:text-[#2ba84a] disabled:opacity-50">{previewingSpace === a._id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />} Visualiser l'espace</button>
+                      <button onClick={() => setPyemesEdit({ id: a._id, name: a.name, code: a.pyemesCode || a.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 12), pct: '30' })} title="Revente Pyemes : code de parrainage + % de commission" className="inline-flex items-center gap-1 text-[11.5px] text-[#635BFF] hover:opacity-80">💜 Pyemes{a.pyemesCode ? ` · ${a.pyemesCode}` : ''}</button>
+                      {a.pyemesCode && (
+                        <button onClick={() => ouvrirRoadmap(a._id, a.name)} title="Feuille de route Pyemes (partagée avec l'agence)" className="inline-flex items-center gap-1 text-[11.5px] text-[#1D6ADE] hover:opacity-80 ml-2">🗺️ Feuille de route</button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -446,6 +653,93 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
           </table>
         )}
       </div>
+
+      {/* Modal réglage revente Pyemes (code + %). @Rabah 2026-08-01 */}
+      {pyemesEdit && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => !pyemesSaving && setPyemesEdit(null)}>
+          <div className="w-full max-w-[420px] rounded-2xl bg-white p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-[16px] font-bold text-[#1D1D1F]">Revente Pyemes · {pyemesEdit.name}</h3>
+            <p className="text-[12.5px] text-[#86868B] mt-1">Relie cette agence à Pyemes et fixe sa commission (% de la vente TTC).</p>
+            <label className="block mt-4 text-[12px] font-semibold text-[#1D1D1F]">Code de parrainage</label>
+            <input value={pyemesEdit.code} onChange={(e) => setPyemesEdit({ ...pyemesEdit, code: e.target.value.toUpperCase() })} className="mt-1 w-full h-10 px-3 rounded-lg border border-black/15 text-[14px] font-mono uppercase" placeholder="NOVA" />
+            <p className="text-[11.5px] text-[#86868B] mt-1">Lien de vente : <code>pyemes.com/inscription?ag={pyemesEdit.code || 'CODE'}</code></p>
+            <label className="block mt-3 text-[12px] font-semibold text-[#1D1D1F]">Commission (% TTC)</label>
+            <input type="number" value={pyemesEdit.pct} onChange={(e) => setPyemesEdit({ ...pyemesEdit, pct: e.target.value })} className="mt-1 w-32 h-10 px-3 rounded-lg border border-black/15 text-[14px]" min={0} max={100} />
+            <div className="mt-5 flex gap-2 justify-end">
+              <button onClick={() => setPyemesEdit(null)} disabled={pyemesSaving} className="px-4 h-10 rounded-lg border border-black/15 text-[13px]">Annuler</button>
+              <button onClick={savePyemes} disabled={pyemesSaving} className="px-4 h-10 rounded-lg bg-[#635BFF] text-white text-[13px] font-semibold disabled:opacity-60">{pyemesSaving ? 'Enregistrement…' : 'Enregistrer'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Feuille de route Pyemes : la MEME liste que celle vue par l'agence (User.pyemesRoadmap).
+          DD ajoute ses demandes, coche, et repond dans le fil. @author Rabah Ziane - 2026-08-31 */}
+      {roadAgence && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setRoadAgence(null)}>
+          <div className="w-full max-w-[620px] max-h-[86vh] overflow-y-auto rounded-2xl bg-white p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-[16px] font-bold text-[#1D1D1F]">Feuille de route Pyemes · {roadAgence.name}</h3>
+                <p className="text-[12.5px] text-[#86868B] mt-1">Ce qui reste avant la mise en ligne. L'agence voit la même liste et peut vous demander des tâches.</p>
+              </div>
+              <button onClick={() => setRoadAgence(null)} className="text-[#86868B] text-[18px] leading-none">✕</button>
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <input value={roadTitre} onChange={(e) => setRoadTitre(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') ajouterTacheAdmin(); }} placeholder="Demander une tâche à l'agence…" className="flex-1 h-10 px-3 rounded-lg border border-black/15 text-[13px]" />
+              <button onClick={ajouterTacheAdmin} disabled={roadBusy || !roadTitre.trim()} className="px-4 h-10 rounded-lg bg-[#635BFF] text-white text-[13px] font-semibold disabled:opacity-50">Ajouter</button>
+            </div>
+
+            {roadTaches.length === 0 ? (
+              <p className="text-[13px] text-[#86868B] mt-4">Aucune tâche pour l'instant.</p>
+            ) : (
+              <ul className="mt-4 space-y-1.5">
+                {roadTaches.map((t) => {
+                  const fait = t.statut === 'fait';
+                  return (
+                    <li key={t.id} className="flex items-start gap-3 rounded-lg border border-black/8 px-3 py-2">
+                      <input type="checkbox" checked={fait} onChange={() => statutTacheAdmin(t.id, fait ? 'a_faire' : 'fait')} className="mt-1" />
+                      <span className="flex-1 min-w-0">
+                        <span className={`block text-[13px] ${fait ? 'text-[#86868B] line-through' : 'text-[#1D1D1F]'}`}>{t.titre}</span>
+                        <span className="block text-[11px] text-[#A1A1A6] mt-0.5">{t.from === 'dd' ? 'Demandé par Delivery Digital' : "Demandé par l'agence"}{t.source && t.source.startsWith('import') ? ` · ${t.source}` : ''}</span>
+                      </span>
+                      {t.from === 'dd' && <button onClick={() => supprimerTacheAdmin(t.id)} className="text-[12px] text-[#A1A1A6] hover:text-[#FF3B30]">✕</button>}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            <div className="mt-5 pt-4 border-t border-black/8">
+              <p className="text-[13px] font-semibold text-[#1D1D1F] mb-2">Discussion avec l'agence</p>
+              {roadMsgs.length === 0 ? (
+                <p className="text-[12.5px] text-[#86868B]">Aucun message.</p>
+              ) : (
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {roadMsgs.map((m) => (
+                    <div key={m.id} className={`flex ${m.from === 'dd' ? 'justify-end' : 'justify-start'}`}>
+                      <div className="max-w-[80%] rounded-xl px-3 py-2" style={{ background: m.from === 'dd' ? 'rgba(99,91,255,0.10)' : '#F5F5F7' }}>
+                        <p className="text-[11px] text-[#A1A1A6] mb-0.5">{m.from === 'dd' ? 'Delivery Digital' : (m.auteur || "L'agence")}{m.at ? ` · ${new Date(m.at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : ''}</p>
+                        {m.texte && <p className="text-[13px] text-[#1D1D1F] whitespace-pre-line">{m.texte}</p>}
+                        {m.image && <a href={m.image} target="_blank" rel="noreferrer"><img src={m.image} alt="" className="mt-1 rounded-lg max-h-40 border border-black/10" /></a>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="mt-2 flex gap-2 items-center">
+                <input value={roadMsg} onChange={(e) => setRoadMsg(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') envoyerMessageAdmin(); }} placeholder="Écrire à l'agence…" className="flex-1 h-10 px-3 rounded-lg border border-black/15 text-[13px]" />
+                <label className="h-10 w-10 rounded-lg border border-black/15 inline-flex items-center justify-center cursor-pointer" title="Joindre une capture">
+                  📎<input type="file" accept="image/*" className="hidden" onChange={(e) => { setRoadPiece(e.target.files?.[0] || null); e.currentTarget.value = ''; }} />
+                </label>
+                <button onClick={envoyerMessageAdmin} disabled={roadBusy || (!roadMsg.trim() && !roadPiece)} className="px-4 h-10 rounded-lg bg-[#635BFF] text-white text-[13px] font-semibold disabled:opacity-50">{roadBusy ? 'Envoi…' : 'Envoyer'}</button>
+              </div>
+              {roadPiece && <p className="text-[11.5px] text-[#86868B] mt-1">Capture jointe : {roadPiece.name} <button onClick={() => setRoadPiece(null)} className="underline ml-1">retirer</button></p>}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Validation des comptes partenaires : infos entreprise + RIB (PDF) + contrat signe */}
       <div className="rounded-2xl bg-white border border-black/10 overflow-hidden">
@@ -568,6 +862,30 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
               {/* Frise de suivi du dossier (Stripe-like) */}
               <AdminDossierTimeline d={viewDossier} />
 
+              {/* Étapes "Accès OPCO" (rattachement) + "Montage OPCO" : pilotées par le super admin,
+                  visibles côté agence dans son suivi. Le rattachement déclenche la confirmation
+                  "courrier d'activation envoyé" que l'agence peut consulter. @Rabah 2026-06-24 */}
+              <div className="mt-4 rounded-xl border border-[#0066CC]/25 bg-[#0066CC]/[0.04] p-3.5">
+                <p className="text-[12px] font-bold text-[#1D1D1F]">Accès &amp; montage OPCO <span className="font-normal text-[#86868B]">· piloté par Delivery Digital</span></p>
+                <p className="text-[11px] text-[#86868B] mt-0.5 mb-2.5">Indiquez l'avancement. L'agence le voit dans son suivi (le rattachement affiche « courrier envoyé »).</p>
+                <div className="grid sm:grid-cols-2 gap-2.5">
+                  <button onClick={() => setMontage(viewDossier._id, { aktoAttached: !viewDossier.aktoAttached })} className={`flex items-start gap-2.5 text-left rounded-lg border p-2.5 transition ${viewDossier.aktoAttached ? 'border-[#34C759]/50 bg-[#34C759]/5' : 'border-black/10 hover:bg-black/[0.02]'}`}>
+                    <span className={`mt-0.5 h-4 w-4 rounded-[5px] border-2 grid place-items-center flex-shrink-0 ${viewDossier.aktoAttached ? 'bg-[#34C759] border-[#34C759] text-white' : 'border-black/25'}`}>{viewDossier.aktoAttached && <Check className="h-3 w-3" />}</span>
+                    <span>
+                      <span className="block text-[12px] font-semibold text-[#1D1D1F]">Demande de rattachement faite</span>
+                      <span className="block text-[10.5px] text-[#86868B]">Courrier d'activation envoyé au client{viewDossier.aktoAttached && viewDossier.aktoAttachedAt ? ` · le ${new Date(viewDossier.aktoAttachedAt).toLocaleDateString('fr-FR')}` : ''}</span>
+                    </span>
+                  </button>
+                  <button onClick={() => setMontage(viewDossier._id, { salariesPending: !viewDossier.salariesPending })} className={`flex items-start gap-2.5 text-left rounded-lg border p-2.5 transition ${viewDossier.salariesPending ? 'border-[#E5A000]/50 bg-[#E5A000]/5' : 'border-black/10 hover:bg-black/[0.02]'}`}>
+                    <span className={`mt-0.5 h-4 w-4 rounded-[5px] border-2 grid place-items-center flex-shrink-0 ${viewDossier.salariesPending ? 'bg-[#E5A000] border-[#E5A000] text-white' : 'border-black/25'}`}>{viewDossier.salariesPending && <Check className="h-3 w-3" />}</span>
+                    <span>
+                      <span className="block text-[12px] font-semibold text-[#1D1D1F]">En attente du CSV salariés</span>
+                      <span className="block text-[10.5px] text-[#86868B]">Le dossier attend la liste des salariés pour être déposé</span>
+                    </span>
+                  </button>
+                </div>
+              </div>
+
               {/* Statut convention signée */}
               <div className={`mt-4 rounded-xl border p-3 flex items-start gap-3 ${viewDossier.signatureDataUrl || viewDossier.signedBy ? 'border-[#34C759]/40 bg-[#34C759]/5' : 'border-black/10 bg-black/[0.02]'}`}>
                 <div className="flex-1">
@@ -595,6 +913,43 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
                   <div key={k} className="flex justify-between gap-3 border-b border-black/[0.04] py-1.5"><span className="text-[#86868B]">{k}</span><span className="font-medium text-[#1D1D1F] text-right">{v}</span></div>
                 ))}
               </div>
+
+              {/* Édition convention : prix/stagiaire + formateur -> se répercute sur la Convention (PDF). @Rabah 2026-07-17 */}
+              <div className="mt-4 rounded-xl border border-black/10 bg-black/[0.015] p-3.5">
+                <p className="text-[11px] uppercase tracking-wider font-bold text-[#86868B] mb-2.5">Convention · modifier</p>
+                <div className="mb-3">
+                  <label className="block text-[11px] font-semibold text-[#86868B] mb-1">Formation</label>
+                  <select value={(formList.find((f) => f.title === convFormation)?.id) || '__cur'} onChange={(e) => { if (e.target.value === '__cur') return; const f = formList.find((x) => x.id === e.target.value); if (f) { setConvFormation(f.title); setConvPrice(String(f.price)); } }} className="w-full px-3 py-2 rounded-lg border border-black/10 text-[13px] bg-white focus:outline-none focus:border-black/30">
+                    {!formList.some((f) => f.title === convFormation) && <option value="__cur">{convFormation || 'Formation actuelle'}</option>}
+                    {formList.map((f) => <option key={f.id} value={f.id}>{f.title}{f.hours ? ` (${f.hours}h` : ''}{f.hours ? ` · ${f.price}€)` : ''}</option>)}
+                  </select>
+                  <p className="text-[10.5px] text-[#86868B] mt-1">{formList.length} formation(s) au catalogue · choisir met à jour le prix par défaut (modifiable).</p>
+                </div>
+                <div className="grid sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-[#86868B] mb-1">Prix par stagiaire (€)</label>
+                    <input type="number" min="0" value={convPrice} onChange={(e) => setConvPrice(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-black/10 text-[13px] focus:outline-none focus:border-black/30" />
+                    <p className="text-[10.5px] text-[#86868B] mt-1">{(viewDossier.salaries || []).length || 1} stagiaire(s) → HT = <strong>{((Number(convPrice) || 0) * ((viewDossier.salaries || []).length || 1)).toLocaleString('fr-FR')} €</strong></p>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-[#86868B] mb-1">Formateur</label>
+                    <select value={trainers.some((t) => t.email === convTrainerEmail) ? convTrainerEmail : '__cur'} onChange={(e) => { if (e.target.value === '__cur') return; const t = trainers.find((x) => x.email === e.target.value); if (t) { setConvTrainer(t.name || ''); setConvTrainerEmail(t.email || ''); } }} className="w-full px-3 py-2 rounded-lg border border-black/10 text-[13px] bg-white focus:outline-none focus:border-black/30">
+                      {!trainers.some((t) => t.email === convTrainerEmail) && <option value="__cur">{convTrainer || 'Formateur actuel'}{convTrainerEmail ? ` (${convTrainerEmail})` : ''}</option>}
+                      {trainers.map((t) => <option key={t.email} value={t.email}>{t.name || 'Sans nom'} ({t.email})</option>)}
+                    </select>
+                    <p className="text-[10.5px] text-[#86868B] mt-1">{trainers.length ? `${trainers.length} formateur(s) inscrit(s)` : 'Aucun formateur inscrit trouvé'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-[#86868B] mb-1">Email formateur</label>
+                    <input value={convTrainerEmail} onChange={(e) => setConvTrainerEmail(e.target.value)} placeholder="contact@deliverydigital.fr" className="w-full px-3 py-2 rounded-lg border border-black/10 text-[13px] focus:outline-none focus:border-black/30" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mt-3">
+                  <button onClick={saveConventionFields} disabled={savingConv} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1D1D1F] text-white text-[12.5px] font-semibold hover:bg-black disabled:opacity-50">{savingConv ? 'Enregistrement…' : 'Enregistrer'}</button>
+                  <span className="text-[11px] text-[#86868B]">Puis « Convention (PDF) » pour vérifier.</span>
+                </div>
+              </div>
+
               <h4 className="text-[13px] font-bold mt-5 mb-2">Stagiaires inscrits ({(viewDossier.salaries || []).length})</h4>
               <div className="overflow-x-auto border border-black/10 rounded-lg">
                 <table className="w-full text-[12px]">
@@ -655,12 +1010,177 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
       {/* Modal : monter un dossier (DDN) */}
       {showMount && <MountDossierModal agencies={list} headers={headers} onClose={() => setShowMount(false)} onDone={() => { setShowMount(false); load(); }} />}
 
+      {/* Ordres de paiement : montants estimé / attribué OPCO par mois, avances (fixe/%/les 2), et
+          génération d'un ordre de virement (PDF) multi-dossiers envoyé à Delivery Digital (copie
+          agence en option). Le contrat n'est pas modifié. @author Rabah Ziane - 2026-07-29 */}
+      <div id="sec-paiements" className="scroll-mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
+        <div className="px-5 py-3 border-b border-black/10">
+          <h3 className="font-semibold text-[14px]">Ordres de paiement</h3>
+          <p className="text-[12px] text-[#86868B] mt-0.5">Montant <strong>estimé</strong> et <strong>attribué OPCO</strong> par mois. Le % se calcule sur le montant OPCO dès qu'il est saisi (sinon l'estimé). Avancez le fixe, le %, ou les deux ; ou générez un <strong>ordre de virement</strong> (PDF) pour plusieurs dossiers, envoyé à Delivery Digital.</p>
+        </div>
+        {genOrders.length > 0 && (
+          <div className="px-5 py-3 border-b border-black/10 bg-black/[0.02]">
+            <p className="text-[11px] uppercase tracking-wider font-bold text-[#86868B] mb-2">Ordres de virement générés</p>
+            <div className="flex flex-wrap gap-2">
+              {genOrders.map((o) => (
+                <div key={o._id} className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white border border-black/10 text-[11.5px]">
+                  <a href={pdfHref(o)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:underline"><span className="font-semibold text-[#0066CC]">{o.ref}</span> · {o.agencyName} · {(o.totalCommission || 0).toLocaleString('fr-FR')} €</a>
+                  {o.paidAt
+                    ? <button onClick={() => markOrderPaid(o._id, false)} title="Payé à l'agence · cliquer pour annuler" className="text-[#34C759] font-semibold">✓ Payé</button>
+                    : <button onClick={() => markOrderPaid(o._id, true)} className="px-2 py-0.5 rounded-full bg-[#34C759] text-white font-semibold">Marquer payé à l'agence</button>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {(() => {
+          const withComm = dossiers.filter((d) => (d.commission || 0) > 0);
+          if (!withComm.length) return <p className="px-5 py-8 text-center text-[13px] text-[#86868B]">Aucun dossier avec commission pour l'instant.</p>;
+          const groups = new Map<string, typeof withComm>();
+          withComm.forEach((d) => { const k = d.agencyName || 'Agence'; if (!groups.has(k)) groups.set(k, []); groups.get(k)!.push(d); });
+          return <div className="divide-y divide-black/10">{[...groups.entries()].map(([agencyName, ds]) => {
+            const selIds = ds.filter((d) => poSel.has(d._id)).map((d) => d._id);
+            const selTotal = ds.filter((d) => poSel.has(d._id)).reduce((s, d) => s + aVerser(d), 0);
+            const byMonth = new Map<string, typeof ds>();
+            ds.forEach((d) => { const m = dossierMonth(d); if (!byMonth.has(m)) byMonth.set(m, [] as unknown as typeof ds); byMonth.get(m)!.push(d); });
+            const months = [...byMonth.keys()].sort().reverse();
+            return (
+              <div key={agencyName}>
+                <div className="px-5 py-2.5 bg-black/[0.03] flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-[#86868B]" /><span className="font-semibold text-[13px] text-[#1D1D1F]">{agencyName}</span></div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <label className="inline-flex items-center gap-1.5 text-[11.5px] text-[#86868B]"><input type="checkbox" checked={poCcAgency} onChange={(e) => setPoCcAgency(e.target.checked)} /> Copie à l'agence</label>
+                    <button disabled={!selIds.length} onClick={() => setPoPreview({ agencyName, ds: ds.filter((d) => poSel.has(d._id)) })} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold disabled:opacity-40 bg-[#0066CC] text-white">Générer un ordre de paiement · {selIds.length} · {selTotal.toLocaleString('fr-FR')} €</button>
+                  </div>
+                </div>
+                {months.map((ym) => (
+                  <div key={ym}>
+                    <div className="px-5 pt-2 pb-1 text-[11px] uppercase tracking-wider font-bold text-[#0066CC]">{moisLabelFr(ym)}</div>
+                    <div className="divide-y divide-black/5">
+                      {byMonth.get(ym)!.map((d) => {
+                        const poF = (d.paymentOrders || []).filter((p) => p.part === 'fixe').reduce((a, p) => a + p.montant, 0);
+                        const poP = (d.paymentOrders || []).filter((p) => p.part === 'pourcentage').reduce((a, p) => a + p.montant, 0);
+                        const fixeDu = d.commissionFixAmount || 0, pctDu = d.commissionPctAmount || 0;
+                        const fixeReste = Math.max(0, fixeDu - poF), pctReste = Math.max(0, pctDu - poP);
+                        const verbe = d.opcoPaid ? 'Verser' : 'Avancer';
+                        return (
+                          <div key={d._id} className="px-5 py-3">
+                            <div className="flex items-start gap-3 flex-wrap">
+                              <input type="checkbox" className="mt-1" checked={poSel.has(d._id)} onChange={() => togglePoSel(d._id)} />
+                              <div className="flex-1 min-w-[220px]">
+                                <p className="font-semibold text-[13px] text-[#1D1D1F]">{d.denom || 'Client'}</p>
+                                <div className="mt-1 flex items-center gap-3 flex-wrap text-[11.5px] text-[#86868B]">
+                                  <span>Estimé : <strong className="text-[#1D1D1F]">{(d.amountHT || 0).toLocaleString('fr-FR')} €</strong></span>
+                                  <label className="inline-flex items-center gap-1">Attribué OPCO : <input type="number" defaultValue={d.amountOpco || 0} onBlur={(e) => { const v = Math.max(0, Math.round(Number(e.target.value) || 0)); if (v !== (d.amountOpco || 0)) setAmountOpco(d._id, v); }} className="w-24 px-2 py-0.5 rounded border border-black/15 text-[12px]" /> €</label>
+                                  <span>Commission : <strong className="text-[#1D1D1F]">{(d.commission || 0).toLocaleString('fr-FR')} €</strong> (fixe {fixeDu.toLocaleString('fr-FR')} + % {pctDu.toLocaleString('fr-FR')})</span>
+                                  <span>{d.opcoPaid ? <span className="text-[#0A84FF]">OPCO payé</span> : <span className="text-[#FF9F0A]">OPCO non payé</span>}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {fixeReste > 0 && <button onClick={() => addPaymentOrder(d._id, [{ part: 'fixe', montant: fixeReste }])} className="px-2.5 py-1 rounded-md border border-black/10 text-[11px] hover:bg-black/[0.03]">{verbe} fixe · {fixeReste.toLocaleString('fr-FR')} €</button>}
+                                {pctReste > 0 && <button onClick={() => addPaymentOrder(d._id, [{ part: 'pourcentage', montant: pctReste }])} className="px-2.5 py-1 rounded-md border border-black/10 text-[11px] hover:bg-black/[0.03]">{verbe} % · {pctReste.toLocaleString('fr-FR')} €</button>}
+                                {fixeReste > 0 && pctReste > 0 && <button onClick={() => addPaymentOrder(d._id, [{ part: 'fixe', montant: fixeReste }, { part: 'pourcentage', montant: pctReste }])} className="px-2.5 py-1 rounded-md bg-[#34C759] text-white text-[11px] font-semibold">{verbe} les 2</button>}
+                                {fixeReste === 0 && pctReste === 0 && <span className="text-[11.5px] text-[#34C759] font-semibold">Soldé ✓</span>}
+                              </div>
+                            </div>
+                            {(d.paymentOrders || []).length > 0 && (
+                              <div className="mt-2 ml-6 flex flex-wrap gap-1.5">
+                                {(d.paymentOrders || []).map((p) => (
+                                  <span key={p._id} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/[0.04] text-[11px] text-[#1D1D1F]">{p.avance ? 'Avance' : 'Versement'} {p.part === 'fixe' ? 'fixe' : '%'} · {p.montant.toLocaleString('fr-FR')} €<button onClick={() => deletePaymentOrder(d._id, p._id)} className="text-[#FF3B30] hover:opacity-70" title="Annuler">×</button></span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}</div>;
+        })()}
+      </div>
+
+      {/* Aperçu / envoi d'un ordre de paiement (ordre de virement). @Rabah 2026-07-29 */}
+      {poPreview && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setPoPreview(null)}>
+          <div className="bg-white rounded-2xl max-w-lg w-full p-5 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {(() => {
+              const total = poPreview.ds.reduce((s, d) => s + aVerser(d), 0);
+              const agencyEmail = list.find((a) => a.name === poPreview.agencyName)?.email || '';
+              const iban = poPreview.ds.find((d) => d.agencyIban)?.agencyIban || '';
+              return (<>
+                <h3 className="text-[16px] font-bold">Aperçu de l'email · {poPreview.agencyName}</h3>
+                <p className="text-[12px] text-[#86868B] mt-1">Voici l'email qui sera envoyé (avec le PDF de l'ordre de virement en pièce jointe).</p>
+                {/* Prévisualisation façon email */}
+                <div className="mt-3 rounded-xl border border-black/10 overflow-hidden">
+                  <div className="px-4 py-2.5 bg-black/[0.03] text-[12px] space-y-0.5">
+                    <div><span className="text-[#86868B]">À :</span> <span className="text-[#1D1D1F]">contact@deliverydigital.fr</span></div>
+                    <div><span className="text-[#86868B]">Copie :</span> <span className="text-[#1D1D1F]">{poCcAgency ? (agencyEmail || "l'agence") : '—'}</span></div>
+                    <div><span className="text-[#86868B]">Objet :</span> <span className="text-[#1D1D1F]">Ordre de paiement · {poPreview.agencyName} · {total.toLocaleString('fr-FR')} €</span></div>
+                  </div>
+                  <div className="px-4 py-3 text-[12.5px] text-[#1D1D1F]">
+                    <p className="text-[14px] font-bold text-[#0066CC]">Ordre de paiement</p>
+                    <p className="mt-1">Bénéficiaire : <b>{poPreview.agencyName}</b>{iban ? <> · IBAN <span className="font-mono text-[11.5px]">{iban}</span></> : ''}</p>
+                    <table className="w-full mt-2 text-[12px]"><tbody>
+                      {poPreview.ds.map((d) => { const poFixe = (d.paymentOrders || []).filter((p) => p.part === 'fixe').reduce((a, p) => a + p.montant, 0); const poPct = (d.paymentOrders || []).filter((p) => p.part === 'pourcentage').reduce((a, p) => a + p.montant, 0); return (
+                        <tr key={d._id} className="border-b border-black/5"><td className="py-1.5">{moisLabelFr(dossierMonth(d))}</td><td className="py-1.5">{d.denom}</td><td className="py-1.5 text-right">{poFixe ? `fixe ${poFixe.toLocaleString('fr-FR')}` : ''}{poFixe && poPct ? ' + ' : ''}{poPct ? `% ${poPct.toLocaleString('fr-FR')}` : ''} = <b>{aVerser(d).toLocaleString('fr-FR')} €</b></td></tr>
+                      ); })}
+                    </tbody></table>
+                    <p className="mt-2 text-[14px]"><b>Total à verser : {total.toLocaleString('fr-FR')} €</b></p>
+                    <p className="mt-1 text-[11px] text-[#86868B]">PDF de l'ordre de virement joint. Généré depuis l'espace admin Delivery Digital.</p>
+                  </div>
+                </div>
+              </>);
+            })()}
+            <label className="mt-3 flex items-center gap-2 text-[12.5px]"><input type="checkbox" checked={poCcAgency} onChange={(e) => setPoCcAgency(e.target.checked)} /> Mettre l'agence en copie de l'email</label>
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button onClick={() => setPoPreview(null)} className="px-4 py-2 rounded-full border border-black/10 text-[13px]">Annuler</button>
+              <button onClick={() => generateOrder(poPreview.ds.map((d) => d._id), poCcAgency)} className="px-4 py-2 rounded-full bg-[#0066CC] text-white text-[13px] font-semibold">Générer &amp; envoyer</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Attestations de fin de formation (réussite + vitrophanie QR) : désélection des absents +
+          aperçu + envoi au client. @Rabah 2026-07-29 */}
+      {attModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setAttModal(null)}>
+          <div className="bg-white rounded-2xl max-w-lg w-full p-5 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-[16px] font-bold">Attestations de fin de formation</h3>
+            <p className="text-[12px] text-[#86868B] mt-1">{attModal.denom} · {attModal.formationTitle}. Décochez les apprenants <strong>absents</strong> avant l'envoi. Le QR renvoie à une page de vérification officielle (dates + apprenants).</p>
+            <p className="text-[11px] uppercase tracking-wider font-bold text-[#86868B] mt-3 mb-1">Apprenants présents</p>
+            <div className="space-y-1.5">
+              {(attModal.salaries || []).map((s, i) => (
+                <label key={i} className="flex items-center gap-2 text-[13px]"><input type="checkbox" checked={attPresent.has(i)} onChange={() => setAttPresent((p) => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; })} /> {[s.firstname, s.lastname].filter(Boolean).join(' ') || `Salarié ${i + 1}`}</label>
+              ))}
+              {(!attModal.salaries || !attModal.salaries.length) && <p className="text-[12px] text-[#86868B]">Aucun salarié enregistré sur ce dossier.</p>}
+            </div>
+            <label className="mt-3 block"><span className="text-[11px] uppercase tracking-wider font-bold text-[#86868B]">Email du client</span><input value={attEmail} onChange={(e) => setAttEmail(e.target.value)} placeholder="client@exemple.fr" className="w-full mt-1 px-3 py-2 rounded-lg border border-black/10 text-[13px]" /></label>
+            {attResult && (
+              <div className="mt-3 flex flex-wrap gap-2 text-[12px]">
+                <a href={attResult.attestationUrl} target="_blank" rel="noreferrer" className="px-2.5 py-1 rounded-full border border-black/10 hover:bg-black/[0.03]">Aperçu attestation (PDF)</a>
+                <a href={attResult.vitrophanieUrl} target="_blank" rel="noreferrer" className="px-2.5 py-1 rounded-full border border-black/10 hover:bg-black/[0.03]">Aperçu vitrophanie (PDF)</a>
+                <a href={attResult.verifyUrl} target="_blank" rel="noreferrer" className="px-2.5 py-1 rounded-full border border-black/10 hover:bg-black/[0.03]">Page de vérification (QR)</a>
+              </div>
+            )}
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button onClick={() => setAttModal(null)} className="px-4 py-2 rounded-full border border-black/10 text-[13px]">Fermer</button>
+              <button disabled={attBusy} onClick={() => attGenerate(false)} className="px-4 py-2 rounded-full border border-black/10 text-[13px] disabled:opacity-40">Prévisualiser</button>
+              <button disabled={attBusy || !attEmail.trim() || !attPresent.size} onClick={() => attGenerate(true)} className="px-4 py-2 rounded-full bg-[#0066CC] text-white text-[13px] font-semibold disabled:opacity-40">Envoyer au client</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Dossiers OPCO recus : statut jusqu'au paiement + versement commission (multi-select) */}
       <div id="sec-dossiers" className="scroll-mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
         <div className="px-5 py-3 border-b border-black/10 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-[14px]">Dossiers OPCO reçus</h3>
-            {dossiers.filter((d) => d.status === 'transmitted').length > 0 && <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#0066CC] text-white text-[11px] font-bold">{dossiers.filter((d) => d.status === 'transmitted').length} nouveau{dossiers.filter((d) => d.status === 'transmitted').length > 1 ? 'x' : ''} à traiter</span>}
+            {/* Compteur "à traiter" : brouillons exclus (pas encore finalisés). @Rabah 2026-07-02 */}
+            {dossiers.filter((d) => d.status === 'transmitted' && !d.draft).length > 0 && <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#0066CC] text-white text-[11px] font-bold">{dossiers.filter((d) => d.status === 'transmitted' && !d.draft).length} nouveau{dossiers.filter((d) => d.status === 'transmitted' && !d.draft).length > 1 ? 'x' : ''} à traiter</span>}
           </div>
           {selDoss.size > 0 && (
             <button onClick={paySelected} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#34C759] text-white text-[12px] font-semibold">
@@ -691,9 +1211,11 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
                         <thead className="text-[#86868B] text-[10px] uppercase tracking-wider"><tr className="border-b border-black/5"><th className="px-3 py-2"></th><th className="text-left px-3 py-2">Client</th><th className="text-left px-3 py-2">Montant</th><th className="text-left px-3 py-2">Commission</th><th className="text-left px-3 py-2">Statut</th><th className="text-left px-3 py-2">Encaissement</th></tr></thead>
                         <tbody className="divide-y divide-black/5">
                           {ds.map((d) => (
-                            <tr key={d._id} className={`hover:bg-black/[0.02] ${selDoss.has(d._id) ? 'bg-[#34C759]/5' : ''}`}>
+                            <Fragment key={d._id}>
+                            <tr className={`hover:bg-black/[0.02] ${selDoss.has(d._id) ? 'bg-[#34C759]/5' : ''}`}>
                               <td className="px-3 py-2.5"><input type="checkbox" checked={selDoss.has(d._id)} onChange={() => toggleSel(d._id)} /></td>
-                              <td className="px-3 py-2.5"><button onClick={() => setViewDossier(d)} className="text-left"><p className="font-semibold text-[#1D1D1F] underline decoration-dotted underline-offset-2 hover:text-[#0A84FF]">{d.denom || 'Client'}{d.mountedByAdmin && <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full bg-[#0066CC]/10 text-[#0066CC] text-[9.5px] font-bold align-middle">Monté DDN</span>}</p><p className="text-[#86868B] text-[11px]">{d.formationTitle} · {(d.salaries || []).length} stagiaire(s)</p></button></td>
+                              <td className="px-3 py-2.5"><button onClick={() => setViewDossier(d)} className="text-left"><p className="font-semibold text-[#1D1D1F] underline decoration-dotted underline-offset-2 hover:text-[#0A84FF]">{d.denom || 'Client'}{d.mountedByAdmin && <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full bg-[#0066CC]/10 text-[#0066CC] text-[9.5px] font-bold align-middle">Monté DDN</span>}{d.draft && <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full bg-[#FF9F0A]/15 text-[#FF9F0A] text-[9.5px] font-bold align-middle" title="Brouillon enregistré par l'agence, pas encore finalisé/transmis">Brouillon</span>}</p><p className="text-[#86868B] text-[11px]">{d.formationTitle} · {(d.salaries || []).length} stagiaire(s)</p></button>
+                                <span className="ml-2 align-middle"><SessionDatesBadge start={d.sessionStart} end={d.sessionEnd} name={d.sessionName} /></span>{/* Suivi & tâches dépliable (comme l'agence). @Rabah 2026-07-02 */}<button onClick={() => setOpenDossier((v) => v === d._id ? null : d._id)} className={`mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition ${openDossier === d._id ? 'bg-[#0066CC] text-white border-[#0066CC]' : 'bg-[#0066CC]/8 text-[#0066CC] border-[#0066CC]/30 hover:bg-[#0066CC]/15'}`}><Clock className="h-3.5 w-3.5" /> Suivi & tâches{d.tasks && d.tasks.length ? ` (${d.tasks.length})` : ''}{openDossier === d._id ? ' ▲' : ' ▼'}</button><button onClick={() => openAttestations(d)} title="Envoyer les attestations de fin de formation (réussite + vitrophanie)" className="mt-1.5 ml-1.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-[#C9A227]/50 bg-[#C9A227]/10 text-[#8a6d0f] hover:bg-[#C9A227]/20">📄 Attestations</button></td>
                               <td className="px-3 py-2.5">{(d.amountHT || 0).toLocaleString('fr-FR')} €</td>
                               <td className="px-3 py-2.5 font-semibold text-[#1D1D1F]">{(d.commission || 0).toLocaleString('fr-FR')} €</td>
                               <td className="px-3 py-2.5">
@@ -711,6 +1233,27 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
                                 </div>
                               </td>
                             </tr>
+                            {/* Ligne dépliable : timeline + tâches collaboratives (côté DDN). @Rabah 2026-07-02 */}
+                            {openDossier === d._id && (
+                              <tr className="bg-[#EEF4FF]">
+                                <td colSpan={6} className="px-4 pb-4 pt-2">
+                                  {/* Carte encadrée bien visible (avant : fond quasi invisible). @Rabah 2026-07-02 */}
+                                  <div className="rounded-xl border-2 border-[#0066CC]/30 bg-white shadow-md p-4">
+                                  <p className="text-[12px] uppercase tracking-wider font-extrabold text-[#0066CC] mb-3 flex items-center gap-1.5"><Clock className="h-4 w-4" /> Suivi &amp; tâches · {d.denom || 'Client'}</p>
+                                  <AdminDossierTimeline d={d} />
+                                  <DossierTasks
+                                    tasks={d.tasks || []}
+                                    emailSuggestions={[list.find((a) => a.name === d.agencyName)?.email, 'contact@deliverydigital.fr', d.clientEmail].filter(Boolean) as string[]}
+                                    onAdd={async (tk) => { const r = await fetch(`/api/admin/agencies/dossiers/${d._id}/tasks`, { method: 'POST', headers: headers(), body: JSON.stringify(tk) }); const j = await r.json(); if (j.ok) setDossiers((prev) => prev.map((x) => x._id === d._id ? { ...x, tasks: j.tasks } : x)); }}
+                                    onToggle={async (taskId, done) => { const r = await fetch(`/api/admin/agencies/dossiers/${d._id}/tasks/${taskId}`, { method: 'PATCH', headers: headers(), body: JSON.stringify({ done }) }); const j = await r.json(); if (j.ok) setDossiers((prev) => prev.map((x) => x._id === d._id ? { ...x, tasks: j.tasks } : x)); }}
+                                    onEditComment={async (taskId, comment) => { const r = await fetch(`/api/admin/agencies/dossiers/${d._id}/tasks/${taskId}`, { method: 'PATCH', headers: headers(), body: JSON.stringify({ comment }) }); const j = await r.json(); if (j.ok) setDossiers((prev) => prev.map((x) => x._id === d._id ? { ...x, tasks: j.tasks } : x)); }}
+                                    onDelete={async (taskId) => { const r = await fetch(`/api/admin/agencies/dossiers/${d._id}/tasks/${taskId}`, { method: 'DELETE', headers: headers() }); const j = await r.json(); if (j.ok) setDossiers((prev) => prev.map((x) => x._id === d._id ? { ...x, tasks: j.tasks } : x)); }}
+                                  />
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                            </Fragment>
                           ))}
                         </tbody>
                       </table>
@@ -766,13 +1309,14 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
               </thead>
               <tbody className="divide-y divide-black/5">{clientsList.map((c) => (
                 <tr key={c.id} className="hover:bg-black/[0.02] align-top">
-                  <td className="px-5 py-2.5"><p className="font-medium text-[#1D1D1F]">{c.denom || '-'}</p><p className="text-[#86868B] text-[11px]">{c.email || c.siret || ''}</p></td>
+                  <td className="px-5 py-2.5"><p className="font-medium text-[#1D1D1F]">{c.denom || '-'}</p><p className="text-[#86868B] text-[11px]">{c.email || c.siret || ''}</p>{/* Badge budget OPCO basculable en 1 clic. @Rabah 2026-07-02 */}<button onClick={async () => { try { await fetch(`/api/admin/agencies/clients/${c.id}`, { method: 'PATCH', headers: headers(), body: JSON.stringify({ formationDoneThisYear: !c.formationDoneThisYear }) }); setClientsList((prev) => prev.map((x) => x.id === c.id ? { ...x, formationDoneThisYear: !c.formationDoneThisYear } : x)); } catch { /* */ } }} title="Cliquer pour basculer : Budget OPCO 100% dispo ↔ Formation faite cette année" className={`mt-1 inline-flex px-1.5 py-0.5 rounded-full text-[10px] border transition hover:brightness-95 cursor-pointer ${c.formationDoneThisYear ? 'border-[#E5A000]/40 text-[#B87A00] bg-[#E5A000]/10' : 'border-[#34C759]/40 text-[#1a9d4b] bg-[#34C759]/10'}`}>{c.formationDoneThisYear ? 'Formation faite cette année' : 'Budget OPCO 100% dispo'}</button></td>
                   <td className="px-5 py-2.5 text-[#86868B] text-[11px]"><p>{c.accountantEmail ? `Compta : ${c.accountantEmail}` : '-'}</p><p>{c.managerEmail ? `Gérant : ${c.managerEmail}` : '-'}</p></td>
                   <td className="px-5 py-2.5 text-[#86868B]">{c.opco || '-'}</td>
                   <td className="px-5 py-2.5 text-[#86868B]">{c.agence}</td>
                   <td className="px-5 py-2.5 text-[#86868B]">{c.commercial || '-'}</td>
+                  <td className="px-5 py-2.5">{c.createdAt ? <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-[#0066CC]/10 text-[#0066CC] font-semibold text-[11.5px] whitespace-nowrap"><Clock className="h-3.5 w-3.5" />{new Date(c.createdAt).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span> : <span className="text-[#86868B]">-</span>}</td>
                   <td className="px-5 py-2.5">{c.status}</td>
-                  <td className="px-5 py-2.5 text-right"><button onClick={() => setEditClient({ id: c.id, denom: c.denom || '', email: c.email || '', accountantEmail: c.accountantEmail || '', managerEmail: c.managerEmail || '', siret: c.siret || '', opco: c.opco || '' })} className="px-3 py-1 rounded-lg border border-black/10 text-[11.5px] font-medium hover:bg-black/[0.04]">Modifier</button></td>
+                  <td className="px-5 py-2.5 text-right"><div className="inline-flex items-center gap-2"><button onClick={() => setEditClient({ id: c.id, denom: c.denom || '', email: c.email || '', accountantEmail: c.accountantEmail || '', managerEmail: c.managerEmail || '', siret: c.siret || '', opco: c.opco || '' })} className="px-3 py-1 rounded-lg border border-black/10 text-[11.5px] font-medium hover:bg-black/[0.04]">Modifier</button>{/* Masquer le client (soft delete, jamais de suppression dure). @Rabah 2026-07-02 */}<button onClick={async () => { if (!confirm(`Masquer le client « ${c.denom || 'ce client'} » ? Il sera retiré de la liste (réversible en base).`)) return; try { await fetch(`/api/admin/agencies/clients/${c.id}`, { method: 'PATCH', headers: headers(), body: JSON.stringify({ hidden: true }) }); setClientsList((prev) => prev.filter((x) => x.id !== c.id)); } catch { /* */ } }} title="Masquer ce client (réversible)" className="text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded p-1"><Trash2 className="h-3.5 w-3.5" /></button></div></td>
                 </tr>
               ))}</tbody>
             </table>
@@ -826,7 +1370,38 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
 }
 
 // Frise de suivi du dossier (pipeline OPCO) cote superadmin - theme clair. @author Rabah Ziane - 2026-06-04
-function AdminDossierTimeline({ d }: { d: { status: string; createdAt?: string; updatedAt?: string; sessionStart?: string; sessionEnd?: string; sessionName?: string; signedAt?: string } }) {
+
+/**
+ * Encadré des dates de formation, affiché directement dans les listes de dossiers pour éviter
+ * d'ouvrir la fiche juste pour savoir quand la session a lieu.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function SessionDatesBadge({ start, end, name }: { start?: string; end?: string; name?: string }) {
+  if (!start) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-black/10 bg-black/[0.03] text-[10.5px] font-semibold text-[#86868B] align-middle">
+        Dates à planifier{name ? ` · ${name}` : ''}
+      </span>
+    );
+  }
+  const d1 = new Date(start);
+  const d2 = end ? new Date(end) : null;
+  const dow = (d: Date) => d.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', '').toUpperCase();
+  const day = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  const sameDay = d2 && d1.toDateString() === d2.toDateString();
+  return (
+    <span className="inline-flex flex-col px-2.5 py-1 rounded-lg border border-[#34C759]/40 bg-[#34C759]/8 align-middle leading-tight">
+      <span className="text-[9px] font-extrabold tracking-wider text-[#1a9d4b]">
+        {d2 && !sameDay ? `${dow(d1)} → ${dow(d2)}` : dow(d1)}
+      </span>
+      <span className="text-[11.5px] font-bold text-[#1D1D1F] whitespace-nowrap">
+        {d2 && !sameDay ? `${day(d1)} → ${day(d2)} ${d2.getFullYear()}` : `${day(d1)} ${d1.getFullYear()}`}
+      </span>
+    </span>
+  );
+}
+
+function AdminDossierTimeline({ d }: { d: { status: string; createdAt?: string; updatedAt?: string; sessionStart?: string; sessionEnd?: string; sessionName?: string; signedAt?: string; aktoAttached?: boolean; aktoAttachedAt?: string; salariesPending?: boolean } }) {
   const STEPS = [
     { key: 'transmitted', label: 'Transmis' },
     { key: 'instruction', label: 'En instruction' },
@@ -840,24 +1415,42 @@ function AdminDossierTimeline({ d }: { d: { status: string; createdAt?: string; 
   const isRejected = d.status === 'rejected';
   const fmt = (s?: string) => s ? new Date(s).toLocaleDateString('fr-FR') : '';
   const subFor = (k: string) => k === 'transmitted' ? (d.signedAt ? 'Signé le ' + fmt(d.signedAt) : fmt(d.createdAt)) : k === 'scheduled' ? (d.sessionStart ? 'Début ' + fmt(d.sessionStart) : '') : k === 'completed' ? (d.sessionEnd ? 'Fin ' + fmt(d.sessionEnd) : '') : k === 'paid' && d.status === 'paid' ? fmt(d.updatedAt) : '';
+  // Étapes "Accès OPCO" (rattachement -> courrier d'activation) puis "Montage OPCO" (dossier monté
+  // + attente CSV), intercalées entre Transmis et En instruction. Nœuds virtuels (pas des statuts).
+  // @author Rabah Ziane - 2026-06-24
+  const acces = {
+    done: cur >= 1,
+    active: cur < 1 && !isRejected && !!d.aktoAttached,
+    sub: d.aktoAttached ? 'Rattachement demandé · courrier envoyé' + (d.aktoAttachedAt ? ' le ' + fmt(d.aktoAttachedAt) : '') : 'Accès client',
+  };
+  const montage = {
+    done: cur >= 1,
+    active: cur < 1 && !isRejected && !d.aktoAttached,
+    sub: cur >= 1 ? 'Dossier monté' : d.salariesPending ? 'Attente CSV salariés' : 'À monter',
+  };
+  // Liste affichée : Transmis, [Accès OPCO], [Montage OPCO], puis le reste du pipeline.
+  type Node = { key: string; label: string; done: boolean; active: boolean; sub: string };
+  const nodes: Node[] = [
+    { key: 'transmitted', label: 'Transmis', done: cur > 0, active: cur === 0 && !isRejected, sub: subFor('transmitted') },
+    { key: 'acces', label: 'Accès OPCO', done: acces.done, active: acces.active, sub: acces.sub },
+    { key: 'montage', label: 'Montage OPCO', done: montage.done, active: montage.active, sub: montage.sub },
+    ...STEPS.slice(1).map((s, idx) => { const i = idx + 1; return { key: s.key, label: s.label, done: i < cur, active: i === cur && !isRejected, sub: subFor(s.key) }; }),
+  ];
   return (
     <div>
       <p className="text-[10px] uppercase tracking-wider font-bold text-[#86868B] mb-2">Suivi du dossier</p>
       {isRejected && <p className="text-[12px] text-[#FF3B30] font-semibold mb-2">Dossier refusé par l'OPCO.</p>}
       <div className="flex items-start gap-1 overflow-x-auto pb-1">
-        {STEPS.map((s, i) => {
-          const done = i < cur, active = i === cur && !isRejected;
-          return (
-            <div key={s.key} className="flex items-center flex-shrink-0">
-              <div className="flex flex-col items-center w-[78px] text-center">
-                <span className={`h-3.5 w-3.5 rounded-full border-2 ${done ? 'bg-[#34C759] border-[#34C759]' : active ? 'bg-[#0066CC] border-[#0066CC]' : 'bg-white border-black/15'}`} />
-                <span className={`text-[10px] mt-1 leading-tight ${done || active ? 'text-[#1D1D1F] font-semibold' : 'text-[#86868B]'}`}>{s.label}</span>
-                {subFor(s.key) && <span className="text-[9px] text-[#86868B] mt-0.5">{subFor(s.key)}</span>}
-              </div>
-              {i < STEPS.length - 1 && <span className={`h-[2px] w-5 mt-[7px] ${i < cur ? 'bg-[#34C759]' : 'bg-black/10'}`} />}
+        {nodes.map((n, i) => (
+          <div key={n.key} className="flex items-center flex-shrink-0">
+            <div className="flex flex-col items-center w-[78px] text-center">
+              <span className={`h-3.5 w-3.5 rounded-full border-2 ${n.done ? 'bg-[#34C759] border-[#34C759]' : n.active ? 'bg-[#0066CC] border-[#0066CC]' : 'bg-white border-black/15'}`} />
+              <span className={`text-[10px] mt-1 leading-tight ${n.done || n.active ? 'text-[#1D1D1F] font-semibold' : 'text-[#86868B]'}`}>{n.label}</span>
+              {n.sub && <span className="text-[9px] text-[#86868B] mt-0.5">{n.sub}</span>}
             </div>
-          );
-        })}
+            {i < nodes.length - 1 && <span className={`h-[2px] w-5 mt-[7px] ${n.done ? 'bg-[#34C759]' : 'bg-black/10'}`} />}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -902,8 +1495,30 @@ function printContract(a: ContractAgency) {
 
 // === Impression PDF (document interne Delivery Digital) ===
 type PrintSalarie = { firstname?: string; lastname?: string; email?: string; poste?: string; type_contrat?: string; date_naissance?: string; num_secu?: string; telephone?: string };
-type PrintDossier = { _id: string; denom?: string; siret?: string; opco?: string; addr?: string; clientEmail?: string; formationTitle?: string; sessionName?: string; salaries?: PrintSalarie[]; signedBy?: string; signedFunction?: string; signedIp?: string; signatureDataUrl?: string; signedRemote?: boolean; signedAt?: string; amountHT?: number; createdAt?: string; invoiceNumber?: string };
+type PrintDossier = { _id: string; denom?: string; siret?: string; opco?: string; addr?: string; clientEmail?: string; formationTitle?: string; sessionName?: string; sessionStart?: string; sessionEnd?: string; salaries?: PrintSalarie[]; signedBy?: string; signedFunction?: string; signedIp?: string; signatureDataUrl?: string; signedRemote?: boolean; signedAt?: string; amountHT?: number; trainerName?: string; trainerEmail?: string; createdAt?: string; invoiceNumber?: string };
+// Dates de session lisibles : "les 15, 16 et 17 juillet 2026" (3 jours), ou une date
+// seule, ou "du X au Y". Repli sur sessionName. @Rabah 2026-07-10
+function sessionDatesText(d: PrintDossier): string {
+  if (!d.sessionStart) return d.sessionName ? esc(d.sessionName) : '';
+  const start = new Date(d.sessionStart);
+  const end = d.sessionEnd ? new Date(d.sessionEnd) : start;
+  const full = (dt: Date) => dt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  if (start.toDateString() === end.toDateString()) return full(start);
+  const days: Date[] = [];
+  for (const dt = new Date(start); dt <= end && days.length < 15; dt.setDate(dt.getDate() + 1)) days.push(new Date(dt));
+  const sameMonth = start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
+  if (sameMonth && days.length <= 6) {
+    const nums = days.map(dt => dt.getDate());
+    const last = nums.pop();
+    return `les ${nums.join(', ')} et ${last} ${end.toLocaleDateString('fr-FR', { month: 'long' })} ${end.getFullYear()}`;
+  }
+  return `du ${full(start)} au ${full(end)}`;
+}
 const esc = (s: unknown) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+// SIRET formaté sans regex (évite les soucis d'échappement) : 902 945 195 00029.
+const fmtSiret = (s?: string) => { const x = String(s || '').split('').filter(ch => ch >= '0' && ch <= '9').join(''); return x ? [x.slice(0, 3), x.slice(3, 6), x.slice(6, 9), x.slice(9)].filter(Boolean).join(' ') : ''; };
+// Cachet visuel (tampon incliné bordé) à placer À CÔTÉ de la signature.
+const convStamp = (name: string, line2?: string, line3?: string) => `<div style="display:inline-block;transform:rotate(-6deg);color:#1b1b1b;flex:0 0 auto"><div style="border:2px solid #1b1b1b;border-radius:8px;padding:7px 14px;text-align:center;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.18)"><p style="font-size:12px;font-weight:800;text-transform:uppercase;margin:0;line-height:1.05">${esc(name)}</p>${line2 ? `<p style="font-size:7.5px;font-weight:600;margin:3px 0 0">${esc(line2)}</p>` : ''}${line3 ? `<p style="font-size:7.5px;margin:0">${esc(line3)}</p>` : ''}</div></div>`;
 const A4_HEAD = `<style>@page{size:A4;margin:0}*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1D1D1F;margin:0}.sheet{width:210mm;min-height:297mm;padding:18mm 16mm;margin:0 auto}h1{font-size:20px;text-align:center;margin:0}h2{font-size:13px;margin:18px 0 4px}.muted{color:#6e6e73}.hdr{font-size:10px;text-align:center;color:#6e6e73;border-bottom:1px solid #1D1D1F;padding-bottom:10px}p{font-size:12px;line-height:1.5;margin:4px 0}table{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:8px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f5f5f7;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em}.sign{display:flex;gap:24px;margin-top:28px}.sign>div{flex:1;border:1px solid #ddd;border-radius:6px;padding:10px;min-height:90px}</style>`;
 function openPrint(title: string, inner: string) {
   const w = window.open('', '_blank'); if (!w) { alert('Autorisez les pop-up pour télécharger le PDF.'); return; }
@@ -922,8 +1537,12 @@ function printStagiaires(d: PrintDossier) {
 function printConvention(d: PrintDossier) {
   const n = (d.salaries || []).length;
   const total = (d.amountHT || 0).toFixed(2);
+  const unitPrice = (n ? (d.amountHT || 0) / n : (d.amountHT || 0)).toFixed(2); // prix par stagiaire (dynamique)
+  const trainerNom = esc(d.trainerName || 'Ziane Rabah');            // formateur modifiable. @Rabah 2026-07-17
+  const trainerMail = esc(d.trainerEmail || 'contact@deliverydigital.fr');
   const stag = (d.salaries || []).map((s) => `<li>${esc(s.firstname)} ${esc(s.lastname)} (${esc(s.type_contrat === 'CDD' ? "Salarié d'employeurs privés (CDD)" : "Salarié d'employeurs privés hors apprentis")})</li>`).join('');
   const dateSign = d.signedAt ? new Date(d.signedAt).toLocaleDateString('fr-FR') : d.createdAt ? new Date(d.createdAt).toLocaleDateString('fr-FR') : new Date().toLocaleDateString('fr-FR');
+  const sessDates = sessionDatesText(d);
   const rep = d.signedBy || 'le représentant légal';
   // Signature manuscrite reelle du client (image) si disponible, sinon repli sur le nom.
   const clientSig = d.signatureDataUrl
@@ -945,10 +1564,10 @@ function printConvention(d: PrintDossier) {
     <p><b>Indicateurs de résultats :</b> taux de satisfaction 90 % · taux de recommandation 95 %.</p>
 
     <h2>Article 2 : NATURE ET LOGISTIQUE DE L'ACTION</h2>
-    <p>Action réalisée en distanciel et en INTRA entreprise. Durée : 3 jours dissociés soit 21 heures. Séances de 10h00 à 17h00 en distanciel${d.sessionName ? ' (' + esc(d.sessionName) + ')' : ''}. Prérequis des apprenants : aucun.</p>
+    <p>Action réalisée en distanciel et en INTRA entreprise. Durée : 3 jours dissociés soit 21 heures. Séances de 10h00 à 17h00 en distanciel${sessDates ? ' (Formation · ' + sessDates + ')' : ''}. Prérequis des apprenants : aucun.</p>
 
     <h2>Article 3 : LES FORMATEURS DE L'ACTION</h2>
-    <p>La formation est assurée par <b>Asma SOUALMI</b> (dietlivry@gmail.com) : conception de ressources pédagogiques et animation en visioconférence (français/anglais), pédagogie interactive axée sur la mise en situation professionnelle.</p>
+    <p>La formation est assurée par <b>${trainerNom}</b> (${trainerMail}) : conception de ressources pédagogiques et animation en visioconférence (en français), pédagogie interactive axée sur la mise en situation professionnelle.</p>
 
     <h2>Article 4 : ENGAGEMENTS DE PARTICIPATION</h2>
     <p>Le bénéficiaire s'engage à assurer la présence des participants désignés par la direction. Il s'agit de :</p>
@@ -956,7 +1575,7 @@ function printConvention(d: PrintDossier) {
     <p>Ils devront être déclarés par leurs noms, prénoms et fonctions avant la formation auprès de l'OPCO. Accessibilité : adaptations possibles pour les personnes en situation de handicap, nous contacter avant l'entrée en formation.</p>
 
     <h2>Article 5 : DISPOSITIONS FINANCIÈRES ET PRIX DE LA FORMATION</h2>
-    <p>La formation « ${esc(d.formationTitle || '')} » est facturée 525,00 € TTC par apprenant (prix fixe). Coût total de la session : coût unitaire 525,00 € HT × ${n} stagiaire(s) = <b>${total} € HT (${total} € TTC)</b>. TVA non applicable - art. 261-4-4° du CGI. Facturation directe à l'OPCO (subrogation).</p>
+    <p>La formation « ${esc(d.formationTitle || '')} » est facturée ${unitPrice} € TTC par apprenant (prix fixe). Coût total de la session : coût unitaire ${unitPrice} € HT × ${n} stagiaire(s) = <b>${total} € HT (${total} € TTC)</b>. TVA non applicable - art. 261-4-4° du CGI. Facturation directe à l'OPCO (subrogation).</p>
 
     <h2>Article 6 : MOYENS PÉDAGOGIQUES ET TECHNIQUES</h2>
     <p>Séquences de travail en visioconférence encadrées par un formateur ; accès continu à la plateforme pédagogique (cours, quizz, exercices) 24h/24 et 7j/7 via l'Espace apprenant.</p>
@@ -990,8 +1609,8 @@ function printConvention(d: PrintDossier) {
 
     <p style="margin-top:18px"><b>Document réalisé et signé le ${dateSign} :</b></p>
     <div class="sign">
-      <div><p class="muted">Pour le bénéficiaire</p><p><b>${esc(d.denom)}</b></p><p>${esc(d.signedBy || '')}${d.signedFunction ? ' (' + esc(d.signedFunction) + ')' : ''}</p>${clientSig}<p class="muted" style="font-size:10px">Signé électroniquement${d.signedRemote ? ' à distance' : ''}${d.signedIp ? ' · IP ' + esc(d.signedIp) : ''} · le ${dateSign}</p></div>
-      <div><p class="muted">Pour l'organisme de formation</p><p><b>DELIVERY Digital Nice</b></p><img src="https://deliverydigital.fr/uploads/assets/signature-dd.png" alt="Signature" style="max-height:48px;margin-top:6px" onerror="this.style.display='none'" /><p class="muted" style="font-size:10px">Signé · le ${dateSign}</p></div>
+      <div><p class="muted">Pour le bénéficiaire</p><p><b>${esc(d.denom)}</b>${d.signedBy ? ' · ' + esc(d.signedBy) + (d.signedFunction ? ' (' + esc(d.signedFunction) + ')' : '') : ''}</p><div style="display:flex;align-items:center;gap:18px;margin-top:8px;flex-wrap:wrap">${clientSig}${convStamp(d.denom || '', d.addr || '', d.siret ? 'SIRET ' + fmtSiret(d.siret) : '')}</div><p class="muted" style="font-size:10px;margin-top:6px">Signé électroniquement${d.signedRemote ? ' à distance' : ''} · le ${dateSign}</p></div>
+      <div><p class="muted">Pour l'organisme de formation</p><p><b>DELIVERY Digital Nice</b></p><div style="display:flex;align-items:center;gap:18px;margin-top:8px;flex-wrap:wrap"><img src="https://deliverydigital.fr/uploads/assets/signature-dd.png" alt="Signature" style="max-height:48px" onerror="this.style.display='none'" />${convStamp('DELIVERY Digital Nice', '470 promenade des Anglais · 06200 Nice', 'SIRET 902 945 195 00029 · RCS 902 945 195')}</div><p class="muted" style="font-size:10px;margin-top:6px">Signé · le ${dateSign}</p></div>
     </div>`);
 }
 

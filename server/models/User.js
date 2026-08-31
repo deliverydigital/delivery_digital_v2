@@ -55,6 +55,56 @@ const userSchema = new Schema({
   // dossier, versee a la reception du paiement OPCO. Standard : 120 € + 15%.
   commissionFix: { type: Number, default: 120 },
   commissionPercent: { type: Number, default: 15 },
+  // Revente Pyemes : code de l'agence cote Pyemes (lien de parrainage ?ag=CODE). Sert a
+  // rapatrier ses ventes/commissions Pyemes et son onboarding Stripe Connect. Regle par le
+  // superadmin DD. @author Rabah Ziane - 2026-08-01
+  pyemesCode: { type: String, uppercase: true, trim: true, index: true },
+  // Avenant « Revente Pyemes » signe par l'agence (30% de la vente TTC). Le lien de vente et
+  // l'activation Stripe ne se debloquent qu'apres signature. @author Rabah Ziane - 2026-08-01
+  pyemesContract: {
+    signed: { type: Boolean, default: false },
+    signedBy: String, signedFunction: String, signedAt: Date, signedIp: String,
+  },
+  // Historique des argumentaires Pyemes envoyés aux clients (support de vente). `token` = jeton
+  // opaque du lien tracké dans l'email ; `openedAt` = 1re ouverture du lien par le client (statut
+  // « lien ouvert »). @author Rabah Ziane - 2026-08-01
+  pyemesPitches: [{ to: String, template: String, at: Date, token: String, openedAt: Date, clientName: String, siret: String }],
+  // Feuille de route Pyemes (avant mise en ligne) PARTAGEE entre Delivery Digital et l'agence :
+  // chacun peut ajouter une tache a l'autre, cocher ce qui est fait, importer une checklist
+  // (PDF/texte/CSV) et discuter dans le fil de messages. @author Rabah Ziane - 2026-08-31
+  pyemesRoadmap: [{
+    from: { type: String, enum: ['dd', 'agence'], default: 'dd' },  // qui a demande la tache
+    titre: String,
+    detail: String,
+    statut: { type: String, enum: ['a_faire', 'en_cours', 'fait'], default: 'a_faire' },
+    source: String,                                                  // 'manuel' ou 'import: <fichier>'
+    createdAt: { type: Date, default: Date.now },
+    doneAt: Date,
+  }],
+  // Publications reseaux sociaux proposees par l'agence : elle televerse la video, dit OU elle sera
+  // publiee et avec quel texte ; Pyemes valide AVANT publication. Une video deposee = l'agence la
+  // considere prete de son cote. @author Rabah Ziane - 2026-08-31
+  pyemesSocials: [{
+    fichier: String,                 // /uploads/agency-social/xxx.mp4
+    nomFichier: String,              // nom d'origine, pour s'y retrouver
+    taille: Number,
+    reseaux: [String],               // instagram, tiktok, linkedin, facebook, youtube, x
+    comptes: [String],               // comptes de publication reperes au @ (ex. @pyemes, @nova.agency)
+    datePrevue: Date,                // publication prevue le...
+    texte: String,                   // legende / contenu de la publication
+    statut: { type: String, enum: ['a_valider', 'validee', 'a_revoir', 'publiee'], default: 'a_valider' },
+    retour: String,                  // commentaire de Pyemes quand c'est a revoir
+    decidePar: String,               // qui a tranche (Pyemes / Delivery Digital)
+    decideLe: Date,
+    createdAt: { type: Date, default: Date.now },
+  }],
+  pyemesMessages: [{
+    from: { type: String, enum: ['dd', 'agence'], default: 'dd' },
+    auteur: String,
+    texte: String,
+    image: String,                                                   // capture jointe (/uploads/...)
+    at: { type: Date, default: Date.now },
+  }],
   // Coordonnees bancaires de l'agence (pour verser les commissions).
   // iban/bic conserves pour compat FR/SEPA ; bankCountry + bankData gerent les
   // autres pays (les champs s'adaptent au pays cote UI). @author Rabah Ziane - 2026-06-02
@@ -81,6 +131,16 @@ const userSchema = new Schema({
   onboardingValidated: { type: Boolean, default: false },
   // === Champs FORMATEUR (role 'trainer') === @author Rabah Ziane - 2026-06-06
   hourlyRate: { type: Number, default: 0 },
+  /**
+   * Salle de visioconférence PERMANENTE du formateur : deliverydigital.fr/visio/<slug>,
+   * le slug reprend son nom (ex. 'nicolas-goralski') pour valoriser l'intervenant auprès
+   * des apprenants. Le lien ne change jamais, il se partage une fois pour toutes.
+   * `visioHostKey` reste privée : elle seule donne le droit d'admettre les participants
+   * qui patientent en salle d'attente (lien /visio/<slug>?h=<clé>, jamais diffusé).
+   * @author Rabah Ziane - 2026-07-20
+   */
+  visioRoomSlug: { type: String, index: true },
+  visioHostKey: { type: String },
   trainerSkills: { type: [String], default: [] },
   // Disponibilités RÉCURRENTES du formateur : jours de semaine travaillés (0=dim ... 6=sam) +
   // créneaux horaires d'1h. Sert à générer les sessions assignables. @author Rabah Ziane - 2026-06-19

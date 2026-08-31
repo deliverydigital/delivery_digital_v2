@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback, Fragment } from 'react';
-import { Building2, Loader2, LogOut, Copy, Eye, EyeOff, KeyRound, Plus, FileText, ShieldCheck, Users, FolderCheck, Search, Wallet, X, Stamp, PenLine, Download, ExternalLink, Clock, Mail, Send, CheckCircle2, ArrowRight, Inbox, Trash2, Cpu } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef, Fragment } from 'react';
+import { Building2, Loader2, LogOut, Copy, Eye, EyeOff, KeyRound, Plus, FileText, ShieldCheck, Users, FolderCheck, Search, Wallet, X, Stamp, PenLine, Download, ExternalLink, Clock, Mail, Send, CheckCircle2, ArrowRight, Inbox, Trash2, Cpu, ChevronDown, Calculator } from 'lucide-react';
 import FormationWizardModal from './FormationWizardModal';
 import type { TransmitPayload, WizardEmployer } from './FormationWizardModal';
+import DossierTasks, { type DossierTask } from './DossierTasks';
 import { FORMATIONS } from '../lib/formationCatalog';
 import type { Formation } from '../lib/formationCatalog';
 import { FORMATION_TARIFS, BRANCHES_2026, getBranche, couvertureLigne, meilleurFinancement } from '../lib/opcoRates';
@@ -20,6 +21,9 @@ const DOTTED_BG: React.CSSProperties = { backgroundColor: '#0E0F13', backgroundI
 // @author Rabah Ziane - 2026-06-04
 const AKTO_SIGNUP_URL = 'https://aktoext.ciamlogin.com/7395201a-5dfb-4ccf-9922-1550adf159ab/oauth2/v2.0/authorize?client_id=5f1c2efd-f550-452a-8985-134cd4447182&scope=api%3A%2F%2Fapi-extranet-prod%2F.default%20openid%20profile%20offline_access&redirect_uri=https%3A%2F%2Fmonespace.akto.fr%2F&response_mode=fragment&client_info=1&clidata=1&prompt=create&response_type=code';
 const AKTO_ESPACE_URL = 'https://monespace.akto.fr/';
+// Commission services informatiques : frais fixes identiques à la formation + 20 % (la formation est à 15 %).
+// @Rabah 2026-06-23
+const IT_COMMISSION_PCT = 20;
 
 // Arguments de vente de la formation "Hygiène, Sécurité et Développement Durable" :
 // pitch a reprendre tel quel par l'agence / le commercial face au restaurateur.
@@ -165,6 +169,24 @@ const COUNTRIES_FULL: { code: string; name: string }[] = [
   { code: 'GE', name: 'Géorgie' }, { code: 'AM', name: 'Arménie' }, { code: 'LK', name: 'Sri Lanka' }, { code: 'NP', name: 'Népal' },
   { code: 'AU', name: 'Australie' }, { code: 'NZ', name: 'Nouvelle-Zélande' },
 ];
+// Indicatifs téléphoniques (E.164) par code ISO-2, pour le sélecteur WhatsApp. @author Rabah Ziane - 2026-06-24
+const DIAL_CODES: Record<string, string> = {
+  FR: '33', BE: '32', CH: '41', LU: '352', MC: '377', DE: '49', AT: '43', ES: '34', PT: '351', IT: '39', NL: '31', GB: '44',
+  IE: '353', DK: '45', SE: '46', NO: '47', FI: '358', IS: '354', PL: '48', CZ: '420', SK: '421', HU: '36', RO: '40', BG: '359',
+  GR: '30', HR: '385', SI: '386', RS: '381', BA: '387', AL: '355', MK: '389', ME: '382', EE: '372', LV: '371', LT: '370',
+  UA: '380', BY: '375', RU: '7', MD: '373', CY: '357', MT: '356', TR: '90',
+  MA: '212', DZ: '213', TN: '216', LY: '218', EG: '20', MR: '222', SN: '221', ML: '223', CI: '225', BF: '226', NE: '227',
+  GN: '224', TG: '228', BJ: '229', GH: '233', NG: '234', CM: '237', GA: '241', CG: '242', CD: '243', TD: '235', CF: '236',
+  ET: '251', KE: '254', TZ: '255', UG: '256', RW: '250', ZA: '27', AO: '244', MZ: '258', MG: '261', MU: '230',
+  SA: '966', AE: '971', QA: '974', KW: '965', BH: '973', OM: '968', JO: '962', LB: '961', IL: '972', PS: '970', IQ: '964',
+  IR: '98', SY: '963', YE: '967',
+  US: '1', CA: '1', MX: '52', BR: '55', AR: '54', CL: '56', CO: '57', PE: '51', VE: '58', UY: '598', EC: '593', BO: '591',
+  PY: '595', HT: '509', DO: '1', CU: '53',
+  CN: '86', JP: '81', KR: '82', IN: '91', PK: '92', BD: '880', ID: '62', MY: '60', SG: '65', TH: '66', VN: '84', PH: '63',
+  AF: '93', KZ: '7', UZ: '998', AZ: '994', GE: '995', AM: '374', LK: '94', NP: '977', AU: '61', NZ: '64',
+};
+type WaCountry = { code: string; name: string; dial: string };
+const WA_COUNTRIES: WaCountry[] = COUNTRIES_FULL.filter((c) => DIAL_CODES[c.code]).map((c) => ({ ...c, dial: DIAL_CODES[c.code] }));
 // Drapeau emoji depuis le code ISO-2.
 function flagEmoji(code: string) { return (code || '').toUpperCase().replace(/[A-Z]/g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0))); }
 
@@ -217,9 +239,11 @@ const BANK_FIELDS_BY_COUNTRY: Record<string, { key: string; label: string; mono?
 };
 function bankFieldsFor(country: string) { return BANK_FIELDS_BY_COUNTRY[country] || IBAN_FIELDS; }
 type Commercial = { id: string; name: string; email: string; status?: string; clients: number; dossiers: number; gains: number };
-type Lead = { _id: string; email?: string; accountantEmail?: string; managerEmail?: string; denom?: string; siret?: string; opco?: string; addr?: string; status: string; createdAt?: string; commercialId?: string; commercialName?: string; waitingNote?: string; reminderAt?: string | null; formationDoneThisYear?: boolean; companyEmployees?: number };
+type Lead = { _id: string; email?: string; accountantEmail?: string; managerEmail?: string; denom?: string; siret?: string; opco?: string; addr?: string; status: string; createdAt?: string; commercialId?: string; commercialName?: string; waitingNote?: string; reminderAt?: string | null; formationDoneThisYear?: boolean; companyEmployees?: number; rdvAt?: string | null; confirmationEmailSentAt?: string | null; tasks?: DossierTask[] };
 type DossierSalarie = { firstname?: string; lastname?: string; email?: string; poste?: string; type_contrat?: string; date_naissance?: string; num_secu?: string; telephone?: string };
-type Dossier = { _id: string; leadId?: string; mountedByAdmin?: boolean; denom?: string; siret?: string; opco?: string; addr?: string; formationTitle?: string; sessionName?: string; sessionStart?: string; sessionEnd?: string; amountHT?: number; status: string; createdAt?: string; updatedAt?: string; opcoPaid?: boolean; opcoPaidAt?: string | null; encashRequestedAt?: string | null; invoiceNumber?: string; signedBy?: string; signedFunction?: string; salaries?: DossierSalarie[] };
+type Dossier = { _id: string; leadId?: string; mountedByAdmin?: boolean; denom?: string; siret?: string; opco?: string; addr?: string; formationTitle?: string; sessionName?: string; sessionStart?: string; sessionEnd?: string; amountHT?: number; status: string; createdAt?: string; updatedAt?: string; opcoPaid?: boolean; opcoPaidAt?: string | null; encashRequestedAt?: string | null; invoiceNumber?: string; signedBy?: string; signedFunction?: string; aktoAttached?: boolean; aktoAttachedAt?: string | null; rattachEmailSentAt?: string | null; rdvAt?: string | null; confirmationEmailSentAt?: string | null; salariesPending?: boolean; clientEmail?: string; salaries?: DossierSalarie[]; tasks?: DossierTask[] };
+// Cible d'un email de confirmation : un dossier OPCO (monté) OU un client/lead (pas encore monté). @Rabah 2026-06-25
+type ConfirmTarget = { kind: 'dossier' | 'lead'; id: string; clientEmail?: string; denom?: string; rdvAt?: string | null; confirmationEmailSentAt?: string | null };
 type Period = 'day' | 'week' | 'month' | 'all';
 const PERIOD_MS: Record<Period, number> = { day: 86400000, week: 7 * 86400000, month: 30 * 86400000, all: Infinity };
 const PERIOD_LABEL: Record<Period, string> = { day: 'Jour', week: 'Semaine', month: 'Mois', all: 'Tout' };
@@ -282,9 +306,40 @@ function detectOpco(ape: string, idccList?: string[]): { opco: string; idcc?: st
   return { opco, idcc: firstIdcc, exact: false };
 }
 
+
+/**
+ * Encadré des dates de formation dans la liste des clients : évite d'ouvrir le dossier
+ * uniquement pour savoir quand la session est prévue. Version sombre du badge admin.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function SessionDatesBadge({ start, end }: { start?: string; end?: string }) {
+  if (!start) return null;
+  const d1 = new Date(start);
+  const d2 = end ? new Date(end) : null;
+  const dow = (d: Date) => d.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', '').toUpperCase();
+  const day = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  const sameDay = d2 && d1.toDateString() === d2.toDateString();
+  return (
+    <span className="inline-flex flex-col px-2.5 py-1 rounded-lg border border-[#3DD68C]/35 bg-[#3DD68C]/10 leading-tight">
+      <span className="text-[8.5px] font-bold tracking-wider text-[#3DD68C]/70 uppercase">Formation prévue</span>
+      <span className="text-[9px] font-extrabold tracking-wider text-[#3DD68C] mt-0.5">{d2 && !sameDay ? `${dow(d1)} → ${dow(d2)}` : dow(d1)}</span>
+      <span className="text-[11.5px] font-bold text-white whitespace-nowrap">{d2 && !sameDay ? `${day(d1)} → ${day(d2)} ${d2.getFullYear()}` : `${day(d1)} ${d1.getFullYear()}`}</span>
+    </span>
+  );
+}
+
 export default function AgenceSpace() {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  // Mode prévisualisation super admin : /agence#preview=<jwt> ouvre le tableau de bord de l'agence
+  // tel qu'elle le voit. Le token n'est PAS persisté en localStorage (n'écrase aucune session
+  // agence existante) et disparaît à la fermeture de l'onglet. @author Rabah Ziane - 2026-06-24
+  const previewToken = (() => {
+    if (typeof window === 'undefined') return null;
+    const m = window.location.hash.match(/(?:^|[#&])preview=([^&]+)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  })();
+  const [token, setToken] = useState<string | null>(() => previewToken || localStorage.getItem(TOKEN_KEY));
   if (!token) return <Login onAuth={(t) => { localStorage.setItem(TOKEN_KEY, t); setToken(t); }} />;
+  if (previewToken) return <Dashboard token={token} preview onLogout={() => { try { window.close(); } catch { /* */ } }} />;
   return <Dashboard token={token} onLogout={() => { localStorage.removeItem(TOKEN_KEY); setToken(null); }} />;
 }
 
@@ -320,11 +375,229 @@ function Login({ onAuth }: { onAuth: (token: string) => void }) {
   );
 }
 
-function Dashboard({ token, onLogout }: { token: string; onLogout: () => void }) {
+function Dashboard({ token, onLogout, preview }: { token: string; onLogout: () => void; preview?: boolean }) {
   const [agency, setAgency] = useState<Agency | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [dossierByLead, setDossierByLead] = useState<Record<string, Dossier>>({});
   const [dossiers, setDossiers] = useState<Dossier[]>([]);
+  // Ordres de virement reçus (PDF) générés par Delivery Digital. @Rabah 2026-07-29
+  const [payOrders, setPayOrders] = useState<{ _id: string; ref: string; totalCommission?: number; pdfUrl?: string; sentAt?: string; paidAt?: string; createdAt?: string; updatedAt?: string; lines?: { denom?: string; month?: string; total?: number }[] }[]>([]);
+  const pdfHref = (o: { pdfUrl?: string; updatedAt?: string }) => `${o.pdfUrl || ''}?v=${o.updatedAt ? Date.parse(o.updatedAt) : ''}`;
+  const [showGains, setShowGains] = useState(false); // détail des gains acquis (virements payés)
+  // Revente Pyemes : ventes/commissions de l'agence + statut onboarding Stripe. @author Rabah Ziane - 2026-08-01
+  const [pyemesData, setPyemesData] = useState<{ active?: boolean; code?: string; lien?: string; contract?: { signed?: boolean; signedAt?: string | null; signedBy?: string | null }; pitches?: { id: string; to: string; template: string; at: string; openedAt?: string | null; clientName?: string; siret?: string }[]; totaux?: { a_venir: number; disponible: number; paye: number }; clients?: { email: string; statut: string; depuis?: string }[]; commissions?: { id: string; client?: string; base: number; commission: number; etat: string; date?: string }[]; agence?: { commission_percent?: number } } | null>(null);
+  const [pyemesConnect, setPyemesConnect] = useState<{ onboarde?: boolean; demarre?: boolean } | null>(null);
+  const [pyemesBusy, setPyemesBusy] = useState(false);
+  const [pyemesSign, setPyemesSign] = useState({ by: '', fn: '' }); // signature avenant
+  const [pyemesSignBusy, setPyemesSignBusy] = useState(false);
+  // Feuille de route Pyemes (avant mise en ligne) : taches partagees DD <-> agence, import d'une
+  // checklist et fil de messages. @author Rabah Ziane - 2026-08-31
+  type RoadTache = { id: string; from: 'dd' | 'agence'; titre: string; detail?: string; statut: 'a_faire' | 'en_cours' | 'fait'; source?: string; createdAt?: string; doneAt?: string | null };
+  type RoadMsg = { id: string; from: 'dd' | 'agence'; auteur?: string; texte: string; image?: string; at?: string };
+  const [roadTaches, setRoadTaches] = useState<RoadTache[]>([]);
+  const [roadMsgs, setRoadMsgs] = useState<RoadMsg[]>([]);
+  const [roadTitre, setRoadTitre] = useState('');
+  const [roadMsg, setRoadMsg] = useState('');
+  const [roadBusy, setRoadBusy] = useState(false);
+  const [roadImport, setRoadImport] = useState(false); // lecture du fichier en cours
+  const [roadInfo, setRoadInfo] = useState('');
+  const roadFile = useRef<HTMLInputElement | null>(null);
+  const roadChatFile = useRef<HTMLInputElement | null>(null);
+  // Publications reseaux sociaux : l'agence depose sa video + le texte, Pyemes valide avant
+  // publication. @author Rabah Ziane - 2026-08-31
+  type Publication = { id: string; fichier: string; nomFichier?: string; taille?: number; reseaux: string[]; comptes?: string[]; datePrevue?: string | null; texte?: string; statut: 'a_valider' | 'validee' | 'a_revoir' | 'publiee'; retour?: string; decidePar?: string; createdAt?: string };
+  const RESEAUX = [
+    { id: 'instagram', nom: 'Instagram' }, { id: 'tiktok', nom: 'TikTok' }, { id: 'linkedin', nom: 'LinkedIn' },
+    { id: 'facebook', nom: 'Facebook' }, { id: 'youtube', nom: 'YouTube' }, { id: 'x', nom: 'X' },
+  ];
+  const [pubs, setPubs] = useState<Publication[]>([]);
+  const [pubVideo, setPubVideo] = useState<File | null>(null);
+  const [pubReseaux, setPubReseaux] = useState<string[]>([]);
+  const [pubDate, setPubDate] = useState('');
+  const [pubTexte, setPubTexte] = useState('');
+  const [pubComptes, setPubComptes] = useState('');   // comptes de publication, reperes au @
+  const [pubBusy, setPubBusy] = useState(false);
+  const [pubInfo, setPubInfo] = useState('');
+  const pubFile = useRef<HTMLInputElement | null>(null);
+  // Apercu de la video AVANT envoi : on voit ce qu'on depose. L'URL locale est liberee des qu'on
+  // change de fichier (sinon la memoire du navigateur la garde). @author Rabah Ziane - 2026-08-31
+  const [pubApercu, setPubApercu] = useState<string>('');
+  useEffect(() => {
+    if (!pubVideo) { setPubApercu(''); return; }
+    const url = URL.createObjectURL(pubVideo);
+    setPubApercu(url);
+    return () => URL.revokeObjectURL(url);
+  }, [pubVideo]);
+
+  async function chargerPublications() {
+    const r = await fetch('/api/agency/self/pyemes/publications', { headers: auth() }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) setPubs(r.publications || []);
+  }
+  async function envoyerPublication() {
+    if (!pubVideo || pubReseaux.length === 0 || pubBusy) return;
+    setPubBusy(true); setPubInfo('');
+    const fd = new FormData();
+    fd.append('video', pubVideo);
+    fd.append('reseaux', pubReseaux.join(','));
+    if (pubDate) fd.append('datePrevue', pubDate);
+    fd.append('texte', pubTexte);
+    fd.append('comptes', pubComptes);
+    const r = await fetch('/api/agency/self/pyemes/publications', { method: 'POST', headers: auth(), body: fd }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) { setPubs(r.publications || []); setPubVideo(null); setPubReseaux([]); setPubDate(''); setPubTexte(''); setPubComptes(''); setPubInfo('Envoyé pour validation.'); }
+    else setPubInfo(r?.error === 'video_requise' ? 'Ajoutez une vidéo.' : r?.error === 'reseau_requis' ? 'Choisissez au moins un réseau.' : "L'envoi n'a pas abouti (vidéo trop lourde ?).");
+    setPubBusy(false);
+  }
+  async function marquerPubliee(id: string) {
+    const r = await fetch(`/api/agency/self/pyemes/publications/${id}`, { method: 'PATCH', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify({ statut: 'publiee' }) }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) setPubs(r.publications || []);
+  }
+  const [roadPiece, setRoadPiece] = useState<File | null>(null); // capture jointe au message
+
+  // Bip discret a l'arrivee d'un message de Delivery Digital (l'agence peut etre sur un autre
+  // onglet). Pas de fichier son : un WebAudio court. @Rabah 2026-08-31
+  const nbMsgVus = useRef(-1);
+  const bip = () => {
+    try {
+      const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = 880; g.gain.value = 0.05;
+      o.connect(g); g.connect(ctx.destination); o.start();
+      setTimeout(() => { o.stop(); ctx.close(); }, 160);
+    } catch { /* le son n'est jamais bloquant */ }
+  };
+
+  async function chargerRoadmap() {
+    const r = await fetch('/api/agency/self/pyemes/roadmap', { headers: auth() }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) {
+      setRoadTaches(r.taches || []);
+      const msgs = r.messages || [];
+      const nbDD = msgs.filter((m: RoadMsg) => m.from === 'dd').length;
+      if (nbMsgVus.current >= 0 && nbDD > nbMsgVus.current) bip();
+      nbMsgVus.current = nbDD;
+      setRoadMsgs(msgs);
+    }
+  }
+  const appliquerRoadmap = (r: any) => { if (r?.ok) { setRoadTaches(r.taches || []); setRoadMsgs(r.messages || []); } };
+
+  async function ajouterTache() {
+    const titre = roadTitre.trim();
+    if (!titre || roadBusy) return;
+    setRoadBusy(true); setRoadInfo('');
+    const r = await fetch('/api/agency/self/pyemes/roadmap', { method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify({ titre }) }).then((x) => x.json()).catch(() => null);
+    appliquerRoadmap(r); setRoadTitre(''); setRoadBusy(false);
+  }
+  async function changerStatutTache(id: string, statut: string) {
+    const r = await fetch(`/api/agency/self/pyemes/roadmap/${id}`, { method: 'PATCH', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify({ statut }) }).then((x) => x.json()).catch(() => null);
+    appliquerRoadmap(r);
+  }
+  async function supprimerTache(id: string) {
+    const r = await fetch(`/api/agency/self/pyemes/roadmap/${id}`, { method: 'DELETE', headers: auth() }).then((x) => x.json()).catch(() => null);
+    appliquerRoadmap(r);
+  }
+  async function importerChecklist(f: File) {
+    setRoadBusy(true); setRoadImport(true); setRoadInfo('');
+    const fd = new FormData(); fd.append('fichier', f);
+    const r = await fetch('/api/agency/self/pyemes/roadmap/import', { method: 'POST', headers: auth(), body: fd }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) { appliquerRoadmap(r); setRoadInfo(`${r.ajoutees} tâche(s) importée(s) depuis ${f.name}`); }
+    else setRoadInfo(r?.error === 'aucune_tache_trouvee' ? 'Aucune ligne exploitable dans ce fichier.' : "Impossible de lire ce fichier.");
+    setRoadBusy(false); setRoadImport(false);
+  }
+  async function envoyerMessage() {
+    const texte = roadMsg.trim();
+    if ((!texte && !roadPiece) || roadBusy) return;
+    setRoadBusy(true);
+    // Multipart : le message peut porter une capture, comme sur l'espace client. @Rabah 2026-08-31
+    const fd = new FormData();
+    fd.append('texte', texte);
+    if (roadPiece) fd.append('image', roadPiece);
+    const r = await fetch('/api/agency/self/pyemes/messages', { method: 'POST', headers: auth(), body: fd }).then((x) => x.json()).catch(() => null);
+    appliquerRoadmap(r); setRoadMsg(''); setRoadPiece(null); setRoadBusy(false);
+  }
+  // Projet actif (slider en haut) : on ne mélange pas Formation/Informatique et Pyemes. @Rabah 2026-08-01
+  const [project, setProject] = useState<'formation' | 'informatique' | 'pyemes'>('formation');
+  const [pitchTo, setPitchTo] = useState(''); // email client pour envoyer l'argumentaire Pyemes
+  const [pitchName, setPitchName] = useState(''); // nom de l'entreprise du client (identification)
+  const [pitchSiret, setPitchSiret] = useState(''); // SIRET du client (identification sûre)
+  const [pitchSug, setPitchSug] = useState<{ nom: string; siret: string; ville?: string }[]>([]); // suggestions annuaire
+  const [pitchSugOpen, setPitchSugOpen] = useState(false);
+  const pitchPick = useRef(false); // évite de relancer la recherche juste après une sélection
+  const [pitchAud, setPitchAud] = useState<'independant' | 'entreprise' | 'comptable'>('independant');
+  const [simuOpen, setSimuOpen] = useState(false); // simulateur de commission par forfait (dépliant)
+  const [pitchBusy, setPitchBusy] = useState(false);
+  // Arguments par type de client : ils changent avec le sélecteur. @Rabah 2026-08-01
+  const argsParAudience: Record<'independant' | 'entreprise' | 'comptable', string[]> = {
+    independant: [
+      'Connectez votre banque en 2 minutes (DSP2 sécurisé).',
+      'Livre des recettes et suivi URSSAF automatiques.',
+      'Aucune liasse ni TVA à gérer en franchise en base.',
+      'À partir de 29 €/mois, données hébergées en France 🇫🇷.',
+    ],
+    entreprise: [
+      'Banque synchronisée, écritures catégorisées automatiquement.',
+      'TVA et liasses fiscales officielles (2033, 2065) générées.',
+      'Export FEC conforme, prêt en cas de contrôle.',
+      'À partir de 49 €/mois - rattrapage des exercices en retard possible.',
+    ],
+    comptable: [
+      'Tableau de bord multi-clients : tous vos dossiers au même endroit.',
+      'Catégorisation automatique en continu.',
+      'TVA, liasses et export FEC par dossier.',
+      'Tarif cabinet dégressif - 1 entreprise incluse par comptable.',
+    ],
+  };
+  const argumentairePyemes = argsParAudience[pitchAud];
+  // Détection auto : on interroge l'annuaire officiel (proxy backend) quand on tape le nom d'entreprise.
+  // @author Rabah Ziane - 2026-08-01
+  useEffect(() => {
+    if (pitchPick.current) { pitchPick.current = false; return; }
+    const q = pitchName.trim();
+    if (q.length < 3) { setPitchSug([]); setPitchSugOpen(false); return; }
+    const t = setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/agency/self/pyemes/recherche-entreprise?q=${encodeURIComponent(q)}`, { headers: auth() });
+        const j = await r.json();
+        if (j.ok) { setPitchSug(j.resultats || []); setPitchSugOpen((j.resultats || []).length > 0); }
+      } catch { /* recherche silencieuse */ }
+    }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pitchName]);
+  // Suppression d'un envoi (ou de tout l'historique) : l'agence garde la main sur ses tests. @Rabah 2026-08-01
+  // La feuille de route se charge avec l'onglet Pyemes. @Rabah 2026-08-31
+  // Feuille de route en TEMPS REEL tant que l'onglet Pyemes est ouvert : les messages de Delivery
+  // Digital arrivent tout seuls (avant, il fallait recharger la page). Meme cadence que le support
+  // Pyemes. Les publications changent moins souvent : toutes les 10 s. @author Rabah Ziane - 2026-08-31
+  useEffect(() => {
+    if (project !== 'pyemes') return;
+    chargerRoadmap(); chargerPublications();
+    const t1 = setInterval(chargerRoadmap, 2000);
+    const t2 = setInterval(chargerPublications, 10000);
+    return () => { clearInterval(t1); clearInterval(t2); };
+  }, [project]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function rechargerPyemes() { const p = await fetch('/api/agency/self/pyemes', { headers: auth() }).then((x) => x.json()); if (p.ok) setPyemesData(p); }
+  async function supprimerPitch(id: string) {
+    try { await fetch(`/api/agency/self/pyemes/pitch/${id}`, { method: 'DELETE', headers: auth() }); await rechargerPyemes(); } catch { alert('Suppression impossible.'); }
+  }
+  async function viderPitches() {
+    if (!confirm('Effacer tout l\'historique des envois ?')) return;
+    try { await fetch('/api/agency/self/pyemes/pitches', { method: 'DELETE', headers: auth() }); await rechargerPyemes(); } catch { alert('Suppression impossible.'); }
+  }
+  async function envoyerPitch() {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(pitchTo.trim())) { alert('Email client invalide.'); return; }
+    // SIRET = 14 chiffres (optionnel) : si saisi, on vérifie le format pour une identification sûre.
+    const siret = pitchSiret.replace(/\s/g, '');
+    if (siret && !/^\d{14}$/.test(siret)) { alert('SIRET invalide (14 chiffres).'); return; }
+    setPitchBusy(true);
+    try {
+      const r = await fetch('/api/agency/self/pyemes/send-pitch', { method: 'POST', headers: authJson(), body: JSON.stringify({ clientEmail: pitchTo.trim(), audience: pitchAud, clientName: pitchName.trim(), siret }) });
+      const j = await r.json();
+      if (j.ok) { setPitchTo(''); setPitchName(''); setPitchSiret(''); const p = await fetch('/api/agency/self/pyemes', { headers: auth() }).then((x) => x.json()); if (p.ok) setPyemesData(p); alert('Argumentaire + PDF envoyés au client ✓'); }
+      else alert('Erreur : ' + (j.error || ''));
+    } catch { alert('Envoi impossible.'); } finally { setPitchBusy(false); }
+  }
   const [period, setPeriod] = useState<Period>('month');
   const [commerciaux, setCommerciaux] = useState<Commercial[]>([]);
   const [coName, setCoName] = useState('');
@@ -333,6 +606,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
   const [coCreated, setCoCreated] = useState<{ email: string; password: string } | null>(null);
   const [accessByEmail, setAccessByEmail] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(false); // token invalide/expiré (surtout en prévisualisation admin)
   const [showKey, setShowKey] = useState(false);
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState('');
@@ -373,34 +647,80 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
   const [transmitting, setTransmitting] = useState(false);
   const [askingOpco, setAskingOpco] = useState<string | null>(null);
   const [accessLead, setAccessLead] = useState<Lead | null>(null); // client pour qui on ouvre "Accès OPCO" (2 choix)
+  const [rattachInfo, setRattachInfo] = useState<Dossier | null>(null); // confirmation "demande de rattachement faite" (courrier envoyé)
+  const [confirmTarget, setConfirmTarget] = useState<ConfirmTarget | null>(null); // email de confirmation formation (déroulé + RDV) - dossier OU lead
   const [reminderLead, setReminderLead] = useState<Lead | null>(null); // édition du rappel / suivi d'un client
+  const [editEmp, setEditEmp] = useState<string | null>(null); // édition inline du nb de salariés. @Rabah 2026-07-02
+  const [empDraft, setEmpDraft] = useState('');
   const [argKey, setArgKey] = useState<'hygiene' | 'nutrition'>('hygiene'); // formation affichée dans les arguments de vente
   const [assigningLead, setAssigningLead] = useState<string | null>(null); // reaffectation commercial en cours
   const [sendingSignLink, setSendingSignLink] = useState(false); // envoi du lien de signature convention au client
+  const [savingDossier, setSavingDossier] = useState(false); // enregistrement d'une modif (ex. email) sans renvoyer le dossier
   const [sendingWhatsapp, setSendingWhatsapp] = useState(false);  // envoi du lien de signature via WhatsApp
+  const [waModal, setWaModal] = useState<{ link: string; denom: string } | null>(null); // saisie n° WhatsApp (drapeaux + recherche)
   const [editDossier, setEditDossier] = useState<{ lead: Lead; dossier: Dossier } | null>(null); // correction d'un dossier transmis
 
   const auth = useCallback(() => ({ Authorization: `Bearer ${token}` }), [token]);
   const authJson = useCallback(() => ({ Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }), [token]);
+  // Maj locale des tâches d'un CLIENT (lead) après une action (pas de reload). @Rabah 2026-07-02
+  const updateLeadTasks = useCallback((leadId: string, tasks: DossierTask[]) => {
+    setLeads((prev) => prev.map((x) => x._id === leadId ? { ...x, tasks } : x));
+  }, []);
+  // Enregistre le nombre de salariés d'un client en 1 clic, sans monter le dossier. @Rabah 2026-07-02
+  const saveEmployees = useCallback(async (leadId: string, val: string) => {
+    const n = val.trim() === '' ? null : Number(val);
+    setLeads((prev) => prev.map((x) => x._id === leadId ? { ...x, companyEmployees: n == null ? undefined : n } : x));
+    setEditEmp(null);
+    try { await fetch(`/api/agency/self/leads/${leadId}`, { method: 'PATCH', headers: authJson(), body: JSON.stringify({ companyEmployees: n }) }); } catch { /* */ }
+  }, [authJson]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const p = await fetch('/api/agency/self/profile', { headers: auth() });
-      if (p.status === 401 || p.status === 403) { onLogout(); return; }
+      // En prévisualisation admin, un token expiré ne doit PAS planter (window.close inopérant) :
+      // on affiche un écran d'erreur propre. @author Rabah Ziane - 2026-06-25
+      if (p.status === 401 || p.status === 403) { if (preview) { setAuthError(true); return; } onLogout(); return; }
       const pj = await p.json(); if (pj.ok) setAgency(pj.agency);
       const lj = await fetch('/api/agency/self/leads', { headers: auth() }).then((r) => r.json()).catch(() => ({}));
       if (lj.ok) setLeads(lj.leads || []);
       const dj = await fetch('/api/agency/self/dossiers', { headers: auth() }).then((r) => r.json()).catch(() => ({}));
       if (dj.ok) { const all: Dossier[] = dj.dossiers || []; setDossiers(all); const m: Record<string, Dossier> = {}; all.forEach((d) => { if (d.leadId && !m[d.leadId]) m[d.leadId] = d; }); setDossierByLead(m); }
+      try { const po = await fetch('/api/agency/self/payment-orders', { headers: auth() }).then((r) => r.json()); if (po.ok) setPayOrders(po.orders || []); } catch { /* non-owner ou indispo */ }
       const aj = await fetch('/api/agency/self/access-requests', { headers: auth() }).then((r) => r.json()).catch(() => ({}));
       if (aj.ok) { const m: Record<string, string> = {}; (aj.requests || []).forEach((r: { clientEmail: string; status: string }) => { m[r.clientEmail] = r.status; }); setAccessByEmail(m); }
       if (pj.ok && pj.agency?.isOwner) {
         const cj = await fetch('/api/agency/self/commerciaux', { headers: auth() }).then((r) => r.json()).catch(() => ({}));
         if (cj.ok) setCommerciaux(cj.commerciaux || []);
+        // Revente Pyemes (propriétaire uniquement).
+        fetch('/api/agency/self/pyemes', { headers: auth() }).then((r) => r.json()).then((j) => { if (j.ok) setPyemesData(j); }).catch(() => {});
+        fetch('/api/agency/self/pyemes/connect/status', { headers: auth() }).then((r) => r.json()).then((j) => setPyemesConnect(j)).catch(() => {});
       }
     } finally { setLoading(false); }
   }, [auth, onLogout]);
+
+  // Signature de l'avenant Pyemes : débloque le lien de vente + l'activation Stripe.
+  async function signerAvenantPyemes() {
+    if (!pyemesSign.by.trim() || !pyemesSign.fn.trim()) { alert('Nom et fonction requis.'); return; }
+    setPyemesSignBusy(true);
+    try {
+      const r = await fetch('/api/agency/self/pyemes/contract/sign', { method: 'POST', headers: authJson(), body: JSON.stringify({ signedBy: pyemesSign.by.trim(), signedFunction: pyemesSign.fn.trim() }) });
+      const j = await r.json();
+      if (j.ok) { const p = await fetch('/api/agency/self/pyemes', { headers: auth() }).then((x) => x.json()); if (p.ok) setPyemesData(p); }
+      else alert('Erreur : ' + (j.error || ''));
+    } catch { alert('Connexion impossible.'); } finally { setPyemesSignBusy(false); }
+  }
+
+  // Onboarding Stripe Connect de l'agence (KYC géré par Stripe) : on récupère l'URL et on redirige.
+  async function connecterPyemes() {
+    setPyemesBusy(true);
+    try {
+      const r = await fetch('/api/agency/self/pyemes/connect', { method: 'POST', headers: auth() });
+      const j = await r.json();
+      if (j.ok && j.url) { window.location.href = j.url; return; }
+      alert('Connexion Stripe impossible : ' + (j.message || j.error || 'réessayez plus tard'));
+    } catch { alert('Connexion impossible.'); } finally { setPyemesBusy(false); }
+  }
 
   async function createCommercial() {
     if (!coName.trim() || !coEmail.trim()) { alert('Nom + email requis.'); return; }
@@ -608,12 +928,11 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     setSendingWhatsapp(true);
     try {
       const sessionName = `Formation · ${p.startAt ? new Date(p.startAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'à confirmer'}`;
-      const r = await fetch('/api/agency/self/sign-link', { method: 'POST', headers: authJson(), body: JSON.stringify({ channel: 'whatsapp', noEmail: true, dossierId: editDossier?.dossier._id, leadId: lead._id, denom: lead.denom, siret: lead.siret, opco: lead.opco, addr: lead.addr, clientEmail: lead.email, managerEmail: lead.managerEmail, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, amountHT: p.amountHT }) });
+      const r = await fetch('/api/agency/self/sign-link', { method: 'POST', headers: authJson(), body: JSON.stringify({ channel: 'whatsapp', noEmail: true, dossierId: editDossier?.dossier._id, leadId: lead._id, denom: lead.denom, siret: lead.siret, opco: lead.opco, addr: lead.addr, clientEmail: p.contactEmail || lead.email, managerEmail: lead.managerEmail, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, amountHT: p.amountHT }) });
       const j = await r.json();
       if (!j.ok || !j.link) { alert('Erreur : ' + (j.error === 'salaries_required' ? 'ajoutez au moins un stagiaire' : j.error || 'lien impossible')); return; }
-      const phone = (window.prompt('Numéro WhatsApp du client (format international, ex. 33612345678).\nLaissez vide pour choisir le contact dans WhatsApp :', '') || '').replace(/\D/g, '');
-      const msg = `Bonjour, voici votre convention de formation ${lead.denom ? `(${lead.denom}) ` : ''}à lire et signer au doigt depuis votre téléphone : ${j.link}`;
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+      // Ouvre un sélecteur pro (drapeaux + recherche + champ numéro) au lieu du prompt natif. @Rabah 2026-06-24
+      setWaModal({ link: j.link, denom: lead.denom || '' });
       setDossierLead(null); setEditDossier(null); load();
     } finally { setSendingWhatsapp(false); }
   }
@@ -625,6 +944,31 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     const j = await r.json();
     if (j.ok) alert(`✓ Modèle CSV envoyé à ${lead.email}. Le client le remplit et vous le renvoie.`);
     else alert('Erreur : ' + (j.error || 'envoi impossible'));
+  }
+
+  // Envoie au client ET à l'agence l'email confirmant la demande de rattachement (courrier à
+  // surveiller). Renvoyable. Renvoie la date d'envoi (ISO) ou null. @author Rabah Ziane - 2026-06-24
+  async function sendRattachEmail(d: Dossier): Promise<string | null> {
+    try {
+      const r = await fetch(`/api/agency/self/dossiers/${d._id}/rattachement-email`, { method: 'POST', headers: auth() });
+      const j = await r.json();
+      if (!j.ok) { alert('Erreur : ' + (j.error === 'no_recipient' ? "aucun email (client/agence) renseigné" : j.error === 'rattachement_not_done' ? "le rattachement n'est pas encore marqué fait" : j.error || 'envoi impossible')); return null; }
+      load();
+      return j.rattachEmailSentAt || new Date().toISOString();
+    } catch { alert('Erreur réseau'); return null; }
+  }
+
+  // Envoie l'email de confirmation de formation au client (copie agence) : RDV + déroulé + à
+  // préparer + message. Renvoie la date d'envoi (ISO) ou null. @author Rabah Ziane - 2026-06-24
+  async function sendConfirmationEmail(t: ConfirmTarget, payload: { rdvAt: string; message: string; prepText: string }): Promise<string | null> {
+    try {
+      const url = t.kind === 'dossier' ? `/api/agency/self/dossiers/${t.id}/confirmation-email` : `/api/agency/self/leads/${t.id}/confirmation-email`;
+      const r = await fetch(url, { method: 'POST', headers: authJson(), body: JSON.stringify(payload) });
+      const j = await r.json();
+      if (!j.ok) { alert('Erreur : ' + (j.error === 'no_client_email' ? "ce client n'a pas d'email" : j.error === 'invalid_rdv' ? 'date de RDV invalide' : j.error || 'envoi impossible')); return null; }
+      load();
+      return j.confirmationEmailSentAt || new Date().toISOString();
+    } catch { alert('Erreur réseau'); return null; }
   }
 
   async function sendEncash(d: Dossier) {
@@ -666,6 +1010,9 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
   const paidDossiers = dossiers.filter((d) => d.status === 'paid').sort((a, b) => new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime());
   // Fonds disponibles : OPCO a payé DD, l'agence peut demander l'encaissement de sa commission.
   const fondsDispo = dossiers.filter((d) => d.opcoPaid && d.status !== 'paid');
+  // Gains acquis = somme des ordres de virement CONFIRMÉS payés par Delivery Digital. @Rabah 2026-07-29
+  const paidOrders = payOrders.filter((o) => o.paidAt);
+  const gainsAcquisVir = paidOrders.reduce((s, o) => s + (o.totalCommission || 0), 0);
   const fondsTotal = fondsDispo.reduce((s, d) => s + earn(d), 0);
   const dossierRef = (d: Dossier) => d.invoiceNumber || ('DOS-' + new Date(d.createdAt || Date.now()).getFullYear() + '-' + d._id.slice(-5).toUpperCase());
   const gotoSection = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -695,10 +1042,28 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
   const estRecommandee = (id: string) => id === recommendedId;
   const simFinancePer = brancheFinance[simBranche.id] || 0; // facturé par stagiaire pour la branche choisie
 
+  // Prévisualisation admin avec token expiré/invalide : écran clair plutôt qu'une page blanche.
+  if (preview && authError) return (
+    <main className="min-h-screen flex items-center justify-center px-5" style={DOTTED_BG}>
+      <div className="max-w-sm text-center bg-[#181A20] border border-white/10 rounded-2xl p-7">
+        <span className="inline-flex h-12 w-12 rounded-full bg-[#E5A000]/15 items-center justify-center"><Clock className="h-6 w-6 text-[#E5A000]" /></span>
+        <h1 className="text-[17px] font-bold text-white mt-4">Prévisualisation expirée</h1>
+        <p className="text-[13px] text-white/55 mt-2 leading-relaxed">Ce lien de prévisualisation de l&apos;espace agence n&apos;est plus valide (il expire après quelques heures). Revenez à l&apos;admin et cliquez de nouveau sur « Visualiser l&apos;espace ».</p>
+        <button onClick={() => { try { window.close(); } catch { /* */ } }} className="mt-5 px-4 py-2.5 rounded-lg bg-[#0066CC] text-white text-[13px] font-semibold hover:bg-[#0077ED]">Fermer cet onglet</button>
+      </div>
+    </main>
+  );
   if (loading) return <main className="min-h-screen bg-[#0E0F13] flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-white/40" /></main>;
 
   return (
     <main className="min-h-screen text-white" style={DOTTED_BG}>
+      {/* Bandeau "prévisualisation admin" : visible uniquement quand un super admin ouvre l'espace
+          d'une agence via /agence#preview=<jwt>. @author Rabah Ziane - 2026-06-24 */}
+      {preview && (
+        <div className="bg-[#E5A000] text-[#1D1D1F] text-center text-[12px] font-semibold px-4 py-2 flex items-center justify-center gap-2">
+          <Eye className="h-3.5 w-3.5" /> Prévisualisation super admin · vous voyez le tableau de bord de l'agence « {agency?.name || '…'} » tel qu'elle le voit.
+        </div>
+      )}
       {/* Topbar */}
       <header className="border-b border-black/10 bg-white">
         <div className="max-w-[1200px] mx-auto px-6 py-3 flex items-center justify-between gap-4">
@@ -706,7 +1071,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
             <img src={LOGO_URL} alt="Delivery Digital" className="h-10 w-auto" />
             <span className="text-[15px] font-bold text-[#1D1D1F] leading-tight">{agency?.name || 'Agence'}</span>
           </div>
-          <button onClick={onLogout} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/[0.04] hover:bg-black/[0.08] text-[#1D1D1F] text-[11.5px] border border-black/10"><LogOut className="h-3.5 w-3.5" /> Déconnexion</button>
+          <button onClick={onLogout} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/[0.04] hover:bg-black/[0.08] text-[#1D1D1F] text-[11.5px] border border-black/10"><LogOut className="h-3.5 w-3.5" /> {preview ? 'Fermer' : 'Déconnexion'}</button>
         </div>
       </header>
 
@@ -759,6 +1124,21 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
             <button onClick={saveCompany} disabled={savingCompany} className="mt-3 px-4 py-2 rounded-lg bg-[#0066CC] text-white text-[12.5px] font-semibold hover:bg-[#0077ED] disabled:opacity-60">{savingCompany ? 'Enregistrement…' : 'Enregistrer mes informations'}</button>
           </section>
         )}
+
+        {/* Slider de projet : 3 activités jamais mélangées (Formation / Informatique / Pyemes). @Rabah 2026-08-01 */}
+        {isOwner && (
+          <div className="inline-flex self-start rounded-xl border border-white/10 bg-white/5 p-1">
+            <button onClick={() => setProject('formation')} className={`px-4 py-2 rounded-lg text-[12.5px] font-semibold transition ${project === 'formation' ? 'bg-[#0066CC] text-white' : 'text-white/60 hover:text-white'}`}>Formation</button>
+            <button onClick={() => setProject('informatique')} className={`px-4 py-2 rounded-lg text-[12.5px] font-semibold transition ${project === 'informatique' ? 'bg-[#3DD68C] text-[#0B0B0F]' : 'text-white/60 hover:text-white'}`}>Informatique</button>
+            {pyemesData?.active && <button onClick={() => setProject('pyemes')} className={`px-4 py-2 rounded-lg text-[12.5px] font-semibold transition inline-flex items-center gap-1.5 ${project === 'pyemes' ? 'bg-[#635BFF] text-white' : 'text-white/60 hover:text-white'}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="https://pyemes.com/logo/pyemes-mark.svg" alt="" className="h-4 w-4 animate-[spin_6s_linear_infinite]" style={{ filter: 'brightness(0) invert(1)' }} onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://pyemes.com/icon-192.png'; }} />
+              Pyemes
+            </button>}
+          </div>
+        )}
+
+        {project === 'formation' && (<>
         <div className="flex items-end justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-[22px] font-bold">Tableau de bord</h1>
@@ -778,8 +1158,39 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
           <Kpi icon={<Users className="h-4 w-4" />} label="Clients" value={kpi.clients} accent="#0066CC" onClick={() => gotoSection('sec-clients')} />
           <Kpi icon={<FolderCheck className="h-4 w-4" />} label="Dossiers" value={kpi.dossiers} accent="#0066CC" onClick={() => gotoSection('sec-clients')} />
           {isOwner && <Kpi icon={<Wallet className="h-4 w-4" />} label={`Gains estimés · ${PERIOD_LABEL[period]}`} value={kpi.gains} suffix=" €" accent="#3DD68C" onClick={() => gotoSection(fondsDispo.length ? 'sec-fonds' : 'sec-historique')} />}
-          {isOwner && <Kpi icon={<ShieldCheck className="h-4 w-4" />} label={`Gains acquis · ${PERIOD_LABEL[period]}`} value={kpi.acquis} suffix=" €" accent="#3DD68C" onClick={() => gotoSection('sec-historique')} />}
+          {isOwner && <Kpi icon={<ShieldCheck className="h-4 w-4" />} label="Gains acquis (versés)" value={gainsAcquisVir} suffix=" €" accent="#3DD68C" onClick={() => setShowGains(true)} />}
         </div>
+
+        {/* Détail des gains acquis : virements confirmés payés par Delivery Digital. @Rabah 2026-07-29 */}
+        {showGains && (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowGains(false)}>
+            <div className="bg-[#181A20] border border-white/10 rounded-2xl max-w-lg w-full p-5 max-h-[85vh] overflow-y-auto text-white" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between"><h3 className="text-[16px] font-bold">Gains acquis</h3><span className="text-[#3DD68C] font-extrabold text-[18px]">{gainsAcquisVir.toLocaleString('fr-FR')} €</span></div>
+              <p className="text-[12px] text-white/50 mt-1">Détail des virements confirmés payés par Delivery Digital.</p>
+              {paidOrders.length === 0 ? (
+                <p className="mt-4 text-[13px] text-white/40 text-center py-6">Aucun virement confirmé pour l&apos;instant.</p>
+              ) : (
+                <div className="mt-3 space-y-3">
+                  {paidOrders.map((o) => (
+                    <div key={o._id} className="rounded-xl border border-white/10 p-3">
+                      <div className="flex items-center justify-between"><span className="font-semibold text-[#3DD68C]">{o.ref}</span><span className="font-bold">{(o.totalCommission || 0).toLocaleString('fr-FR')} €</span></div>
+                      <p className="text-[11.5px] text-white/40">Payé le {o.paidAt ? new Date(o.paidAt).toLocaleDateString('fr-FR') : ''}</p>
+                      {(o.lines || []).length > 0 && (
+                        <div className="mt-2 divide-y divide-white/5 text-[12px]">
+                          {(o.lines || []).map((l, i) => (
+                            <div key={i} className="py-1.5 flex items-center justify-between"><span className="text-white/70">{l.denom}</span><span className="font-semibold">{(l.total || 0).toLocaleString('fr-FR')} €</span></div>
+                          ))}
+                        </div>
+                      )}
+                      {o.pdfUrl && <a href={pdfHref(o)} target="_blank" rel="noreferrer" className="mt-2 inline-block text-[11.5px] text-[#0A84FF] hover:underline">Télécharger le PDF</a>}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="mt-4 flex justify-end"><button onClick={() => setShowGains(false)} className="px-4 py-2 rounded-full border border-white/15 text-[13px]">Fermer</button></div>
+            </div>
+          </div>
+        )}
 
         {/* Nos formations (catalogue) - cliquables, detail + programme telechargeable */}
         <section>
@@ -810,9 +1221,6 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
             ))}
           </div>
         </section>
-
-        {/* Services informatiques : devis IT (revente prestations Delivery Digital). @Rabah 2026-06-21 */}
-        <DevisITSection auth={auth} authJson={authJson} isOwner={isOwner} fix={fix} pct={pct} />
 
         {/* Arguments de vente - 2 formations (toggle), à reprendre face au client */}
         {(() => {
@@ -1086,11 +1494,34 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                               <p className="text-white/40 text-[11.5px] truncate">{[l.email, l.opco && `OPCO ${l.opco}`].filter(Boolean).join(' · ') || l.siret || '-'}</p>
                               {/* Suivi : effectif + budget OPCO de l'année (100% dispo si aucune formation faite). @Rabah 2026-06-18 */}
                               <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                                {l.companyEmployees != null && <span className="inline-flex items-center gap-1 text-[10.5px] text-white/50"><Users className="h-3 w-3" /> {l.companyEmployees} salarié{l.companyEmployees > 1 ? 's' : ''}</span>}
-                                {l.formationDoneThisYear
-                                  ? <span className="inline-flex px-1.5 py-0.5 rounded-full text-[10px] border border-[#E5B567]/30 text-[#E5B567] bg-[#E5B567]/10">Formation faite cette année</span>
-                                  : <span className="inline-flex px-1.5 py-0.5 rounded-full text-[10px] border border-[#3DD68C]/30 text-[#3DD68C] bg-[#3DD68C]/10">Budget OPCO 100% dispo</span>}
+                                {/* Nombre de salariés éditable en 1 clic, sans monter le dossier. @Rabah 2026-07-02 */}
+                                {editEmp === l._id ? (
+                                  <span className="inline-flex items-center gap-1">
+                                    <input value={empDraft} autoFocus inputMode="numeric" onChange={(e) => setEmpDraft(e.target.value.replace(/[^0-9]/g, ''))} onKeyDown={(e) => { if (e.key === 'Enter') saveEmployees(l._id, empDraft); if (e.key === 'Escape') setEditEmp(null); }} placeholder="Nb" className="w-12 px-1.5 py-0.5 rounded bg-white/10 border border-white/20 text-[10.5px] text-white focus:outline-none" />
+                                    <button onClick={() => saveEmployees(l._id, empDraft)} className="text-[10px] text-[#4da3ff] font-semibold">OK</button>
+                                  </span>
+                                ) : (
+                                  <button onClick={() => { setEditEmp(l._id); setEmpDraft(l.companyEmployees != null ? String(l.companyEmployees) : ''); }} title="Indiquer le nombre de salariés (sans monter le dossier)" className="inline-flex items-center gap-1 text-[10.5px] text-white/50 hover:text-white/80">
+                                    <Users className="h-3 w-3" /> {l.companyEmployees != null ? `${l.companyEmployees} salarié${l.companyEmployees > 1 ? 's' : ''}` : '+ salariés'}
+                                  </button>
+                                )}
+                                {/* Badge basculable en 1 clic : budget dispo <-> formation faite cette année. @Rabah 2026-07-02 */}
+                                <button
+                                  onClick={async () => {
+                                    // Maj optimiste du seul badge (pas de reload de toute la page). Rollback si l'API échoue. @Rabah 2026-07-02
+                                    const next = !l.formationDoneThisYear;
+                                    setLeads((prev) => prev.map((x) => x._id === l._id ? { ...x, formationDoneThisYear: next } : x));
+                                    try { await fetch(`/api/agency/self/leads/${l._id}`, { method: 'PATCH', headers: authJson(), body: JSON.stringify({ formationDoneThisYear: next }) }); }
+                                    catch { setLeads((prev) => prev.map((x) => x._id === l._id ? { ...x, formationDoneThisYear: !next } : x)); }
+                                  }}
+                                  title="Cliquer pour basculer : Budget OPCO 100% dispo ↔ Formation faite cette année"
+                                  className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] border transition hover:brightness-125 cursor-pointer ${l.formationDoneThisYear ? 'border-[#E5B567]/30 text-[#E5B567] bg-[#E5B567]/10' : 'border-[#3DD68C]/30 text-[#3DD68C] bg-[#3DD68C]/10'}`}
+                                >{l.formationDoneThisYear ? 'Formation faite cette année' : 'Budget OPCO 100% dispo'}</button>
                               </div>
+                              {/* Dates de la formation, visibles sans ouvrir le dossier. @Rabah 2026-07-20 */}
+                              {dos?.sessionStart && (
+                                <div className="mt-1.5"><SessionDatesBadge start={dos.sessionStart} end={dos.sessionEnd} /></div>
+                              )}
                               {/* Emails dédiés comptable / gérant si renseignés. @Rabah 2026-06-18 */}
                               {(l.accountantEmail || l.managerEmail) && (
                                 <div className="flex flex-col gap-0.5 mt-1">
@@ -1144,24 +1575,57 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                             {acc === 'received' ? <span className="inline-flex items-center gap-1 text-[11.5px] text-[#3DD68C]"><ShieldCheck className="h-3.5 w-3.5" /> Reçus par Delivery Digital</span>
                               : l.waitingNote ? <span className="text-[11.5px] text-[#E5B567]">{l.waitingNote}</span>
                               : acc === 'pending' ? <span className="text-[11.5px] text-[#E5B567]">Demandés…</span>
-                              : <span className="text-[11.5px] text-white/40 group-hover:text-white/70">+ Suivi / rappel</span>}
+                              : <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-[#4da3ff] bg-[#0066CC]/15 border border-[#0066CC]/45 rounded-full px-2.5 py-1 group-hover:bg-[#0066CC]/30 transition"><Clock className="h-3.5 w-3.5" /> + Suivi / rappel</span>}
                             {l.reminderAt && <span className="block mt-0.5 inline-flex items-center gap-1 text-[10.5px] text-[#4da3ff]"><Clock className="h-3 w-3" /> Rappel {new Date(l.reminderAt).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>}
                           </button>
                         </td>
                         <td className="px-5 py-3">
                           <div className="flex justify-end gap-2">
-                            {dos && <button onClick={() => setOpenTimeline((v) => v === l._id ? null : l._id)} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11.5px] whitespace-nowrap ${openTimeline === l._id ? 'bg-[#0066CC]/15 border-[#0066CC]/40 text-[#4da3ff]' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}><Clock className="h-3.5 w-3.5" /> Suivi</button>}
+                            {/* Suivi visible même sans dossier monté : ouvre la timeline "à venir". @Rabah 2026-07-02 */}
+                            <button onClick={() => setOpenTimeline((v) => v === l._id ? null : l._id)} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11.5px] whitespace-nowrap ${openTimeline === l._id ? 'bg-[#0066CC]/15 border-[#0066CC]/40 text-[#4da3ff]' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}><Clock className="h-3.5 w-3.5" /> Suivi</button>
                             {dos && dos.status !== 'paid' && dos.status !== 'invoiced' && <button onClick={() => setEditDossier({ lead: l, dossier: dos })} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11.5px] whitespace-nowrap" title="Corriger ce dossier déjà transmis et le renvoyer"><PenLine className="h-3.5 w-3.5" /> Modifier</button>}
+                            {/* Email d'information visible qu'un dossier OPCO existe ou non : on doit
+                                pouvoir (re)prévenir le client à tout moment, avant comme après le montage
+                                du dossier. Cible le dossier s'il existe (le « envoyé le » y est rattaché),
+                                sinon le lead. @Rabah 2026-07-22 */}
+                            <button onClick={() => setConfirmTarget(dos
+                              ? { kind: 'dossier', id: dos._id, clientEmail: dos.clientEmail || l.email, denom: dos.denom || l.denom, rdvAt: dos.rdvAt, confirmationEmailSentAt: dos.confirmationEmailSentAt }
+                              : { kind: 'lead', id: l._id, clientEmail: l.email, denom: l.denom, rdvAt: l.rdvAt, confirmationEmailSentAt: l.confirmationEmailSentAt })} title="Envoyer au client l'email d'information (déroulé + RDV)" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0066CC]/10 hover:bg-[#0066CC]/20 border border-[#0066CC]/25 text-[#4da3ff] text-[11.5px] whitespace-nowrap"><Mail className="h-3.5 w-3.5" /> Email d&apos;information{(dos ? dos.confirmationEmailSentAt : l.confirmationEmailSentAt) ? ' ✓' : ''}</button>
                             <button onClick={() => setDossierLead(l)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11.5px] whitespace-nowrap"><FileText className="h-3.5 w-3.5" /> {dos ? 'Nouveau dossier' : 'Dossier OPCO'}</button>
                             {acc !== 'received' && <button onClick={() => setAccessLead(l)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11.5px] whitespace-nowrap"><KeyRound className="h-3.5 w-3.5" /> {acc === 'pending' ? 'Accès OPCO · en cours' : 'Accès OPCO'}</button>}
                           </div>
                         </td>
                       </tr>
-                      {openTimeline === l._id && dos && (
+                      {openTimeline === l._id && (
                         <tr className="bg-white/[0.02]">
                           <td colSpan={isOwner ? 6 : 4} className="px-5 pb-4 pt-1">
-                            <p className="text-[10px] uppercase tracking-wider font-bold text-white/40 mb-2">Suivi du dossier · {l.denom || 'Client'}</p>
-                            <DossierTimeline d={dos} accessStatus={l.email ? accessByEmail[l.email] : undefined} onAccess={() => setAccessLead(l)} />
+                            <p className="text-[10px] uppercase tracking-wider font-bold text-white/40 mb-2">Suivi du dossier · {l.denom || 'Client'}{!dos && <span className="ml-2 normal-case tracking-normal text-white/30">— dossier pas encore monté</span>}</p>
+                            <DossierTimeline d={dos ?? null} accessStatus={l.email ? accessByEmail[l.email] : undefined} onAccess={() => setAccessLead(l)} onRattachInfo={() => dos && setRattachInfo(dos)} />
+                            <div className="mt-3 flex items-center gap-2 flex-wrap">
+                              {dos ? (
+                                <>
+                                  <button onClick={() => setConfirmTarget({ kind: 'dossier', id: dos._id, clientEmail: dos.clientEmail || l.email, denom: dos.denom || l.denom, rdvAt: dos.rdvAt, confirmationEmailSentAt: dos.confirmationEmailSentAt })} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0066CC]/15 hover:bg-[#0066CC]/25 border border-[#0066CC]/30 text-[#4da3ff] text-[11.5px] font-semibold"><Mail className="h-3.5 w-3.5" /> Email d&apos;information (déroulé + RDV)</button>
+                                  {dos.confirmationEmailSentAt && <span className="text-[11px] text-[#3DD68C]">✓ Envoyé le {new Date(dos.confirmationEmailSentAt).toLocaleDateString('fr-FR')}{dos.rdvAt ? ` · RDV le ${new Date(dos.rdvAt).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}` : ''}</span>}
+                                </>
+                              ) : (
+                                // Dossier pas encore monté : on propose de le monter + l'email de confirmation client. @Rabah 2026-07-02
+                                <>
+                                  <button onClick={() => setDossierLead(l)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0066CC]/15 hover:bg-[#0066CC]/25 border border-[#0066CC]/30 text-[#4da3ff] text-[11.5px] font-semibold"><FileText className="h-3.5 w-3.5" /> Monter le dossier OPCO</button>
+                                  <button onClick={() => setConfirmTarget({ kind: 'lead', id: l._id, clientEmail: l.email, denom: l.denom, rdvAt: l.rdvAt, confirmationEmailSentAt: l.confirmationEmailSentAt })} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11.5px]"><Mail className="h-3.5 w-3.5" /> Email d&apos;information{l.confirmationEmailSentAt ? ' ✓' : ''}</button>
+                                </>
+                              )}
+                            </div>
+                            {/* Tâches collaboratives agence <-> DDN sur TOUS les clients : portées par le
+                                client (lead), pas besoin qu'un dossier OPCO existe. @Rabah 2026-07-02 */}
+                            <DossierTasks
+                              tasks={l.tasks || []}
+                              dark
+                              emailSuggestions={[agency?.email, 'contact@deliverydigital.fr'].filter(Boolean) as string[]}
+                              onAdd={async (tk) => { const r = await fetch(`/api/agency/self/leads/${l._id}/tasks`, { method: 'POST', headers: authJson(), body: JSON.stringify(tk) }); const j = await r.json(); if (j.ok) updateLeadTasks(l._id, j.tasks); }}
+                              onToggle={async (taskId, done) => { const r = await fetch(`/api/agency/self/leads/${l._id}/tasks/${taskId}`, { method: 'PATCH', headers: authJson(), body: JSON.stringify({ done }) }); const j = await r.json(); if (j.ok) updateLeadTasks(l._id, j.tasks); }}
+                              onEditComment={async (taskId, comment) => { const r = await fetch(`/api/agency/self/leads/${l._id}/tasks/${taskId}`, { method: 'PATCH', headers: authJson(), body: JSON.stringify({ comment }) }); const j = await r.json(); if (j.ok) updateLeadTasks(l._id, j.tasks); }}
+                              onDelete={async (taskId) => { const r = await fetch(`/api/agency/self/leads/${l._id}/tasks/${taskId}`, { method: 'DELETE', headers: authJson() }); const j = await r.json(); if (j.ok) updateLeadTasks(l._id, j.tasks); }}
+                            />
                           </td>
                         </tr>
                       )}
@@ -1323,6 +1787,19 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
             <h2 className="text-[15px] font-bold">Historique des paiements</h2>
             <span className="text-[12px] text-white/50">Total acquis : <strong className="text-[#3DD68C]">{paidDossiers.reduce((s, d) => s + earn(d), 0).toLocaleString('fr-FR')} €</strong></span>
           </div>
+          {/* Ordres de virement (PDF) reçus de Delivery Digital. @Rabah 2026-07-29 */}
+          {payOrders.length > 0 && (
+            <div className="px-5 py-3 border-b border-white/10">
+              <p className="text-[11px] uppercase tracking-wider font-bold text-white/40 mb-2">Ordres de virement reçus</p>
+              <div className="flex flex-wrap gap-2">
+                {payOrders.map((o) => (
+                  <a key={o._id} href={pdfHref(o)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[11.5px] text-white/80 hover:bg-white/10">
+                    <span className="font-semibold text-[#3DD68C]">{o.ref}</span> · {(o.totalCommission || 0).toLocaleString('fr-FR')} €{o.createdAt ? ` · ${new Date(o.createdAt).toLocaleDateString('fr-FR')}` : ''} · PDF
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
           {paidDossiers.length === 0 ? (
             <p className="px-5 py-10 text-center text-[13px] text-white/40">Aucun paiement OPCO reçu pour l&apos;instant. La commission est versée dès que le dossier passe au statut « Payé ».</p>
           ) : (
@@ -1342,6 +1819,546 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
               </table>
             </div>
           )}
+        </section>
+        )}
+
+        </>)}
+
+        {/* Onglet Informatique : devis IT (prestations Delivery Digital). @Rabah 2026-08-01 */}
+        {project === 'informatique' && (
+          <DevisITSection auth={auth} authJson={authJson} isOwner={isOwner} fix={fix} pct={pct} />
+        )}
+
+        {/* Vente Pyemes : affiché quand le projet Pyemes est sélectionné. @Rabah 2026-08-01 */}
+        {project === 'pyemes' && isOwner && pyemesData?.active && (
+        <section id="sec-pyemes" className="scroll-mt-4 rounded-2xl bg-[#181A20] border border-[#635BFF]/30 overflow-hidden">
+          <div className="px-5 py-4 border-b border-white/10 flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="https://pyemes.com/logo/pyemes-mark.svg" alt="Pyemes" className="h-8 w-8 animate-[spin_6s_linear_infinite]" style={{ filter: 'brightness(0) invert(1)' }} onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://pyemes.com/icon-192.png'; }} />
+            <div className="flex-1 min-w-0">
+              <h2 className="text-[15px] font-bold">Vente Pyemes</h2>
+              <p className="text-[12px] text-white/50">Revendez la solution comptable Pyemes et touchez <strong className="text-[#635BFF]">{pyemesData.agence?.commission_percent ?? ''}%</strong> sur chaque paiement de vos clients.</p>
+            </div>
+            {/* Date de lancement officiel de Pyemes. @author Rabah Ziane - 2026-08-01 */}
+            <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-[#635BFF]/15 border border-[#635BFF]/30 px-3 py-1.5 text-[11.5px] font-semibold text-[#b3abff]">
+              🚀 Lancement officiel le 1er septembre 2026
+            </span>
+          </div>
+
+          {/* Mini-dashboard animé (barres qui montent/descendent) - façon page d'accueil, pour le côté pro. @Rabah 2026-08-01 */}
+          <div className="px-5 pt-4 pb-1 flex items-end gap-[5px] h-20 overflow-hidden" aria-hidden>
+            <style>{'@keyframes pymBar{0%,100%{transform:scaleY(.42)}50%{transform:scaleY(1)}}'}</style>
+            {[62, 50, 71, 66, 82, 91, 100, 74, 86, 92, 66, 58, 78, 68].map((h, i) => (
+              <span key={i} style={{ height: `${h}%`, flex: 1, maxWidth: 12, background: '#5FA88C', borderRadius: 3, transformOrigin: 'bottom', animation: `pymBar ${2.1 + (i % 4) * 0.35}s ease-in-out ${(i * 0.11).toFixed(2)}s infinite` }} />
+            ))}
+          </div>
+
+          <div className="p-5 pt-3 space-y-4">
+            {!pyemesData.contract?.signed && (
+              /* Avenant à signer - affiché en bandeau, l'interface reste visible pour vérification. @Rabah 2026-08-01 */
+              <div className="rounded-xl border border-[#635BFF]/30 bg-[#635BFF]/[0.06] p-4">
+                <p className="text-[13px] font-bold text-white">Avenant au contrat - Revente Pyemes</p>
+                <div className="mt-2 text-[12.5px] text-white/70 leading-[1.6] space-y-1.5">
+                  <p>En signant, l&apos;Agence est autorisée à revendre la solution comptable <strong className="text-white">Pyemes</strong> et accepte les conditions suivantes :</p>
+                  <p>• <strong className="text-white">Commission de 30% du montant TTC</strong> de chaque paiement des clients qu&apos;elle apporte (via son lien de parrainage), pendant toute la durée de leur abonnement.</p>
+                  <p>• <strong className="text-white">Attribution</strong> par lien de parrainage unique ; Delivery Digital peut corriger une attribution erronée.</p>
+                  <p>• <strong className="text-white">Versement automatique via Stripe Connect</strong> dès que les fonds sont disponibles ; l&apos;Agence complète son onboarding Stripe (identité + coordonnées bancaires).</p>
+                  <p>• Avenant valable tant que le contrat de partenariat est en vigueur.</p>
+                </div>
+                <div className="mt-3 grid sm:grid-cols-2 gap-2">
+                  <input value={pyemesSign.by} onChange={(e) => setPyemesSign((s) => ({ ...s, by: e.target.value }))} placeholder="Nom et prénom du signataire" className="h-10 px-3 rounded-lg bg-black/30 border border-white/15 text-[13px] text-white" />
+                  <input value={pyemesSign.fn} onChange={(e) => setPyemesSign((s) => ({ ...s, fn: e.target.value }))} placeholder="Fonction (ex. Gérant)" className="h-10 px-3 rounded-lg bg-black/30 border border-white/15 text-[13px] text-white" />
+                </div>
+                <button onClick={signerAvenantPyemes} disabled={pyemesSignBusy} className="mt-3 px-4 py-2.5 rounded-lg bg-black text-white text-[13px] font-semibold hover:opacity-90 disabled:opacity-60">{pyemesSignBusy ? 'Signature…' : 'Je signe l’avenant et commence à vendre'}</button>
+                <p className="text-[11px] text-white/40 mt-2">Signature électronique valant acceptation (nom, fonction, date et IP enregistrés).</p>
+              </div>
+            )}
+            {/* Action à faire : onboarding Stripe (Stripe vérifie les documents, sans intervention DD) */}
+            {!pyemesConnect?.onboarde ? (
+              <div className="rounded-2xl border border-[#635BFF]/30 overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(99,91,255,0.14), rgba(99,91,255,0.03))' }}>
+                <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between gap-2">
+                  <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wider font-bold text-white/50">
+                    <ShieldCheck className="h-4 w-4 text-[#3DD68C]" /> Paiements sécurisés par
+                    {/* Logo Stripe (wordmark officiel, blanc) */}
+                    <span className="inline-flex items-center gap-1.5"><span className="inline-flex items-center justify-center rounded-[5px]" style={{ background: '#635BFF', width: 18, height: 18 }}><svg width="11" height="11" viewBox="0 0 32 32"><polygon points="6,12 26,8 26,21 6,25" fill="#fff" /></svg></span><span className="text-[12px] font-bold text-white normal-case tracking-normal">Stripe</span></span>
+                  </div>
+                  <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full text-[#F5A623] bg-[#F5A623]/15">Action requise</span>
+                </div>
+                <div className="p-4">
+                  <p className="text-[13.5px] font-bold text-white">Activez vos paiements pour recevoir vos commissions</p>
+                  <p className="text-[12.5px] text-white/60 mt-1 leading-[1.55]">Stripe vérifie votre <strong className="text-white/80">identité</strong> et vos <strong className="text-white/80">coordonnées bancaires</strong> en ligne, en quelques minutes. Vous suivez simplement les étapes - nous n&apos;avons rien à faire de notre côté.</p>
+                  <button onClick={connecterPyemes} disabled={pyemesBusy} className="mt-3 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-white text-[13px] font-semibold hover:opacity-90 disabled:opacity-70 transition" style={{ background: '#635BFF' }}>
+                    {pyemesBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <span className="inline-flex items-center justify-center rounded-[4px]" style={{ background: '#fff', width: 16, height: 16 }}><svg width="10" height="10" viewBox="0 0 32 32"><polygon points="6,12 26,8 26,21 6,25" fill="#635BFF" /></svg></span>}
+                    {pyemesBusy ? 'Ouverture de Stripe…' : (pyemesConnect?.demarre ? 'Terminer ma vérification' : 'Activer mes paiements')}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-[#3DD68C]/30 bg-[#3DD68C]/10 px-4 py-3 text-[12.5px] text-[#3DD68C] font-semibold inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Paiements activés - vos commissions sont versées automatiquement dès qu&apos;elles sont disponibles.</div>
+            )}
+
+            {/* Lien de vente */}
+            <div>
+              <p className="text-[11px] uppercase tracking-wider font-bold text-white/40 mb-1.5">Votre lien de vente</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <code className="flex-1 min-w-[220px] px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-[12.5px] font-mono break-all">{pyemesData.lien}</code>
+                <button onClick={() => { navigator.clipboard?.writeText(pyemesData.lien || ''); }} className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 inline-flex items-center gap-1.5 text-[12px]"><Copy className="h-3.5 w-3.5" /> Copier</button>
+              </div>
+              <p className="text-[11.5px] text-white/40 mt-1.5">Partagez ce lien : tout client qui s&apos;inscrit via lui vous est attribué automatiquement.</p>
+            </div>
+
+            {/* Totaux */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-xl bg-black/20 border border-white/10 p-3"><p className="text-[11px] text-white/40">À venir</p><p className="text-[17px] font-bold text-white/80">{(pyemesData.totaux?.a_venir || 0).toLocaleString('fr-FR')} €</p></div>
+              <div className="rounded-xl bg-black/20 border border-[#3DD68C]/30 p-3"><p className="text-[11px] text-white/40">Disponible</p><p className="text-[17px] font-bold text-[#3DD68C]">{(pyemesData.totaux?.disponible || 0).toLocaleString('fr-FR')} €</p></div>
+              <div className="rounded-xl bg-black/20 border border-white/10 p-3"><p className="text-[11px] text-white/40">Payé</p><p className="text-[17px] font-bold text-white/60">{(pyemesData.totaux?.paye || 0).toLocaleString('fr-FR')} €</p></div>
+            </div>
+
+            {/* Commissions détaillées */}
+            {(pyemesData.commissions?.length || 0) > 0 ? (
+              <div className="rounded-xl border border-white/10 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[12.5px]">
+                    <thead className="text-white/40 text-[10px] uppercase tracking-wider"><tr className="border-b border-white/5"><th className="text-left px-4 py-2.5">Client</th><th className="text-left px-4 py-2.5">Vente TTC</th><th className="text-left px-4 py-2.5">Commission</th><th className="text-right px-4 py-2.5">État</th></tr></thead>
+                    <tbody className="divide-y divide-white/5">
+                      {pyemesData.commissions!.map((c) => {
+                        const lib = c.etat === 'paye' ? { t: 'Payé', c: '#8A93A6' } : c.etat === 'disponible' ? { t: 'Disponible', c: '#3DD68C' } : { t: 'À venir', c: '#F5A623' };
+                        return (
+                          <tr key={c.id} className="hover:bg-white/[0.02]">
+                            <td className="px-4 py-3">{c.client || 'Client'}{c.date ? <span className="block text-white/40 text-[11px]">{new Date(c.date).toLocaleDateString('fr-FR')}</span> : null}</td>
+                            <td className="px-4 py-3 text-white/60">{(c.base || 0).toLocaleString('fr-FR')} €</td>
+                            <td className="px-4 py-3 font-semibold text-[#635BFF]">+ {(c.commission || 0).toLocaleString('fr-FR')} €</td>
+                            <td className="px-4 py-3 text-right"><span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ color: lib.c, background: lib.c + '22' }}>{lib.t}</span></td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <p className="text-[12.5px] text-white/40">Aucune commission pour l&apos;instant. {(pyemesData.clients?.length || 0)} client(s) apporté(s) - la commission apparaît dès leur premier paiement.</p>
+            )}
+
+            {/* Simulateur de commission par forfait (dépliant) : donne une idée du gain selon l'offre
+                que l'agence vend, au pourcentage réglé pour elle. @author Rabah Ziane - 2026-08-01 */}
+            {(() => {
+              const pct = (pyemesData.agence?.commission_percent ?? 30) / 100;
+              const eur = (n: number) => (Number.isInteger(n) ? `${n}` : n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) + ' €';
+              const forfaits = [
+                { nom: 'Micro', pour: 'Indépendant', m: 29 },
+                { nom: 'Cabinet', pour: 'Comptable', m: 39 },
+                { nom: 'Standard', pour: 'TPE-PME', m: 49 },
+                { nom: 'Premium', pour: 'TPE-PME', m: 79 },
+                { nom: 'Par entreprise', pour: 'Dossier en +', m: 11.9 },
+              ];
+              return (
+                <div className="rounded-xl border border-white/10 overflow-hidden">
+                  <button onClick={() => setSimuOpen((v) => !v)} className="w-full flex items-center gap-2.5 px-4 py-3 text-left hover:bg-white/[0.02]">
+                    <Calculator className="h-4 w-4 text-[#635BFF]" />
+                    <span className="flex-1">
+                      <span className="block text-[13px] font-semibold">Combien vous gagnez par forfait</span>
+                      <span className="block text-[11.5px] text-white/45">Votre commission : {pyemesData.agence?.commission_percent ?? 30}% du montant TTC, à chaque paiement du client.</span>
+                    </span>
+                    <ChevronDown className={`h-4 w-4 text-white/40 transition-transform ${simuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {simuOpen && (
+                    <div className="border-t border-white/10 overflow-x-auto">
+                      <table className="w-full text-[12.5px]">
+                        <thead className="text-white/40 text-[10px] uppercase tracking-wider"><tr className="border-b border-white/5"><th className="text-left px-4 py-2.5">Forfait</th><th className="text-right px-4 py-2.5">Prix / mois</th><th className="text-right px-4 py-2.5">Vous touchez / mois</th><th className="text-right px-4 py-2.5">Sur 12 mois</th></tr></thead>
+                        <tbody className="divide-y divide-white/5">
+                          {forfaits.map((f) => (
+                            <tr key={f.nom} className="hover:bg-white/[0.02]">
+                              <td className="px-4 py-2.5">{f.nom}<span className="block text-white/40 text-[11px]">{f.pour}</span></td>
+                              <td className="px-4 py-2.5 text-right text-white/60 tabular-nums">{eur(f.m)}</td>
+                              <td className="px-4 py-2.5 text-right font-semibold text-[#635BFF] tabular-nums">+ {eur(Math.round(f.m * pct * 100) / 100)}</td>
+                              <td className="px-4 py-2.5 text-right text-white/50 tabular-nums">+ {eur(Math.round(f.m * pct * 12 * 100) / 100)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <p className="text-[11px] text-white/35 px-4 py-2.5">Estimation indicative : « sur 12 mois » = 12 × la commission mensuelle. Elle est versée tant que le client paie son abonnement.</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Étape 2 : suivi des clients apportés (cycle de vie de l'abonnement). @Rabah 2026-08-01 */}
+            <div>
+              <p className="text-[11px] uppercase tracking-wider font-bold text-white/40 mb-2">Vos clients Pyemes ({pyemesData.clients?.length || 0})</p>
+              {/* Alerte rétention : votre commission dure tant que le client paie -> relancez ceux à risque. @Rabah 2026-08-01 */}
+              {(() => {
+                const risque = (pyemesData.clients || []).filter((x) => x.statut === 'impaye' || x.statut === 'resilie');
+                return risque.length > 0 ? (
+                  <div className="mb-2 rounded-xl border border-[#F5A623]/40 bg-[#F5A623]/10 px-3.5 py-2.5 text-[12.5px] text-white/80">
+                    <strong className="text-[#F5A623]">{risque.length} client(s) à risque</strong> (paiement en attente ou résilié). Votre commission s&apos;arrête s&apos;ils partent - <strong>contactez-les pour les retenir</strong> : {risque.map((x) => x.email).slice(0, 4).join(', ')}{risque.length > 4 ? '…' : ''}
+                  </div>
+                ) : null;
+              })()}
+              {(pyemesData.clients?.length || 0) === 0 ? (
+                <p className="text-[12.5px] text-white/40">Aucun client pour l&apos;instant. Partagez votre lien de vente pour commencer.</p>
+              ) : (
+                <div className="rounded-xl border border-white/10 overflow-hidden overflow-x-auto">
+                  <table className="w-full text-[12.5px]">
+                    <thead className="text-white/40 text-[10px] uppercase tracking-wider"><tr className="border-b border-white/5"><th className="text-left px-4 py-2.5">Client</th><th className="text-left px-4 py-2.5">Statut</th><th className="text-right px-4 py-2.5">Paiements</th><th className="text-right px-4 py-2.5">Encaissé TTC</th><th className="text-right px-4 py-2.5">Votre commission</th><th className="text-right px-4 py-2.5">Dernier · depuis</th></tr></thead>
+                    <tbody className="divide-y divide-white/5">
+                      {pyemesData.clients!.map((cl) => {
+                        const st = cl.statut === 'actif' || cl.statut === 'en_essai' ? { t: 'Abonné', c: '#3DD68C' } : cl.statut === 'resilie' ? { t: 'Résilié', c: '#FF6B6B' } : cl.statut === 'impaye' ? { t: 'Paiement en attente', c: '#F5A623' } : { t: 'Inscrit', c: '#8A93A6' };
+                        // A-t-il ouvert le lien d'argumentaire qu'on lui a envoyé ? @Rabah 2026-08-01
+                        const ouvert = (pyemesData.pitches || []).find((p) => p.to === cl.email && p.openedAt)?.openedAt;
+                        // Transparence : on agrège les paiements de CE client (commissions liées). @Rabah 2026-08-01
+                        const paie = (pyemesData.commissions || []).filter((x) => x.client === cl.email);
+                        const encaisse = paie.reduce((s, x) => s + (x.base || 0), 0);
+                        const commis = paie.reduce((s, x) => s + (x.commission || 0), 0);
+                        const dernier = paie.map((x) => x.date).filter(Boolean).sort().slice(-1)[0];
+                        return (
+                          <tr key={cl.email} className="hover:bg-white/[0.02]">
+                            <td className="px-4 py-3 text-white/80">{cl.email}</td>
+                            <td className="px-4 py-3"><span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ color: st.c, background: st.c + '22' }}>{st.t}</span>{ouvert && <span className="block text-[10px] text-[#3DD68C] mt-1">Lien ouvert · {new Date(ouvert).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>}</td>
+                            <td className="px-4 py-3 text-right text-white/60 tabular-nums">{paie.length}</td>
+                            <td className="px-4 py-3 text-right text-white/70 tabular-nums">{encaisse.toLocaleString('fr-FR')} €</td>
+                            <td className="px-4 py-3 text-right font-semibold tabular-nums" style={{ color: '#635BFF' }}>{commis.toLocaleString('fr-FR')} €</td>
+                            <td className="px-4 py-3 text-right text-white/50 tabular-nums">{dernier ? new Date(dernier).toLocaleDateString('fr-FR') : (cl.depuis ? new Date(cl.depuis).toLocaleDateString('fr-FR') : '-')}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <p className="text-[11px] text-white/35 mt-2">Suivi transparent : chaque paiement de vos clients et votre commission correspondante (30 % TTC).</p>
+            </div>
+
+            {/* Feuille de route AVANT mise en ligne : ce qui reste a faire de chaque cote, l'import
+                d'une checklist existante, et un fil de discussion avec Delivery Digital.
+                @author Rabah Ziane - 2026-08-31 */}
+            <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <p className="text-[13px] font-bold text-white">Feuille de route · avant mise en ligne</p>
+                <span className="text-[11px] text-white/40">
+                  {roadTaches.filter((t) => t.statut === 'fait').length}/{roadTaches.length} fait
+                </span>
+              </div>
+              <p className="text-[12px] text-white/50">
+                Ce qui reste à faire avant l'ouverture au public. Vous pouvez demander une tâche à Delivery Digital,
+                et Delivery Digital peut vous en demander une : tout le monde voit la même liste.
+              </p>
+
+              {/* Ajout d'une tache + import d'une checklist */}
+              <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                <input
+                  value={roadTitre}
+                  onChange={(e) => setRoadTitre(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') ajouterTache(); }}
+                  placeholder="Ajouter une tâche…"
+                  className="flex-1 h-9 px-3 rounded-lg bg-black/30 border border-white/10 text-[12.5px] text-white placeholder:text-white/30"
+                />
+                <button onClick={ajouterTache} disabled={roadBusy || !roadTitre.trim()} className="h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white disabled:opacity-40" style={{ background: '#635BFF' }}>
+                  Ajouter
+                </button>
+                <button onClick={() => roadFile.current?.click()} disabled={roadBusy} className="h-9 px-4 rounded-lg text-[12.5px] font-semibold border border-white/15 text-white/80 disabled:opacity-40 inline-flex items-center gap-2">
+                  {roadImport && <span className="inline-block h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
+                  {roadImport ? 'Lecture du fichier…' : 'Importer une checklist'}
+                </button>
+                <input
+                  ref={roadFile}
+                  type="file"
+                  accept=".pdf,.txt,.csv,.md,application/pdf,text/plain,text/csv,text/markdown"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) importerChecklist(f); e.currentTarget.value = ''; }}
+                />
+              </div>
+              {roadInfo && <p className="text-[11.5px] text-white/60 mt-2">{roadInfo}</p>}
+              <p className="text-[11px] text-white/30 mt-1">PDF, texte, CSV ou Markdown - une ligne = une tâche (les cases déjà cochées arrivent en « fait »).</p>
+
+              {/* Liste des taches */}
+              {roadTaches.length === 0 ? (
+                <p className="text-[12.5px] text-white/40 mt-3">Aucune tâche pour l'instant.</p>
+              ) : (
+                <ul className="mt-3 space-y-1.5">
+                  {roadTaches.map((t) => {
+                    const fait = t.statut === 'fait';
+                    return (
+                      <li key={t.id} className="flex items-start gap-3 rounded-lg border border-white/8 bg-black/20 px-3 py-2">
+                        <button
+                          onClick={() => changerStatutTache(t.id, fait ? 'a_faire' : 'fait')}
+                          aria-label={fait ? 'Marquer à faire' : 'Marquer fait'}
+                          className="mt-0.5 h-4 w-4 rounded border shrink-0"
+                          style={{ borderColor: fait ? '#3DD68C' : 'rgba(255,255,255,0.25)', background: fait ? '#3DD68C' : 'transparent' }}
+                        />
+                        <span className="flex-1 min-w-0">
+                          <span className={`block text-[12.5px] ${fait ? 'text-white/40 line-through' : 'text-white/85'}`}>{t.titre}</span>
+                          <span className="block text-[10.5px] text-white/35 mt-0.5">
+                            {t.from === 'dd' ? 'Demandé par Delivery Digital' : 'Demandé par vous'}
+                            {t.source && t.source.startsWith('import') ? ` · ${t.source}` : ''}
+                          </span>
+                        </span>
+                        {t.from === 'agence' && (
+                          <button onClick={() => supprimerTache(t.id)} aria-label="Retirer" className="text-[11px] text-white/30 hover:text-white/60">✕</button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+
+              {/* Fil de discussion avec Delivery Digital */}
+              <div className="mt-4 pt-3 border-t border-white/8">
+                <p className="text-[12.5px] font-semibold text-white/80 mb-2">Discussion avec Delivery Digital</p>
+                {roadMsgs.length === 0 ? (
+                  <p className="text-[12px] text-white/35">Aucun message. Posez votre question ici, on répond au même endroit.</p>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                    {roadMsgs.map((m) => (
+                      <div key={m.id} className={`flex ${m.from === 'agence' ? 'justify-end' : 'justify-start'}`}>
+                        <div className="max-w-[80%] rounded-xl px-3 py-2" style={{ background: m.from === 'agence' ? 'rgba(99,91,255,0.18)' : 'rgba(255,255,255,0.07)' }}>
+                          <p className="text-[10.5px] text-white/40 mb-0.5">{m.from === 'agence' ? (m.auteur || 'Vous') : 'Delivery Digital'}{m.at ? ` · ${new Date(m.at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : ''}</p>
+                          {m.texte && <p className="text-[12.5px] text-white/85 whitespace-pre-line">{m.texte}</p>}
+                          {m.image && (
+                            <a href={m.image} target="_blank" rel="noreferrer">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={m.image} alt="" className="mt-1 rounded-lg max-h-44 border border-white/10" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Barre d'ecriture COLLEE en bas : on garde le champ sous la main pendant qu'on
+                    fait defiler le fil. @author Rabah Ziane - 2026-08-31 */}
+                <div className="mt-2 flex gap-2 items-center sticky bottom-0 z-10 py-2 -mx-4 px-4 border-t border-white/8" style={{ background: 'rgba(12,12,16,0.96)', backdropFilter: 'blur(6px)' }}>
+                  <input
+                    value={roadMsg}
+                    onChange={(e) => setRoadMsg(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') envoyerMessage(); }}
+                    placeholder="Écrire un message…"
+                    className="flex-1 h-9 px-3 rounded-lg bg-black/30 border border-white/10 text-[12.5px] text-white placeholder:text-white/30"
+                  />
+                  {/* Capture jointe : meme confort que le fil de l'espace client. @Rabah 2026-08-31 */}
+                  <button onClick={() => roadChatFile.current?.click()} title="Joindre une capture" className="h-9 w-9 rounded-lg border border-white/15 text-white/70">📎</button>
+                  <input ref={roadChatFile} type="file" accept="image/*" className="hidden" onChange={(e) => { setRoadPiece(e.target.files?.[0] || null); e.currentTarget.value = ''; }} />
+                  <button onClick={envoyerMessage} disabled={roadBusy || (!roadMsg.trim() && !roadPiece)} className="h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white disabled:opacity-40" style={{ background: '#635BFF' }}>
+                    {roadBusy ? 'Envoi…' : 'Envoyer'}
+                  </button>
+                </div>
+                {roadPiece && (
+                  <p className="text-[11px] text-white/50 mt-1">
+                    Capture jointe : {roadPiece.name} <button onClick={() => setRoadPiece(null)} className="underline ml-1">retirer</button>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Publications reseaux sociaux : l'agence depose sa video, dit ou elle sera publiee et
+                avec quel texte ; Pyemes valide AVANT publication. @author Rabah Ziane - 2026-08-31 */}
+            <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+              <p className="text-[13px] font-bold text-white">Publications réseaux sociaux</p>
+              <p className="text-[12px] text-white/50 mt-0.5">
+                Déposez la vidéo, dites où elle sera publiée et avec quel texte. Pyemes valide avant la mise en ligne.
+              </p>
+
+              <div className="mt-3 grid gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button onClick={() => pubFile.current?.click()} disabled={pubBusy} className="h-9 px-4 rounded-lg text-[12.5px] font-semibold border border-white/15 text-white/80 disabled:opacity-40">
+                    {pubVideo ? 'Changer la vidéo' : 'Choisir une vidéo'}
+                  </button>
+                  <input ref={pubFile} type="file" accept="video/*" className="hidden" onChange={(e) => { setPubVideo(e.target.files?.[0] || null); e.currentTarget.value = ''; }} />
+                  {pubVideo && <span className="text-[11.5px] text-white/60">{pubVideo.name} · {(pubVideo.size / (1024 * 1024)).toFixed(1)} Mo</span>}
+                </div>
+
+                {pubApercu && (
+                  <video
+                    src={pubApercu}
+                    controls
+                    playsInline
+                    className="rounded-lg border border-white/10 max-h-64 w-auto"
+                    style={{ maxWidth: '100%' }}
+                  />
+                )}
+
+                <div className="flex flex-wrap gap-1.5">
+                  {RESEAUX.map((r) => {
+                    const on = pubReseaux.includes(r.id);
+                    return (
+                      <button
+                        key={r.id}
+                        onClick={() => setPubReseaux((p) => on ? p.filter((x) => x !== r.id) : [...p, r.id])}
+                        className="h-8 px-3 rounded-full text-[12px] font-semibold border"
+                        style={{ borderColor: on ? '#635BFF' : 'rgba(255,255,255,0.15)', background: on ? 'rgba(99,91,255,0.18)' : 'transparent', color: on ? '#FFFFFF' : 'rgba(255,255,255,0.65)' }}
+                      >
+                        {r.nom}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Compte(s) de publication : on repere les identifiants au « @ » (ici et dans le
+                    texte de la publication). @author Rabah Ziane - 2026-08-31 */}
+                <div className="flex flex-col gap-1">
+                  <input
+                    value={pubComptes}
+                    onChange={(e) => setPubComptes(e.target.value)}
+                    placeholder="Sur quel compte ? ex. @pyemes, @nova.agence"
+                    className="h-9 px-3 rounded-lg bg-black/30 border border-white/10 text-[12.5px] text-white placeholder:text-white/30"
+                  />
+                  {(() => {
+                    const trouves = [...`${pubComptes} ${pubTexte}`.matchAll(/@([A-Za-z0-9._-]{2,30})/g)]
+                      .map((m) => `@${m[1]}`)
+                      .filter((v, i, a) => a.findIndex((x) => x.toLowerCase() === v.toLowerCase()) === i)
+                      .slice(0, 10);
+                    return trouves.length > 0 ? (
+                      <span className="text-[11px] text-white/45">Compte(s) détecté(s) : {trouves.join(' · ')}</span>
+                    ) : (
+                      <span className="text-[11px] text-white/30">Écrivez le compte avec un @ : il est détecté automatiquement.</span>
+                    );
+                  })()}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="text-[12px] text-white/50">Publication prévue le</label>
+                  <input type="date" value={pubDate} onChange={(e) => setPubDate(e.target.value)} className="h-9 px-3 rounded-lg bg-black/30 border border-white/10 text-[12.5px] text-white" />
+                </div>
+
+                <textarea
+                  value={pubTexte}
+                  onChange={(e) => setPubTexte(e.target.value)}
+                  rows={3}
+                  placeholder="Texte de la publication (légende, hashtags, lien…)"
+                  className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-[12.5px] text-white placeholder:text-white/30 resize-y"
+                />
+
+                <div className="flex items-center gap-3">
+                  <button onClick={envoyerPublication} disabled={pubBusy || !pubVideo || pubReseaux.length === 0} className="h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white disabled:opacity-40" style={{ background: '#635BFF' }}>
+                    {pubBusy ? 'Envoi en cours…' : 'Envoyer pour validation'}
+                  </button>
+                  {pubInfo && <span className="text-[11.5px] text-white/60">{pubInfo}</span>}
+                </div>
+              </div>
+
+              {/* Historique */}
+              {pubs.length > 0 && (
+                <ul className="mt-4 space-y-2">
+                  {pubs.map((p) => {
+                    const tons: Record<string, { t: string; c: string }> = {
+                      a_valider: { t: 'En attente de validation', c: '#E0A800' },
+                      validee: { t: 'Validée - publiez quand vous voulez', c: '#3DD68C' },
+                      a_revoir: { t: 'À revoir', c: '#e5484d' },
+                      publiee: { t: 'Publiée', c: 'rgba(255,255,255,0.45)' },
+                    };
+                    const ton = tons[p.statut] || tons.a_valider;
+                    return (
+                      <li key={p.id} className="rounded-lg border border-white/8 bg-black/20 px-3 py-2.5">
+                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                          <span className="text-[12.5px] text-white/85">
+                            {p.reseaux.map((r) => RESEAUX.find((x) => x.id === r)?.nom || r).join(' · ')}
+                            {p.comptes && p.comptes.length > 0 ? ` · ${p.comptes.join(' ')}` : ''}
+                            {p.datePrevue ? ` · prévue le ${new Date(p.datePrevue).toLocaleDateString('fr-FR')}` : ''}
+                          </span>
+                          <span className="text-[11.5px] font-semibold" style={{ color: ton.c }}>{ton.t}</span>
+                        </div>
+                        {p.texte && <p className="text-[12px] text-white/55 mt-1 whitespace-pre-line">{p.texte}</p>}
+                        {/* Lecteur direct : on revoit la video sans quitter la page. @Rabah 2026-08-31 */}
+                        <video src={p.fichier} controls playsInline preload="metadata" className="mt-2 rounded-lg border border-white/10 max-h-56 w-auto" style={{ maxWidth: '100%' }} />
+                        <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                          <a href={p.fichier} target="_blank" rel="noreferrer" className="text-[11.5px] text-[#635BFF] underline underline-offset-2">Ouvrir dans un onglet</a>
+                          {p.statut === 'validee' && (
+                            <button onClick={() => marquerPubliee(p.id)} className="text-[11.5px] text-white/60 underline underline-offset-2">Marquer comme publiée</button>
+                          )}
+                        </div>
+                        {p.statut === 'a_revoir' && p.retour && (
+                          <p className="text-[12px] mt-1.5 rounded-lg px-2.5 py-1.5" style={{ background: 'rgba(229,72,77,0.12)', color: '#ffb4b4' }}>
+                            Retour {p.decidePar ? `de ${p.decidePar}` : ''} : {p.retour}
+                          </p>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+
+            {/* Étape 3 : supports de vente (arguments + envoi au client). @Rabah 2026-08-01 */}
+            <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="https://pyemes.com/logo/pyemes-mark.svg" alt="" className="h-5 w-5" style={{ filter: 'brightness(0) invert(1)' }} />
+                <p className="text-[13px] font-bold text-white">Supports de vente</p>
+              </div>
+              <p className="text-[12.5px] text-white/55">Arguments clés pour présenter Pyemes à vos clients :</p>
+              <ul className="mt-2 space-y-1.5">
+                {argumentairePyemes.map((a, i) => <li key={i} className="text-[12.5px] text-white/75 flex gap-2"><span className="text-[#3DD68C]">✓</span> {a}</li>)}
+              </ul>
+              {/* Choix de l'audience : email + PDF adaptés au destinataire. */}
+              <div className="mt-3">
+                <p className="text-[11px] uppercase tracking-wider font-bold text-white/40 mb-1.5">Type de client</p>
+                <div className="inline-flex rounded-lg border border-white/10 bg-white/5 p-0.5 flex-wrap">
+                  {([['independant', 'Indépendant'], ['entreprise', 'Entreprise'], ['comptable', 'Comptable']] as const).map(([k, lab]) => (
+                    <button key={k} onClick={() => setPitchAud(k)} className={`px-3 py-1.5 rounded-md text-[12px] font-semibold transition ${pitchAud === k ? 'bg-[#635BFF] text-white' : 'text-white/60 hover:text-white'}`}>{lab}</button>
+                  ))}
+                </div>
+              </div>
+              {/* Identification du client : email + nom d'entreprise + SIRET, pour être sûr de qui on
+                  démarche et fiabiliser l'attribution. @author Rabah Ziane - 2026-08-01 */}
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                <input value={pitchTo} onChange={(e) => setPitchTo(e.target.value)} placeholder="Email du client *" className="h-9 px-3 rounded-lg bg-black/30 border border-white/15 text-[12.5px] text-white" />
+                <div className="relative">
+                  <input value={pitchName} onChange={(e) => setPitchName(e.target.value)} onFocus={() => pitchSug.length && setPitchSugOpen(true)} onBlur={() => setTimeout(() => setPitchSugOpen(false), 150)} placeholder="Nom de l'entreprise" autoComplete="off" className="w-full h-9 px-3 rounded-lg bg-black/30 border border-white/15 text-[12.5px] text-white" />
+                  {pitchSugOpen && pitchSug.length > 0 && (
+                    <div className="absolute z-20 left-0 right-0 mt-1 rounded-lg border border-white/15 bg-[#1b1d24] shadow-xl overflow-hidden max-h-64 overflow-y-auto">
+                      {pitchSug.map((s, k) => (
+                        <button
+                          key={k}
+                          onMouseDown={(e) => { e.preventDefault(); pitchPick.current = true; setPitchName(s.nom); if (s.siret) setPitchSiret(s.siret); setPitchSugOpen(false); }}
+                          className="w-full text-left px-3 py-2 hover:bg-white/5 border-b border-white/5 last:border-0"
+                        >
+                          <div className="text-[12.5px] text-white/90 truncate">{s.nom}</div>
+                          <div className="text-[11px] text-white/45">{s.siret ? `SIRET ${s.siret}` : 'SIRET indisponible'}{s.ville ? ` · ${s.ville}` : ''}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <input value={pitchSiret} onChange={(e) => setPitchSiret(e.target.value)} inputMode="numeric" maxLength={17} placeholder="SIRET (14 chiffres)" className="h-9 px-3 rounded-lg bg-black/30 border border-white/15 text-[12.5px] text-white" />
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <button onClick={() => { navigator.clipboard?.writeText(`Découvrez Pyemes :\n\n${argumentairePyemes.map((a) => '• ' + a).join('\n')}\n\nInscription : ${pyemesData.lien}`); }} className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 inline-flex items-center gap-1.5 text-[12px]"><Copy className="h-3.5 w-3.5" /> Copier l&apos;argumentaire</button>
+                <div className="flex-1" />
+                <button onClick={envoyerPitch} disabled={pitchBusy} className="px-4 h-9 rounded-lg bg-[#635BFF] text-white text-[12.5px] font-semibold hover:opacity-90 disabled:opacity-60 inline-flex items-center gap-1.5">{pitchBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}{pitchBusy ? 'Envoi…' : 'Envoyer au client'}</button>
+              </div>
+              <p className="text-[11px] text-white/35 mt-2">Email adapté au type de client + <strong className="text-white/50">présentation PDF</strong> en pièce jointe, avec votre lien de vente (attribution automatique).</p>
+
+              {/* Historique des envois */}
+              {(pyemesData.pitches?.length || 0) > 0 && (
+                <div className="mt-4 border-t border-white/10 pt-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-[11px] uppercase tracking-wider font-bold text-white/40">Historique des envois ({pyemesData.pitches!.length})</p>
+                    <button onClick={viderPitches} className="text-[11px] text-white/40 hover:text-[#FF6B6B] inline-flex items-center gap-1"><Trash2 className="h-3 w-3" /> Tout effacer</button>
+                  </div>
+                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                    {pyemesData.pitches!.map((p, i) => {
+                      const lab = p.template === 'entreprise' ? 'Entreprise' : p.template === 'comptable' ? 'Comptable' : 'Indépendant';
+                      // Statut du lien : « Lien ouvert » (vert) dès que le client a cliqué, sinon « Envoyé ».
+                      // @author Rabah Ziane - 2026-08-01
+                      return (
+                        <div key={i} className="flex items-center justify-between gap-2 text-[12px] text-white/60">
+                          <span className="truncate">{p.clientName ? <span className="text-white/80">{p.clientName} · </span> : null}{p.to} <span className="text-white/30">·</span> <span className="text-[#635BFF]">{lab}</span>{p.siret ? <span className="text-white/30"> · SIRET {p.siret}</span> : null}</span>
+                          <span className="flex items-center gap-2 shrink-0">
+                            {p.openedAt
+                              ? <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ color: '#3DD68C', background: '#3DD68C22' }}>Lien ouvert · {new Date(p.openedAt).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                              : <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ color: '#8A93A6', background: '#8A93A622' }}>Envoyé</span>}
+                            <span className="text-white/35">{p.at ? new Date(p.at).toLocaleDateString('fr-FR') : ''}</span>
+                            <button onClick={() => supprimerPitch(p.id)} title="Supprimer cet envoi" className="text-white/30 hover:text-[#FF6B6B]"><Trash2 className="h-3 w-3" /></button>
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </section>
         )}
 
@@ -1373,13 +2390,30 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
           employer={{ siret: dossierLead.siret || '', denom: dossierLead.denom || 'Client', opco: dossierLead.opco || 'OPCO EP', email: dossierLead.email, address: dossierLead.addr } as WizardEmployer}
           submitting={transmitting}
           onSendCsvTemplate={() => sendCsvTemplate(dossierLead)}
+          saveAction={{
+            busy: savingDossier,
+            onClick: async (p: TransmitPayload) => {
+              if (!dossierLead) return;
+              setSavingDossier(true);
+              try {
+                // Nouveau dossier : "Enregistrer" crée un BROUILLON (même incomplet) qui apparaît dans
+                // "Dossiers OPCO reçus" côté DD, sans convention ni notification. On complètera puis
+                // transmettra plus tard via "Modifier". @Rabah 2026-07-02
+                const sessionName = p.startAt ? `Formation · ${new Date(p.startAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}` : 'À confirmer';
+                const r = await fetch('/api/agency/self/transmit-dossier', { method: 'POST', headers: authJson(), body: JSON.stringify({ draft: true, leadId: dossierLead._id, denom: dossierLead.denom, siret: dossierLead.siret, opco: dossierLead.opco, addr: dossierLead.addr, clientEmail: p.contactEmail || dossierLead.email, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, signedBy: p.signedBy, signedFunction: p.signedFunction, signatureDataUrl: p.signatureDataUrl, amountHT: p.amountHT }) });
+                const j = await r.json();
+                if (j.ok) { setDossierLead(null); load(); alert('✓ Brouillon enregistré. Le dossier apparaît dans « Dossiers OPCO reçus » (à compléter puis transmettre via « Modifier »).'); }
+                else alert('Erreur : ' + (j.error || 'enregistrement impossible'));
+              } finally { setSavingDossier(false); }
+            },
+          }}
           onClose={() => setDossierLead(null)}
           onTransmit={async (p: TransmitPayload) => {
             if (!dossierLead) return;
             setTransmitting(true);
             try {
               const sessionName = `Formation · ${p.startAt ? new Date(p.startAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'à confirmer'}`;
-              const r = await fetch('/api/agency/self/transmit-dossier', { method: 'POST', headers: authJson(), body: JSON.stringify({ leadId: dossierLead._id, denom: dossierLead.denom, siret: dossierLead.siret, opco: dossierLead.opco, addr: dossierLead.addr, clientEmail: dossierLead.email, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, signedBy: p.signedBy, signedFunction: p.signedFunction, signatureDataUrl: p.signatureDataUrl, amountHT: p.amountHT }) });
+              const r = await fetch('/api/agency/self/transmit-dossier', { method: 'POST', headers: authJson(), body: JSON.stringify({ leadId: dossierLead._id, denom: dossierLead.denom, siret: dossierLead.siret, opco: dossierLead.opco, addr: dossierLead.addr, clientEmail: p.contactEmail || dossierLead.email, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, signedBy: p.signedBy, signedFunction: p.signedFunction, signatureDataUrl: p.signatureDataUrl, amountHT: p.amountHT }) });
               const j = await r.json();
               if (j.ok) { setDossierLead(null); load(); alert('✓ Dossier transmis à Delivery Digital (convention signée par le client).'); }
               else alert('Erreur : ' + (j.error || 'transmission impossible'));
@@ -1391,13 +2425,14 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
             busy: sendingSignLink,
             onClick: async (p) => {
               if (!dossierLead) return;
-              if (!dossierLead.email) { alert("Ce client n'a pas d'email - renseignez-le pour envoyer le lien de signature."); return; }
+              const ce = (p.contactEmail || dossierLead.email || '').trim();
+              if (!ce) { alert("Ce client n'a pas d'email - renseignez-le (onglet Employeur) pour envoyer le lien de signature."); return; }
               setSendingSignLink(true);
               try {
                 const sessionName = `Formation · ${p.startAt ? new Date(p.startAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'à confirmer'}`;
-                const r = await fetch('/api/agency/self/sign-link', { method: 'POST', headers: authJson(), body: JSON.stringify({ leadId: dossierLead._id, denom: dossierLead.denom, siret: dossierLead.siret, opco: dossierLead.opco, addr: dossierLead.addr, clientEmail: dossierLead.email, managerEmail: dossierLead.managerEmail, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, amountHT: p.amountHT }) });
+                const r = await fetch('/api/agency/self/sign-link', { method: 'POST', headers: authJson(), body: JSON.stringify({ leadId: dossierLead._id, denom: dossierLead.denom, siret: dossierLead.siret, opco: dossierLead.opco, addr: dossierLead.addr, clientEmail: ce, managerEmail: dossierLead.managerEmail, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, amountHT: p.amountHT }) });
                 const j = await r.json();
-                if (j.ok) { setDossierLead(null); load(); alert(`✓ Lien de signature envoyé à ${dossierLead.email}. Le client lit la convention et signe au doigt depuis son téléphone ; le dossier sera transmis automatiquement à sa signature.`); }
+                if (j.ok) { setDossierLead(null); load(); alert(`✓ Lien de signature envoyé à ${ce}. Le client lit la convention et signe au doigt depuis son téléphone ; le dossier sera transmis automatiquement à sa signature.`); }
                 else alert('Erreur : ' + (j.error === 'salaries_required' ? 'ajoutez au moins un stagiaire' : j.error || 'envoi impossible'));
               } finally { setSendingSignLink(false); }
             },
@@ -1413,6 +2448,30 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
           submitLabel="Renvoyer le dossier corrigé"
           onSendCsvTemplate={() => sendCsvTemplate(editDossier.lead)}
           whatsappAction={{ label: 'WhatsApp', busy: sendingWhatsapp, onClick: (p) => { if (editDossier) sendSignLinkWhatsapp(editDossier.lead, p as TransmitPayload); } }}
+          saveAction={{
+            busy: savingDossier,
+            onClick: async (p: TransmitPayload) => {
+              if (!editDossier) return;
+              setSavingDossier(true);
+              try {
+                const sessionName = `Formation · ${p.startAt ? new Date(p.startAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'à confirmer'}`;
+                // silent: enregistre les champs sans notifier Delivery Digital (simple sauvegarde). @Rabah 2026-06-24
+                const newEmail = (p.contactEmail || editDossier.lead.email || '').trim();
+                const r = await fetch(`/api/agency/self/dossiers/${editDossier.dossier._id}`, { method: 'PATCH', headers: authJson(), body: JSON.stringify({ silent: true, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, signedBy: p.signedBy, signedFunction: p.signedFunction, signatureDataUrl: p.signatureDataUrl, amountHT: p.amountHT, clientEmail: newEmail }) });
+                const j = await r.json();
+                if (j.ok) {
+                  // Met à jour l'état local (lead source d'affichage du wizard + dossier) pour refléter la modif.
+                  // On répercute aussi la SESSION (dates), la formation, les stagiaires et le montant : sans ça,
+                  // rouvrir le wizard réaffichait l'ancienne date (seul l'email était rafraîchi) -> la modif de
+                  // date "ne se prenait pas en compte" à l'écran. @author Rabah Ziane - 2026-07-17
+                  setEditDossier((ed) => ed ? { ...ed, lead: { ...ed.lead, email: newEmail || ed.lead.email }, dossier: { ...ed.dossier, clientEmail: newEmail || ed.dossier.clientEmail, sessionName, sessionStart: p.startAt, sessionEnd: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, amountHT: p.amountHT } } : ed);
+                  load();
+                  alert('✓ Modifications enregistrées.');
+                }
+                else alert('Erreur : ' + (j.error === 'locked' ? 'ce dossier est déjà facturé/payé, il ne peut plus être modifié' : j.error || 'enregistrement impossible'));
+              } finally { setSavingDossier(false); }
+            },
+          }}
           initial={{
             salaries: (editDossier.dossier.salaries || []).map((s) => ({ id: 's_' + Math.random().toString(36).slice(2, 9), firstname: s.firstname || '', lastname: s.lastname || '', email: s.email || '', poste: s.poste || '', type_contrat: s.type_contrat || 'CDI', date_naissance: s.date_naissance || '', num_secu: s.num_secu || '', telephone: s.telephone || '' })),
             formationId: FORMATIONS.find((f) => f.title === editDossier.dossier.formationTitle)?.id,
@@ -1426,7 +2485,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
             setTransmitting(true);
             try {
               const sessionName = `Formation · ${p.startAt ? new Date(p.startAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'à confirmer'}`;
-              const r = await fetch(`/api/agency/self/dossiers/${editDossier.dossier._id}`, { method: 'PATCH', headers: authJson(), body: JSON.stringify({ sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, signedBy: p.signedBy, signedFunction: p.signedFunction, signatureDataUrl: p.signatureDataUrl, amountHT: p.amountHT }) });
+              const r = await fetch(`/api/agency/self/dossiers/${editDossier.dossier._id}`, { method: 'PATCH', headers: authJson(), body: JSON.stringify({ sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, signedBy: p.signedBy, signedFunction: p.signedFunction, signatureDataUrl: p.signatureDataUrl, amountHT: p.amountHT, clientEmail: p.contactEmail || editDossier.lead.email }) });
               const j = await r.json();
               if (j.ok) { setEditDossier(null); load(); alert('✓ Dossier corrigé et renvoyé à Delivery Digital.'); }
               else alert('Erreur : ' + (j.error === 'locked' ? 'ce dossier est déjà facturé/payé, il ne peut plus être modifié' : j.error === 'salaries_required' ? 'ajoutez au moins un stagiaire' : j.error || 'modification impossible'));
@@ -1437,14 +2496,15 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
             busy: sendingSignLink,
             onClick: async (p) => {
               if (!editDossier) return;
-              if (!editDossier.lead.email) { alert("Ce client n'a pas d'email - renseignez-le pour envoyer le lien de signature."); return; }
+              const ce = (p.contactEmail || editDossier.lead.email || '').trim();
+              if (!ce) { alert("Ce client n'a pas d'email - renseignez-le (onglet Employeur) pour envoyer le lien de signature."); return; }
               setSendingSignLink(true);
               try {
                 const sessionName = `Formation · ${p.startAt ? new Date(p.startAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'à confirmer'}`;
                 // dossierId : la signature à distance mettra à jour CE dossier (pas de doublon).
-                const r = await fetch('/api/agency/self/sign-link', { method: 'POST', headers: authJson(), body: JSON.stringify({ dossierId: editDossier.dossier._id, leadId: editDossier.lead._id, denom: editDossier.dossier.denom || editDossier.lead.denom, siret: editDossier.dossier.siret || editDossier.lead.siret, opco: editDossier.dossier.opco || editDossier.lead.opco, addr: editDossier.dossier.addr || editDossier.lead.addr, clientEmail: editDossier.lead.email, managerEmail: editDossier.lead.managerEmail, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, amountHT: p.amountHT }) });
+                const r = await fetch('/api/agency/self/sign-link', { method: 'POST', headers: authJson(), body: JSON.stringify({ dossierId: editDossier.dossier._id, leadId: editDossier.lead._id, denom: editDossier.dossier.denom || editDossier.lead.denom, siret: editDossier.dossier.siret || editDossier.lead.siret, opco: editDossier.dossier.opco || editDossier.lead.opco, addr: editDossier.dossier.addr || editDossier.lead.addr, clientEmail: ce, managerEmail: editDossier.lead.managerEmail, sessionName, startAt: p.startAt, endAt: p.endAt, formationTitle: p.formationTitle, salaries: p.salaries, amountHT: p.amountHT }) });
                 const j = await r.json();
-                if (j.ok) { setEditDossier(null); load(); alert(`✓ Lien de signature envoyé à ${editDossier.lead.email}. À sa signature, ce dossier sera mis à jour avec la convention corrigée.`); }
+                if (j.ok) { setEditDossier(null); load(); alert(`✓ Lien de signature envoyé à ${ce}. À sa signature, ce dossier sera mis à jour avec la convention corrigée.`); }
                 else alert('Erreur : ' + (j.error === 'salaries_required' ? 'ajoutez au moins un stagiaire' : j.error || 'envoi impossible'));
               } finally { setSendingSignLink(false); }
             },
@@ -1476,7 +2536,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
           lead={accessLead}
           status={accessLead.email ? accessByEmail[accessLead.email] : undefined}
           busy={askingOpco === accessLead._id}
-          onAsk={async (label) => { const ok = await askOpco(accessLead, label); if (ok) alert(`Lien sécurisé envoyé à ${accessLead.email}. Le client saisit ses informations, reçues directement par Delivery Digital.`); }}
+          onAsk={async (label) => { const ok = await askOpco(accessLead, label); if (ok) alert(label.startsWith('Validation dossier AKTO') ? `Rappel envoyé à ${accessLead.email}. Le client valide le dossier depuis son espace AKTO ; le suivi passe à « en attente de validation ».` : `Lien sécurisé envoyé à ${accessLead.email}. Le client saisit ses informations, reçues directement par Delivery Digital.`); }}
           onReminder={() => { const l = accessLead; setAccessLead(null); setReminderLead(l); }}
           onClose={() => setAccessLead(null)}
         />
@@ -1485,7 +2545,217 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
       {reminderLead && (
         <ReminderModal lead={reminderLead} onSave={(note, when, extra) => saveReminder(reminderLead._id, note, when, extra)} onClose={() => setReminderLead(null)} />
       )}
+
+      {rattachInfo && (
+        <RattachementDoneModal dossier={rattachInfo} onSend={sendRattachEmail} onClose={() => setRattachInfo(null)} />
+      )}
+
+      {confirmTarget && (
+        <ConfirmationEmailModal target={confirmTarget} onSend={sendConfirmationEmail} onClose={() => setConfirmTarget(null)} />
+      )}
+
+      {waModal && (
+        <WhatsAppPhoneModal
+          denom={waModal.denom}
+          onSend={(phone) => {
+            const msg = `Bonjour, voici votre convention de formation ${waModal.denom ? `(${waModal.denom}) ` : ''}à lire et signer au doigt depuis votre téléphone : ${waModal.link}`;
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+            setWaModal(null);
+          }}
+          onClose={() => setWaModal(null)}
+        />
+      )}
     </main>
+  );
+}
+
+// Confirmation "Demande de rattachement terminée" affichée à l'agence quand Delivery Digital a fait
+// la demande de rattachement OPCO du client (le client n'avait pas ses identifiants) : un courrier
+// d'activation part à l'adresse de l'entreprise. @author Rabah Ziane - 2026-06-24
+function RattachementDoneModal({ dossier, onSend, onClose }: { dossier: Dossier; onSend: (d: Dossier) => Promise<string | null>; onClose: () => void }) {
+  const fmt = (s?: string | null) => s ? new Date(s).toLocaleDateString('fr-FR') : '';
+  const [sentAt, setSentAt] = useState<string | null>(dossier.rattachEmailSentAt || null);
+  const [sending, setSending] = useState(false);
+  const doSend = async () => {
+    setSending(true);
+    try { const res = await onSend(dossier); if (res) setSentAt(res); } finally { setSending(false); }
+  };
+  // Adresse du courrier : on retire les lignes purement numériques (ex. code INSEE parasite).
+  const addrLines = (dossier.addr || '').split(',').map((s) => s.trim()).filter((s) => s && !/^\d[\d\s]*$/.test(s));
+  return (
+    <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-end px-4 pt-4">
+          <button onClick={onClose} className="h-8 w-8 rounded-lg border border-black/10 inline-flex items-center justify-center text-[#86868B] hover:bg-black/[0.04]"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="px-7 pb-7 -mt-2 text-center">
+          <div className="mx-auto h-16 w-16 rounded-full bg-[#3DD68C] flex items-center justify-center"><CheckCircle2 className="h-9 w-9 text-white" /></div>
+          <h3 className="text-[24px] font-extrabold text-[#3DD68C] mt-4">Demande de rattachement terminée</h3>
+          <p className="text-[14px] text-[#1D1D1F] mt-4 text-left">Un courrier d&apos;activation va être envoyé à votre entreprise.</p>
+          <p className="text-[13px] text-[#1D1D1F] mt-5 text-left font-semibold underline">Adresse du courrier :</p>
+          <div className="text-left mt-2 text-[15px] text-[#1D1D1F] leading-relaxed">
+            <p className="font-extrabold">{dossier.denom || 'Votre entreprise'}</p>
+            {addrLines.map((line, i) => <p key={i}>{line}</p>)}
+          </div>
+          {dossier.aktoAttachedAt && <p className="text-[12px] text-[#86868B] mt-3 text-left">Demande effectuée le {fmt(dossier.aktoAttachedAt)}.</p>}
+
+          {/* Email de confirmation au client + à l'agence (courrier à surveiller). Renvoyable. */}
+          <button onClick={doSend} disabled={sending} className={`mt-5 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[14px] font-semibold transition disabled:opacity-60 ${sentAt ? 'bg-[#3DD68C] text-white hover:bg-[#34c07e]' : 'bg-[#0066CC] text-white hover:bg-[#0077ED]'}`}>
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : sentAt ? <CheckCircle2 className="h-4 w-4" /> : <Mail className="h-4 w-4" />}
+            {sending ? 'Envoi…' : sentAt ? 'Email envoyé · Renvoyer' : 'Envoyer l\'email de confirmation'}
+          </button>
+          {sentAt && <p className="text-[11.5px] text-[#86868B] mt-1.5">Confirmation envoyée au client et à l&apos;agence le {fmt(sentAt)}.</p>}
+          {!sentAt && <p className="text-[11.5px] text-[#86868B] mt-1.5">Le client et l&apos;agence recevront un email pour surveiller l&apos;arrivée du courrier.</p>}
+
+          <button onClick={onClose} className="mt-4 w-full px-4 py-3 rounded-xl border-2 border-[#1D1D1F] text-[#1D1D1F] text-[15px] font-semibold hover:bg-black/[0.03]">Ok</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Saisie du numéro WhatsApp du client : sélecteur de pays avec drapeaux + barre de recherche
+// (indicatif auto) puis numéro local. Remplace le prompt natif. @author Rabah Ziane - 2026-06-24
+function WhatsAppPhoneModal({ denom, onSend, onClose }: { denom?: string; onSend: (phone: string) => void; onClose: () => void }) {
+  const [country, setCountry] = useState<WaCountry>(() => WA_COUNTRIES.find((c) => c.code === 'FR') || WA_COUNTRIES[0]);
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState('');
+  const [num, setNum] = useState('');
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const list = q ? WA_COUNTRIES.filter((c) => norm(c.name).includes(norm(q)) || c.dial.includes(q.replace(/\D/g, '')) || c.code.toLowerCase() === norm(q)) : WA_COUNTRIES;
+  const localDigits = num.replace(/\D/g, '').replace(/^0+/, ''); // on retire le 0 initial (format national)
+  const full = country.dial + localDigits;
+  const canSend = localDigits.length >= 5;
+  return (
+    <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <div className="w-full max-w-md bg-[#181A20] border border-white/10 rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className="inline-flex h-9 w-9 rounded-xl bg-[#25D366]/15 items-center justify-center"><Send className="h-4 w-4 text-[#25D366]" /></span>
+            <div><p className="text-[14px] font-bold text-white leading-tight">Envoyer par WhatsApp</p><p className="text-[11.5px] text-white/45">{denom ? `Convention · ${denom}` : 'Lien de signature de la convention'}</p></div>
+          </div>
+          <button onClick={onClose} className="h-8 w-8 rounded-lg border border-white/10 inline-flex items-center justify-center text-white/50 hover:bg-white/5"><X className="h-4 w-4" /></button>
+        </div>
+
+        <div className="px-6 py-5">
+          <label className="block text-[12px] font-semibold text-white/70 mb-1.5">Pays du client</label>
+          <div className="relative">
+            <button type="button" onClick={() => { setOpen((o) => !o); setQ(''); }} className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[14px] text-left text-white focus:outline-none focus:border-[#25D366]">
+              <span className="flex items-center gap-2.5"><span className="text-[18px]">{flagEmoji(country.code)}</span> {country.name}</span>
+              <span className="text-white/50 font-semibold">+{country.dial}</span>
+            </button>
+            {open && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+                <div className="absolute z-50 mt-1 w-full rounded-lg bg-[#1E2128] border border-white/10 shadow-2xl overflow-hidden">
+                  <div className="p-2 border-b border-white/10 relative">
+                    <Search className="h-3.5 w-3.5 text-white/30 absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher un pays ou un indicatif…" className="w-full pl-8 pr-2.5 py-2 rounded-md bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#25D366]" />
+                  </div>
+                  <div className="max-h-64 overflow-y-auto py-1">
+                    {list.length === 0 ? <p className="px-3 py-3 text-[12.5px] text-white/40">Aucun pays</p> : list.map((c) => (
+                      <button key={c.code} type="button" onClick={() => { setCountry(c); setOpen(false); setQ(''); }} className={`w-full text-left px-3 py-2 text-[13.5px] flex items-center justify-between gap-2.5 hover:bg-white/5 ${country.code === c.code ? 'text-[#25D366]' : 'text-white/85'}`}>
+                        <span className="flex items-center gap-2.5"><span className="text-[17px]">{flagEmoji(c.code)}</span> {c.name}</span>
+                        <span className="text-white/40">+{c.dial}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <label className="block text-[12px] font-semibold text-white/70 mb-1.5 mt-4">Numéro de téléphone</label>
+          <div className="flex items-stretch rounded-lg bg-white/5 border border-white/10 focus-within:border-[#25D366] overflow-hidden">
+            <span className="flex items-center gap-1.5 px-3 text-[14px] text-white/70 bg-white/5 border-r border-white/10"><span className="text-[16px]">{flagEmoji(country.code)}</span> +{country.dial}</span>
+            <input autoFocus value={num} onChange={(e) => setNum(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && canSend) onSend(full); }} inputMode="tel" placeholder="6 12 34 56 78" className="flex-1 px-3 py-2.5 bg-transparent text-[14px] text-white placeholder-white/30 focus:outline-none" />
+          </div>
+          <p className="text-[11.5px] text-white/40 mt-1.5">Saisissez le numéro sans le 0 initial. Sera envoyé à <span className="text-white/70 font-mono">+{full || country.dial}</span>.</p>
+
+          <button onClick={() => onSend(full)} disabled={!canSend} className="mt-5 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#25D366] text-[#0a3d24] text-[14px] font-bold hover:bg-[#28e070] disabled:opacity-40 disabled:cursor-not-allowed transition"><Send className="h-4 w-4" /> Ouvrir WhatsApp</button>
+          <button onClick={() => onSend('')} className="mt-2 w-full px-4 py-2.5 rounded-xl border border-white/10 text-white/60 text-[12.5px] hover:bg-white/5">Je n&apos;ai pas le numéro - choisir le contact dans WhatsApp</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Email de confirmation de formation au client (copie agence) : confirme le RDV de finalisation du
+// dossier, rappelle le déroulé de la formation, ce que le client doit préparer + un message libre.
+// Bouton bleu -> vert (renvoyable). @author Rabah Ziane - 2026-06-24
+const PREP_DEFAULT = [
+  "Une pièce d'identité du dirigeant",
+  'Vos identifiants OPCO (ou le code reçu par courrier)',
+  'La liste des salariés à former',
+  'Un ordinateur ou téléphone avec connexion internet pour la visioconférence',
+].join('\n');
+function ConfirmationEmailModal({ target, onSend, onClose }: { target: ConfirmTarget; onSend: (t: ConfirmTarget, p: { rdvAt: string; message: string; prepText: string }) => Promise<string | null>; onClose: () => void }) {
+  // Pré-remplit la date du RDV avec celle déjà enregistrée le cas échéant (format datetime-local).
+  const toLocalInput = (iso?: string | null) => { if (!iso) return ''; const dt = new Date(iso); return new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
+  // Proposition par defaut : demain 10 h, heure de Paris (Europe/Paris), quel que soit le
+  // fuseau du poste. Le champ reste modifiable - simple avance de saisie. @Rabah 2026-07-22
+  const defautParis = () => {
+    const demain = new Date(Date.now() + 24 * 3600 * 1000);
+    const jour = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(demain);
+    return `${jour}T10:00`;
+  };
+  const [rdv, setRdv] = useState(toLocalInput(target.rdvAt) || defautParis());
+  const [message, setMessage] = useState('');
+  const [prep, setPrep] = useState(PREP_DEFAULT);
+  const [sentAt, setSentAt] = useState<string | null>(target.confirmationEmailSentAt || null);
+  const [sending, setSending] = useState(false);
+  const doSend = async () => {
+    setSending(true);
+    try {
+      const res = await onSend(target, { rdvAt: rdv ? new Date(rdv).toISOString() : '', message: message.trim(), prepText: prep.trim() });
+      if (res) setSentAt(res);
+    } finally { setSending(false); }
+  };
+  const lbl = 'block text-[11px] uppercase tracking-wider font-bold text-white/45 mb-1.5';
+  return (
+    <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="w-full max-w-lg my-6 bg-[#181A20] border border-white/10 rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className="inline-flex h-9 w-9 rounded-xl bg-[#0066CC]/15 items-center justify-center"><Mail className="h-4 w-4 text-[#4da3ff]" /></span>
+            <div><p className="text-[14px] font-bold text-white leading-tight">Email d&apos;information</p><p className="text-[11.5px] text-white/45">Au client{target.clientEmail ? ` (${target.clientEmail})` : ''} · copie à l&apos;agence</p></div>
+          </div>
+          <button onClick={onClose} className="h-8 w-8 rounded-lg border border-white/10 inline-flex items-center justify-center text-white/50 hover:bg-white/5"><X className="h-4 w-4" /></button>
+        </div>
+
+        <div className="px-6 py-5 space-y-4">
+          {!target.clientEmail && <p className="text-[12px] text-[#FF9F0A] bg-[#FF9F0A]/10 border border-[#FF9F0A]/30 rounded-lg px-3 py-2">Ce client n&apos;a pas d&apos;email. Renseignez-le (fiche client / onglet Employeur) avant d&apos;envoyer.</p>}
+          <div>
+            <label className={lbl}>Date du rendez-vous de finalisation</label>
+            <input type="datetime-local" value={rdv} onChange={(e) => setRdv(e.target.value)} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[14px] text-white focus:outline-none focus:border-[#0066CC] [color-scheme:dark]" />
+            <p className="text-[11px] text-white/35 mt-1">Heure de Paris. Proposé par défaut, modifiable, puis indiqué au client dans l&apos;email.</p>
+          </div>
+          <div>
+            <label className={lbl}>Message / réponse à une question (optionnel)</label>
+            <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} placeholder="Ex. Suite à votre question sur les horaires : la visio dure 1h par jour…" className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[13.5px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC] resize-none" />
+          </div>
+          <div>
+            <label className={lbl}>À préparer pour le RDV (1 par ligne, modifiable)</label>
+            <textarea value={prep} onChange={(e) => setPrep(e.target.value)} rows={4} className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[13.5px] text-white focus:outline-none focus:border-[#0066CC] resize-none" />
+          </div>
+          <div className="rounded-lg bg-white/[0.03] border border-white/10 px-3.5 py-3">
+            <p className="text-[11px] uppercase tracking-wider font-bold text-white/45 mb-1.5">Inclus automatiquement dans l&apos;email</p>
+            <ul className="text-[12.5px] text-white/65 space-y-0.5 list-disc pl-4">
+              <li>21 heures sur 3 jours</li>
+              <li>Chaque jour : 1h en visioconférence avec le formateur + 6h en situation de travail</li>
+              <li>Financement OPCO - aucun reste à charge</li>
+              <li>Convocations officielles + 2 questionnaires à remplir avant la formation (attentes &amp; positionnement de l&apos;apprenant)</li>
+            </ul>
+          </div>
+
+          <button onClick={doSend} disabled={sending || !target.clientEmail} className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[14px] font-semibold transition disabled:opacity-50 ${sentAt ? 'bg-[#3DD68C] text-[#0a3d24] hover:bg-[#34c07e]' : 'bg-[#0066CC] text-white hover:bg-[#0077ED]'}`}>
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : sentAt ? <CheckCircle2 className="h-4 w-4" /> : <Send className="h-4 w-4" />}
+            {sending ? 'Envoi…' : sentAt ? 'Confirmation envoyée · Renvoyer' : 'Envoyer la confirmation au client'}
+          </button>
+          {sentAt && <p className="text-[11.5px] text-white/45 text-center">Envoyée au client (copie agence) le {new Date(sentAt).toLocaleDateString('fr-FR')}.</p>}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1564,7 +2834,7 @@ function ReminderModal({ lead, onSave, onClose }: { lead: Lead; onSave: (note: s
 //     entreprise -> code recu par courrier) que l'agence/le commercial suit avec le client,
 //     puis espace dedie pour transmettre le code de rattachement. @author Rabah Ziane - 2026-06-04
 function OpcoAccessModal({ lead, status, busy, onAsk, onReminder, onClose }: { lead: Lead; status?: string; busy: boolean; onAsk: (label: string) => void | Promise<void>; onReminder?: () => void; onClose: () => void }) {
-  const [mode, setMode] = useState<'choice' | 'have' | 'akto'>('choice');
+  const [mode, setMode] = useState<'choice' | 'have' | 'akto' | 'mount'>('choice');
   const Header = ({ title, sub }: { title: string; sub?: string }) => (
     <div className="flex items-start justify-between gap-3 border-b border-white/10 px-6 py-4">
       <div>
@@ -1584,22 +2854,28 @@ function OpcoAccessModal({ lead, status, busy, onAsk, onReminder, onClose }: { l
   );
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto" onClick={onClose}>
-      <div className="w-full max-w-2xl my-6 rounded-2xl bg-[#181A20] border border-white/10 shadow-2xl text-white" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-3xl my-6 rounded-2xl bg-[#181A20] border border-white/10 shadow-2xl text-white" onClick={(e) => e.stopPropagation()}>
 
         {/* 1) Choix : a-t-il deja un compte OPCO ? */}
         {mode === 'choice' && (
           <>
-            <Header title="Le client a-t-il déjà un compte OPCO ?" sub="Deux cas de figure. Choisissez celui du client pour lancer la bonne procédure." />
-            <div className="px-6 py-5 grid sm:grid-cols-2 gap-3">
+            <Header title="Le client a-t-il déjà un compte OPCO ?" sub="Trois cas de figure. Choisissez celui du client pour lancer la bonne procédure." />
+            <div className="px-6 py-5 grid sm:grid-cols-3 gap-3">
               <button onClick={() => setMode('have')} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-[#0066CC]/40 p-4 transition">
                 <span className="inline-flex h-10 w-10 rounded-xl bg-[#3DD68C]/15 items-center justify-center"><ShieldCheck className="h-5 w-5 text-[#3DD68C]" /></span>
-                <p className="text-[13.5px] font-bold mt-3">Oui, il a déjà un compte OPCO</p>
-                <p className="text-[12px] text-white/50 mt-1 leading-relaxed">Il possède ses identifiants (email + mot de passe). On lui envoie un lien sécurisé pour les transmettre à Delivery Digital.</p>
+                <p className="text-[13.5px] font-bold mt-3">Compte OPCO + identifiants</p>
+                <p className="text-[12px] text-white/50 mt-1 leading-relaxed">Il a un compte et accepte de partager ses identifiants. On lui envoie un lien sécurisé pour les transmettre à Delivery Digital.</p>
                 <span className="inline-flex items-center gap-1 text-[12px] text-[#4da3ff] font-semibold mt-3">Transmettre les identifiants <ArrowRight className="h-3.5 w-3.5" /></span>
+              </button>
+              <button onClick={() => setMode('mount')} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-[#0066CC]/40 p-4 transition">
+                <span className="inline-flex h-10 w-10 rounded-xl bg-[#BF5AF2]/15 items-center justify-center"><Stamp className="h-5 w-5 text-[#BF5AF2]" /></span>
+                <p className="text-[13.5px] font-bold mt-3">Compte OPCO, sans partage</p>
+                <p className="text-[12px] text-white/50 mt-1 leading-relaxed">Il a un compte mais ne veut pas donner ses identifiants. Delivery Digital monte le dossier sur AKTO ; le client le <strong className="text-white/70">valide depuis son espace</strong>.</p>
+                <span className="inline-flex items-center gap-1 text-[12px] text-[#4da3ff] font-semibold mt-3">Monter le dossier sur AKTO <ArrowRight className="h-3.5 w-3.5" /></span>
               </button>
               <button onClick={() => setMode('akto')} className="text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-[#0066CC]/40 p-4 transition">
                 <span className="inline-flex h-10 w-10 rounded-xl bg-[#0066CC]/15 items-center justify-center"><Building2 className="h-5 w-5 text-[#4da3ff]" /></span>
-                <p className="text-[13.5px] font-bold mt-3">Non, pas encore de compte</p>
+                <p className="text-[13.5px] font-bold mt-3">Pas encore de compte</p>
                 <p className="text-[12px] text-white/50 mt-1 leading-relaxed">On l&apos;accompagne : création du compte AKTO, rattachement de son entreprise, puis transmission du code reçu par courrier.</p>
                 <span className="inline-flex items-center gap-1 text-[12px] text-[#4da3ff] font-semibold mt-3">Lancer l&apos;accompagnement AKTO <ArrowRight className="h-3.5 w-3.5" /></span>
               </button>
@@ -1671,6 +2947,45 @@ function OpcoAccessModal({ lead, status, busy, onAsk, onReminder, onClose }: { l
                         ? <p className="inline-flex items-center gap-1.5 text-[12px] text-[#E5B567] mt-2"><Clock className="h-3.5 w-3.5" /> Lien déjà envoyé, en attente du code.</p>
                         : null}
                       <button onClick={() => onAsk('Code de rattachement OPCO (AKTO)')} disabled={busy} className="mt-2.5 inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#0066CC] hover:bg-[#0077ED] text-white text-[12px] font-semibold disabled:opacity-60">{busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />} {status === 'pending' ? 'Renvoyer le lien' : 'Envoyer le lien de transmission'}</button>
+                    </div>
+                  </div>
+                </div>
+              </Step>
+              <div className="pt-1"><button onClick={() => setMode('choice')} className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[12.5px]">Retour</button></div>
+            </div>
+          </>
+        )}
+
+        {/* 3) Le client a un compte AKTO mais ne veut pas partager ses identifiants :
+            Delivery Digital monte la demande de prise en charge côté organisme de formation,
+            le client la valide depuis son propre espace AKTO. Suivi via le statut pending/received
+            (timeline : « En attente de validation » -> « Validé »). @author Rabah Ziane - 2026-06-23 */}
+        {mode === 'mount' && (
+          <>
+            <Header title="DD monte le dossier sur AKTO" sub="Le client a un compte mais ne partage pas ses identifiants : Delivery Digital dépose la demande, le client la valide depuis son espace." />
+            <div className="px-6 py-5 space-y-5">
+              <Step n={1} title="Delivery Digital dépose la demande sur AKTO">
+                Avec le SIREN{lead.siret ? ` (${lead.siret.replace(/\s/g, '').slice(0, 9)})` : ''} et les pièces du dossier, Delivery Digital crée la <strong className="text-white/80">demande de prise en charge</strong> sur son espace organisme de formation AKTO. Aucun identifiant du client n&apos;est nécessaire.
+              </Step>
+              <Step n={2} title="Le client valide depuis son espace AKTO">
+                AKTO notifie l&apos;employeur : il se connecte à <strong className="text-white/80">son propre espace AKTO</strong> et <strong className="text-white/80">valide la demande</strong> en un clic. Il garde la main, sans jamais communiquer son mot de passe.
+                <a href={AKTO_ESPACE_URL} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/5 border border-white/10 text-white/80 text-[12px] font-semibold hover:bg-white/10 transition"><ExternalLink className="h-3.5 w-3.5" /> Ouvrir l&apos;espace AKTO du client</a>
+              </Step>
+              <Step n={3} title="Suivi de la validation">
+                On prévient le client qu&apos;il a une demande à valider, puis on suit l&apos;état directement dans la timeline du dossier.
+                <div className="mt-3 rounded-xl border border-[#BF5AF2]/25 bg-[#BF5AF2]/[0.07] p-3.5">
+                  <div className="flex items-start gap-3">
+                    <span className="inline-flex h-9 w-9 rounded-lg bg-[#BF5AF2]/20 items-center justify-center flex-shrink-0"><Stamp className="h-4 w-4 text-[#BF5AF2]" /></span>
+                    <div className="min-w-0">
+                      <p className="text-[12.5px] font-semibold">Validation par le client · espace AKTO</p>
+                      <p className="text-[11.5px] text-white/55 mt-0.5 leading-relaxed">Rappel envoyé à <span className="text-[#4da3ff]">{lead.email || '—'}</span> : « votre dossier est déposé sur AKTO, validez-le depuis votre espace ».</p>
+                      {status === 'received'
+                        ? <p className="inline-flex items-center gap-1.5 text-[12px] text-[#3DD68C] font-semibold mt-2"><CheckCircle2 className="h-3.5 w-3.5" /> Dossier validé par le client sur AKTO.</p>
+                        : status === 'pending'
+                        ? <p className="inline-flex items-center gap-1.5 text-[12px] text-[#E5B567] mt-2"><Clock className="h-3.5 w-3.5" /> En attente de la validation du client sur son espace AKTO.</p>
+                        : null}
+                      <button onClick={() => onAsk('Validation dossier AKTO (monté par DD)')} disabled={busy} className="mt-2.5 inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#0066CC] hover:bg-[#0077ED] text-white text-[12px] font-semibold disabled:opacity-60">{busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />} {status === 'pending' ? 'Renvoyer le rappel au client' : 'Prévenir le client de valider'}</button>
+                      {onReminder && <div className="mt-2.5"><button onClick={onReminder} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/5 border border-white/10 text-white/80 text-[12px] font-semibold hover:bg-white/10"><Clock className="h-3.5 w-3.5" /> Programmer un rappel de relance</button></div>}
                     </div>
                   </div>
                 </div>
@@ -1825,7 +3140,7 @@ function ContractModal({ agency, fix, pct, signFunction, setSignFunction, signin
         {/* Feuille du contrat */}
         <div className="bg-white text-[#1D1D1F] rounded-xl shadow-2xl px-8 py-8 sm:px-12 sm:py-10">
           <div className="flex items-center justify-between border-b border-black/10 pb-4">
-            <div><p className="text-[10px] uppercase tracking-[0.2em] text-[#86868B] font-bold">Delivery Digital</p><h1 className="text-[18px] font-extrabold mt-1">Contrat de partenariat</h1><p className="text-[11.5px] text-[#86868B]">Apporteur d&apos;affaires - dispositifs de formation financés (OPCO)</p></div>
+            <div><p className="text-[10px] uppercase tracking-[0.2em] text-[#86868B] font-bold">Delivery Digital</p><h1 className="text-[18px] font-extrabold mt-1">Contrat de partenariat</h1><p className="text-[11.5px] text-[#86868B]">Apporteur d&apos;affaires - formation financée (OPCO) &amp; prestations informatiques</p></div>
             <img src={LOGO_URL} alt="Delivery Digital" className="h-9 w-auto" />
           </div>
 
@@ -1844,6 +3159,16 @@ function ContractModal({ agency, fix, pct, signFunction, setSignFunction, signin
           <C n={7} title="Non-concurrence et non-sollicitation">Pendant la durée du contrat et <strong>après son arrêt, quelle qu&apos;en soit la cause (terme, résiliation, non-reconduction), sans limitation de durée</strong>, le Partenaire n&apos;a <strong>pas le droit d&apos;exercer ni d&apos;orienter l&apos;activité d&apos;apport et de montage de dossiers de formation financés par les OPCO avec d&apos;autres organismes ou centres de formation</strong>. Il s&apos;interdit notamment : (a) de démarcher, reprendre ou réorienter vers un autre centre de formation les <strong>clients qu&apos;il a apportés dans le cadre du présent contrat</strong> ; (b) de poursuivre avec ces clients des prestations OPCO équivalentes par l&apos;intermédiaire d&apos;un tiers ; (c) de solliciter les clients, prospects, formateurs ou salariés de Delivery Digital, ni d&apos;exploiter ses méthodes, contenus, outils, fichiers ou données. Les clients apportés demeurent la clientèle de Delivery Digital. Tout manquement entraîne la perte des commissions non encore versées.</C>
           <C n={8} title="Indépendance">Le Partenaire agit en toute indépendance. Le présent contrat ne crée aucun lien de subordination ni société de fait entre les parties.</C>
           <C n={9} title="Validation">La signature électronique du Partenaire est soumise à la validation de Delivery Digital, qui vérifie les informations de l&apos;entreprise, le RIB et le présent contrat avant activation du compte.</C>
+
+          {/* Avenant n°1 : extension du partenariat aux prestations de services informatiques.
+              Mêmes conditions de commission que la formation ({fix} € + {pct} %), modalités de
+              versement propres au cycle de paiement client (acompte / solde). @Rabah 2026-06-23 */}
+          <div className="mt-6 rounded-lg border border-[#0066CC]/25 bg-[#0066CC]/[0.04] p-4">
+            <p className="font-extrabold text-[12.5px] text-[#1D1D1F]">Avenant n°1 - Prestations de services informatiques</p>
+            <p className="text-[12px] leading-relaxed text-[#3a3a3c] mt-1.5">Le présent avenant étend le partenariat à l&apos;apport et au montage de devis de <strong>prestations de services informatiques</strong> (sites web, applications, logiciels sur mesure, etc.) que le Partenaire présente à la Société via son espace partenaire. Pour cette activité, le Partenaire perçoit <strong>{fix.toLocaleString('fr-FR')} € TTC par client</strong> (frais fixes, mêmes conditions que la formation) majorés de <strong>{IT_COMMISSION_PCT} % TTC</strong> du montant de chaque devis (le taux propre aux prestations informatiques).</p>
+            <p className="text-[12px] leading-relaxed text-[#3a3a3c] mt-1.5"><strong>Modalités de versement :</strong> les <strong>frais fixes</strong> sont versés au Partenaire <strong>à la signature du devis par le client</strong> (1er acompte), et le <strong>pourcentage</strong> est versé à l&apos;encaissement du <strong>2ème acompte du client</strong> (solde). Les versements s&apos;effectuent par virement sur le RIB validé du Partenaire.</p>
+            <p className="text-[12px] leading-relaxed text-[#3a3a3c] mt-1.5">Les clauses de confidentialité, de durée, d&apos;indépendance et de validation du contrat s&apos;appliquent à l&apos;identique à cette activité. En revanche, <strong>l&apos;activité de prestations informatiques n&apos;est soumise à aucune exclusivité ni à la clause de non-concurrence</strong> : le Partenaire reste <strong>libre de travailler avec d&apos;autres sociétés ou prestataires</strong> pour le développement informatique. La clause de non-concurrence et de non-sollicitation (Article 7) demeure limitée à la seule activité de formation financée par les OPCO. La signature du présent contrat vaut acceptation de cet avenant.</p>
+          </div>
 
           {/* Blocs de signature */}
           <div className="mt-8 grid sm:grid-cols-2 gap-6 border-t border-black/10 pt-6">
@@ -2017,28 +3342,46 @@ function FactureModal({ agency, dossier, commission, fix, pct, sending, onSend, 
 }
 
 // Frise de suivi du dossier OPCO (pipeline) par client.
-function DossierTimeline({ d, accessStatus, onAccess }: { d: Dossier; accessStatus?: string; onAccess?: () => void }) {
-  const cur = DOSSIER_META[d.status]?.step ?? 1;
+// d peut être null : client "Non monté" -> on affiche quand même la timeline (tout à venir,
+// étape 0) pour que l'agence voie le parcours avant de monter le dossier. @Rabah 2026-07-02
+function DossierTimeline({ d, accessStatus, onAccess, onRattachInfo }: { d: Dossier | null; accessStatus?: string; onAccess?: () => void; onRattachInfo?: () => void }) {
+  const cur = d ? (DOSSIER_META[d.status]?.step ?? 1) : 0;
   const fmt = (s?: string) => s ? new Date(s).toLocaleDateString('fr-FR') : '';
-  const depot = fmt(d.createdAt);
-  const maj = fmt(d.updatedAt);
-  const start = fmt(d.sessionStart);
-  const end = fmt(d.sessionEnd);
+  const depot = fmt(d?.createdAt);
+  const maj = fmt(d?.updatedAt);
+  const start = fmt(d?.sessionStart);
+  const end = fmt(d?.sessionEnd);
   const accessDone = accessStatus === 'received';
+  // Demande de rattachement OPCO effectuée par DD (courrier d'activation envoyé au client) : info
+  // remontée sur l'étape "Accès OPCO" pour que l'agence voie que c'est pris en charge. @Rabah 2026-06-24
+  const rattachSent = !!d?.aktoAttached;
   type Node = { label: string; resp: 'Agence' | 'DDN'; sub?: string; done: boolean; active: boolean; action?: () => void };
   const nodes: Node[] = [
     { label: 'Transmis', resp: 'Agence', sub: depot, done: cur >= 1, active: cur === 1 },
-    // Action agence cliquable : ouvre la procédure "Accès OPCO" pour ce client tant que non reçu.
-    { label: 'Accès OPCO', resp: 'Agence', sub: accessDone ? 'Reçus par DD' : accessStatus === 'pending' ? 'Demandés…' : 'À demander au client', done: accessDone, active: !accessDone && cur >= 1, action: !accessDone ? onAccess : undefined },
+    // Accès OPCO : soit le client a ses identifiants (accès reçus par DD), soit DD a fait la
+    // demande de rattachement -> courrier d'activation envoyé (cliquable pour voir la confirmation).
+    {
+      label: 'Accès OPCO', resp: 'Agence',
+      sub: accessDone ? 'Reçus par DD' : rattachSent ? 'Rattachement · courrier envoyé' : accessStatus === 'pending' ? 'Validation demandée au client' : 'À faire valider par le client',
+      done: accessDone, active: !accessDone && cur >= 1,
+      action: rattachSent ? onRattachInfo : (!accessDone ? onAccess : undefined),
+    },
+    // Montage OPCO (DD) : montage du dossier par Delivery Digital + éventuelle attente du CSV des
+    // salariés. Lecture seule côté agence. @author Rabah Ziane - 2026-06-24
+    {
+      label: 'Montage OPCO', resp: 'DDN',
+      sub: cur >= 2 ? 'Dossier monté' : d?.salariesPending ? 'En attente CSV salariés' : cur === 0 ? 'À monter' : 'Pris en charge par DD',
+      done: cur >= 2, active: cur < 2 && cur >= 1,
+    },
     ...(['instruction', 'accepted', 'scheduled', 'completed', 'invoiced', 'paid'] as const).map((k) => {
       const m = DOSSIER_META[k];
-      const sub = k === 'scheduled' ? (start ? 'Début : ' + start : (d.sessionName || '')) : k === 'completed' ? (end ? 'Fin : ' + end : '') : (k === 'paid' && d.status === 'paid') ? maj : '';
+      const sub = k === 'scheduled' ? (start ? 'Début : ' + start : (d?.sessionName || '')) : k === 'completed' ? (end ? 'Fin : ' + end : '') : (k === 'paid' && d?.status === 'paid') ? maj : '';
       return { label: m.label, resp: 'DDN' as const, sub, done: m.step <= cur, active: m.step === cur };
     }),
   ];
   return (
     <div className="overflow-x-auto pb-1">
-      <div className="flex items-start min-w-[760px] px-1">
+      <div className="flex items-start min-w-[920px] px-1">
         {nodes.map((n, i) => {
           const clickable = !!n.action;
           const Inner = (
@@ -2046,7 +3389,7 @@ function DossierTimeline({ d, accessStatus, onAccess }: { d: Dossier; accessStat
               <span className={`relative z-10 h-[18px] w-[18px] rounded-full border-2 grid place-items-center ${n.active ? 'bg-[#0066CC] border-[#0066CC]' : n.done ? 'bg-[#3DD68C] border-[#3DD68C]' : 'bg-[#181A20] border-white/25'} ${clickable ? 'ring-2 ring-[#0066CC]/40' : ''}`}>{n.done && !n.active && <span className="text-black text-[9px] leading-none">✓</span>}</span>
               <p className={`text-[10px] mt-1.5 leading-tight ${n.active ? 'text-white font-bold' : n.done ? 'text-white/75' : 'text-white/35'}`}>{n.label}</p>
               <span className={`mt-1 inline-block px-1.5 py-[1px] rounded text-[8.5px] font-semibold ${n.resp === 'Agence' ? 'bg-[#0066CC]/15 text-[#4da3ff]' : 'bg-white/10 text-white/55'}`}>{n.resp === 'Agence' ? 'Action agence' : 'Action DDN'}</span>
-              {n.sub && <span className={`mt-1 inline-block px-2 py-0.5 rounded-full border text-[9.5px] whitespace-nowrap ${clickable ? 'bg-[#0066CC] border-[#0066CC] text-white font-semibold' : 'bg-white/5 border-white/10 text-white/55'}`}>{clickable ? n.sub + ' ›' : n.sub}</span>}
+              {n.sub && <span className={`mt-1 inline-block px-2 py-0.5 rounded-lg border text-[9.5px] leading-snug max-w-[108px] ${clickable ? 'bg-[#0066CC] border-[#0066CC] text-white font-semibold' : 'bg-white/5 border-white/10 text-white/55'}`}>{clickable ? n.sub + ' ›' : n.sub}</span>}
             </>
           );
           return (
@@ -2086,9 +3429,13 @@ type CatalogItem = { id: string; category: string; label: string; defaultPrice: 
 type QuoteLine = { description: string; details?: string; quantity: number; unit: string; unitPrice: number };
 type ITQuote = {
   _id: string; ref?: string; status: string; title?: string; publicToken?: string;
-  client?: { name?: string; email?: string; company?: string; phone?: string; address?: string };
+  client?: { name?: string; email?: string; company?: string; phone?: string; address?: string; siret?: string };
   lines?: QuoteLine[]; total?: number; totalTTC?: number; taxRate?: number; currency?: string;
+  discountType?: 'none' | 'percent' | 'amount'; discountValue?: number; discountAmount?: number;
   commercialName?: string; createdAt?: string; sentAt?: string; acceptedAt?: string;
+  acceptance?: { signerName?: string; signerEmail?: string; signedAt?: string };
+  invoice?: { ref?: string; sentAt?: string; amount?: number };
+  agencyCommission?: { clientPaid?: boolean; clientPaidAt?: string; encashRequestedAt?: string; paidAt?: string; invoiceNumber?: string };
 };
 const QUOTE_STATUS: Record<string, { label: string; cls: string }> = {
   draft: { label: 'Brouillon', cls: 'bg-white/10 text-white/60' },
@@ -2112,8 +3459,20 @@ function DevisITSection({ auth, authJson, isOwner, fix, pct }: { auth: () => any
   useEffect(() => { fetch('/api/agency/quotes/catalog', { headers: auth() }).then((r) => r.json()).then((j) => setCatalog(j.catalog || [])).catch(() => {}); }, [auth]);
 
   const euro = (n: number, c = 'EUR') => (n || 0).toLocaleString('fr-FR') + ' ' + (c === 'EUR' ? '€' : c);
-  // Commission estimée sur un devis accepté (même barème que les dossiers OPCO).
-  const commissionOf = (q: ITQuote) => Math.round((fix || 0) + ((pct || 0) / 100) * (q.total || 0));
+  // Commission services informatiques : frais fixes + 20 % du HT (la formation est à 15 %).
+  const commissionOf = (q: ITQuote) => Math.round((fix || 0) + (IT_COMMISSION_PCT / 100) * (q.total || 0));
+  const [encashing, setEncashing] = useState<string | null>(null);
+  // L'agence demande l'encaissement de sa commission une fois que DD a encaissé le client. @Rabah 2026-06-23
+  const encash = async (q: ITQuote) => {
+    if (!confirm(`Demander l'encaissement de votre commission (${euro(commissionOf(q))}) pour le devis ${q.ref} ?`)) return;
+    setEncashing(q._id);
+    try {
+      const r = await fetch(`/api/agency/quotes/${q._id}/encash`, { method: 'POST', headers: authJson() }).then((x) => x.json());
+      if (r.error) { alert('Erreur : ' + r.error); return; }
+      alert("Demande d'encaissement envoyée à Delivery Digital ✓");
+      load();
+    } finally { setEncashing(null); }
+  };
 
   return (
     <section className="rounded-2xl bg-[#181A20] border border-white/10 overflow-hidden">
@@ -2131,7 +3490,7 @@ function DevisITSection({ auth, authJson, isOwner, fix, pct }: { auth: () => any
         </div>
       </div>
 
-      {isOwner && <div className="px-5 py-2.5 bg-[#3DD68C]/[0.06] border-b border-white/10 text-[12px] text-[#3DD68C]">Commission services IT : <strong>{(fix || 0).toLocaleString('fr-FR')} € + {pct || 0}%</strong> du montant HT, versée quand le client accepte et règle (même barème que les dossiers).</div>}
+      {isOwner && <div className="px-5 py-2.5 bg-[#3DD68C]/[0.06] border-b border-white/10 text-[12px] text-[#3DD68C]">Commission services IT : <strong>{(fix || 0).toLocaleString('fr-FR')} € + {IT_COMMISSION_PCT}%</strong> du montant HT. Frais fixes versés à la signature, pourcentage au 2ème acompte du client.</div>}
 
       {showArgs && <ITSalesArguments />}
 
@@ -2153,8 +3512,27 @@ function DevisITSection({ auth, authJson, isOwner, fix, pct }: { auth: () => any
                     <td className="px-5 py-3"><p className="font-semibold">{q.client?.name || 'Client'}</p><p className="text-white/40 text-[11.5px]">{q.client?.company || q.client?.email || ''}</p>{!isOwner && q.commercialName && <p className="text-white/30 text-[10.5px]">{q.commercialName}</p>}</td>
                     <td className="px-5 py-3"><p className="font-mono text-[11.5px] text-white/70">{q.ref || '-'}</p><p className="text-white/40 text-[11px]">{q.title}</p></td>
                     <td className="px-5 py-3"><p className="font-semibold">{euro(q.total || 0, q.currency)}</p><p className="text-white/40 text-[10.5px]">{euro(q.totalTTC || 0, q.currency)} TTC</p></td>
-                    <td className="px-5 py-3"><span className={`inline-flex px-2 py-0.5 rounded-full text-[10.5px] ${sm.cls}`}>{sm.label}</span></td>
-                    {isOwner && <td className="px-5 py-3">{q.status === 'accepted' ? <span className="text-[#3DD68C] font-semibold">{euro(commissionOf(q))}</span> : <span className="text-white/30">-</span>}</td>}
+                    <td className="px-5 py-3">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10.5px] ${sm.cls}`}>{sm.label}</span>
+                      {q.status === 'accepted' && q.acceptance?.signedAt && <p className="text-[10px] text-[#3DD68C] mt-1">✍ Signé le {new Date(q.acceptance.signedAt).toLocaleDateString('fr-FR')}{q.acceptance.signerName ? ` · ${q.acceptance.signerName}` : ''}</p>}
+                      {q.invoice?.sentAt && <p className="text-[10px] text-white/45 mt-0.5">Facture d'acompte envoyée le {new Date(q.invoice.sentAt).toLocaleDateString('fr-FR')}</p>}
+                    </td>
+                    {isOwner && <td className="px-5 py-3">
+                      {q.status === 'accepted' ? (
+                        <div>
+                          <span className="text-[#3DD68C] font-semibold">{euro(commissionOf(q))}</span>
+                          {q.agencyCommission?.paidAt ? (
+                            <p className="text-[10px] text-[#3DD68C] mt-1">✓ Versée le {new Date(q.agencyCommission.paidAt).toLocaleDateString('fr-FR')}</p>
+                          ) : q.agencyCommission?.encashRequestedAt ? (
+                            <p className="text-[10px] text-[#E5B567] mt-1">Encaissement demandé…</p>
+                          ) : q.agencyCommission?.clientPaid ? (
+                            <button onClick={() => encash(q)} disabled={encashing === q._id} className="mt-1.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#3DD68C] text-black text-[11px] font-semibold hover:brightness-110 disabled:opacity-60">{encashing === q._id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wallet className="h-3 w-3" />} Encaisser</button>
+                          ) : (
+                            <p className="text-[10px] text-white/35 mt-1">En attente du règlement client</p>
+                          )}
+                        </div>
+                      ) : <span className="text-white/30">-</span>}
+                    </td>}
                     <td className="px-5 py-3 text-right whitespace-nowrap">
                       {(q.status === 'draft' || q.status === 'sent') && <button onClick={() => setBuilder(q)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] mr-1.5"><PenLine className="h-3 w-3" /> Modifier</button>}
                       {link && <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] mr-1.5"><ExternalLink className="h-3 w-3" /> Voir</a>}
@@ -2208,14 +3586,62 @@ Pourquoi nous :
 
 // Constructeur de devis IT (création / édition) - réutilise le catalogue serveur.
 function ITQuoteBuilder({ initial, catalog, authJson, onClose, onSaved }: { initial: ITQuote | null; catalog: CatalogItem[]; authJson: () => any; onClose: () => void; onSaved: () => void }) {
-  const [client, setClient] = useState({ name: '', email: '', company: '', phone: '', address: '', ...(initial?.client || {}) });
+  const [client, setClient] = useState({ name: '', email: '', company: '', phone: '', address: '', siret: '', ...(initial?.client || {}) });
   const [title, setTitle] = useState(initial?.title || 'Devis services informatiques');
   const [taxRate, setTaxRate] = useState(initial?.taxRate != null ? initial.taxRate : 20);
+  // Remise : pourcentage ou montant fixe, comme le super admin DD. @Rabah 2026-06-23
+  const [discountType, setDiscountType] = useState<'none' | 'percent' | 'amount'>((initial as any)?.discountType || 'none');
+  const [discountValue, setDiscountValue] = useState<number>((initial as any)?.discountValue || 0);
   const [lines, setLines] = useState<QuoteLine[]>(initial?.lines?.length ? initial.lines.map((l) => ({ description: l.description, details: l.details || '', quantity: l.quantity || 1, unit: l.unit || 'forfait', unitPrice: l.unitPrice || 0 })) : []);
   const [autoSendInvoice, setAutoSendInvoice] = useState(initial ? (initial as any).autoSendInvoice !== false : true);
   const [pickCat, setPickCat] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  // Assistance "retrouver un client par SIRET" : clients déjà connus de l'agence + annuaire entreprises. @Rabah 2026-06-23
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [siretMsg, setSiretMsg] = useState('');
+  const [siretBusy, setSiretBusy] = useState(false);
+
+  // Charge une fois la liste des clients de l'agence (pour reconnaître un SIRET déjà saisi).
+  useEffect(() => {
+    let on = true;
+    fetch('/api/agency/self/leads', { headers: authJson() }).then((r) => r.json()).then((j) => { if (on) setLeads(j?.leads || []); }).catch(() => {});
+    return () => { on = false; };
+  }, []);
+
+  // À la saisie d'un SIRET (9 ou 14 chiffres) : 1) si c'est un client déjà connu de l'agence on
+  // pré-remplit depuis sa fiche ; 2) sinon on interroge l'annuaire des entreprises (raison sociale +
+  // adresse). Les champs restent modifiables. Même API que la création de lead. @Rabah 2026-06-23
+  useEffect(() => {
+    const raw = (client.siret || '').replace(/\D/g, '');
+    if (raw.length !== 9 && raw.length !== 14) { setSiretMsg(''); return; }
+    const norm = (s?: string) => (s || '').replace(/\D/g, '');
+    const t = setTimeout(async () => {
+      setSiretBusy(true);
+      try {
+        const lead = leads.find((l) => norm(l.siret) && norm(l.siret).slice(0, 9) === raw.slice(0, 9));
+        if (lead) {
+          setClient((cl) => ({ ...cl, company: cl.company || lead.denom || '', email: cl.email || lead.email || '', address: cl.address || lead.addr || '' }));
+          setSiretMsg(`Client existant : ${lead.denom || lead.email || 'trouvé'} - infos pré-remplies.`);
+          return;
+        }
+        const r = await fetch(`https://recherche-entreprises.api.gouv.fr/search?q=${raw}&limite=1`);
+        const j = await r.json();
+        const res = (j?.results || [])[0];
+        if (!res) { setSiretMsg('SIRET introuvable - saisie manuelle.'); return; }
+        const m = (res.matching_etablissements || [])[0] || res.siege || {};
+        const found = String(res.nom_complet || res.denomination || '');
+        const sg = res.siege || {};
+        const cp = sg.code_postal || m.code_postal || '';
+        const ville = sg.commune || sg.libelle_commune || m.libelle_commune || m.commune || '';
+        const voie = String(sg.adresse || m.adresse || [m.numero_voie, m.type_voie, m.libelle_voie].filter(Boolean).join(' ') || '').replace(/\s+/g, ' ').trim();
+        const addr = [voie, [cp, ville].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+        setClient((cl) => ({ ...cl, company: cl.company || found, address: cl.address || addr }));
+        setSiretMsg(found ? `Entreprise trouvée : ${found}` : 'SIRET reconnu.');
+      } catch { setSiretMsg(''); } finally { setSiretBusy(false); }
+    }, 500);
+    return () => clearTimeout(t);
+  }, [client.siret, leads]);
 
   const inp = 'w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-[#0066CC]';
   const setLine = (i: number, k: keyof QuoteLine, v: any) => setLines((arr) => arr.map((l, j) => j === i ? { ...l, [k]: v } : l));
@@ -2227,8 +3653,10 @@ function ITQuoteBuilder({ initial, catalog, authJson, onClose, onSaved }: { init
     setPickCat('');
   };
   const subtotal = lines.reduce((s, l) => s + (l.quantity || 0) * (l.unitPrice || 0), 0);
-  const tax = Math.round(subtotal * (taxRate / 100));
-  const ttc = subtotal + tax;
+  const discountAmount = discountType === 'percent' ? Math.round(subtotal * ((discountValue || 0) / 100)) : discountType === 'amount' ? Math.min(discountValue || 0, subtotal) : 0;
+  const afterDiscount = subtotal - discountAmount;
+  const tax = Math.round(afterDiscount * (taxRate / 100));
+  const ttc = afterDiscount + tax;
   const euro = (n: number) => (n || 0).toLocaleString('fr-FR') + ' €';
 
   const save = async (thenSend: boolean) => {
@@ -2237,7 +3665,7 @@ function ITQuoteBuilder({ initial, catalog, authJson, onClose, onSaved }: { init
     if (lines.length === 0 || lines.some((l) => !l.description?.trim())) { setErr('Ajoutez au moins une ligne (avec une description).'); return; }
     setBusy(true);
     try {
-      const body = { client, title, taxRate, lines, autoSendInvoice };
+      const body = { client, title, taxRate, lines, autoSendInvoice, discountType, discountValue };
       let id = initial?._id;
       if (id) {
         await fetch(`/api/agency/quotes/${id}`, { method: 'PATCH', headers: authJson(), body: JSON.stringify(body) });
@@ -2265,6 +3693,10 @@ function ITQuoteBuilder({ initial, catalog, authJson, onClose, onSaved }: { init
         </div>
         <div className="px-5 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Client */}
+          <div>
+            <input className={inp} inputMode="numeric" placeholder="SIRET du client (recherche auto : société + adresse)" value={client.siret || ''} onChange={(e) => setClient({ ...client, siret: e.target.value })} />
+            {(siretBusy || siretMsg) && <p className={`text-[11px] mt-1 ${siretMsg.startsWith('Client existant') ? 'text-[#3DD68C]' : 'text-white/50'}`}>{siretBusy ? 'Recherche…' : siretMsg}</p>}
+          </div>
           <div className="grid sm:grid-cols-2 gap-3">
             <input className={inp} placeholder="Nom du client *" value={client.name} onChange={(e) => setClient({ ...client, name: e.target.value })} />
             <input className={inp} type="email" placeholder="Email du client *" value={client.email} onChange={(e) => setClient({ ...client, email: e.target.value })} />
@@ -2310,10 +3742,27 @@ function ITQuoteBuilder({ initial, catalog, authJson, onClose, onSaved }: { init
             )}
           </div>
 
+          {/* Remise : pourcentage ou montant fixe (comme le super admin DD) */}
+          <div className="rounded-xl bg-[#0E0F13] border border-white/10 p-3.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[12px] text-white/60 mr-1">Remise</span>
+              {([['none', 'Aucune'], ['percent', 'Pourcentage'], ['amount', 'Montant fixe']] as const).map(([v, lab]) => (
+                <button key={v} type="button" onClick={() => { setDiscountType(v); if (v === 'none') setDiscountValue(0); }} className={`px-3 py-1.5 rounded-full text-[12px] font-medium ${discountType === v ? 'bg-white text-[#0E0F13]' : 'bg-white/5 border border-white/10 text-white/70 hover:bg-white/10'}`}>{lab}</button>
+              ))}
+              {discountType !== 'none' && (
+                <span className="inline-flex items-center gap-1.5 ml-1">
+                  <input type="number" min={0} value={discountValue} onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)} placeholder={discountType === 'percent' ? 'ex : 10' : 'ex : 500'} className="w-24 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white focus:outline-none focus:border-[#0066CC]" />
+                  <span className="text-[12px] text-white/50">{discountType === 'percent' ? '%' : '€'}</span>
+                </span>
+              )}
+            </div>
+            {discountAmount > 0 && <p className="text-[11.5px] text-[#3DD68C] mt-2 text-right">Remise appliquée : -{euro(discountAmount)}{discountType === 'percent' ? ` (${discountValue}%)` : ''} → HT après remise : {euro(afterDiscount)}</p>}
+          </div>
+
           {/* Totaux + TVA */}
           <div className="flex items-center justify-between gap-3 flex-wrap rounded-xl bg-[#0E0F13] border border-white/10 p-3.5">
             <label className="text-[12px] text-white/60 inline-flex items-center gap-2">TVA % <input type="number" className="w-16 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[13px] text-white focus:outline-none" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} /></label>
-            <div className="text-right text-[13px]"><p className="text-white/60">Total HT : <strong className="text-white">{euro(subtotal)}</strong></p><p className="text-white/40 text-[12px]">TVA : {euro(tax)} · <strong className="text-white">TTC {euro(ttc)}</strong></p></div>
+            <div className="text-right text-[13px]">{discountAmount > 0 && <p className="text-white/35 text-[11.5px]">Sous-total : {euro(subtotal)}</p>}<p className="text-white/60">Total HT{discountAmount > 0 ? ' (après remise)' : ''} : <strong className="text-white">{euro(afterDiscount)}</strong></p><p className="text-white/40 text-[12px]">TVA : {euro(tax)} · <strong className="text-white">TTC {euro(ttc)}</strong></p></div>
           </div>
 
           <label className="flex items-center gap-2.5 cursor-pointer select-none">
