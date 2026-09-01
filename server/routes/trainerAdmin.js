@@ -16,8 +16,10 @@ import nodemailer from 'nodemailer';
 import { User, TrainingProgram } from '../models/index.js';
 import TrainerSession from '../models/TrainerSession.js';
 import TrainerUnavailability from '../models/TrainerUnavailability.js';
+import TrainerAvailability from '../models/TrainerAvailability.js';
 import TrainerInstruction from '../models/TrainerInstruction.js';
 import AgencyDossier from '../models/AgencyDossier.js';
+import { exercisesForDay } from '../lib/exercisesCatalog.js';
 import { encryptField, decryptField } from '../models/AccessRequest.js';
 
 const router = express.Router();
@@ -173,6 +175,74 @@ router.post('/:id/recurring-availability', requireAdmin, async (req, res) => {
   res.json({ ok: true, recurringAvailability: u.recurringAvailability });
 });
 
+/**
+ * Disponibilités d'un formateur sur une fenêtre de dates, pour caler les créneaux d'un cours
+ * au moment de l'assignation : créneaux récurrents (ce qu'il accepte), jours bloqués (ce qu'il
+ * a posé depuis son espace) et créneaux déjà pris par ses autres cours.
+ * @author Rabah Ziane · 2026-07-20
+ */
+router.get('/:id/availability', requireAdmin, async (req, res) => {
+  const u = await User.findOne({ _id: req.params.id, role: 'trainer' }).select('name recurringAvailability').lean();
+  if (!u) return res.status(404).json({ ok: false, error: 'not_found' });
+  const from = /^\d{4}-\d{2}-\d{2}$/.test(req.query.from || '') ? req.query.from : new Date().toISOString().slice(0, 10);
+  const to = /^\d{4}-\d{2}-\d{2}$/.test(req.query.to || '') ? req.query.to : new Date(Date.now() + 180 * 864e5).toISOString().slice(0, 10);
+
+  const blocked = await TrainerUnavailability.find({ trainerId: u._id, day: { $gte: from, $lte: to } }).lean().catch(() => []);
+  // Jours que le formateur a DÉCLARÉS disponibles : hors de cette liste, on ne l'assigne pas.
+  const available = await TrainerAvailability.find({ trainerId: u._id, day: { $gte: from, $lte: to } }).lean().catch(() => []);
+
+  // Créneaux déjà réservés : d'abord le découpage `days`, sinon repli sur sessionStart/sessionEnd.
+  const sessions = await TrainerSession.find({ trainerId: u._id, status: { $in: ['scheduled', 'done', 'encashRequested', 'paid'] } })
+    .select('formationTitle clientName days sessionStart sessionEnd').lean().catch(() => []);
+  const busy = [];
+  for (const s of sessions) {
+    const label = [s.formationTitle, s.clientName].filter(Boolean).join(' · ');
+    if (Array.isArray(s.days) && s.days.length) {
+      for (const d of s.days) if (d.date >= from && d.date <= to) busy.push({ day: d.date, from: d.from, to: d.to, label, sessionId: String(s._id) });
+    } else if (s.sessionStart) {
+      const day = new Date(s.sessionStart).toISOString().slice(0, 10);
+      if (day >= from && day <= to) busy.push({ day, from: '00:00', to: '23:59', label, sessionId: String(s._id) });
+    }
+  }
+  res.json({
+    ok: true,
+    trainer: { id: u._id, name: u.name },
+    recurring: { days: u.recurringAvailability?.days || [], slots: u.recurringAvailability?.slots || [] },
+    blocked: blocked.map((b) => ({ day: b.day, kind: b.kind || 'full', hours: b.hours || [], label: b.label || '' })),
+    available: available.map((b) => ({ day: b.day, kind: b.kind || 'full', hours: b.hours || [] })),
+    busy,
+  });
+});
+
+/**
+ * Indisponibilités posées par l'ADMIN sur le calendrier du formateur (même granularité que
+ * l'espace formateur : journée / matin / après-midi / créneaux horaires). Sert à bloquer une
+ * date au téléphone avec le formateur sans lui demander de le faire lui-même.
+ * @author Rabah Ziane · 2026-07-20
+ */
+router.post('/:id/unavailability', requireAdmin, async (req, res) => {
+  const u = await User.findOne({ _id: req.params.id, role: 'trainer' }).select('_id').lean();
+  if (!u) return res.status(404).json({ ok: false, error: 'not_found' });
+  const day = String(req.body.day || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return res.status(400).json({ ok: false, error: 'bad_day' });
+  const kind = ['full', 'am', 'pm', 'hours'].includes(req.body.kind) ? req.body.kind : 'full';
+  const hours = kind === 'hours' && Array.isArray(req.body.hours)
+    ? req.body.hours.filter((h) => h && HHMM.test(h.from) && HHMM.test(h.to) && h.from < h.to).map((h) => ({ from: h.from, to: h.to })).slice(0, 8)
+    : [];
+  if (kind === 'hours' && !hours.length) return res.status(400).json({ ok: false, error: 'no_hours' });
+  const row = await TrainerUnavailability.findOneAndUpdate(
+    { trainerId: u._id, day },
+    { trainerId: u._id, day, kind, hours, label: String(req.body.label || '').slice(0, 120) },
+    { upsert: true, new: true },
+  );
+  res.json({ ok: true, day: { id: row._id, day: row.day, kind: row.kind, hours: row.hours, label: row.label } });
+});
+
+router.delete('/:id/unavailability/:day', requireAdmin, async (req, res) => {
+  await TrainerUnavailability.deleteOne({ trainerId: req.params.id, day: req.params.day });
+  res.json({ ok: true });
+});
+
 router.post('/:id/validate-bank', requireAdmin, async (req, res) => {
   const u = await User.findById(req.params.id);
   if (!u || u.role !== 'trainer') return res.status(404).json({ error: 'not_found' });
@@ -238,6 +308,16 @@ async function notifyAssigned(trainer, s) {
           <p style="margin:0 0 4px"><strong>Date :</strong> ${esc(when)}</p>
           <p style="margin:0"><strong>Apprenants :</strong> ${(s.learners || []).length}</p>
         </div>
+        ${/* Détail des créneaux réservés sur vos disponibilités. @Rabah 2026-07-20 */ ''}
+        ${(s.days || []).length ? `<div style="background:#fff;border:1px solid #e5e5ea;border-radius:12px;padding:14px 16px;margin:0 0 16px;font-size:14px;color:#1d1d1f">
+          <p style="margin:0 0 8px;font-weight:600">Créneaux réservés sur vos disponibilités</p>
+          ${s.days.map((d) => `<p style="margin:0 0 4px;color:#3a3a3c">${esc(new Date(`${d.date}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }))} · ${esc(d.from)} - ${esc(d.to)} · ${esc({ visio: 'Visioconférence', presentiel: 'Présentiel', afest: 'En situation de travail (AFEST)' }[d.mode] || d.mode)}</p>`).join('')}
+        </div>` : ''}
+        ${s.meetingLink ? `<div style="background:#f5f5f7;border:1px solid #e5e5ea;border-radius:12px;padding:14px 16px;margin:0 0 16px;font-size:14px;color:#1d1d1f">
+          <p style="margin:0 0 6px;font-weight:600">Salle de visioconférence</p>
+          <p style="margin:0 0 6px;color:#3a3a3c;font-size:13px">Partagez ce lien dans le groupe WhatsApp avec votre message d'accueil. Vous pourrez y partager votre écran.</p>
+          <a href="${esc(s.meetingLink)}" style="color:${DD_BLUE};font-size:13px;word-break:break-all">${esc(s.meetingLink)}</a>
+        </div>` : ''}
         <p style="font-size:13px;color:#3a3a3c;line-height:1.6;margin:0 0 16px">Connectez-vous à votre espace pour voir le détail, les apprenants et les <strong>instructions</strong> (notamment la création du groupe WhatsApp).</p>
         <a href="${PUBLIC_BASE}/formateur" style="display:inline-block;background:${DD_BLUE};color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:999px">Voir mon cours</a>`),
     });
@@ -288,20 +368,97 @@ async function notifyCancelled(trainer, s, reason) {
   } catch (e) { /* email best effort */ }
 }
 
+const HHMM = /^\d{2}:\d{2}$/;
+
+/**
+ * Lien de visioconférence du cours. Si l'admin n'en colle pas un (Meet/Zoom/Teams), on ouvre
+ * une salle Delivery Digital dédiée : notre propre page /visio/<roomId>, sans compte ni
+ * installation, avec un identifiant imprévisible pour que seuls les destinataires y entrent.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function resolveMeetingLink(provided) {
+  const url = String(provided || '').trim();
+  if (url) return { meetingLink: /^https?:\/\//i.test(url) ? url : `https://${url}`, meetingProvider: '', roomId: undefined, hostKey: undefined };
+  const roomId = crypto.randomBytes(12).toString('base64url');
+  // hostKey : réservée au formateur, elle ouvre le droit d'admettre les apprenants.
+  return { meetingLink: `${PUBLIC_BASE}/visio/${roomId}`, meetingProvider: 'dd', roomId, hostKey: crypto.randomBytes(16).toString('base64url') };
+}
+
+/**
+ * Normalise les créneaux envoyés par le modal d'assignation et en déduit les bornes de la
+ * session. Une formation peut s'étaler sur plusieurs jours avec 1 h encadrée par jour :
+ * sessionStart = début du 1er créneau, sessionEnd = fin du dernier.
+ * @author Rabah Ziane · 2026-07-20
+ */
+/**
+ * Lieu déduit des modalités réellement planifiées : un cours 100 % visio ne doit pas
+ * s'afficher « Présentiel » avec l'adresse du client (erreur constatée en prod).
+ * @author Rabah Ziane · 2026-07-20
+ */
+function locationFromDays(days, fallback) {
+  const modes = [...new Set((days || []).map((d) => d.mode))];
+  if (!modes.length) return fallback || 'Présentiel';
+  if (modes.length === 1 && modes[0] === 'visio') return 'Visioconférence (distanciel)';
+  if (modes.includes('visio')) return 'Visioconférence + présentiel';
+  return 'Présentiel';
+}
+
+function normalizeDays(raw, formationKey, formationTitle) {
+  const days = (Array.isArray(raw) ? raw : [])
+    .filter((d) => d && /^\d{4}-\d{2}-\d{2}$/.test(d.date) && HHMM.test(d.from) && HHMM.test(d.to) && d.from < d.to)
+    .map((d) => ({ date: d.date, from: d.from, to: d.to, mode: ['visio', 'presentiel', 'afest'].includes(d.mode) ? d.mode : 'visio', label: (d.label || '').slice(0, 120), exercises: d.exercises || '' }))
+    .sort((a, b) => (a.date + a.from).localeCompare(b.date + b.from))
+    .slice(0, 60)
+    // Chaque journée reçoit les exercices correspondants du programme (jour 1, 2, 3...).
+    .map((d, i) => ({ ...d, exercises: d.exercises || exercisesForDay(formationKey, formationTitle, i) }));
+  const mins = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+  const scheduledHours = Math.round(days.reduce((n, d) => n + (mins(d.to) - mins(d.from)) / 60, 0) * 100) / 100;
+  const first = days[0], last = days[days.length - 1];
+  return {
+    days,
+    scheduledHours,
+    sessionStart: first ? new Date(`${first.date}T${first.from}:00`) : undefined,
+    sessionEnd: last ? new Date(`${last.date}T${last.to}:00`) : undefined,
+  };
+}
+
+/**
+ * Émet le bon de commande de la session : Delivery Digital commande au formateur la
+ * prestation d'animation, en application de son contrat-cadre. Le numéro reprend l'identifiant
+ * de la session, ce qui le rend unique sans compteur à maintenir.
+ * @author Rabah Ziane · 2026-07-20
+ */
+async function issuePurchaseOrder(s) {
+  if (s.purchaseOrder?.number) return s;
+  s.purchaseOrder = {
+    number: 'BC-' + new Date().getFullYear() + '-' + String(s._id).slice(-5).toUpperCase(),
+    issuedAt: new Date(),
+  };
+  await s.save();
+  return s;
+}
+
 // Création d'une session manuelle.
 router.post('/sessions', requireAdmin, async (req, res) => {
   const b = req.body || {};
   const trainer = await User.findOne({ _id: b.trainerId, role: 'trainer' }).lean();
   if (!trainer) return res.status(400).json({ ok: false, error: 'invalid_trainer' });
   const learners = Array.isArray(b.learners) ? b.learners.filter((l) => l && (l.firstname || l.lastname)) : [];
+  // Créneaux calés sur les dispos du formateur ; à défaut on garde les dates simples (compat).
+  const plan = normalizeDays(b.days, b.formationKey, b.formationTitle);
   const s = await TrainerSession.create({
     trainerId: trainer._id, trainerName: trainer.name, source: 'manual',
     formationKey: b.formationKey, formationTitle: b.formationTitle, hours: Number(b.hours) || 0,
-    clientName: b.clientName, clientEmail: b.clientEmail, location: b.location, addr: b.addr,
-    sessionStart: b.startAt ? new Date(b.startAt) : undefined, sessionEnd: b.endAt ? new Date(b.endAt) : undefined,
+    clientName: b.clientName, clientEmail: b.clientEmail, clientContactName: b.clientContactName, clientPhone: b.clientPhone,
+    location: locationFromDays(plan.days, b.location), addr: b.addr,
+    sessionStart: plan.sessionStart || (b.startAt ? new Date(b.startAt) : undefined),
+    sessionEnd: plan.sessionEnd || (b.endAt ? new Date(b.endAt) : undefined),
+    days: plan.days, scheduledHours: plan.scheduledHours,
+    ...resolveMeetingLink(b.meetingLink),
     learners, pedagoName: b.pedagoName, pedagoPhone: b.pedagoPhone, notes: b.notes,
     status: 'scheduled', assignedNotifiedAt: new Date(),
   });
+  await issuePurchaseOrder(s);
   notifyAssigned(trainer, s);
   res.json({ ok: true, session: s });
 });
@@ -321,14 +478,19 @@ router.post('/sessions/from-dossier', requireAdmin, async (req, res) => {
   }
   if (!hours) hours = 21;
   const learners = (d.salaries || []).map((sal) => ({ firstname: sal.firstname, lastname: sal.lastname, email: sal.email, phone: sal.telephone || sal.phone || '' }));
+  const plan = normalizeDays(b.days, null, d.formationTitle);
   const s = await TrainerSession.create({
     trainerId: trainer._id, trainerName: trainer.name, source: 'opco', dossierId: d._id,
     formationTitle: d.formationTitle, hours,
-    clientName: d.denom, clientEmail: d.clientEmail, location: b.location || 'Présentiel', addr: d.addr,
-    sessionStart: d.sessionStart, sessionEnd: d.sessionEnd,
+    clientName: d.denom, clientEmail: d.clientEmail, clientContactName: b.clientContactName || d.signedBy, clientPhone: b.clientPhone, location: locationFromDays(plan.days, b.location), addr: d.addr,
+    // Les créneaux choisis sur les dispos du formateur priment sur les dates brutes du dossier.
+    sessionStart: plan.sessionStart || d.sessionStart, sessionEnd: plan.sessionEnd || d.sessionEnd,
+    days: plan.days, scheduledHours: plan.scheduledHours,
+    ...resolveMeetingLink(b.meetingLink),
     learners, pedagoName: b.pedagoName, pedagoPhone: b.pedagoPhone,
     status: 'scheduled', assignedNotifiedAt: new Date(),
   });
+  await issuePurchaseOrder(s);
   notifyAssigned(trainer, s);
   res.json({ ok: true, session: s });
 });
@@ -342,10 +504,18 @@ router.patch('/sessions/:id', requireAdmin, async (req, res) => {
   // État avant modification pour détecter report (date) et annulation (status).
   const oldStart = s.sessionStart;
   const wasCancelled = s.status === 'cancelled';
-  for (const k of ['formationTitle', 'clientName', 'clientEmail', 'location', 'addr', 'pedagoName', 'pedagoPhone', 'notes']) {
+  for (const k of ['formationTitle', 'clientName', 'clientEmail', 'location', 'addr', 'pedagoName', 'pedagoPhone', 'notes', 'meetingLink', 'clientContactName', 'clientPhone']) {
     if (b[k] != null) s[k] = b[k];
   }
   if (b.hours != null) s.hours = Number(b.hours) || 0;
+  // Replanification par créneaux (recalcule aussi les bornes). @Rabah 2026-07-20
+  if (Array.isArray(b.days)) {
+    const plan = normalizeDays(b.days, s.formationKey, s.formationTitle);
+    s.days = plan.days; s.scheduledHours = plan.scheduledHours;
+    s.location = locationFromDays(plan.days, s.location);
+    if (plan.sessionStart) s.sessionStart = plan.sessionStart;
+    if (plan.sessionEnd) s.sessionEnd = plan.sessionEnd;
+  }
   if (b.startAt) s.sessionStart = new Date(b.startAt);
   if (b.endAt) s.sessionEnd = new Date(b.endAt);
   if (b.status && ['scheduled', 'cancelled'].includes(b.status)) s.status = b.status;
@@ -372,7 +542,11 @@ router.post('/sessions/:id/done', requireAdmin, async (req, res) => {
   } else {
     const rate = req.body.hourlyRate != null ? Number(req.body.hourlyRate) : (trainer?.hourlyRate || 0);
     s.hourlyRate = rate;
-    s.payAmount = req.body.payAmount != null ? Math.round(Number(req.body.payAmount)) : Math.round((s.hours || 0) * rate);
+    // Le formateur est payé sur les heures qu'il ENCADRE (créneaux réservés), pas sur la durée
+    // pédagogique totale de la formation, qui inclut les heures en situation de travail faites
+    // par l'apprenant seul. Repli sur `hours` pour les cours créés avant les créneaux.
+    const paidHours = s.scheduledHours || s.hours || 0;
+    s.payAmount = req.body.payAmount != null ? Math.round(Number(req.body.payAmount)) : Math.round(paidHours * rate);
     s.status = 'done'; s.doneAt = new Date();
   }
   await s.save();
@@ -410,6 +584,7 @@ router.put('/instructions/:id', requireAdmin, async (req, res) => {
   const b = req.body || {};
   const set = {};
   for (const k of ['title', 'body', 'icon']) if (b[k] != null) set[k] = String(b[k]);
+  if (Array.isArray(b.docs)) set.docs = b.docs.map((d) => String(d).slice(0, 200)).slice(0, 10);
   if (b.order != null) set.order = Number(b.order);
   if (b.active != null) set.active = !!b.active;
   const row = await TrainerInstruction.findByIdAndUpdate(req.params.id, { $set: set }, { new: true });

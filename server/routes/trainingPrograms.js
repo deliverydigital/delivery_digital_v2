@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import {TrainingDocument, TrainingProgram, User} from '../models/index.js';
+import { generateProgramPdf } from '../lib/programPdf.js';
 import { isMongoAvailable } from '../config/mongodb.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { uploadTrainingMaterials, handleUploadError, deleteFile } from '../middleware/upload.js';
@@ -65,6 +66,13 @@ router.get('/:programId/documents', async (req, res) => {
 router.get('/:programId/documents/:documentId/download', async (req, res) => {
   try {
     const { programId, documentId } = req.params;
+    if (documentId === 'program') {
+      let program = null;
+      try { program = await TrainingProgram.findById(programId).lean(); } catch (e) {}
+      if (!program) program = await TrainingProgram.findOne({ program_id: programId }).lean();
+      if (!program) return res.status(404).json({ success: false, error: 'Program not found' });
+      return generateProgramPdf(program, res);
+    }
 
     // Check if MongoDB is available
     if (!isMongoAvailable()) {

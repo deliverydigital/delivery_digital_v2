@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2, Plus, Send, Eye, X as XIcon, Trash2, FileText,
-  CheckCircle2, Clock, AlertCircle, Search, Download, Copy, ExternalLink, RefreshCw,
+  CheckCircle2, Clock, AlertCircle, Search, Download, Copy, ExternalLink, RefreshCw, Ban, Wallet,
 } from 'lucide-react';
 
 interface Line { _id?: string; description: string; details?: string; quantity: number; unit: string; unitPrice: number }
@@ -40,6 +40,8 @@ interface Quote {
   createdAt: string;
   sentAt?: string;
   viewedAt?: string;
+  total?: number; // HT (= subtotalAfterDiscount), sert au calcul de la commission agence
+  agencyCommission?: { clientPaid?: boolean; clientPaidAt?: string; encashRequestedAt?: string; paidAt?: string; invoiceNumber?: string };
 }
 
 const LANGUAGES = [
@@ -180,6 +182,26 @@ export default function QuoteAdmin({ secret }: { secret: string }) {
     } catch (e: any) { setError(e.message); }
   };
 
+  // Le client a refusé : on enregistre le refus et un email cordial part au client pour l'en
+  // informer (porte laissée ouverte). @Rabah 2026-06-23
+  const onReject = async (q: Quote) => {
+    if (!confirm(`Enregistrer le refus du devis ${q.ref} ?\n\nUn email cordial sera envoyé à ${q.client.email || 'le client'} pour l'en informer.`)) return;
+    try {
+      const r = await api(`/api/admin/quotes-quick/${q._id}/reject`, { method: 'POST', body: JSON.stringify({}) });
+      await load();
+      if (r?.emailSent === false) setError("Refus enregistré, mais l'email au client n'a pas pu être envoyé (vérifier son adresse email).");
+    } catch (e: any) { setError(e.message); }
+  };
+
+  // Commission agence (devis IT montés par une agence) : DD reçoit le paiement client -> débloque
+  // l'encaissement de l'agence ; puis DD marque la commission versée. @Rabah 2026-06-23
+  const markClientPaid = async (id: string, paid: boolean) => {
+    try { await api(`/api/admin/quotes-quick/${id}/agency-client-paid`, { method: 'POST', body: JSON.stringify({ paid }) }); await load(); } catch (e: any) { setError(e.message); }
+  };
+  const markCommissionPaid = async (id: string, paid: boolean) => {
+    try { await api(`/api/admin/quotes-quick/${id}/agency-commission-paid`, { method: 'POST', body: JSON.stringify({ paid }) }); await load(); } catch (e: any) { setError(e.message); }
+  };
+
   return (
     <>
       <div className="flex items-center justify-between mb-6">
@@ -258,7 +280,28 @@ export default function QuoteAdmin({ secret }: { secret: string }) {
                   <td className="px-3 py-3"><StatusPill status={q.status} /></td>
                   <td className="px-3 py-3 text-right font-semibold tabular-nums">{fmtCurrency(q.totalTTC, q.currency)}</td>
                   <td className="px-3 py-3 text-right text-[11.5px] text-[#86868B]">{new Date(q.createdAt).toLocaleDateString('fr-FR')}</td>
-                  <td className="px-3 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-3 py-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    {(q.status === 'sent' || q.status === 'viewed') && (
+                      <button onClick={() => onReject(q)} title="Le client a refusé : enregistrer le refus + email cordial au client" className="inline-flex items-center gap-1 px-2 py-1 mr-1 rounded-md text-[11.5px] font-medium text-[#FF3B30] hover:bg-[#FF3B30]/10">
+                        <Ban className="h-3.5 w-3.5" /> Refuser
+                      </button>
+                    )}
+                    {/* Commission agence : devis IT monté par une agence et accepté par le client. */}
+                    {q.agencyName && q.status === 'accepted' && (
+                      !q.agencyCommission?.clientPaid ? (
+                        <button onClick={() => markClientPaid(q._id, true)} title="DD a reçu le paiement du client → débloque l'encaissement de l'agence" className="inline-flex items-center gap-1 px-2 py-1 mr-1 rounded-md text-[11.5px] font-medium text-[#34C759] hover:bg-[#34C759]/10">
+                          <Wallet className="h-3.5 w-3.5" /> Paiement reçu
+                        </button>
+                      ) : !q.agencyCommission?.paidAt ? (
+                        <button onClick={() => markCommissionPaid(q._id, true)} title="Marquer la commission agence comme versée (virement effectué)" className="inline-flex items-center gap-1 px-2 py-1 mr-1 rounded-md text-[11.5px] font-medium text-[#0066CC] hover:bg-[#0066CC]/10">
+                          <CheckCircle2 className="h-3.5 w-3.5" /> {q.agencyCommission?.encashRequestedAt ? 'Verser commission (demandée)' : 'Verser commission'}
+                        </button>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 mr-1 text-[11px] text-[#86868B]" title={`Commission versée le ${q.agencyCommission?.paidAt ? new Date(q.agencyCommission.paidAt).toLocaleDateString('fr-FR') : ''}`}>
+                          <CheckCircle2 className="h-3.5 w-3.5 text-[#34C759]" /> Commission versée
+                        </span>
+                      )
+                    )}
                     <button onClick={() => onDelete(q._id)} className="p-1.5 text-[#86868B] hover:text-[#FF3B30]">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

@@ -905,6 +905,7 @@ const vueRoadmapAdmin = (u) => ({
   taches: (u?.pyemesRoadmap || []).map((t) => ({
     id: String(t._id), from: t.from || 'dd', titre: t.titre || '', detail: t.detail || '',
     statut: t.statut || 'a_faire', source: t.source || '', createdAt: t.createdAt, doneAt: t.doneAt || null,
+    phase: t.phase || '', echeance: t.echeance || '', resp: t.resp || '', critere: t.critere || '', ref: t.ref || '', ordre: t.ordre ?? null,
   })),
   messages: (u?.pyemesMessages || []).map((m) => ({
     id: String(m._id), from: m.from || 'dd', auteur: m.auteur || '', texte: m.texte || '', image: m.image || '', at: m.at,
@@ -930,11 +931,24 @@ router.post('/:id/pyemes/roadmap', requireAdmin, async (req, res) => {
 
 router.patch('/:id/pyemes/roadmap/:tid', requireAdmin, async (req, res) => {
   const statut = String(req.body?.statut || '');
-  if (!['a_faire', 'en_cours', 'fait'].includes(statut)) return res.status(400).json({ error: 'statut_invalide' });
+  if (!['a_faire', 'en_cours', 'fait', 'standby'].includes(statut)) return res.status(400).json({ error: 'statut_invalide' });
   await User.updateOne(
     { _id: req.params.id, 'pyemesRoadmap._id': req.params.tid },
     { $set: { 'pyemesRoadmap.$.statut': statut, 'pyemesRoadmap.$.doneAt': statut === 'fait' ? new Date() : null } },
   );
+  const u = await User.findById(req.params.id, { pyemesRoadmap: 1, pyemesMessages: 1 }).lean();
+  res.json({ ok: true, ...vueRoadmapAdmin(u) });
+});
+
+// Reordonnancement (glisser-deposer) cote admin : les identifiants arrivent dans le NOUVEL ordre.
+// La liste etant partagee, l'ordre choisi ici est celui que voit aussi l'agence.
+// @author Rabah Ziane - 2026-09-01
+router.patch('/:id/pyemes/roadmap-ordre', requireAdmin, async (req, res) => {
+  const ids = Array.isArray(req.body?.ids) ? req.body.ids.slice(0, 400) : [];
+  if (!ids.length) return res.status(400).json({ error: 'ordre_vide' });
+  await User.bulkWrite(ids.map((tid, i) => ({
+    updateOne: { filter: { _id: req.params.id, 'pyemesRoadmap._id': tid }, update: { $set: { 'pyemesRoadmap.$.ordre': i + 1 } } },
+  })), { ordered: false });
   const u = await User.findById(req.params.id, { pyemesRoadmap: 1, pyemesMessages: 1 }).lean();
   res.json({ ok: true, ...vueRoadmapAdmin(u) });
 });
@@ -1065,6 +1079,96 @@ router.get('/pyemes/publications/:code', async (req, res) => {
   const ag = await User.findOne({ role: 'agence', pyemesCode: String(req.params.code || '').toUpperCase() }, { pyemesSocials: 1, name: 1 }).lean();
   if (!ag) return res.status(404).json({ error: 'agence_introuvable' });
   res.json({ ok: true, agence: ag.name, publications: vuePubsAdmin(ag) });
+});
+
+/* ── RETOURS CLIENTS : meme liste, cote admin Delivery Digital et cote Pyemes ──────────────────
+   @author Rabah Ziane - 2026-09-01 */
+const vueRetoursAdmin = (u) => ({
+  retours: (u.pyemesRetours || []).map((r) => ({
+    id: String(r._id), from: r.from || 'agence', auteur: r.auteur || '', client: r.client || '',
+    texte: r.texte || '', gravite: r.gravite || 'genant', statut: r.statut || 'nouveau',
+    reponse: r.reponse || '', createdAt: r.createdAt, traiteLe: r.traiteLe || null,
+  })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+});
+
+router.get('/:id/pyemes/retours', requireAdmin, async (req, res) => {
+  const u = await User.findById(req.params.id, { pyemesRetours: 1 }).lean();
+  if (!u) return res.status(404).json({ error: 'agence_introuvable' });
+  res.json({ ok: true, ...vueRetoursAdmin(u) });
+});
+
+router.post('/:id/pyemes/retours', requireAdmin, async (req, res) => {
+  const texte = String(req.body?.texte || '').trim();
+  if (!texte) return res.status(400).json({ error: 'retour_vide' });
+  const gravite = ['bloquant', 'genant', 'idee'].includes(req.body?.gravite) ? req.body.gravite : 'genant';
+  await User.updateOne({ _id: req.params.id }, { $push: { pyemesRetours: {
+    from: 'dd', auteur: String(req.body?.auteur || 'Delivery Digital').slice(0, 80),
+    client: String(req.body?.client || '').trim().slice(0, 120),
+    texte: texte.slice(0, 2000), gravite, statut: 'nouveau', createdAt: new Date(),
+  } } });
+  const u = await User.findById(req.params.id, { pyemesRetours: 1 }).lean();
+  res.json({ ok: true, ...vueRetoursAdmin(u) });
+});
+
+router.patch('/:id/pyemes/retours/:rid', requireAdmin, async (req, res) => {
+  const statut = String(req.body?.statut || '');
+  if (!['nouveau', 'en_cours', 'traite', 'ecarte'].includes(statut)) return res.status(400).json({ error: 'statut_invalide' });
+  const set = { 'pyemesRetours.$.statut': statut, 'pyemesRetours.$.traiteLe': ['traite', 'ecarte'].includes(statut) ? new Date() : null };
+  if (typeof req.body?.reponse === 'string') set['pyemesRetours.$.reponse'] = req.body.reponse.trim().slice(0, 2000);
+  await User.updateOne({ _id: req.params.id, 'pyemesRetours._id': req.params.rid }, { $set: set });
+  const u = await User.findById(req.params.id, { pyemesRetours: 1 }).lean();
+  res.json({ ok: true, ...vueRetoursAdmin(u) });
+});
+
+// Lecture et ecriture depuis l'admin PYEMES (serveur a serveur, meme secret que le reste).
+router.get('/pyemes/retours/:code', async (req, res) => {
+  const secret = req.headers['x-admin-secret'] || '';
+  if (!secret || secret !== (process.env.ADMIN_SECRET || '')) return res.status(401).json({ error: 'unauthorized' });
+  const ag = await User.findOne({ role: 'agence', pyemesCode: String(req.params.code || '').toUpperCase() }, { pyemesRetours: 1, name: 1 }).lean();
+  if (!ag) return res.status(404).json({ error: 'agence_introuvable' });
+  res.json({ ok: true, agence: ag.name, ...vueRetoursAdmin(ag) });
+});
+
+router.post('/pyemes/retours/statut', async (req, res) => {
+  const secret = req.headers['x-admin-secret'] || '';
+  if (!secret || secret !== (process.env.ADMIN_SECRET || '')) return res.status(401).json({ error: 'unauthorized' });
+  const statut = String(req.body?.statut || '');
+  if (!['nouveau', 'en_cours', 'traite', 'ecarte'].includes(statut)) return res.status(400).json({ error: 'statut_invalide' });
+  const ag = await User.findOne({ role: 'agence', pyemesCode: String(req.body?.code || '').toUpperCase() }, { _id: 1 }).lean();
+  if (!ag) return res.status(404).json({ error: 'agence_introuvable' });
+  const set = { 'pyemesRetours.$.statut': statut, 'pyemesRetours.$.traiteLe': ['traite', 'ecarte'].includes(statut) ? new Date() : null };
+  if (typeof req.body?.reponse === 'string') set['pyemesRetours.$.reponse'] = req.body.reponse.trim().slice(0, 2000);
+  await User.updateOne({ _id: ag._id, 'pyemesRetours._id': String(req.body?.rid || '') }, { $set: set });
+  const u = await User.findById(ag._id, { pyemesRetours: 1 }).lean();
+  res.json({ ok: true, ...vueRetoursAdmin(u) });
+});
+
+/* ── Feuille de route lue et pilotee depuis l'ADMIN PYEMES (serveur a serveur) ───────────────────
+   La check-list de lancement est la meme liste pour les trois vues : l'espace de l'agence, l'admin
+   Delivery Digital et l'admin Pyemes. Ces deux routes donnent a Pyemes la lecture et le changement
+   de statut, avec le meme secret que les autres echanges. @author Rabah Ziane - 2026-09-01 */
+router.get('/pyemes/roadmap/:code', async (req, res) => {
+  const secret = req.headers['x-admin-secret'] || '';
+  if (!secret || secret !== (process.env.ADMIN_SECRET || '')) return res.status(401).json({ error: 'unauthorized' });
+  const ag = await User.findOne({ role: 'agence', pyemesCode: String(req.params.code || '').toUpperCase() },
+    { pyemesRoadmap: 1, name: 1 }).lean();
+  if (!ag) return res.status(404).json({ error: 'agence_introuvable' });
+  res.json({ ok: true, agence: ag.name, ...vueRoadmapAdmin(ag) });
+});
+
+router.post('/pyemes/roadmap/statut', async (req, res) => {
+  const secret = req.headers['x-admin-secret'] || '';
+  if (!secret || secret !== (process.env.ADMIN_SECRET || '')) return res.status(401).json({ error: 'unauthorized' });
+  const statut = String(req.body?.statut || '');
+  if (!['a_faire', 'en_cours', 'fait', 'standby'].includes(statut)) return res.status(400).json({ error: 'statut_invalide' });
+  const ag = await User.findOne({ role: 'agence', pyemesCode: String(req.body?.code || '').toUpperCase() }, { _id: 1 }).lean();
+  if (!ag) return res.status(404).json({ error: 'agence_introuvable' });
+  await User.updateOne(
+    { _id: ag._id, 'pyemesRoadmap._id': String(req.body?.tid || '') },
+    { $set: { 'pyemesRoadmap.$.statut': statut, 'pyemesRoadmap.$.doneAt': statut === 'fait' ? new Date() : null } },
+  );
+  const u = await User.findById(ag._id, { pyemesRoadmap: 1 }).lean();
+  res.json({ ok: true, ...vueRoadmapAdmin(u) });
 });
 
 export default router;

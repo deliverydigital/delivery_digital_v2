@@ -1,0 +1,45 @@
+/**
+ * Espace client (suivi de projet). Un projet = un client (ex. HipeKids) avec sa liste
+ * de tâches suivies. Le client consulte l'avancement via /espace-client + code d'accès
+ * (lecture seule). L'admin DD gère projets + tâches. @author Rabah Ziane - 2026-08-05
+ */
+import mongoose from 'mongoose';
+const { Schema } = mongoose;
+
+const taskSchema = new Schema({
+  code: String,                 // ex. AA-BE-0201
+  section: String,              // ex. "A · SOCLE BACKEND CENTRAL…"
+  title: String,
+  story: String,                // besoin utilisateur
+  area: String,                 // zone impactée (PA/SH…)
+  priority: { type: Number, default: 3 },   // 1..5
+  category: String,             // Nouvelle fonctionnalité, Bug…
+  status: { type: String, enum: ['todo', 'in_progress', 'done', 'built'], default: 'todo' },
+  estimate: String,             // "4 j"
+  dependsOn: String,
+  note: String,                 // note interne DD (non affichée au client)
+}, { _id: false });
+
+const schema = new Schema({
+  name: { type: String, required: true },           // "HiPe Kids"
+  slug: { type: String, required: true, unique: true, index: true }, // "hipekids"
+  accessCode: { type: String, required: true, index: true },         // code de suivi (unique en pratique)
+  contactEmail: String,
+  logoUrl: String,                                  // logo du client (animé côté espace) - ex. /client-logos/hipekids.png
+  summary: String,                                  // sous-titre affiché au client
+  // Versions du chantier (la courante + les précédentes déjà livrées), pour le menu déroulant de
+  // l'espace client. label ex. "v6.0.0", "Version 28 oct. 2025". @Rabah 2026-08-10
+  versions: { type: [{ label: String, current: Boolean }], default: [] },
+  unit: { type: String, default: 'j' },             // unité d'estimation
+  availableDays: { type: Number, default: 0 },      // forfait acheté par le client (jours disponibles)
+  forfaitStart: Date,                               // date de démarrage du forfait (« à partir de maintenant »)
+  clientOrder: { type: [String], default: [] },     // ordre des tâches défini par le client (glisser-déposer)
+  linkSends: { type: [{ email: String, at: Date }], default: [] }, // historique des envois du lien par email
+  stagingUrl: String,                               // lien environnement de test (aperçu client)
+  prodUrl: String,                                  // lien environnement de production (aperçu client)
+  active: { type: Boolean, default: true },
+  tasks: { type: [taskSchema], default: [] },
+  lastViewedAt: Date,                               // dernière consultation par le client
+}, { timestamps: true });
+
+export default mongoose.models.ClientProject || mongoose.model('ClientProject', schema);

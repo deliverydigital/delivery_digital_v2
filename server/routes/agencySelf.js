@@ -831,6 +831,7 @@ const vueRoadmap = (u) => ({
   taches: (u.pyemesRoadmap || []).map((t) => ({
     id: String(t._id), from: t.from || 'dd', titre: t.titre || '', detail: t.detail || '',
     statut: t.statut || 'a_faire', source: t.source || '', createdAt: t.createdAt, doneAt: t.doneAt || null,
+    phase: t.phase || '', echeance: t.echeance || '', resp: t.resp || '', critere: t.critere || '', ref: t.ref || '', ordre: t.ordre ?? null,
   })),
   messages: (u.pyemesMessages || []).map((m) => ({
     id: String(m._id), from: m.from || 'dd', auteur: m.auteur || '', texte: m.texte || '', image: m.image || '', at: m.at,
@@ -858,7 +859,7 @@ router.post('/pyemes/roadmap', async (req, res) => {
 router.patch('/pyemes/roadmap/:id', async (req, res) => {
   const c = await ctx(req);
   const statut = String(req.body?.statut || '');
-  if (!['a_faire', 'en_cours', 'fait'].includes(statut)) return res.status(400).json({ ok: false, error: 'statut_invalide' });
+  if (!['a_faire', 'en_cours', 'fait', 'standby'].includes(statut)) return res.status(400).json({ ok: false, error: 'statut_invalide' });
   await User.updateOne(
     { _id: c.agencyId, 'pyemesRoadmap._id': req.params.id },
     { $set: { 'pyemesRoadmap.$.statut': statut, 'pyemesRoadmap.$.doneAt': statut === 'fait' ? new Date() : null } },
@@ -871,6 +872,131 @@ router.patch('/pyemes/roadmap/:id', async (req, res) => {
 router.delete('/pyemes/roadmap/:id', async (req, res) => {
   const c = await ctx(req);
   await User.updateOne({ _id: c.agencyId }, { $pull: { pyemesRoadmap: { _id: req.params.id, from: 'agence' } } });
+  const u = await User.findById(c.agencyId, { pyemesRoadmap: 1, pyemesMessages: 1 }).lean();
+  res.json({ ok: true, ...vueRoadmap(u) });
+});
+
+/* ── IDENTIFIANTS DES RESEAUX SOCIAUX (action #8) ───────────────────────────────────────────────
+   Pyemes ouvre les comptes, Nova les anime. Les mots de passe sont CHIFFRES en base et ne sortent
+   jamais avec la liste : il faut les demander un par un, ce qui laisse une trace d'intention et
+   evite qu'un ecran partage expose tout d'un coup. @author Rabah Ziane - 2026-09-01 */
+const cleReseaux = () => crypto.createHash('sha256').update(String(process.env.ADMIN_SECRET || 'pyemes')).digest();
+export function chiffrerSecret(clair) {
+  if (!clair) return '';
+  const iv = crypto.randomBytes(12);
+  const c = crypto.createCipheriv('aes-256-gcm', cleReseaux(), iv);
+  const donnees = Buffer.concat([c.update(String(clair), 'utf8'), c.final()]);
+  return `${iv.toString('hex')}:${c.getAuthTag().toString('hex')}:${donnees.toString('hex')}`;
+}
+export function dechiffrerSecret(chiffre) {
+  try {
+    const [iv, tag, donnees] = String(chiffre || '').split(':');
+    if (!iv || !tag || !donnees) return '';
+    const d = crypto.createDecipheriv('aes-256-gcm', cleReseaux(), Buffer.from(iv, 'hex'));
+    d.setAuthTag(Buffer.from(tag, 'hex'));
+    return Buffer.concat([d.update(Buffer.from(donnees, 'hex')), d.final()]).toString('utf8');
+  } catch { return ''; }
+}
+
+// La liste ne porte JAMAIS le mot de passe, seulement le fait qu'il existe.
+export const vueReseaux = (u) => ({
+  reseaux: (u.pyemesReseaux || []).map((r) => ({
+    id: String(r._id), reseau: r.reseau || 'autre', compte: r.compte || '',
+    identifiant: r.identifiant || '', aSecret: !!r.secret, note: r.note || '',
+    majPar: r.majPar || '', majLe: r.majLe,
+  })),
+});
+
+router.get('/pyemes/reseaux', async (req, res) => {
+  const c = await ctx(req);
+  const u = await User.findById(c.agencyId, { pyemesReseaux: 1 }).lean();
+  res.json({ ok: true, ...vueReseaux(u) });
+});
+
+router.post('/pyemes/reseaux', async (req, res) => {
+  const c = await ctx(req);
+  const reseau = String(req.body?.reseau || '').trim().toLowerCase().slice(0, 20);
+  const identifiant = String(req.body?.identifiant || '').trim().slice(0, 160);
+  if (!reseau || !identifiant) return res.status(400).json({ ok: false, error: 'champs_manquants' });
+  await User.updateOne({ _id: c.agencyId }, { $push: { pyemesReseaux: {
+    reseau, compte: String(req.body?.compte || '').trim().slice(0, 80), identifiant,
+    secret: chiffrerSecret(req.body?.motDePasse), note: String(req.body?.note || '').trim().slice(0, 400),
+    majPar: String(req.body?.auteur || c.name || '').slice(0, 80), majLe: new Date(),
+  } } });
+  const u = await User.findById(c.agencyId, { pyemesReseaux: 1 }).lean();
+  res.json({ ok: true, ...vueReseaux(u) });
+});
+
+// Revelation d'UN mot de passe, a la demande.
+router.get('/pyemes/reseaux/:id/secret', async (req, res) => {
+  const c = await ctx(req);
+  const u = await User.findById(c.agencyId, { pyemesReseaux: 1 }).lean();
+  const r = (u?.pyemesReseaux || []).find((x) => String(x._id) === req.params.id);
+  if (!r) return res.status(404).json({ ok: false, error: 'introuvable' });
+  console.log(`[reseaux] mot de passe ${r.reseau} consulte par l'agence ${c.agencyId}`);
+  res.json({ ok: true, motDePasse: dechiffrerSecret(r.secret) });
+});
+
+router.delete('/pyemes/reseaux/:id', async (req, res) => {
+  const c = await ctx(req);
+  await User.updateOne({ _id: c.agencyId }, { $pull: { pyemesReseaux: { _id: req.params.id } } });
+  const u = await User.findById(c.agencyId, { pyemesReseaux: 1 }).lean();
+  res.json({ ok: true, ...vueReseaux(u) });
+});
+
+/* ── RETOURS CLIENTS (colonne partagee, action #4) ──────────────────────────────────────────────
+   La meme liste des deux cotes : l'agence saisit ce que remontent les testeurs, Delivery Digital
+   et Pyemes lisent, repondent et referment. @author Rabah Ziane - 2026-09-01 */
+const vueRetours = (u) => ({
+  retours: (u.pyemesRetours || []).map((r) => ({
+    id: String(r._id), from: r.from || 'agence', auteur: r.auteur || '', client: r.client || '',
+    texte: r.texte || '', gravite: r.gravite || 'genant', statut: r.statut || 'nouveau',
+    reponse: r.reponse || '', createdAt: r.createdAt, traiteLe: r.traiteLe || null,
+  })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+});
+
+router.get('/pyemes/retours', async (req, res) => {
+  const c = await ctx(req);
+  const u = await User.findById(c.agencyId, { pyemesRetours: 1 }).lean();
+  res.json({ ok: true, ...vueRetours(u) });
+});
+
+router.post('/pyemes/retours', async (req, res) => {
+  const c = await ctx(req);
+  const texte = String(req.body?.texte || '').trim();
+  if (!texte) return res.status(400).json({ ok: false, error: 'retour_vide' });
+  const gravite = ['bloquant', 'genant', 'idee'].includes(req.body?.gravite) ? req.body.gravite : 'genant';
+  await User.updateOne({ _id: c.agencyId }, { $push: { pyemesRetours: {
+    from: 'agence', auteur: String(req.body?.auteur || c.name || '').slice(0, 80),
+    client: String(req.body?.client || '').trim().slice(0, 120),
+    texte: texte.slice(0, 2000), gravite, statut: 'nouveau', createdAt: new Date(),
+  } } });
+  const u = await User.findById(c.agencyId, { pyemesRetours: 1 }).lean();
+  res.json({ ok: true, ...vueRetours(u) });
+});
+
+router.patch('/pyemes/retours/:id', async (req, res) => {
+  const c = await ctx(req);
+  const statut = String(req.body?.statut || '');
+  if (!['nouveau', 'en_cours', 'traite', 'ecarte'].includes(statut)) return res.status(400).json({ ok: false, error: 'statut_invalide' });
+  const set = { 'pyemesRetours.$.statut': statut, 'pyemesRetours.$.traiteLe': ['traite', 'ecarte'].includes(statut) ? new Date() : null };
+  if (typeof req.body?.reponse === 'string') set['pyemesRetours.$.reponse'] = req.body.reponse.trim().slice(0, 2000);
+  await User.updateOne({ _id: c.agencyId, 'pyemesRetours._id': req.params.id }, { $set: set });
+  const u = await User.findById(c.agencyId, { pyemesRetours: 1 }).lean();
+  res.json({ ok: true, ...vueRetours(u) });
+});
+
+// Reordonnancement (glisser-deposer) : le front envoie les identifiants dans le NOUVEL ordre, on
+// reecrit le champ `ordre` de chacun. On ne deplace que ce qui est envoye, le reste ne bouge pas.
+// @author Rabah Ziane - 2026-09-01
+router.patch('/pyemes/roadmap-ordre', async (req, res) => {
+  const c = await ctx(req);
+  const ids = Array.isArray(req.body?.ids) ? req.body.ids.slice(0, 400) : [];
+  if (!ids.length) return res.status(400).json({ ok: false, error: 'ordre_vide' });
+  const ops = ids.map((id, i) => ({
+    updateOne: { filter: { _id: c.agencyId, 'pyemesRoadmap._id': id }, update: { $set: { 'pyemesRoadmap.$.ordre': i + 1 } } },
+  }));
+  await User.bulkWrite(ops, { ordered: false });
   const u = await User.findById(c.agencyId, { pyemesRoadmap: 1, pyemesMessages: 1 }).lean();
   res.json({ ok: true, ...vueRoadmap(u) });
 });

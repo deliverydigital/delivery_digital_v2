@@ -40,9 +40,19 @@ import quotesAdminRoutes, { publicQuotesRouter, agencyQuotesRouter } from './rou
 import agencyAdminRoutes from './routes/agencyAdmin.js';
 import agencyApiRoutes from './routes/agencyApi.js';
 import agencySelfRoutes from './routes/agencySelf.js';
+import { clientAdminRouter, clientPublicRouter } from './routes/clientSpace.js';
+import verifyRoutes from './routes/verify.js';
 import trainerAdminRoutes from './routes/trainerAdmin.js';
 import trainerSelfRoutes from './routes/trainerSelf.js';
+import visioRoutes from './routes/visio.js';
+import { attachVisioSignaling } from './visioSignaling.js';
+import http from 'http';
 import qualiopiAdminRoutes from './routes/qualiopiAdmin.js';
+// Module Comptabilité style Indy (Qonto + liasse IS/IR) - @author Rabah Ziane 2026-07-07
+import comptaAdminRoutes from './routes/comptaAdmin.js';
+import stripeBillingRoutes from './routes/stripeBilling.js';
+// Coffre-fort de fichiers admin (onglet "Fichiers"). @Rabah 2026-07-14
+import filesAdminRoutes from './routes/filesAdmin.js';
 import { publicRouter as accessRequestsPublic, adminRouter as accessRequestsAdmin } from './routes/accessRequests.js';
 import { publicRouter as conventionSignPublic } from './routes/conventionSign.js';
 import { publicRouter as formationAvailabilityPublic } from './routes/formationAvailability.js';
@@ -154,19 +164,28 @@ app.use('/api/project-types', projectTypesRoutes);
 app.use('/api/project-chat', projectChatRoutes);
 app.use('/api/admin/seo', seoAdminRoutes);
 app.use('/api/seo', publicSeoRouter);
+app.use('/api/verify', verifyRoutes);
 appendLlmsRouter();
 function appendLlmsRouter(){ app.use('/', llmsRouter); }
 app.use('/api/admin/prospects', prospectsAdminRoutes);
 app.use('/api/admin/conversations', conversationsAdminRoutes);
 app.use('/api/admin/quotes-quick', quotesAdminRoutes);
 app.use('/api/admin/agencies', agencyAdminRoutes);
+app.use('/api/admin/client-projects', clientAdminRouter);
+app.use('/api/client-space', clientPublicRouter);
 app.use('/api/admin/video-studio', videoStudioRoutes);
 app.use('/api/agency/self', agencySelfRoutes);
 app.use('/api/agency/quotes', agencyQuotesRouter);
 app.use('/api/agency/v1', agencyApiRoutes);
 app.use('/api/admin/trainers', trainerAdminRoutes);
 app.use('/api/trainer/self', trainerSelfRoutes);
+app.use('/api/visio', visioRoutes);
 app.use('/api/admin/qualiopi', qualiopiAdminRoutes);
+// Coffre-fort de fichiers admin. Stockage hors `uploads/` (servi en statique
+// public) et hors du dépôt git → voir routes/filesAdmin.js. @Rabah 2026-07-14
+app.use('/api/admin/files', filesAdminRoutes);
+app.use('/api/admin/comptabilite', comptaAdminRoutes);
+app.use('/api/admin/stripe', stripeBillingRoutes);
 app.use('/api/access-requests', accessRequestsPublic);
 app.use('/api/admin/access-requests', accessRequestsAdmin);
 app.use('/api/convention-sign', conventionSignPublic);
@@ -393,7 +412,11 @@ const startServer = async () => {
             }
         });
 
-        app.listen(PORT, () => {
+        // Serveur HTTP explicite pour pouvoir y greffer le WebSocket de la visio (/ws/visio),
+        // qui partage le port de l'API. @Rabah 2026-07-20
+        const httpServer = http.createServer(app);
+        attachVisioSignaling(httpServer);
+        httpServer.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
             console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
             console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
@@ -404,7 +427,7 @@ const startServer = async () => {
             }
 
             console.log('✅ Server startup completed successfully');
-            try { startSeoAgent(); } catch (e) { console.error('seo-agent boot failed:', e.message); }
+            try { void 0; } catch (e) { console.error('seo-agent boot failed:', e.message); }
         });
     } catch (error) {
         console.error('❌ Failed to start server:', error);
@@ -476,9 +499,17 @@ process.on('SIGINT', () => {
 });
 
 // Handle uncaught exceptions
+// @author Rabah Ziane - 2026-07-07 : ne PLUS tuer le serveur sur une exception
+// async d'un job de fond (ex. un JSON.parse sur une reponse HTTP d'erreur type
+// "Per anonymous access is not allowed" cote agent SEO / Google). Auparavant
+// process.exit(1) transformait cette erreur non-critique en crash-loop pm2 (le
+// process redemarrait ~1x/sec). On log desormais et on laisse Express tourner ;
+// seules les vraies erreurs fatales de boot (connexion, bind) arretent le serveur.
 process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
-    process.exit(1);
+    console.error('Uncaught Exception (survecu, serveur maintenu):', error);
+});
+process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled Rejection (survecu, serveur maintenu):', reason);
 });
 
 // Start the server

@@ -1261,6 +1261,105 @@ router.post('/:id/send', requireAdmin, async (req, res) => {
 });
 
 /* ===========================================================
+   Refus enregistre par l'admin : le client a decline (par retour,
+   telephone...). On marque le devis refuse ET on envoie au client
+   un email cordial pour l'en informer (laisse la porte ouverte).
+   @author Rabah Ziane - 2026-06-23
+   =========================================================== */
+const REJECT_MAIL = {
+  fr: { subject: (ref) => `Votre devis ${ref} - Delivery Digital`, greeting: (n) => n ? `Bonjour ${n},` : 'Bonjour,', body: (ref) => `Nous avons bien pris note que vous ne souhaitez pas donner suite a notre devis <strong>${ref}</strong>, et nous respectons pleinement votre decision.<br/><br/>Merci sincerement pour le temps accorde a l'etude de notre proposition. Si votre projet venait a evoluer, ce serait un plaisir d'en rediscuter : n'hesitez pas a nous recontacter a tout moment.<br/><br/>Nous vous souhaitons une pleine reussite dans vos projets.`, signoff: 'Bien cordialement,<br/>L\'equipe Delivery Digital' },
+  en: { subject: (ref) => `Your quote ${ref} - Delivery Digital`, greeting: (n) => n ? `Hello ${n},` : 'Hello,', body: (ref) => `We have noted that you do not wish to proceed with our quote <strong>${ref}</strong>, and we fully respect your decision.<br/><br/>Thank you sincerely for the time you spent reviewing our proposal. Should your project evolve, it would be a pleasure to discuss it again: feel free to reach out to us at any time.<br/><br/>We wish you every success in your projects.`, signoff: 'Kind regards,<br/>The Delivery Digital team' },
+  es: { subject: (ref) => `Su presupuesto ${ref} - Delivery Digital`, greeting: (n) => n ? `Hola ${n},` : 'Hola,', body: (ref) => `Hemos tomado nota de que no desea continuar con nuestro presupuesto <strong>${ref}</strong>, y respetamos plenamente su decision.<br/><br/>Gracias sinceramente por el tiempo dedicado a estudiar nuestra propuesta. Si su proyecto evoluciona, sera un placer volver a conversar: no dude en contactarnos en cualquier momento.<br/><br/>Le deseamos mucho exito en sus proyectos.`, signoff: 'Atentamente,<br/>El equipo de Delivery Digital' },
+  de: { subject: (ref) => `Ihr Angebot ${ref} - Delivery Digital`, greeting: (n) => n ? `Hallo ${n},` : 'Hallo,', body: (ref) => `Wir haben zur Kenntnis genommen, dass Sie unser Angebot <strong>${ref}</strong> nicht weiterverfolgen mochten, und respektieren Ihre Entscheidung vollkommen.<br/><br/>Vielen Dank fur die Zeit, die Sie sich fur unser Angebot genommen haben. Sollte sich Ihr Projekt weiterentwickeln, besprechen wir es gerne erneut: Kontaktieren Sie uns jederzeit.<br/><br/>Wir wunschen Ihnen viel Erfolg bei Ihren Projekten.`, signoff: 'Mit freundlichen Grussen,<br/>Ihr Delivery Digital Team' },
+  it: { subject: (ref) => `Il suo preventivo ${ref} - Delivery Digital`, greeting: (n) => n ? `Buongiorno ${n},` : 'Buongiorno,', body: (ref) => `Abbiamo preso atto che non desidera dare seguito al nostro preventivo <strong>${ref}</strong> e rispettiamo pienamente la sua decisione.<br/><br/>Grazie di cuore per il tempo dedicato alla nostra proposta. Se il suo progetto dovesse evolvere, sara un piacere riparlarne: non esiti a ricontattarci in qualsiasi momento.<br/><br/>Le auguriamo ogni successo nei suoi progetti.`, signoff: 'Cordiali saluti,<br/>Il team Delivery Digital' },
+  pt: { subject: (ref) => `O seu orcamento ${ref} - Delivery Digital`, greeting: (n) => n ? `Ola ${n},` : 'Ola,', body: (ref) => `Registamos que nao deseja avancar com o nosso orcamento <strong>${ref}</strong> e respeitamos plenamente a sua decisao.<br/><br/>Obrigado sinceramente pelo tempo dedicado a analise da nossa proposta. Caso o seu projeto evolua, sera um prazer conversar novamente: contacte-nos a qualquer momento.<br/><br/>Desejamos-lhe muito sucesso nos seus projetos.`, signoff: 'Com os melhores cumprimentos,<br/>A equipa Delivery Digital' },
+  ar: { subject: (ref) => `عرض السعر ${ref} - Delivery Digital`, greeting: (n) => n ? `مرحباً ${n}،` : 'مرحباً،', body: (ref) => `لقد أحطنا علماً برغبتكم في عدم المضي قدماً في عرض السعر <strong>${ref}</strong>، ونحترم قراركم تماماً.<br/><br/>نشكركم بصدق على الوقت الذي خصصتموه لدراسة عرضنا. وإذا تطور مشروعكم مستقبلاً، فسيسعدنا التحدث معكم مجدداً: لا تترددوا في التواصل معنا في أي وقت.<br/><br/>نتمنى لكم كل التوفيق في مشاريعكم.`, signoff: 'مع أطيب التحيات،<br/>فريق Delivery Digital' },
+};
+function getRejectMail(lang) {
+  const l = (lang || 'fr').toLowerCase();
+  return REJECT_MAIL[l] || REJECT_MAIL.en || REJECT_MAIL.fr;
+}
+
+router.post('/:id/reject', requireAdmin, async (req, res) => {
+  try {
+    const quote = await QuickQuote.findById(req.params.id);
+    if (!quote) return res.status(404).json({ error: 'not found' });
+    if (quote.status === 'accepted') return res.status(400).json({ error: 'already_accepted' });
+
+    quote.status = 'rejected';
+    quote.rejection = {
+      reason: String(req.body?.reason || '').slice(0, 600),
+      rejectedAt: new Date(),
+      by: 'admin',
+    };
+    await quote.save();
+
+    // Email cordial au client (best-effort : le refus reste enregistre meme si l'envoi echoue).
+    let emailSent = false;
+    if (quote.client?.email) {
+      try {
+        const M = getRejectMail(quote.language || 'fr');
+        const name = escapeHtml(quote.client?.name || '');
+        const html = `
+          <div style="background:#F2EFE9;padding:32px 0;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;">
+            <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:16px;padding:32px 28px;color:#1D1D1F;">
+              <p style="font-size:15px;margin:0 0 16px;font-weight:600;">${M.greeting(name)}</p>
+              <p style="font-size:14px;line-height:1.6;color:#3a3a3c;margin:0 0 20px;">${M.body(escapeHtml(quote.ref))}</p>
+              <p style="font-size:14px;line-height:1.6;color:#1D1D1F;margin:0;">${M.signoff}</p>
+            </div>
+            <p style="text-align:center;font-size:11px;color:#86868B;margin:18px 0 0;">deliverydigital.fr</p>
+          </div>`;
+        const transporter = getTransporter();
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || 'contact@deliverydigital.fr',
+          to: quote.client.email,
+          bcc: 'contact@deliverydigital.fr',
+          subject: M.subject(quote.ref),
+          html,
+        });
+        emailSent = true;
+      } catch {}
+    }
+
+    res.json({ item: quote, emailSent });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/* Commission agence sur devis IT - côté super admin DD.
+   - /agency-client-paid : DD a reçu le paiement du client -> débloque l'encaissement agence.
+   - /agency-commission-paid : DD a versé la commission à l'agence -> clôture.
+   @author Rabah Ziane - 2026-06-23 */
+router.post('/:id/agency-client-paid', requireAdmin, async (req, res) => {
+  try {
+    const quote = await QuickQuote.findById(req.params.id);
+    if (!quote) return res.status(404).json({ error: 'not found' });
+    const paid = req.body?.paid === false ? false : true;
+    const ac = quote.agencyCommission || {};
+    ac.clientPaid = paid;
+    ac.clientPaidAt = paid ? new Date() : null;
+    if (!paid) { ac.encashRequestedAt = null; ac.paidAt = null; } // on remet à zéro le cycle si on annule
+    quote.agencyCommission = ac;
+    await quote.save();
+    res.json({ item: quote });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/:id/agency-commission-paid', requireAdmin, async (req, res) => {
+  try {
+    const quote = await QuickQuote.findById(req.params.id);
+    if (!quote) return res.status(404).json({ error: 'not found' });
+    const paid = req.body?.paid === false ? false : true;
+    const ac = quote.agencyCommission || {};
+    ac.paidAt = paid ? new Date() : null;
+    quote.agencyCommission = ac;
+    await quote.save();
+    res.json({ item: quote });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ===========================================================
    Public view (par token, sans auth) - utilisable par le client
    =========================================================== */
 publicRouter.use(express.urlencoded({ extended: true })); // pour parser les form POST
@@ -1533,6 +1632,39 @@ agencyRouter.post('/:id/send', async (req, res) => {
     quote.status = 'sent'; quote.sentAt = new Date();
     await quote.save();
     res.json({ item: quote, publicLink });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Taux de commission propre aux prestations informatiques (la formation est à 15 %). @Rabah 2026-06-23
+const IT_COMMISSION_PCT = 20;
+
+// L'agence (propriétaire) demande l'encaissement de sa commission une fois que DD a encaissé le
+// client (clientPaid). Calque sur les dossiers OPCO : marque encashRequestedAt + notifie DD.
+agencyRouter.post('/:id/encash', async (req, res) => {
+  try {
+    const c = await quoteCtx(req);
+    if (!c.isOwner) return res.status(403).json({ error: 'owner_only' }); // commission = propriétaire de l'agence
+    const quote = await QuickQuote.findOne({ _id: req.params.id, ...quoteScope(c) });
+    if (!quote) return res.status(404).json({ error: 'not_found' });
+    const ac = quote.agencyCommission || {};
+    if (!ac.clientPaid) return res.status(400).json({ error: 'not_available' }); // DD n'a pas encore encaissé le client
+    if (ac.paidAt) return res.status(400).json({ error: 'already_paid' });
+    if (!ac.invoiceNumber) ac.invoiceNumber = 'AGC-' + new Date(quote.createdAt || Date.now()).getFullYear() + '-' + String(quote._id).slice(-5).toUpperCase();
+    ac.encashRequestedAt = new Date();
+    quote.agencyCommission = ac;
+    await quote.save();
+    try {
+      const me = c.me || {};
+      const fix = me.commissionFix != null ? me.commissionFix : 120;
+      const commission = Math.round(fix + (IT_COMMISSION_PCT / 100) * (quote.total || 0));
+      await getTransporter().sendMail({
+        from: process.env.SMTP_FROM || 'contact@deliverydigital.fr',
+        to: process.env.ADMIN_EMAIL || 'contact@deliverydigital.fr',
+        subject: `Ordre d'encaissement (IT) ${ac.invoiceNumber} - ${me.name || 'Agence'}`,
+        text: `L'agence ${me.name || ''} demande l'encaissement de sa commission sur un devis informatique.\n\nDevis : ${quote.ref}\nClient : ${quote.client?.name || '-'} (${quote.client?.company || ''})\nMontant HT : ${quote.total || 0} €\nCommission : ${commission} € TTC (${fix} € + ${IT_COMMISSION_PCT} %)\nRIB : ${me.iban || '(non renseigné)'} ${me.bic || ''}\nTitulaire : ${me.accountHolder || me.name || ''}\n\nValidez le virement puis marquez la commission "versée" dans l'admin.`,
+      });
+    } catch { /* email best effort */ }
+    res.json({ item: quote, invoiceNumber: ac.invoiceNumber });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

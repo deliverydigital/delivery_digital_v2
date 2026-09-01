@@ -1,9 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
-import { LayoutDashboard, Users, Sparkles, LogOut, MessageSquare, Loader2, FileText, BarChart3, GraduationCap, FolderOpen, ExternalLink, Building2, UserCog, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Users, Sparkles, LogOut, MessageSquare, Loader2, FileText, BarChart3, GraduationCap, FolderOpen, ExternalLink, Building2, UserCog, ShieldCheck, Landmark, CreditCard, HardDrive } from 'lucide-react';
 import AIOrb from './AIOrb';
 import AgencyAdmin from './AgencyAdmin';
+import ClientProjectsAdmin from './ClientProjectsAdmin';
 import TrainerAdmin from './TrainerAdmin';
 import QualiopiAdmin from './QualiopiAdmin';
+import Comptabilite from './Comptabilite';
+import StripeBilling from './StripeBilling';
+import FilesAdmin from './FilesAdmin';
 import VideoStudio from './VideoStudio';
 import SeoAdmin from './SeoAdmin';
 import RankingsTab from './admin/RankingsTab';
@@ -19,7 +23,7 @@ const SECRET_KEY = 'dd_seo_admin_secret';
 // Fusion 2026-05-14 (Rabah) : ajout onglets 'formations' (TrainingProgramsManagement)
 // et 'gestion' (lien vers ancien AdminDashboard /?admin=true pour Clients/Projets/Taches
 // en attendant migration complete demain).
-type Section = 'overview' | 'conversations' | 'prospects' | 'quotes' | 'seo' | 'dashboard' | 'formations' | 'gestion' | 'rankings' | 'linkbuilding' | 'agencies' | 'trainers' | 'qualiopi' | 'video';
+type Section = 'overview' | 'conversations' | 'prospects' | 'quotes' | 'seo' | 'dashboard' | 'formations' | 'gestion' | 'rankings' | 'linkbuilding' | 'agencies' | 'clients' | 'trainers' | 'qualiopi' | 'comptabilite' | 'facturation' | 'fichiers' | 'video';
 
 export default function AdminPanel() {
   const [secret, setSecret] = useState<string | null>(() => localStorage.getItem(SECRET_KEY));
@@ -33,8 +37,13 @@ export default function AdminPanel() {
     if (p.startsWith('/admin/dashboard') || p.startsWith('/admin/conversions')) return 'dashboard';
     if (p.startsWith('/admin/formations') || p.startsWith('/admin/training')) return 'formations';
     if (p.startsWith('/admin/gestion') || p.startsWith('/admin/projects') || p.startsWith('/admin/clients')) return 'gestion';
+    if (p.startsWith('/admin/clients-suivi') || p.startsWith('/admin/espaces-client')) return 'clients';
     if (p.startsWith('/admin/formateurs') || p.startsWith('/admin/trainers')) return 'trainers';
     if (p.startsWith('/admin/qualiopi')) return 'qualiopi';
+    // /comptabilite (URL dédiée demandée) ou /admin/comptabilite
+    if (p === '/comptabilite' || p.startsWith('/comptabilite') || p.startsWith('/admin/comptabilite')) return 'comptabilite';
+    if (p === '/facturation' || p.startsWith('/facturation') || p.startsWith('/admin/facturation')) return 'facturation';
+    if (p.startsWith('/admin/fichiers') || p.startsWith('/admin/files')) return 'fichiers';
     return 'overview';
   });
   useEffect(() => {
@@ -77,7 +86,12 @@ export default function AdminPanel() {
   }, [section, loadStats]);
 
   useEffect(() => {
-    const path = section === 'overview' ? '/admin' : `/admin/${section}`;
+    // Comptabilité garde son URL dédiée /comptabilite (demande produit).
+    const path = section === 'overview' ? '/admin'
+      : section === 'comptabilite' ? '/comptabilite'
+      : section === 'facturation' ? '/facturation'
+      : section === 'clients' ? '/admin/espaces-client'
+      : `/admin/${section}`;
     if (window.location.pathname !== path) {
       window.history.replaceState({}, '', path);
     }
@@ -129,8 +143,12 @@ export default function AdminPanel() {
           <SideBtn active={section === 'seo'} icon={<Sparkles className="h-4 w-4" />} label="SEO Content" onClick={() => setSection('seo')} />
           <SideBtn active={section === 'gestion'} icon={<FolderOpen className="h-4 w-4" />} label="Projets & Clients" onClick={() => setSection('gestion')} />
           <SideBtn active={section === 'agencies'} icon={<Building2 className="h-4 w-4" />} label="Agences" badge={stats?.agencyPending || undefined} pulse onClick={() => setSection('agencies')} />
+          <SideBtn active={section === 'clients'} icon={<FolderOpen className="h-4 w-4" />} label="Espaces client" onClick={() => setSection('clients')} />
           <SideBtn active={section === 'trainers'} icon={<UserCog className="h-4 w-4" />} label="Formateurs" badge={stats?.trainerPending || undefined} pulse onClick={() => setSection('trainers')} />
           <SideBtn active={section === 'qualiopi'} icon={<ShieldCheck className="h-4 w-4" />} label="Qualiopi" onClick={() => setSection('qualiopi')} />
+          <SideBtn active={section === 'comptabilite'} icon={<Landmark className="h-4 w-4" />} label="Comptabilité" onClick={() => setSection('comptabilite')} />
+          <SideBtn active={section === 'facturation'} icon={<CreditCard className="h-4 w-4" />} label="Facturation" onClick={() => setSection('facturation')} />
+          <SideBtn active={section === 'fichiers'} icon={<HardDrive className="h-4 w-4" />} label="Fichiers" onClick={() => setSection('fichiers')} />
           {/* Vidéos Hacœur masqué pour l'instant (code conservé, à réactiver plus tard). @Rabah 2026-06-06
           <SideBtn active={section === 'video'} icon={<Video className="h-4 w-4" />} label="Vidéos Hacœur" onClick={() => setSection('video')} /> */}
         </nav>
@@ -168,8 +186,12 @@ export default function AdminPanel() {
         {section === 'seo' && <SeoAdmin embedded sharedSecret={secret} />}
         {section === 'formations' && <TrainingProgramsManagement />}
         {section === 'agencies' && <AgencyAdmin secret={secret} />}
+        {section === 'clients' && <ClientProjectsAdmin secret={secret} />}
         {section === 'trainers' && <TrainerAdmin secret={secret} />}
         {section === 'qualiopi' && <QualiopiAdmin secret={secret} />}
+        {section === 'comptabilite' && <Comptabilite secret={secret} />}
+        {section === 'facturation' && <StripeBilling secret={secret} />}
+        {section === 'fichiers' && <FilesAdmin secret={secret} />}
         {section === 'video' && <VideoStudio secret={secret} />}
         {section === 'gestion' && <GestionPlaceholder />}
       </main>

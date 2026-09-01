@@ -36,6 +36,7 @@ export type TransmitPayload = {
   signedBy: string; signedFunction: string; salaries: WizardSalarie[]; formationTitle: string;
   signatureDataUrl?: string; // image PNG de la signature du client (au doigt) - persistée sur le dossier
   amountHT?: number;         // montant facturé = pris en charge OPCO (adapté à la branche), 0 reste à charge
+  contactEmail?: string;     // email de contact du client, éditable dans le wizard (sert aux envois)
 };
 
 type WizardTab = "intro" | "employer" | "formation" | "salaries" | "synth" | "docs";
@@ -111,12 +112,14 @@ export function parseSalariesCsv(text: string): WizardSalarie[] {
 }
 
 export default function FormationWizardModal({
-  employer, onClose, onTransmit, submitting, secondaryAction, whatsappAction, initial, submitLabel, onSendCsvTemplate,
+  employer, onClose, onTransmit, submitting, secondaryAction, whatsappAction, initial, submitLabel, onSendCsvTemplate, saveAction,
 }: {
   employer: WizardEmployer;
   onClose: () => void;
   onTransmit: (p: TransmitPayload) => void;
   submitting: boolean;
+  /** Enregistrer les modifications (ex. email) SANS renvoyer le dossier ni notifier DD. @Rabah 2026-06-24 */
+  saveAction?: { onClick: (p: TransmitPayload) => void; busy?: boolean };
   /** Action secondaire optionnelle (ex. "Envoyer le lien au client pour signer"). */
   secondaryAction?: { label: string; onClick: (p: Omit<TransmitPayload, "signedBy" | "signedFunction">) => void; busy?: boolean };
   /** Envoi du lien de signature via WhatsApp (optionnel). */
@@ -169,11 +172,19 @@ export default function FormationWizardModal({
       cursor.setDate(cursor.getDate() + 1);
       i++;
     }
-    // En mode correction : on prepend la session d'origine du dossier (peut etre passee/hors liste).
+    // En mode correction : on inclut la session d'origine du dossier (peut etre passee/hors liste).
+    // Si elle correspond a un creneau deja liste, on reutilise sa carte (id 'orig'), sinon on l'ajoute.
     if (initial?.session?.startAt && initial?.session?.endAt) {
       const sd = new Date(initial.session.startAt), ed = new Date(initial.session.endAt);
-      out.unshift({ id: 'orig', title: initial.session.title || "Session d'origine", startAt: sd.toISOString(), endAt: ed.toISOString(), startDate: sd, endDate: ed });
+      const existing = out.find((o) => o.startDate.getTime() === sd.getTime());
+      if (existing) {
+        existing.id = 'orig';
+      } else {
+        out.push({ id: 'orig', title: initial.session.title || "Session d'origine", startAt: sd.toISOString(), endAt: ed.toISOString(), startDate: sd, endDate: ed });
+      }
     }
+    // Tri par date croissante : on affiche les sessions les plus proches d'abord (pas l'aout en tete). @Rabah 2026-06-25
+    out.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
     return out;
   }, [initial, blockedDays]);
   const [selectedSlotId, setSelectedSlotId] = useState<string>(initial?.session ? "orig" : "");
@@ -220,6 +231,7 @@ export default function FormationWizardModal({
   const [formationId, setFormationId] = useState<string>(initial?.formationId || FORMATIONS[0].id);
   const formation = getFormation(formationId) || FORMATIONS[0];
 
+  const [contactEmail, setContactEmail] = useState(employer.email || ""); // email de contact éditable (lead sans email -> à saisir)
   const [signedBy, setSignedBy] = useState(initial?.signedBy || "");
   const [signedFunction, setSignedFunction] = useState(initial?.signedFunction || "Gérant");
   const [drawn, setDrawn] = useState(false);
@@ -323,17 +335,23 @@ export default function FormationWizardModal({
 
   function transmit() {
     if (!allOk) { const firstBad = TABS.find((t) => !t.ok); if (firstBad) setTab(firstBad.key); alert("Complétez tous les onglets (✓ vert) avant de transmettre."); return; }
-    onTransmit({ startAt, endAt, formatType, size, signedBy: signedBy.trim(), signedFunction: signedFunction.trim(), salaries: filledSalaries, formationTitle: formation.title, signatureDataUrl, amountHT: billedTotal });
+    onTransmit({ startAt, endAt, formatType, size, signedBy: signedBy.trim(), signedFunction: signedFunction.trim(), salaries: filledSalaries, formationTitle: formation.title, signatureDataUrl, amountHT: billedTotal, contactEmail: contactEmail.trim() });
   }
   function runSecondary() {
     if (!secondaryAction) return;
     if (!formationOk || !salariesOk) { setTab(!formationOk ? "formation" : "salaries"); alert("Choisissez une session et ajoutez au moins un stagiaire."); return; }
-    secondaryAction.onClick({ startAt, endAt, formatType, size, salaries: filledSalaries, formationTitle: formation.title, amountHT: billedTotal });
+    secondaryAction.onClick({ startAt, endAt, formatType, size, salaries: filledSalaries, formationTitle: formation.title, amountHT: billedTotal, contactEmail: contactEmail.trim() });
+  }
+  // Enregistre l'état courant (email, salariés, session, signataire…) sans contrôle "tout vert" ni
+  // renvoi du dossier. Sert à conserver une modif ponctuelle comme l'email. @author Rabah Ziane - 2026-06-24
+  function runSave() {
+    if (!saveAction) return;
+    saveAction.onClick({ startAt, endAt, formatType, size, signedBy: signedBy.trim(), signedFunction: signedFunction.trim(), salaries: filledSalaries, formationTitle: formation.title, signatureDataUrl, amountHT: billedTotal, contactEmail: contactEmail.trim() });
   }
   function runWhatsapp() {
     if (!whatsappAction) return;
     if (!formationOk || !salariesOk) { setTab(!formationOk ? "formation" : "salaries"); alert("Choisissez une session et ajoutez au moins un stagiaire."); return; }
-    whatsappAction.onClick({ startAt, endAt, formatType, size, salaries: filledSalaries, formationTitle: formation.title, amountHT: billedTotal });
+    whatsappAction.onClick({ startAt, endAt, formatType, size, salaries: filledSalaries, formationTitle: formation.title, amountHT: billedTotal, contactEmail: contactEmail.trim() });
   }
 
   return (
@@ -397,7 +415,12 @@ export default function FormationWizardModal({
                     <Field label="Raison sociale" value={employer.denom} />
                     <Field label="SIRET" value={(employer.siret || "").replace(/(\d{3})(\d{3})(\d{3})(\d{0,5})/, "$1 $2 $3 $4").trim()} mono />
                     <Field label="OPCO" value={employer.opco} />
-                    <Field label="Email de contact" value={employer.email || "-"} />
+                    {/* Email de contact ÉDITABLE : si le lead n'a pas d'email, l'agence le saisit ici.
+                        Il est porté par le dossier (clientEmail) et sert aux envois. @Rabah 2026-06-24 */}
+                    <div className="rounded-2xl border border-ink-200 bg-paper px-4 py-3">
+                      <label className="block text-[10.5px] uppercase tracking-widest font-bold text-ink-500 mb-1">Email de contact</label>
+                      <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="email@entreprise.fr" className="w-full bg-transparent text-[14px] text-ink-900 placeholder-ink-400 focus:outline-none" />
+                    </div>
                   </div>
                 </div>
               )}
@@ -650,6 +673,11 @@ export default function FormationWizardModal({
             </div>
             <div className="flex items-center gap-3">
               <button onClick={onClose} className="px-5 py-2.5 rounded-lg border border-ink-200 text-ink-900 placeholder-ink-400 hover:bg-paper2 text-ink-900 h-display text-[13.5px]">Annuler</button>
+              {saveAction && (
+                <button onClick={runSave} disabled={saveAction.busy} className="px-4 py-2.5 rounded-lg border border-ink-300 text-ink-900 hover:bg-paper2 text-[13px] font-semibold disabled:opacity-50 inline-flex items-center gap-1.5" title="Enregistrer vos modifications (ex. email) sans renvoyer le dossier">
+                  {saveAction.busy ? "Enregistrement…" : "Enregistrer"}
+                </button>
+              )}
               <button onClick={transmit} disabled={!allOk || submitting} className="px-3.5 py-1.5 rounded-full bg-ink-900 text-paper/85 hover:text-paper text-[12px] font-medium hover:bg-black active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5">
                 {submitting ? "Transmission…" : <>{submitLabel || "Transmettre"} <ChevronRight size={13} /></>}
               </button>
@@ -756,7 +784,7 @@ export function ConventionPreview({ beneficiaire, beneficiaireSiret, beneficiair
           <p className="mt-1"><strong>Prérequis des apprenants avant la formation :</strong> Aucun.</p>
         </Article>
         <Article num={3} title="LES FORMATEURS DE L'ACTION">
-          <p>La formation sera assurée par <strong>{trainerName || 'Asma SOUALMI'}</strong>{(trainerEmail || (!trainerName)) ? ` (${trainerEmail || 'dietlivry@gmail.com'})` : ''} : conception de ressources pédagogiques (supports, questionnaires) et animation de formations en visioconférence, en français et en anglais. Pédagogie interactive, structurée et axée sur la mise en situation professionnelle.</p>
+          <p>La formation sera assurée par <strong>{trainerName || 'Ziane Rabah'}</strong>{(trainerEmail || (!trainerName)) ? ` (${trainerEmail || 'contact@deliverydigital.fr'})` : ''} : conception de ressources pédagogiques (supports, questionnaires) et animation de formations en visioconférence, en français. Pédagogie interactive, structurée et axée sur la mise en situation professionnelle.</p>
         </Article>
         <Article num={4} title="ENGAGEMENTS DE PARTICIPATION">
           <p>Le bénéficiaire s&apos;engage à assurer la présence des participants aux dates, lieux et heures prévues. Les participants sont désignés par la direction de la société. Il s&apos;agit de :</p>

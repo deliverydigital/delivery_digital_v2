@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, CreditCard as Edit, Trash2, Eye, Save, X, Upload, Download, FileText, Search, Filter, RefreshCw, CheckCircle, AlertTriangle, Star, Award, Clock, Users, Euro, BookOpen, Target, Globe, Code, Palette, Shield, Briefcase, Heart, Folder, GraduationCap, Settings, ExternalLink, Calendar, MapPin, Phone, Mail, Building2, Tag, BarChart3, TrendingUp, Activity, Zap, PieChart } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Eye, EyeOff, Save, X, Upload, Download, FileText, Search, Filter, RefreshCw, CheckCircle, AlertTriangle, Star, Award, Clock, Users, Euro, BookOpen, Target, Globe, Code, Palette, Shield, Briefcase, Heart, Folder, GraduationCap, Settings, ExternalLink, Calendar, MapPin, Phone, Mail, Building2, Tag, BarChart3, TrendingUp, Activity, Zap, PieChart } from 'lucide-react';
 import { useTrainingPrograms } from '../hooks/useTrainingPrograms';
 import { useTrainingDocuments } from '../hooks/useTrainingDocuments';
 import { useCategories } from '../hooks/useCategories';
@@ -765,6 +765,20 @@ const TrainingProgramsManagement = () => {
     setIsSubmitting(false);
   };
 
+  // Active/désactive une formation : une formation inactive est masquée du site public
+  // (filtre active_only=true) sans être supprimée. @Rabah 2026-07-10
+  const handleToggleActive = async (program: any) => {
+    const next = !program.is_active;
+    if (next === false && !window.confirm(`Désactiver « ${program.title} » ?\nElle sera masquée du site public (et du catalogue), mais conservée.`)) return;
+    try {
+      const result = await updateProgram(program.program_id || program.id, { is_active: next });
+      if (result?.success !== false) refetchPrograms();
+      else alert(`Erreur : ${result?.error || 'inconnue'}`);
+    } catch (e: any) {
+      alert(`Erreur : ${e?.message || 'inconnue'}`);
+    }
+  };
+
   const handleDelete = async (programId: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce programme de formation ?')) {
       try {
@@ -996,6 +1010,13 @@ const TrainingProgramsManagement = () => {
                       {program.created_at ? new Date(program.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}
                     </div>
                     <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleToggleActive(program)}
+                        className={program.is_active ? "text-[#1F7A4D] hover:opacity-70" : "text-[#86868B] hover:opacity-70"}
+                        title={program.is_active ? "Désactiver (masquer du site)" : "Activer (rendre visible)"}
+                      >
+                        {program.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                      </button>
                       <button
                         onClick={() => openUploadModal(program)}
                         className="text-blue-400 hover:text-blue-300"

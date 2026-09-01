@@ -13,7 +13,9 @@ import StickyDiscutonsBar from './components/StickyDiscutonsBar';
 import ProspectAdmin from './components/ProspectAdmin';
 import AdminPanel from './components/AdminPanel';
 import AgenceSpace from './components/AgenceSpace';
+import ClientSpace from './components/ClientSpace';
 import TrainerSpace from './components/TrainerSpace';
+import VisioRoom from './components/VisioRoom';
 import AccesPage from './components/AccesPage';
 import ConventionSignPage from './components/ConventionSignPage';
 import Contact from './components/Contact';
@@ -42,6 +44,7 @@ function App() {
   const [seoSlug, setSeoSlug] = useState<{ type: 'services' | 'blog'; slug: string } | null>(null);
   const [countryHubCode, setCountryHubCode] = useState<string | null>(null);
   const [accesToken, setAccesToken] = useState<string | null>(null);
+  const [visioRoomId, setVisioRoomId] = useState<string | null>(null);
   const [signToken, setSignToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -84,9 +87,21 @@ function App() {
       setCurrentPage('signer');
     } else if (pathname === '/agence' || pathname.startsWith('/agence/')) {
       setCurrentPage('agence');
+    } else if (pathname === '/espace-client' || pathname.startsWith('/espace-client')) {
+      // Espace client - suivi de projet (code d'accès). @Rabah 2026-08-05
+      setCurrentPage('client-space');
+    } else if (pathname.startsWith('/visio/')) {
+      // Salle de visioconférence Delivery Digital (lien partagé aux apprenants). @Rabah 2026-07-20
+      setVisioRoomId(pathname.slice('/visio/'.length).replace(/\/$/, ''));
+      setCurrentPage('visio');
     } else if (pathname === '/formateur' || pathname.startsWith('/formateur/')) {
       setCurrentPage('formateur');
     } else if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+      setCurrentPage('admin-panel');
+    } else if (pathname === '/comptabilite' || pathname.startsWith('/comptabilite')) {
+      // Tableau de bord Comptabilité (style Indy) - géré par AdminPanel (gate secret + section). @Rabah 2026-07-07
+      setCurrentPage('admin-panel');
+    } else if (pathname === '/facturation' || pathname.startsWith('/facturation')) {
       setCurrentPage('admin-panel');
     } else if (pathname === '/services' || pathname === '/services/') {
       setCurrentPage('services-hub');
@@ -199,9 +214,19 @@ function App() {
     return <AgenceSpace />;
   }
 
+  // Espace client - suivi de projet (code d'accès + dashboard lecture seule)
+  if (currentPage === 'client-space') {
+    return <ClientSpace />;
+  }
+
   // Espace Formateur (login JWT + dashboard)
   if (currentPage === 'formateur') {
     return <TrainerSpace />;
+  }
+
+  // Salle de visioconférence publique (accès par le lien du cours)
+  if (currentPage === 'visio' && visioRoomId) {
+    return <VisioRoom roomId={visioRoomId} />;
   }
 
   // Page publique : le client transmet ses acces en securite

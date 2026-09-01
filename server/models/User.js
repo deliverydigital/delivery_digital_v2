@@ -76,10 +76,52 @@ const userSchema = new Schema({
     from: { type: String, enum: ['dd', 'agence'], default: 'dd' },  // qui a demande la tache
     titre: String,
     detail: String,
-    statut: { type: String, enum: ['a_faire', 'en_cours', 'fait'], default: 'a_faire' },
+    // Structure d'une checklist de lancement : une action appartient a une PHASE, porte une
+    // ECHEANCE, un RESPONSABLE et un CRITERE DE FAIT (ce qui prouve qu'elle est terminee). Sans ces
+    // champs, 116 actions se lisaient comme une liste a plat impossible a piloter.
+    // @author Rabah Ziane - 2026-09-01
+    phase: String,                                                   // ex. "2 · Armement"
+    echeance: String,                                                // ex. "J4 · 31/08"
+    resp: { type: String, enum: ['PY', 'NG', 'MIX', ''], default: '' },
+    critere: String,                                                 // « c'est fait quand… »
+    ref: String,                                                     // renvoi au plan de croissance
+    ordre: Number,                                                   // ordre d'origine dans le plan
+    // « standby » = action volontairement mise en attente (on ne la fait pas maintenant, et ce
+    // n'est pas un oubli). Elle sort du calcul d'avancement au lieu de plomber le compteur.
+    // @author Rabah Ziane - 2026-09-01
+    statut: { type: String, enum: ['a_faire', 'en_cours', 'fait', 'standby'], default: 'a_faire' },
     source: String,                                                  // 'manuel' ou 'import: <fichier>'
     createdAt: { type: Date, default: Date.now },
     doneAt: Date,
+  }],
+  // IDENTIFIANTS DES COMPTES RESEAUX SOCIAUX (action #8 du plan). Pyemes cree les comptes, Nova les
+  // anime : sans un endroit commun, les mots de passe circulent en clair par messagerie et personne
+  // ne sait lequel est a jour. Le mot de passe est CHIFFRE en base (AES-256-GCM, cle derivee du
+  // secret serveur) et n'est jamais renvoye tel quel : il faut le demander explicitement.
+  // @author Rabah Ziane - 2026-09-01
+  pyemesReseaux: [{
+    reseau: String,             // linkedin, tiktok, instagram, x, facebook, youtube, autre
+    compte: String,             // @pyemes, l'identifiant public
+    identifiant: String,        // e-mail ou login de connexion
+    secret: String,             // mot de passe CHIFFRE (iv:tag:donnees)
+    note: String,               // double authentification, numero associe, remarques
+    majPar: String,
+    majLe: { type: Date, default: Date.now },
+  }],
+  // RETOURS CLIENTS de la fenetre de test (action #4 du plan de lancement). Chaque testeur remonte
+  // ce qu'il a vecu, et les trois personnes du projet voient la MEME colonne : sans ca, les retours
+  // se perdent en messages prives et personne ne sait ce qui a deja ete corrige.
+  // @author Rabah Ziane - 2026-09-01
+  pyemesRetours: [{
+    from: { type: String, enum: ['dd', 'agence'], default: 'agence' },   // qui a saisi le retour
+    auteur: String,                                                       // qui l'a saisi (nom)
+    client: String,                                                       // de quel testeur il vient
+    texte: String,                                                        // ce qu'il a dit
+    gravite: { type: String, enum: ['bloquant', 'genant', 'idee'], default: 'genant' },
+    statut: { type: String, enum: ['nouveau', 'en_cours', 'traite', 'ecarte'], default: 'nouveau' },
+    reponse: String,                                                      // ce qui en a ete fait
+    createdAt: { type: Date, default: Date.now },
+    traiteLe: Date,
   }],
   // Publications reseaux sociaux proposees par l'agence : elle televerse la video, dit OU elle sera
   // publiee et avec quel texte ; Pyemes valide AVANT publication. Une video deposee = l'agence la

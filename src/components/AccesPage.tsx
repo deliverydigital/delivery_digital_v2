@@ -75,7 +75,7 @@ export default function AccesPage({ token }: { token: string }) {
       <div className="bg-white rounded-2xl border border-black/10 p-6">
         <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#86868B]">Delivery Digital · Accès sécurisé</p>
         <h1 className="text-xl font-bold text-[#1D1D1F] mt-1">{ctx?.label || 'Transmettez vos accès'}</h1>
-        {ctx?.agencyName && <p className="text-[13px] text-[#86868B] mt-1">Demandé par {ctx.agencyName}.</p>}
+        {/* Ne jamais exposer le nom de l'agence partenaire au client : c'est Delivery Digital. @Rabah 2026-07-10 */}
         {isCode ? (
           <>
             <div className="rounded-xl bg-[#34C759]/5 border border-[#34C759]/30 p-3 text-[12px] text-[#1D1D1F] my-4">🔒 Connexion chiffrée (HTTPS). Saisissez le code d&apos;activation reçu par courrier d&apos;AKTO.</div>

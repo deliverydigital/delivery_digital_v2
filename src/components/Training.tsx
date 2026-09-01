@@ -517,8 +517,23 @@ const Training = () => {
 };
 
 // Helper function to download training documents
+// PDF programme brandé (image de marque, uploadé) selon la formation. @Rabah 2026-07-10
+const brandedProgrammePdf = (prog: any): string | null => {
+  const s = ((prog?.title || '') + ' ' + (prog?.category || '')).toLowerCase();
+  if (s.includes('nutrition') || s.includes('allerg')) return '/uploads/formations/programme-nutrition-allergenes.pdf';
+  if (s.includes('hygi') || s.includes('sécurit') || s.includes('securit') || s.includes('durable')) return '/uploads/formations/programme-hygiene-securite-dd.pdf';
+  return null;
+};
+
 const downloadDocument = async (type: string, programId: string) => {
   try {
+    // Programme détaillé : PDF généré à la volée depuis le contenu du programme. @Rabah 2026-07-10
+    if (type === 'program') {
+      const a = document.createElement('a');
+      a.href = `${import.meta.env.VITE_API_URL || ''}/api/training-programs/${programId}/documents/program/download`;
+      document.body.appendChild(a); a.click(); a.remove();
+      return;
+    }
     const apiUrl = import.meta.env.VITE_API_URL || '';
 
     const response = await fetch(`${apiUrl}/api/training/documents/${programId}`, {

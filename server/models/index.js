@@ -12,6 +12,9 @@ import ProjectType from './ProjectType.js';
 import SeoContent from './SeoContent.js';
 import Prospect from './Prospect.js';
 import QuickQuote from './QuickQuote.js';
+// Module Comptabilité (style Indy) - @author Rabah Ziane 2026-07-07
+import ComptaCompany from './ComptaCompany.js';
+import ComptaEntry from './ComptaEntry.js';
 
 export {
   User,
@@ -26,7 +29,9 @@ export {
   ProjectType,
   SeoContent,
   Prospect,
-  QuickQuote
+  QuickQuote,
+  ComptaCompany,
+  ComptaEntry
 };
 
 // Export default object with all models
@@ -43,5 +48,7 @@ export default {
   ProjectType,
   SeoContent,
   Prospect,
-  QuickQuote
+  QuickQuote,
+  ComptaCompany,
+  ComptaEntry
 };

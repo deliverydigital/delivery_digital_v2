@@ -12,6 +12,7 @@ import {
   ListChecks, Building2, FileSignature, BadgeEuro, MessageCircle, Users, AlertCircle,
   Upload, Send, ChevronLeft, ChevronRight, MapPin, Phone, Mail,
   X, Download, FileText, Stamp, ShieldCheck, ChevronRight as ArrowRight,
+  Video, Copy, MessageSquare,
 } from 'lucide-react';
 
 const TOKEN_KEY = 'dd_trainer_token';
@@ -19,7 +20,29 @@ const LOGO_URL = '/Logo-DELIVERY-Digital-Neo-sans-Bold%20noir_%202%20copie%205.p
 const BLUE = '#0066CC';
 const DOTTED_BG: React.CSSProperties = { backgroundColor: '#0E0F13', backgroundImage: 'radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)', backgroundSize: '22px 22px' };
 
-type TabKey = 'cours' | 'dispo' | 'formations' | 'fonds' | 'instructions' | 'profil';
+/**
+ * Libellé de repli quand la fiche du cours n'a pas de pedagoName renseigné : c'est le
+ * responsable pédagogique DD qui crée le groupe WhatsApp et y ajoute le formateur.
+ * @author Rabah Ziane · 2026-07-20
+ */
+/**
+ * Pays proposés pour l'adresse de l'entreprise et le pays du compte bancaire.
+ * Forme [code, libellé] : le formulaire Informations enregistre le LIBELLÉ, celui du RIB le CODE.
+ * @author Rabah Ziane · 2026-07-20
+ */
+const COUNTRIES: [string, string][] = [
+  ['FR', 'France'], ['BE', 'Belgique'], ['CH', 'Suisse'], ['LU', 'Luxembourg'],
+  ['DE', 'Allemagne'], ['ES', 'Espagne'], ['IT', 'Italie'], ['PT', 'Portugal'],
+  ['NL', 'Pays-Bas'], ['GB', 'Royaume-Uni'], ['IE', 'Irlande'],
+  ['US', 'États-Unis'], ['CA', 'Canada'],
+  ['MA', 'Maroc'], ['DZ', 'Algérie'], ['TN', 'Tunisie'],
+  ['AE', 'Émirats arabes unis'], ['SA', 'Arabie saoudite'], ['QA', 'Qatar'],
+];
+
+const PEDAGO_FALLBACK = 'Monsieur Ziane Rabah';
+const PEDAGO_PHONE_FALLBACK = '+971 50 476 28 38';
+
+type TabKey = 'cours' | 'dispo' | 'formations' | 'fonds' | 'salle' | 'profil';
 
 type Trainer = {
   id: string; name: string; email: string; phone: string;
@@ -31,6 +54,7 @@ type Trainer = {
   companyInfo: any;
   contract: { signed: boolean; signedBy: string; signedFunction: string; signedAt: string | null; validated: boolean };
   onboardingValidated: boolean;
+  visio?: { slug: string; link: string; hostLink: string } | null;
 };
 type Formation = {
   _id: string; program_id: string; title: string; duration_hours: number; description?: string; category?: string;
@@ -42,10 +66,19 @@ type Formation = {
   documents?: { title?: string; file_path?: string; document_type?: string }[];
 };
 type Learner = { firstname?: string; lastname?: string; email?: string; phone?: string };
+type Instruction = { id: string; title: string; body?: string; icon?: string; docs?: string[] };
 type Session = {
   _id: string; source: 'opco' | 'manual'; formationTitle?: string; hours?: number;
   clientName?: string; clientEmail?: string; location?: string; addr?: string;
   sessionStart?: string; sessionEnd?: string; learners?: Learner[];
+  days?: { date: string; from: string; to: string; mode?: string; exercises?: string }[]; scheduledHours?: number;
+  meetingLink?: string; meetingProvider?: string; hostKey?: string;
+  purchaseOrder?: { number?: string; issuedAt?: string };
+  clientContactName?: string; clientPhone?: string;
+  reschedules?: { at: string; by?: string; reason?: string }[];
+  stepsDone?: { instructionId: string; at?: string }[];
+  trainerCompletedAt?: string;
+  selfAssessment?: { at?: string; objectivesMet?: string; groupLevel?: string; attendance?: string; difficulties?: string; improvements?: string; rating?: number };
   pedagoName?: string; pedagoPhone?: string;
   whatsappGroupCreated?: boolean; whatsappGroupLink?: string;
   hourlyRate?: number; payAmount?: number; status: string; doneAt?: string; invoiceNumber?: string;
@@ -113,6 +146,20 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
   }, [auth, onLogout]);
   useEffect(() => { loadProfile(); }, [loadProfile]);
 
+  /**
+   * Nombre de cours encore à mener (statut « planifié ») : sert de pastille rouge clignotante
+   * sur l'onglet « Mes cours » tant que le formateur n'a pas terminé ses formations.
+   * @author Rabah Ziane · 2026-07-20
+   */
+  const [pending, setPending] = useState(0);
+  const loadPending = useCallback(async () => {
+    try {
+      const j = await fetch('/api/trainer/self/sessions', { headers: auth() }).then((r) => r.json());
+      setPending((j.sessions || []).filter((x: Session) => x.status === 'scheduled').length);
+    } catch { /* le badge est un confort, pas un bloquant */ }
+  }, [auth]);
+  useEffect(() => { loadPending(); }, [loadPending]);
+
   if (loading) return <div className="min-h-screen flex items-center justify-center text-white" style={DOTTED_BG}><Loader2 className="h-6 w-6 animate-spin" /></div>;
   if (!trainer) return <div className="min-h-screen flex items-center justify-center text-white" style={DOTTED_BG}>Erreur de chargement. <button onClick={onLogout} className="underline ml-2">Se reconnecter</button></div>;
 
@@ -150,20 +197,26 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
             ['dispo', 'Disponibilités', <CalendarDays className="h-4 w-4" />],
             ['formations', 'Mes formations', <GraduationCap className="h-4 w-4" />],
             ['fonds', 'Fonds', <Wallet className="h-4 w-4" />],
-            ['instructions', 'Instructions', <MessageCircle className="h-4 w-4" />],
+            ['salle', 'Ma salle', <Video className="h-4 w-4" />],
             ['profil', 'Mon compte', <Building2 className="h-4 w-4" />],
           ] as [TabKey, string, React.ReactNode][]).map(([k, label, icon]) => (
-            <button key={k} onClick={() => setTab(k)} className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-semibold transition-colors ${tab === k ? 'text-white' : 'text-white/55 hover:text-white bg-white/5'}`} style={tab === k ? { background: BLUE } : undefined}>
+            <button key={k} onClick={() => setTab(k)} className={`relative shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-semibold transition-colors ${tab === k ? 'text-white' : 'text-white/55 hover:text-white bg-white/5'}`} style={tab === k ? { background: BLUE } : undefined}>
               {icon}{label}
+              {k === 'cours' && pending > 0 && (
+                <span className="relative flex h-5 min-w-5 ml-0.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#FF3B30] opacity-70 animate-ping" />
+                  <span className="relative inline-flex h-5 min-w-5 px-1 rounded-full bg-[#FF3B30] text-white text-[11px] font-bold items-center justify-center">{pending}</span>
+                </span>
+              )}
             </button>
           ))}
         </nav>
 
-        {tab === 'cours' && <SessionsTab token={token} auth={auth} authJson={authJson} />}
+        {tab === 'cours' && <SessionsTab token={token} auth={auth} authJson={authJson} trainer={trainer} trainerRate={trainer.hourlyRate || 0} onCountChanged={loadPending} />}
         {tab === 'dispo' && <DispoTab auth={auth} authJson={authJson} trainer={trainer} onChanged={loadProfile} />}
         {tab === 'formations' && <FormationsTab trainer={trainer} auth={auth} />}
         {tab === 'fonds' && <FondsTab trainer={trainer} auth={auth} authJson={authJson} validated={validated} />}
-        {tab === 'instructions' && <InstructionsTab auth={auth} />}
+        {tab === 'salle' && <MyRoomTab trainer={trainer} />}
         {tab === 'profil' && <ProfilTab trainer={trainer} authJson={authJson} auth={auth} onChanged={loadProfile} />}
       </main>
     </div>
@@ -237,12 +290,19 @@ function StepCard({ n, done, active, title, icon, onClick }: { n: number; done: 
 }
 
 /* ============================ Mes cours ============================ */
-function SessionsTab({ token, auth, authJson }: { token: string; auth: () => any; authJson: () => any }) {
+function SessionsTab({ token, auth, authJson, trainer, trainerRate, onCountChanged }: { token: string; auth: () => any; authJson: () => any; trainer: Trainer; trainerRate: number; onCountChanged: () => void }) {
   const [sessions, setSessions] = useState<Session[] | null>(null);
+  // Le déroulé est le même pour tous les cours : une seule requête, partagée aux fiches.
+  const [steps, setSteps] = useState<Instruction[]>([]);
+  useEffect(() => {
+    fetch('/api/trainer/self/instructions', { headers: auth() }).then((r) => r.json())
+      .then((j) => setSteps(j.instructions || [])).catch(() => setSteps([]));
+  }, [auth]);
   const load = useCallback(async () => {
     const j = await fetch('/api/trainer/self/sessions', { headers: auth() }).then((r) => r.json());
     setSessions(j.sessions || []);
-  }, [auth]);
+    onCountChanged();
+  }, [auth, onCountChanged]);
   useEffect(() => { load(); }, [load]);
   if (!sessions) return <Loading />;
   if (!sessions.length) return <Empty icon={<ListChecks className="h-7 w-7" />} text="Aucun cours pour le moment. Vous serez notifié dès qu'un cours vous sera assigné." />;
@@ -251,20 +311,22 @@ function SessionsTab({ token, auth, authJson }: { token: string; auth: () => any
   const past = sessions.filter((s) => !upcoming.includes(s));
   return (
     <div className="space-y-5">
-      {upcoming.length > 0 && <div className="space-y-3">{upcoming.map((s) => <SessionCard key={s._id} s={s} authJson={authJson} onChanged={load} />)}</div>}
+      {upcoming.length > 0 && <div className="space-y-3">{upcoming.map((s) => <SessionCard key={s._id} s={s} steps={steps} auth={auth} authJson={authJson} onChanged={load} trainer={trainer} trainerRate={trainerRate} />)}</div>}
       {past.length > 0 && (
         <div>
           <h3 className="text-[12px] uppercase tracking-wide text-white/40 font-semibold mb-2 mt-2">Historique</h3>
-          <div className="space-y-3">{past.map((s) => <SessionCard key={s._id} s={s} authJson={authJson} onChanged={load} />)}</div>
+          <div className="space-y-3">{past.map((s) => <SessionCard key={s._id} s={s} steps={steps} auth={auth} authJson={authJson} onChanged={load} trainer={trainer} trainerRate={trainerRate} />)}</div>
         </div>
       )}
     </div>
   );
 }
 
-function SessionCard({ s, authJson, onChanged }: { s: Session; authJson: () => any; onChanged: () => void }) {
+function SessionCard({ s, steps, auth, authJson, onChanged, trainer, trainerRate }: { s: Session; steps: Instruction[]; auth: () => any; authJson: () => any; onChanged: () => void; trainer: Trainer; trainerRate: number }) {
+  const trainerName = trainer.name;
   const [open, setOpen] = useState(false);
   const [link, setLink] = useState(s.whatsappGroupLink || '');
+  const [poOpen, setPoOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const daysTo = s.sessionStart ? Math.ceil((new Date(s.sessionStart).getTime() - Date.now()) / 86400000) : null;
   const soon = daysTo != null && daysTo >= 0 && daysTo <= 3;
@@ -306,11 +368,66 @@ function SessionCard({ s, authJson, onChanged }: { s: Session; authJson: () => a
       {open && (
         <div className="px-4 pb-4 border-t border-white/10 pt-4 space-y-4">
           <div className="grid sm:grid-cols-2 gap-3 text-[13px]">
-            <Info icon={<MapPin className="h-3.5 w-3.5" />} label="Lieu" value={`${s.location || '-'}${s.addr ? ' · ' + s.addr : ''}`} />
+            {/* Un cours 100 % visio n'affiche pas l'adresse du client. @Rabah 2026-07-20 */}
+            <Info icon={<MapPin className="h-3.5 w-3.5" />} label="Lieu" value={(() => {
+              const modes = [...new Set((s.days || []).map((d) => d.mode || 'visio'))];
+              const allVisio = modes.length === 1 && modes[0] === 'visio';
+              const label = allVisio ? 'Visioconférence (distanciel)' : (s.location || '-');
+              return allVisio ? label : `${label}${s.addr ? ' · ' + s.addr : ''}`;
+            })()} />
             <Info icon={<Clock className="h-3.5 w-3.5" />} label="Durée" value={s.hours ? `${s.hours} h` : '-'} />
-            <Info icon={<Users className="h-3.5 w-3.5" />} label="Responsable pédagogique" value={s.pedagoName ? `${s.pedagoName}${s.pedagoPhone ? ' · ' + s.pedagoPhone : ''}` : '-'} />
-            <Info icon={<BadgeEuro className="h-3.5 w-3.5" />} label="Rémunération" value={s.payAmount ? `${euro(s.payAmount)} (${s.hours || 0}h × ${s.hourlyRate || 0}€)` : 'À l\'issue du cours'} />
+            {/* Repli sur le libellé générique si la fiche du cours ne précise pas le responsable. @author Rabah Ziane · 2026-07-20 */}
+            <Info icon={<Users className="h-3.5 w-3.5" />} label="Responsable pédagogique & technique" value={`${s.pedagoName || PEDAGO_FALLBACK} · ${s.pedagoPhone || PEDAGO_PHONE_FALLBACK} · joignable sur WhatsApp`} />
+            <Info icon={<BadgeEuro className="h-3.5 w-3.5" />} label="Rémunération" value={s.payAmount
+              ? `${euro(s.payAmount)} (${s.scheduledHours || s.hours || 0} h encadrées × ${s.hourlyRate || 0} €)`
+              : (s.scheduledHours && trainerRate ? `${euro(Math.round(s.scheduledHours * trainerRate))} estimé (${s.scheduledHours} h encadrées × ${trainerRate} €)` : 'À l\'issue du cours')} />
           </div>
+
+          {/* Déroulé pas-à-pas, repris des Instructions. @Rabah 2026-07-20 */}
+          {s.status === 'scheduled' && <StepsBlock s={s} steps={steps} trainerName={trainerName} trainerRate={trainerRate} auth={auth} authJson={authJson} onChanged={onChanged} />}
+
+          {/* Contact client : à appeler avant la formation pour confirmer ou adapter les dates. @author Rabah Ziane · 2026-07-20 */}
+          {(s.clientPhone || s.clientEmail || s.clientContactName) && (
+            <div className="rounded-xl border border-white/10 bg-[#0E0F13] p-3">
+              <div className="flex items-center gap-2 text-[13px] font-semibold mb-1"><Building2 className="h-4 w-4" style={{ color: BLUE }} /> Contact client{s.clientContactName ? ` · ${s.clientContactName}` : ''}</div>
+              <p className="text-[12.5px] text-white/55 mb-2">Appelez-le ou écrivez-lui sur WhatsApp avant la formation pour confirmer les dates ou les adapter. Si elles changent, modifiez vos créneaux ci-dessous : Delivery Digital en est informé automatiquement.</p>
+              <div className="flex flex-wrap items-center gap-2">
+                {s.clientPhone && <a href={`tel:${s.clientPhone.replace(/\s/g, '')}`} className="px-3.5 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-[13px] font-semibold inline-flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> {s.clientPhone}</a>}
+                {/* Pas de contact par email avec le client : téléphone et WhatsApp uniquement. @Rabah 2026-07-20 */}
+                {s.clientPhone && <a href={`https://wa.me/${waNumber(s.clientPhone)}`} target="_blank" rel="noreferrer" className="px-3.5 py-2 rounded-lg text-black text-[13px] font-semibold inline-flex items-center gap-1.5" style={{ background: '#25D366' }}><MessageCircle className="h-3.5 w-3.5" /> WhatsApp</a>}
+              </div>
+            </div>
+          )}
+
+          {/* Créneaux réservés sur les disponibilités du formateur. @author Rabah Ziane · 2026-07-20 */}
+          {(s.days || []).length > 0 && (
+            <div>
+              <div className="text-[12px] uppercase tracking-wide text-white/40 font-semibold mb-2">Vos créneaux{s.scheduledHours ? ` · ${s.scheduledHours} h encadrées` : ''}</div>
+              <div className="space-y-1.5">
+                {(s.days || []).map((d, i) => (
+                  <DayRow key={i} d={d} index={i} session={s} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Replanification après échange avec le client (notifie Delivery Digital). @author Rabah Ziane · 2026-07-20 */}
+          {s.status === 'scheduled' && <RescheduleBlock s={s} authJson={authJson} onChanged={onChanged} />}
+
+          {/* Supports pédagogiques du coffre-fort DD. @Rabah 2026-07-20 */}
+          <MaterialsBlock s={s} auth={auth} />
+
+          {/* Bon de commande émis par Delivery Digital à l'assignation. @Rabah 2026-07-20 */}
+          {s.purchaseOrder?.number && (
+            <div>
+              <div className="text-[12px] uppercase tracking-wide text-white/40 font-semibold mb-2">Bon de commande</div>
+              <button onClick={() => setPoOpen(true)} className="w-full flex items-center gap-3 text-[13px] bg-[#0E0F13] hover:bg-white/5 rounded-lg px-3 py-2 text-left">
+                <FileText className="h-4 w-4 shrink-0" style={{ color: BLUE }} />
+                <span className="font-medium">{s.purchaseOrder.number}</span>
+                <span className="text-white/40 text-[12px] ml-auto">voir / télécharger</span>
+              </button>
+            </div>
+          )}
 
           {/* Apprenants */}
           <div>
@@ -328,26 +445,920 @@ function SessionCard({ s, authJson, onChanged }: { s: Session; authJson: () => a
             )}
           </div>
 
-          {/* WhatsApp */}
-          <div className="rounded-xl border border-[#25D366]/30 bg-[#25D366]/5 p-3">
-            <div className="flex items-center gap-2 text-[13px] font-semibold mb-2"><MessageCircle className="h-4 w-4 text-[#25D366]" /> Groupe WhatsApp des apprenants</div>
-            {s.whatsappGroupCreated ? (
-              <div className="text-[13px] text-[#3DD68C] inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" /> Groupe créé{s.whatsappGroupLink ? <a href={s.whatsappGroupLink} target="_blank" rel="noreferrer" className="underline text-white/70 ml-1">ouvrir</a> : ''}</div>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-[12.5px] text-white/55">Créez le groupe avec les apprenants ci-dessus + le responsable pédagogique, puis confirmez ici (collez le lien d'invitation si vous l'avez).</p>
-                <div className="flex gap-2">
-                  <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="Lien d'invitation (optionnel)" className="flex-1 px-3 py-2 rounded-lg bg-[#0E0F13] border border-white/10 text-[13px] text-white placeholder-white/30 outline-none" />
-                  <button onClick={markWhatsapp} disabled={busy} className="px-3.5 py-2 rounded-lg bg-[#25D366] text-black text-[13px] font-semibold disabled:opacity-60">{busy ? '…' : "J'ai créé le groupe"}</button>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Visioconférence + message d'accueil prêt à coller dans le groupe WhatsApp. @author Rabah Ziane · 2026-07-20 */}
+          {s.meetingLink && <MeetingBlock s={s} trainerName={trainerName} />}
+
         </div>
       )}
+      {poOpen && <PurchaseOrderModal s={s} trainer={trainer} trainerRate={trainerRate} onClose={() => setPoOpen(false)} />}
     </section>
   );
 }
+/**
+ * Message d'accueil prêt à envoyer dans le groupe WhatsApp : présentation du formateur,
+ * planning repris des créneaux réservés et lien de la salle. Partagé entre l'étape 3 du
+ * déroulé et le bloc visioconférence, pour qu'il n'existe qu'une seule version du texte.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function buildWelcomeMessage(s: Session, trainerName: string) {
+  const planning = (s.days || []).length
+    ? (s.days || []).map((d) => `- ${new Date(`${d.date}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} de ${d.from} à ${d.to}`).join('\n')
+    : (s.sessionStart ? `- ${fmtDate(s.sessionStart)}` : '');
+  return [
+    `Bonjour à toutes et à tous,`,
+    ``,
+    `Je suis ${trainerName}, votre formateur pour « ${s.formationTitle || 'la formation'} » avec Delivery Digital.`,
+    ``,
+    planning ? `Voici le planning :\n${planning}` : '',
+    ``,
+    `Nous nous retrouverons en visioconférence ici :`,
+    s.meetingLink,
+    ``,
+    `Aucune installation n'est nécessaire, le lien s'ouvre directement dans votre navigateur.`,
+    ``,
+    // Envoyés automatiquement 6 jours avant la 1re séance : le message d'accueil sert de
+    // rappel pour qu'ils soient effectivement remplis avant le démarrage (exigence Qualiopi).
+    `IMPORTANT - à faire avant le début de la formation :`,
+    `Vous recevez par email deux questionnaires à compléter impérativement AVANT notre première séance :`,
+    `- Expression des attentes de l'apprenant concernant la formation`,
+    `- Évaluation du positionnement de l'apprenant`,
+    `Ils nous permettent d'adapter la formation à votre niveau et à vos besoins. Merci de les renvoyer avant le démarrage.`,
+    ``,
+    `N'hésitez pas à poser vos questions dans ce groupe avant la session. À très vite !`,
+  ].filter(Boolean).join('\n');
+}
+
+/**
+ * Supports rattachés à une étape : le formateur voit au bon moment le document à utiliser ou
+ * à remettre aux apprenants, sans aller le chercher dans la liste complète.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function StepDocs({ s, docs, auth }: { s: Session; docs: string[]; auth: () => any }) {
+  const [busy, setBusy] = useState('');
+  const open = async (name: string) => {
+    setBusy(name);
+    try {
+      const r = await fetch(`/api/trainer/self/sessions/${s._id}/materials/download?name=${encodeURIComponent(name)}`, { headers: auth() });
+      if (!r.ok) return;
+      const url = URL.createObjectURL(await r.blob());
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } finally { setBusy(''); }
+  };
+  if (!docs.length) return null;
+  return (
+    <div className="mt-2 flex flex-wrap gap-2">
+      {docs.map((d) => (
+        <button key={d} onClick={() => open(d)} disabled={!!busy}
+          className="px-3.5 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-[12.5px] font-semibold inline-flex items-center gap-1.5 disabled:opacity-60">
+          <FileText className="h-3.5 w-3.5" style={{ color: BLUE }} /> {busy === d ? 'ouverture…' : d.replace(/\.pdf$/i, '')}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Numéro au format international pour WhatsApp (wa.me n'accepte que des chiffres, sans « + »).
+ * Les numéros clients sont saisis à la française (06…) : on les préfixe alors en 33.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function waNumber(phone?: string) {
+  const d = String(phone || '').replace(/\D/g, '');
+  if (!d) return '';
+  if (d.startsWith('33')) return d;
+  if (d.startsWith('0')) return `33${d.slice(1)}`;
+  return d;
+}
+
+/**
+ * Message des exercices à coller dans le groupe WhatsApp après la visio d'une journée.
+ * Partagé entre l'étape « Envoyer les exercices » et le détail du créneau.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function buildExercisesMessage(exercises: string) {
+  return [
+    `Bravo pour la séance d'aujourd'hui !`,
+    ``,
+    `COMMENT ÇA MARCHE`,
+    `Cette formation se déroule en situation de travail : après chaque heure de visioconférence, vous appliquez ce que nous avons vu directement sur votre poste, pendant votre service. Cela représente environ 6 h de travail d'ici notre prochaine séance.`,
+    ``,
+    `CE QUE VOUS DEVEZ FAIRE`,
+    exercises,
+    ``,
+    `COMMENT NOUS RENDRE VOTRE TRAVAIL`,
+    `Pour chaque exercice, envoyez directement dans ce groupe WhatsApp ce qui vous est demandé : une photo, un relevé, un tableau ou simplement ce que vous avez constaté. Vous pouvez les envoyer au fur et à mesure, pas besoin de tout faire d'un coup.`,
+    ``,
+    `À QUOI ÇA SERT`,
+    `Ces envois constituent la preuve de votre formation : ils sont obligatoires pour la validation de votre parcours. Nous les reprendrons ensemble au début de la prochaine séance.`,
+    ``,
+    `Je reste disponible dans ce groupe si un exercice n'est pas clair.`,
+  ].join('\n');
+}
+
+/**
+ * Étapes générées à partir des journées réellement planifiées : la formation se déroule en
+ * 3 jours identiques dans leur logique (on anime l'heure de visio, puis on envoie les
+ * exercices des 6 h en situation de travail). Ces étapes suivent la préparation et rendent le
+ * parcours explicite du premier au dernier jour.
+ * Le diaporama accompagne chaque journée ; les documents HACCP n'apparaissent que le jour où
+ * la méthode est traitée (jour 2).
+ * @author Rabah Ziane · 2026-07-20
+ */
+const DIAPO_DOC = 'Diapos _Formation Hygiène, Sécurité et Développement Durable21h.pdf';
+const HACCP_DOCS = ['CAS PRATIQUES HACCP.PDF', 'fiche_non_conformite_HACCP.pdf'];
+
+function buildDaySteps(s: Session): Instruction[] {
+  const out: Instruction[] = [];
+  (s.days || []).forEach((d, i) => {
+    const label = new Date(`${d.date}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    out.push({
+      id: `day-${i}-anim`,
+      title: `Jour ${i + 1} - Animer la séance (${label}, ${d.from}-${d.to})`,
+      body: i === 1
+        ? `Ouvrez votre salle quelques minutes avant, admettez les apprenants depuis la salle d'attente, puis partagez votre écran. C'est LE jour de la méthode HACCP : traitez les cas pratiques ci-dessous et montrez comment remplir une fiche de non-conformité, les apprenants la réutiliseront dans leurs exercices.`
+        : `Ouvrez votre salle quelques minutes avant, admettez les apprenants depuis la salle d'attente, puis partagez votre écran et déroulez le diaporama.`,
+      docs: i === 1 ? [DIAPO_DOC, ...HACCP_DOCS] : [DIAPO_DOC],
+    });
+    out.push({
+      id: `day-${i}-exos`,
+      title: `Jour ${i + 1} - Envoyer les exercices en situation de travail`,
+      body: `Dès la fin de la visio, envoyez les exercices du jour ${i + 1} dans le groupe WhatsApp. Les apprenants les réalisent sur leur poste (6 h), avec un livrable par exercice.`,
+      docs: [],
+    });
+  });
+  // Clôture puis auto-évaluation : la dernière étape lui rappelle sa rémunération et le
+  // circuit de facturation, pour qu'il n'ait pas à demander « et je suis payé quand ? ».
+  // Clôture : le formateur annonce aux apprenants ce qu'ils reçoivent après la formation.
+  if ((s.days || []).length) {
+    out.push({
+      id: 'closing',
+      title: 'Clôturer la formation',
+      body: `Envoyez le message de clôture aux apprenants : il annonce le questionnaire de satisfaction à chaud, l'attestation et le questionnaire à froid.`,
+      docs: [],
+    });
+    out.push({
+      id: 'autoeval',
+      title: 'Remplir votre auto-évaluation et voir votre rémunération',
+      body: `Vous recevez par email, le jour même de la dernière séance, le questionnaire « Auto-évaluation de la formation par le formateur ». Complétez-le, puis validez cette étape.`,
+      docs: [],
+    });
+  }
+  return out;
+}
+
+/**
+ * Confirmation que le formateur est bien dans le groupe WhatsApp des apprenants, avec le lien
+ * d'invitation s'il l'a. Rattachée à l'étape correspondante du déroulé plutôt qu'à un encart
+ * séparé, pour qu'il n'y ait qu'un seul endroit où agir.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function GroupConfirm({ s, authJson, onChanged }: { s: Session; authJson: () => any; onChanged: () => void }) {
+  const [link, setLink] = useState(s.whatsappGroupLink || '');
+  const [busy, setBusy] = useState(false);
+  const confirm = async () => {
+    setBusy(true);
+    try {
+      await fetch(`/api/trainer/self/sessions/${s._id}/whatsapp`, { method: 'POST', headers: authJson(), body: JSON.stringify({ created: true, link }) });
+      onChanged();
+    } finally { setBusy(false); }
+  };
+  if (s.whatsappGroupCreated) {
+    return (
+      <p className="mt-2 text-[12.5px] text-[#3DD68C] inline-flex items-center gap-1.5">
+        <CheckCircle2 className="h-3.5 w-3.5" /> Vous êtes dans le groupe
+        {s.whatsappGroupLink && <a href={s.whatsappGroupLink} target="_blank" rel="noreferrer" className="underline text-white/60 ml-1">ouvrir le groupe</a>}
+      </p>
+    );
+  }
+  return (
+    <div className="mt-2 space-y-2">
+      <p className="text-[12px] text-white/50">
+        Pas encore ajouté ? Contactez {s.pedagoName || PEDAGO_FALLBACK} au {s.pedagoPhone || PEDAGO_PHONE_FALLBACK} - il est <span className="text-white/75 font-semibold">joignable sur WhatsApp</span>, pour le pédagogique comme pour tout problème technique.
+      </p>
+      <a href={`https://wa.me/${waNumber(s.pedagoPhone || PEDAGO_PHONE_FALLBACK)}`} target="_blank" rel="noreferrer"
+        className="px-3.5 py-2 rounded-lg text-black text-[12.5px] font-semibold inline-flex items-center gap-1.5" style={{ background: '#25D366' }}>
+        <MessageCircle className="h-3.5 w-3.5" /> Écrire au responsable
+      </a>
+    <div className="flex flex-wrap gap-2">
+      <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="Lien d'invitation du groupe (facultatif)"
+        className="flex-1 min-w-[220px] px-3 py-2 rounded-lg bg-[#0E0F13] border border-white/10 text-[13px] text-white placeholder-white/30 outline-none" />
+      <button onClick={confirm} disabled={busy} className="px-3.5 py-2 rounded-lg text-white text-[12.5px] font-semibold disabled:opacity-60" style={{ background: BLUE }}>
+        {busy ? '…' : 'Je suis dans le groupe'}
+      </button>
+    </div>
+    </div>
+  );
+}
+
+/**
+ * Auto-évaluation du formateur + rappel de sa rémunération. La dernière étape du déroulé ne
+ * se valide qu'une fois ce formulaire enregistré : c'est la preuve d'exécution attendue côté
+ * Qualiopi, et ça évite de clore un cours sans retour du formateur.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function SelfAssessment({ s, trainerRate, authJson, onChanged }: { s: Session; trainerRate: number; authJson: () => any; onChanged: () => void }) {
+  const saved = s.selfAssessment;
+  const [f, setF] = useState({
+    objectivesMet: saved?.objectivesMet || 'oui',
+    groupLevel: saved?.groupLevel || 'homogene',
+    attendance: saved?.attendance || 'complete',
+    difficulties: saved?.difficulties || '',
+    improvements: saved?.improvements || '',
+    rating: saved?.rating || 0,
+  });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const [editing, setEditing] = useState(!saved);
+
+  const rate = s.hourlyRate || trainerRate || 0;
+  const hours = s.scheduledHours || s.hours || 0;
+  const amount = s.payAmount || Math.round(hours * rate);
+  const settled = !!s.payAmount;
+
+  const save = async () => {
+    if (!f.rating) { setErr('Donnez une note globale à la session.'); return; }
+    setBusy(true); setErr('');
+    try {
+      const r = await fetch(`/api/trainer/self/sessions/${s._id}/self-assessment`, { method: 'POST', headers: authJson(), body: JSON.stringify(f) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || j.ok === false) { setErr("Échec de l'enregistrement."); return; }
+      setEditing(false); onChanged();
+    } catch { setErr('Réseau indisponible.'); }
+    finally { setBusy(false); }
+  };
+
+  const sel = 'px-2.5 py-1.5 rounded-lg bg-[#0E0F13] border border-white/10 text-[13px] text-white outline-none';
+  const area = 'w-full px-3 py-2 rounded-lg bg-[#0E0F13] border border-white/10 text-[13px] text-white placeholder-white/30 outline-none';
+
+  return (
+    <div className="mt-2 space-y-3">
+      <div className="rounded-xl border border-white/10 bg-[#181A20] p-3">
+        <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+          <span className="text-[13px] font-semibold">Auto-évaluation de la formation par le formateur</span>
+          {saved && !editing && <span className="text-[12px] text-[#3DD68C] inline-flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Enregistrée</span>}
+        </div>
+
+        {!editing && saved ? (
+          <div className="text-[12.5px] text-white/65 space-y-1">
+            <p>Objectifs atteints : <span className="text-white/90">{saved.objectivesMet}</span> · Groupe : <span className="text-white/90">{saved.groupLevel === 'homogene' ? 'homogène' : 'hétérogène'}</span> · Assiduité : <span className="text-white/90">{saved.attendance === 'complete' ? 'complète' : 'partielle'}</span></p>
+            <p>Note globale : <span className="text-white/90 font-semibold">{saved.rating}/5</span></p>
+            {saved.difficulties && <p>Difficultés : {saved.difficulties}</p>}
+            {saved.improvements && <p>Améliorations : {saved.improvements}</p>}
+            <button onClick={() => setEditing(true)} className="mt-1 text-[12.5px] text-white/50 hover:text-white underline">Modifier</button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-[12px] text-white/50">Ces réponses sont conservées comme preuve d'exécution de la formation.</p>
+            <div className="flex flex-wrap gap-2">
+              <label className="text-[12px] text-white/50">Objectifs atteints
+                <select className={`${sel} ml-1.5`} value={f.objectivesMet} onChange={(e) => setF({ ...f, objectivesMet: e.target.value })}>
+                  <option value="oui" className="bg-[#181A20]">Oui</option>
+                  <option value="partiellement" className="bg-[#181A20]">Partiellement</option>
+                  <option value="non" className="bg-[#181A20]">Non</option>
+                </select>
+              </label>
+              <label className="text-[12px] text-white/50">Niveau du groupe
+                <select className={`${sel} ml-1.5`} value={f.groupLevel} onChange={(e) => setF({ ...f, groupLevel: e.target.value })}>
+                  <option value="homogene" className="bg-[#181A20]">Homogène</option>
+                  <option value="heterogene" className="bg-[#181A20]">Hétérogène</option>
+                </select>
+              </label>
+              <label className="text-[12px] text-white/50">Assiduité
+                <select className={`${sel} ml-1.5`} value={f.attendance} onChange={(e) => setF({ ...f, attendance: e.target.value })}>
+                  <option value="complete" className="bg-[#181A20]">Complète</option>
+                  <option value="partielle" className="bg-[#181A20]">Partielle</option>
+                </select>
+              </label>
+            </div>
+            <textarea className={area} rows={2} placeholder="Difficultés rencontrées (facultatif)" value={f.difficulties} onChange={(e) => setF({ ...f, difficulties: e.target.value })} />
+            <textarea className={area} rows={2} placeholder="Points à améliorer pour les prochaines sessions (facultatif)" value={f.improvements} onChange={(e) => setF({ ...f, improvements: e.target.value })} />
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[12px] text-white/50">Note globale</span>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button key={n} onClick={() => setF({ ...f, rating: n })}
+                  className={`h-8 w-8 rounded-lg text-[13px] font-semibold ${f.rating >= n ? 'text-white' : 'bg-white/8 text-white/50'}`}
+                  style={f.rating >= n ? { background: BLUE } : undefined}>{n}</button>
+              ))}
+            </div>
+            {err && <p className="text-[12.5px] text-[#FF6B6B]">{err}</p>}
+            <button onClick={save} disabled={busy} className="px-4 py-2 rounded-lg text-white text-[13px] font-semibold disabled:opacity-60" style={{ background: BLUE }}>
+              {busy ? '…' : "Enregistrer mon auto-évaluation"}
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-[#181A20] p-3">
+        <div className="text-[12px] uppercase tracking-wide text-white/40 font-semibold mb-1">Votre rémunération pour cette formation</div>
+        <div className="text-[20px] font-bold mb-1" style={{ color: BLUE }}>{euro(amount)}</div>
+        <p className="text-[12.5px] text-white/55 mb-2">{hours} h encadrées × {rate} €/h{settled ? '' : ' (estimation, figée dès que Delivery Digital marque le cours réalisé)'}</p>
+        <p className="text-[11.5px] text-white/35 mb-2">Les heures en situation de travail sont réalisées par les apprenants sur leur poste : elles ne sont pas des heures encadrées.</p>
+        {/* Le formateur ne comprenait pas pourquoi ses fonds n'apparaissaient pas : on rend
+            l'étape en cours explicite. @Rabah 2026-07-20 */}
+        <div className={`rounded-lg px-3 py-2 mb-2 text-[12.5px] ${settled ? 'bg-[#3DD68C]/10 text-[#3DD68C]' : 'bg-[#E5B567]/10 text-[#E5B567]'}`}>
+          {settled
+            ? <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" /> Montant validé : retrouvez-le dans l'onglet « Fonds » pour demander l'encaissement.</span>
+            : <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> Delivery Digital est prévenu de la fin de votre formation. Vos fonds apparaîtront dans l'onglet « Fonds » dès que le cours sera marqué réalisé.</span>}
+        </div>
+        <div className="text-[12.5px] text-white/65 space-y-1">
+          <p>Votre facture est établie automatiquement à partir des informations de votre profil (raison sociale, SIRET, RIB) : vérifiez qu'elles sont à jour dans « Mon compte ».</p>
+          <p>Vous la recevez <span className="text-white/90 font-semibold">en fin de mois</span>, sans démarche de votre part.</p>
+          <p>Le règlement intervient <span className="text-white/90 font-semibold">à 30 jours</span>.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Actions rattachées à une étape du déroulé : le formateur ne doit pas avoir à chercher
+ * ailleurs ce dont l'étape a besoin (message à envoyer, dates à confirmer, lien à ouvrir).
+ * Le rattachement se fait sur les mots-clés du libellé, car les instructions restent
+ * librement éditables par le superadmin - une étape non reconnue s'affiche simplement sans
+ * action, jamais en erreur.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function stepKind(title: string, body: string, id?: string): 'dates' | 'welcome' | 'room' | 'exos' | 'closing' | 'pay' | 'group' | null {
+  // Étapes générées par jour : le type est porté par l'identifiant, aucun doute possible.
+  if (id?.endsWith('-anim')) return 'room';
+  if (id?.endsWith('-exos')) return 'exos';
+  if (id === 'closing') return 'closing';
+  if (id === 'autoeval') return 'pay';
+  // On ne se fie qu'au TITRE : les textes explicatifs mentionnent souvent « les dates » ou
+  // « le lien visio » sans que ce soit l'objet de l'étape (l'accueil parlait des dates et
+  // affichait à tort les boutons de replanification).
+  const t = title.toLowerCase();
+  if (t.includes('accueil')) return 'welcome';
+  if (t.includes('groupe')) return 'group';
+  if (t.includes('date')) return 'dates';
+  if (t.includes('visio') || t.includes('salle') || t.includes('séance')) return 'room';
+  return null;
+}
+
+function StepAction({ kind, stepId, s, trainerName, trainerRate, authJson, onChanged }: { kind: 'dates' | 'welcome' | 'room' | 'exos' | 'closing' | 'pay' | 'group'; stepId: string; s: Session; trainerName: string; trainerRate: number; authJson: () => any; onChanged: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const [reschedule, setReschedule] = useState(false);
+
+  if (kind === 'dates') {
+    // Message de confirmation pré-rédigé, repris quel que soit le canal choisi.
+    const planning = (s.days || []).map((d) => `- ${new Date(`${d.date}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} de ${d.from} à ${d.to}`).join('\n');
+    const clientMsg = [
+      `Bonjour${s.clientContactName ? ` ${s.clientContactName}` : ''},`,
+      ``,
+      `Je suis ${trainerName}, formateur Delivery Digital pour « ${s.formationTitle || 'la formation'} ».`,
+      planning ? `Je vous confirme les dates prévues :\n${planning}` : `Je vous contacte pour confirmer les dates de la formation.`,
+      ``,
+      `Est-ce que cela vous convient ? Si besoin nous pouvons les adapter ensemble.`,
+      ``,
+      `À noter : tous les apprenants inscrits recevront par email, avant le démarrage, deux questionnaires à compléter (expression des attentes et évaluation du positionnement). À l'issue de la formation, chacun recevra un questionnaire de satisfaction et son attestation de fin de formation.`,
+    ].join('\n');
+    return (
+      <div className="mt-2 space-y-2">
+        {/* Tous les canaux pour joindre le client : appel, WhatsApp, SMS, email. @Rabah 2026-07-20 */}
+        <div className="flex flex-wrap gap-2">
+          {s.clientPhone && <a href={`tel:${s.clientPhone.replace(/\s/g, '')}`} className="px-3.5 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-[12.5px] font-semibold inline-flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> Appeler {s.clientContactName || 'le client'}</a>}
+          {s.clientPhone && <a href={`https://wa.me/${waNumber(s.clientPhone)}?text=${encodeURIComponent(clientMsg)}`} target="_blank" rel="noreferrer" className="px-3.5 py-2 rounded-lg text-black text-[12.5px] font-semibold inline-flex items-center gap-1.5" style={{ background: '#25D366' }}><MessageCircle className="h-3.5 w-3.5" /> WhatsApp</a>}
+          {s.clientPhone && <a href={`sms:${s.clientPhone.replace(/\s/g, '')}${/iPhone|iPad|Mac/.test(navigator.userAgent) ? '&' : '?'}body=${encodeURIComponent(clientMsg)}`} className="px-3.5 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-[12.5px] font-semibold inline-flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5" /> SMS</a>}
+          <button onClick={() => setReschedule((r) => !r)} className="px-3.5 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-[12.5px] font-semibold inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" /> Modifier les dates</button>
+        </div>
+        {(s.days || []).length > 0 && (
+          <p className="text-[12px] text-white/50">
+            Dates prévues : {(s.days || []).map((d) => `${new Date(`${d.date}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} ${d.from}-${d.to}`).join(' · ')}
+          </p>
+        )}
+        {reschedule && <RescheduleBlock s={s} authJson={authJson} onChanged={onChanged} startOpen />}
+      </div>
+    );
+  }
+
+  if (kind === 'room') {
+    if (!s.meetingLink) return null;
+    const hostLink = s.hostKey ? `${s.meetingLink}${s.meetingLink.includes('?') ? '&' : '?'}h=${s.hostKey}` : s.meetingLink;
+    return (
+      <div className="mt-2 flex flex-wrap gap-2">
+        <a href={hostLink} target="_blank" rel="noreferrer" className="px-3.5 py-2 rounded-lg text-white text-[12.5px] font-semibold inline-flex items-center gap-1.5" style={{ background: BLUE }}><Video className="h-3.5 w-3.5" /> Ouvrir ma salle</a>
+      </div>
+    );
+  }
+
+  if (kind === 'group') {
+    // Confirmation d'appartenance au groupe : elle vit dans l'étape, plus dans un encart séparé.
+    return <GroupConfirm s={s} authJson={authJson} onChanged={onChanged} />;
+  }
+
+  if (kind === 'pay') {
+    return <SelfAssessment s={s} trainerRate={trainerRate} authJson={authJson} onChanged={onChanged} />;
+  }
+
+  if (kind === 'closing') {
+    const msg = [
+      `Merci à toutes et à tous pour votre participation et votre implication sur ces ${(s.days || []).length} journées !`,
+      ``,
+      `Vous recevez dès aujourd'hui par email le questionnaire « Évaluation de la satisfaction à chaud de l'apprenant ». Merci de le compléter rapidement : votre retour nous permet d'améliorer la formation.`,
+      ``,
+      `Vous recevrez également votre attestation de fin de formation, puis dans environ 3 mois un dernier questionnaire de satisfaction à froid, pour mesurer ce que vous avez pu mettre en pratique.`,
+      ``,
+      `Bonne continuation et n'hésitez pas à appliquer ce que nous avons vu ensemble !`,
+    ].join('\n');
+    return (
+      <div className="mt-2">
+        <pre className="text-[12.5px] text-white/80 whitespace-pre-wrap font-sans bg-[#181A20] rounded-lg p-2.5 mb-2 max-h-[220px] overflow-auto">{msg}</pre>
+        <div className="flex flex-wrap gap-2">
+          <a href={`https://wa.me/?text=${encodeURIComponent(msg)}`} target="_blank" rel="noreferrer" className="px-3.5 py-2 rounded-lg text-black text-[12.5px] font-semibold inline-flex items-center gap-1.5" style={{ background: '#25D366' }}>
+            <MessageCircle className="h-3.5 w-3.5" /> Partager sur WhatsApp
+          </a>
+          <button onClick={async () => { try { await navigator.clipboard.writeText(msg); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* refusé */ } }}
+            className="px-3.5 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-[12.5px] font-semibold inline-flex items-center gap-1.5">
+            <Copy className="h-3.5 w-3.5" /> {copied ? 'Message copié' : 'Copier le message'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (kind === 'exos') {
+    // L'index du jour est dans l'identifiant de l'étape : on prend les exercices du bon jour.
+    const idx = Number(stepId.split('-')[1] || 0);
+    const day = (s.days || [])[idx];
+    if (!day?.exercises) return null;
+    const msg = buildExercisesMessage(day.exercises);
+    return (
+      <div className="mt-2">
+        <pre className="text-[12.5px] text-white/80 whitespace-pre-wrap font-sans bg-[#181A20] rounded-lg p-2.5 mb-2 max-h-[220px] overflow-auto">{msg}</pre>
+        <div className="flex flex-wrap gap-2">
+          <a href={`https://wa.me/?text=${encodeURIComponent(msg)}`} target="_blank" rel="noreferrer" className="px-3.5 py-2 rounded-lg text-black text-[12.5px] font-semibold inline-flex items-center gap-1.5" style={{ background: '#25D366' }}>
+            <MessageCircle className="h-3.5 w-3.5" /> Partager sur WhatsApp
+          </a>
+          <button onClick={async () => { try { await navigator.clipboard.writeText(msg); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* refusé */ } }}
+            className="px-3.5 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-[12.5px] font-semibold inline-flex items-center gap-1.5">
+            <Copy className="h-3.5 w-3.5" /> {copied ? 'Message copié' : 'Copier le message'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Message d'accueil : texte visible tel qu'il partira, copie, et ouverture directe de WhatsApp.
+  const message = buildWelcomeMessage(s, trainerName);
+  const waHref = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(message); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* refusé */ }
+  };
+  return (
+    <div className="mt-2">
+      <pre className="text-[12.5px] text-white/80 whitespace-pre-wrap font-sans bg-[#181A20] rounded-lg p-2.5 mb-2 max-h-[220px] overflow-auto">{message}</pre>
+      <div className="flex flex-wrap gap-2">
+        <a href={waHref} target="_blank" rel="noreferrer" className="px-3.5 py-2 rounded-lg text-black text-[12.5px] font-semibold inline-flex items-center gap-1.5" style={{ background: '#25D366' }}>
+          <MessageCircle className="h-3.5 w-3.5" /> Partager sur WhatsApp
+        </a>
+        <button onClick={copy} className="px-3.5 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-[12.5px] font-semibold inline-flex items-center gap-1.5">
+          <Copy className="h-3.5 w-3.5" /> {copied ? 'Message copié' : 'Copier le message'}
+        </button>
+      </div>
+      <p className="text-[11.5px] text-white/35 mt-1.5">« Partager sur WhatsApp » ouvre l'application avec le message déjà écrit : il ne reste qu'à choisir le groupe de la formation.</p>
+    </div>
+  );
+}
+
+/**
+ * Déroulé pas-à-pas du cours, repris de la rubrique Instructions : le formateur voit d'un
+ * coup d'œil où il en est du début à la fin. Une seule étape est ouverte à la fois - celle en
+ * cours - les précédentes sont cochées et repliées, les suivantes grisées et non cliquables,
+ * pour qu'il n'y ait jamais d'ambiguïté sur ce qu'il reste à faire.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function StepsBlock({ s, steps, trainerName, trainerRate, auth, authJson, onChanged }: { s: Session; steps: Instruction[]; trainerName: string; trainerRate: number; auth: () => any; authJson: () => any; onChanged: () => void }) {
+  const [done, setDone] = useState<string[]>(() => (s.stepsDone || []).map((x) => x.instructionId));
+  const [busy, setBusy] = useState('');
+  // Étape terminée que le formateur a rouverte pour la relire (sans la décocher).
+  const [reopened, setReopened] = useState<string | null>(null);
+  const [stepErr, setStepErr] = useState('');
+  useEffect(() => { setDone((s.stepsDone || []).map((x) => x.instructionId)); }, [s.stepsDone]);
+  // Préparation (rubrique Instructions) puis une paire d'étapes par journée planifiée.
+  const allSteps = useMemo(() => [...steps, ...buildDaySteps(s)], [steps, s]);
+  if (!allSteps.length) return null;
+
+  const toggle = async (id: string, next: boolean) => {
+    setBusy(id);
+    setDone((d) => next ? [...d, id] : d.filter((x) => x !== id));  // retour visuel immédiat
+    try {
+      const r = await fetch(`/api/trainer/self/sessions/${s._id}/step`, { method: 'POST', headers: authJson(), body: JSON.stringify({ instructionId: id, done: next }) });
+      const j = await r.json().catch(() => ({}));
+      if (j.error === 'self_assessment_required') {
+        setDone((d) => d.filter((x) => x !== id));   // on annule le retour visuel optimiste
+        setStepErr("Enregistrez d'abord votre auto-évaluation ci-dessus.");
+        setTimeout(() => setStepErr(''), 4000);
+        return;
+      }
+      onChanged();
+    } finally { setBusy(''); }
+  };
+
+  const doneCount = allSteps.filter((st) => done.includes(st.id)).length;
+  const currentIndex = allSteps.findIndex((st) => !done.includes(st.id));   // -1 = tout est fait
+  const finished = currentIndex === -1;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="text-[12px] uppercase tracking-wide text-white/40 font-semibold">Déroulé du cours</div>
+        <span className="text-[12px] font-semibold" style={{ color: finished ? '#3DD68C' : BLUE }} title="Cliquez sur une étape terminée pour la revoir">{doneCount}/{allSteps.length} {finished ? '· terminé' : ''}</span>
+      </div>
+      <div className="h-1 rounded-full bg-white/8 mb-3 overflow-hidden">
+        <div className="h-full rounded-full transition-all" style={{ width: `${(doneCount / allSteps.length) * 100}%`, background: finished ? '#3DD68C' : BLUE }} />
+      </div>
+
+      <div className="space-y-1.5">
+        {allSteps.map((st, i) => {
+          const isDone = done.includes(st.id);
+          const isCurrent = i === currentIndex;
+          const locked = !isDone && !isCurrent;   // étape future : on ne saute pas les étapes
+          // Une étape faite peut être rouverte pour la relire, et décochée pour la refaire.
+          const isOpen = isCurrent || reopened === st.id;
+          return (
+            <div key={st.id} className={`rounded-lg px-3 py-2.5 ${isCurrent ? 'bg-[#0E0F13] border' : 'bg-[#0E0F13]'} ${locked ? 'opacity-40' : ''}`}
+              style={isCurrent ? { borderColor: BLUE } : undefined}>
+              <div className="flex items-start gap-2.5">
+                <button disabled={locked || busy === st.id} onClick={() => toggle(st.id, !isDone)}
+                  title={isDone ? 'Décocher pour refaire cette étape' : undefined}
+                  className={`mt-0.5 h-5 w-5 rounded-full shrink-0 flex items-center justify-center text-[11px] font-bold ${isDone ? 'text-white' : 'border border-white/25 text-white/50'} ${locked ? 'cursor-not-allowed' : ''}`}
+                  style={isDone ? { background: '#3DD68C' } : undefined}>
+                  {isDone ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
+                </button>
+                <div className="min-w-0 flex-1">
+                  <button type="button" disabled={locked} onClick={() => { if (isDone) setReopened(reopened === st.id ? null : st.id); }}
+                    className={`text-[13.5px] font-semibold text-left w-full ${isDone ? 'text-white/45 line-through hover:text-white/70' : ''} ${locked ? 'cursor-not-allowed' : isDone ? 'cursor-pointer' : ''}`}>
+                    {st.title}
+                  </button>
+                  {/* Le détail n'est utile que sur l'étape en cours : le reste resterait du bruit. */}
+                  {isOpen && st.body && <p className="text-[12.5px] text-white/60 mt-1 whitespace-pre-line">{st.body}</p>}
+                  {/* Ce dont l'étape a besoin, directement sous elle. @Rabah 2026-07-20 */}
+                  {isOpen && (() => { const k = stepKind(st.title, st.body || '', st.id); return k ? <StepAction kind={k} stepId={st.id} s={s} trainerName={trainerName} trainerRate={trainerRate} authJson={authJson} onChanged={onChanged} /> : null; })()}
+                  {isOpen && <StepDocs s={s} docs={st.docs || []} auth={auth} />}
+                  {isCurrent && <button onClick={() => toggle(st.id, true)} disabled={busy === st.id}
+                    className="mt-2 px-3.5 py-1.5 rounded-lg text-white text-[12.5px] font-semibold disabled:opacity-60" style={{ background: BLUE }}>
+                    {busy === st.id ? '…' : "C'est fait, étape suivante"}
+                  </button>}
+                  {isDone && reopened === st.id && <button onClick={() => { setReopened(null); toggle(st.id, false); }} disabled={busy === st.id}
+                    className="mt-2 px-3.5 py-1.5 rounded-lg bg-white/8 hover:bg-white/12 text-[12.5px] font-semibold">
+                    Revenir à cette étape
+                  </button>}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {stepErr && <p className="text-[12.5px] text-[#FF6B6B] mt-2">{stepErr}</p>}
+      {finished && <p className="text-[12.5px] text-[#3DD68C] mt-2 inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" /> Formation menée de bout en bout : toutes les étapes sont faites.</p>}
+    </div>
+  );
+}
+
+/**
+ * Bon de commande émis par Delivery Digital vers le formateur pour une session : il matérialise
+ * la commande de prestation en application du contrat-cadre signé, et sert de pièce justificative
+ * de part et d'autre. Imprimable / téléchargeable en PDF via le navigateur.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function PurchaseOrderModal({ s, trainer, trainerRate, onClose }: { s: Session; trainer: Trainer; trainerRate: number; onClose: () => void }) {
+  const print = () => window.print();
+  const ci = trainer.companyInfo || {};
+  const rate = s.hourlyRate || trainerRate || 0;
+  const hours = s.scheduledHours || s.hours || 0;
+  const amount = s.payAmount || Math.round(hours * rate);
+  const issued = s.purchaseOrder?.issuedAt ? new Date(s.purchaseOrder.issuedAt) : new Date();
+  const row = (k: string, v: React.ReactNode) => (
+    <div className="flex gap-3 py-1.5 border-b border-black/5 text-[12.5px]"><span className="w-[190px] shrink-0 text-[#86868B]">{k}</span><span className="text-[#1D1D1F]">{v}</span></div>
+  );
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="w-full max-w-3xl my-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-end mb-2 no-print">
+          <button onClick={onClose} className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="bg-white rounded-2xl overflow-hidden">
+          <div id="bc-print" className="p-8 text-[#1D1D1F]">
+            <div className="flex items-start justify-between gap-6 mb-6">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.15em] text-[#86868B] font-bold">Bon de commande</p>
+                <p className="text-[20px] font-extrabold">{s.purchaseOrder?.number || '-'}</p>
+                <p className="text-[12px] text-[#86868B] mt-0.5">Émis le {issued.toLocaleDateString('fr-FR')}</p>
+              </div>
+              <div className="text-right text-[11.5px] leading-relaxed">
+                <p className="font-extrabold text-[13px]">DELIVERY Digital Nice</p>
+                <p>470 promenade des Anglais</p>
+                <p>06200 Nice · France</p>
+                <p className="text-[10.5px] text-[#86868B] mt-1">SIRET 90294519500029 · APE 6201Z</p>
+                <p className="text-[10.5px] text-[#86868B]">Organisme de formation certifié QUALIOPI</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-[#F5F5F7] p-4 mb-5">
+              <p className="text-[11px] uppercase tracking-wider text-[#86868B] font-bold mb-1">Prestataire</p>
+              <p className="text-[13.5px] font-bold">{ci.legalName || trainer.name}</p>
+              {ci.regNumber && <p className="text-[12px]">SIRET / N° {ci.regNumber}</p>}
+              {(ci.address || ci.city) && <p className="text-[12px]">{[ci.address, ci.postalCode, ci.city, ci.country].filter(Boolean).join(', ')}</p>}
+              <p className="text-[12px] text-[#86868B] mt-0.5">{trainer.email}{trainer.phone ? ` · ${trainer.phone}` : ''}</p>
+            </div>
+
+            <p className="text-[11px] uppercase tracking-wider text-[#86868B] font-bold mb-1">Objet de la commande</p>
+            <div className="mb-5">
+              {row('Formation', s.formationTitle || '-')}
+              {row('Bénéficiaire', s.clientName || '-')}
+              {row('Modalité', s.location || '-')}
+              {row('Apprenants', String((s.learners || []).length))}
+              {row('Durée pédagogique', `${s.hours || 0} h (dont formation en situation de travail réalisée par les apprenants)`)}
+              {row('Créneaux animés', (s.days || []).length
+                ? <span className="whitespace-pre-line">{(s.days || []).map((d) => `${new Date(`${d.date}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · ${d.from} - ${d.to}`).join('\n')}</span>
+                : (s.sessionStart ? fmtDate(s.sessionStart) : 'à planifier'))}
+            </div>
+
+            <p className="text-[11px] uppercase tracking-wider text-[#86868B] font-bold mb-1">Rémunération</p>
+            <table className="w-full text-[12.5px] mb-5">
+              <thead><tr className="text-[#86868B] text-left"><th className="py-1.5 font-semibold">Désignation</th><th className="py-1.5 font-semibold text-right">Heures encadrées</th><th className="py-1.5 font-semibold text-right">Taux horaire</th><th className="py-1.5 font-semibold text-right">Total</th></tr></thead>
+              <tbody>
+                <tr className="border-t border-black/10">
+                  <td className="py-2">Animation de la formation</td>
+                  <td className="py-2 text-right">{hours} h</td>
+                  <td className="py-2 text-right">{rate} €</td>
+                  <td className="py-2 text-right font-bold">{euro(amount)}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="text-[11px] text-[#86868B] mb-5">Seules les heures encadrées (animation) sont rémunérées. Les heures en situation de travail sont réalisées par les apprenants sur leur poste et ne donnent pas lieu à facturation.</p>
+
+            <p className="text-[11px] uppercase tracking-wider text-[#86868B] font-bold mb-1">Conditions</p>
+            <p className="text-[11.5px] text-[#3a3a3c] leading-relaxed mb-6">
+              Prestation commandée en application du contrat de prestation signé entre les parties. La facture correspondante est établie automatiquement à partir des informations du prestataire et lui est adressée en fin de mois ; le règlement intervient à 30 jours par virement sur le compte bancaire renseigné. Le prestataire s'engage à respecter le programme pédagogique, le référentiel QUALIOPI et à transmettre les éléments d'évaluation des apprenants.
+            </p>
+
+            <div className="grid sm:grid-cols-2 gap-6 border-t border-black/10 pt-5">
+              <div>
+                <p className="text-[10.5px] uppercase tracking-wider text-[#86868B] font-bold">Pour Delivery Digital</p>
+                <p className="text-[11.5px] mt-1">Nice, le {issued.toLocaleDateString('fr-FR')}</p>
+                <p className="text-[12.5px] font-bold mt-2">Ziane Rabah</p>
+                <p className="text-[11px] text-[#86868B]">Responsable pédagogique</p>
+              </div>
+              <div>
+                <p className="text-[10.5px] uppercase tracking-wider text-[#86868B] font-bold">Le prestataire</p>
+                <p className="text-[11.5px] mt-1">Bon pour accord</p>
+                <p className="text-[12.5px] font-bold mt-2">{ci.legalName || trainer.name}</p>
+                {trainer.contract?.signed && <p className="text-[11px] text-[#86868B]">Contrat de prestation signé électroniquement{trainer.contract?.signedAt ? ` le ${new Date(trainer.contract.signedAt).toLocaleDateString('fr-FR')}` : ''}</p>}
+              </div>
+            </div>
+          </div>
+
+          <div className="px-8 py-4 bg-[#F5F5F7] flex items-center justify-between gap-3 no-print">
+            <button onClick={print} className="text-[13px] text-[#1D1D1F] font-semibold underline">Télécharger / Imprimer</button>
+            <button onClick={onClose} className="px-4 py-2 rounded-lg bg-[#1D1D1F] text-white text-[13px] font-semibold">Fermer</button>
+          </div>
+        </div>
+      </div>
+      <style>{`@media print { body * { visibility: hidden; } #bc-print, #bc-print * { visibility: visible; } #bc-print { position: absolute; left: 0; top: 0; width: 100%; } .no-print { display: none; } }`}</style>
+    </div>
+  );
+}
+
+/**
+ * Supports pédagogiques du cours (diaporama, exercices, ressources) servis depuis le
+ * coffre-fort DD. Le téléchargement passe par une route authentifiée : on récupère le PDF en
+ * blob avec le jeton du formateur plutôt que par un lien direct, qui serait non authentifié.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function MaterialsBlock({ s, auth }: { s: Session; auth: () => any }) {
+  const [files, setFiles] = useState<{ name: string; size: number }[] | null>(null);
+  const [busy, setBusy] = useState('');
+  useEffect(() => {
+    fetch(`/api/trainer/self/sessions/${s._id}/materials`, { headers: auth() })
+      .then((r) => r.json()).then((j) => setFiles(j.ok ? j.files : []))
+      .catch(() => setFiles([]));
+  }, [s._id, auth]);
+
+  const openFile = async (name: string) => {
+    setBusy(name);
+    try {
+      const r = await fetch(`/api/trainer/self/sessions/${s._id}/materials/download?name=${encodeURIComponent(name)}`, { headers: auth() });
+      if (!r.ok) return;
+      const url = URL.createObjectURL(await r.blob());
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } finally { setBusy(''); }
+  };
+
+  if (!files || files.length === 0) return null;
+  const mo = (n: number) => n > 1e6 ? `${(n / 1e6).toFixed(1)} Mo` : `${Math.round(n / 1e3)} Ko`;
+  return (
+    <div>
+      <div className="text-[12px] uppercase tracking-wide text-white/40 font-semibold mb-2">Supports de cours</div>
+      <div className="space-y-1.5">
+        {files.map((f) => (
+          <button key={f.name} onClick={() => openFile(f.name)} disabled={!!busy}
+            className="w-full flex items-center gap-3 text-[13px] bg-[#0E0F13] hover:bg-white/5 rounded-lg px-3 py-2 text-left disabled:opacity-60">
+            <FileText className="h-4 w-4 shrink-0" style={{ color: BLUE }} />
+            <span className="font-medium truncate">{f.name.replace(/\.pdf$/i, '')}</span>
+            <span className="text-white/40 text-[12px] ml-auto shrink-0">{busy === f.name ? 'ouverture…' : mo(f.size)}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Une journée du cours, avec les exercices en situation de travail à envoyer dans le groupe
+ * WhatsApp juste APRÈS l'heure de visio : les apprenants les réalisent ensuite sur leur poste.
+ * Le message est prêt à coller (intitulé du jour + consignes numérotées).
+ * @author Rabah Ziane · 2026-07-20
+ */
+function DayRow({ d, index, session }: { d: NonNullable<Session['days']>[number]; index: number; session: Session }) {
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const dayLabel = new Date(`${d.date}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const message = d.exercises ? buildExercisesMessage(d.exercises) : '';
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(message); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* refusé */ }
+  };
+  return (
+    <div className="bg-[#0E0F13] rounded-lg px-3 py-2">
+      <div className="flex items-center gap-3 text-[13px] flex-wrap">
+        <span className="font-medium capitalize">{dayLabel}</span>
+        <span className="text-white/70 inline-flex items-center gap-1"><Clock className="h-3 w-3" />{d.from} - {d.to}</span>
+        <span className="text-white/45">{{ visio: 'Visioconférence', presentiel: 'Présentiel', afest: 'En situation de travail' }[d.mode || 'visio'] || d.mode}</span>
+        {d.exercises && (
+          <button onClick={() => setOpen((o) => !o)} className="ml-auto text-[12px] font-semibold inline-flex items-center gap-1" style={{ color: BLUE }}>
+            <ListChecks className="h-3.5 w-3.5" /> Exercices du jour {index + 1}
+          </button>
+        )}
+      </div>
+      {open && d.exercises && (
+        <div className="mt-2 pt-2 border-t border-white/10">
+          <p className="text-[12px] text-white/45 mb-1.5">À envoyer dans le groupe WhatsApp dès la fin de la visio - les apprenants les réalisent en situation de travail.</p>
+          <pre className="text-[12.5px] text-white/80 whitespace-pre-wrap font-sans mb-2">{d.exercises}</pre>
+          <div className="flex flex-wrap gap-2">
+            <a href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noreferrer"
+              className="px-3.5 py-2 rounded-lg text-black text-[12.5px] font-semibold inline-flex items-center gap-1.5" style={{ background: '#25D366' }}>
+              <MessageCircle className="h-3.5 w-3.5" /> Partager sur WhatsApp
+            </a>
+            <button onClick={copy} className="px-3.5 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-[12.5px] font-semibold inline-flex items-center gap-1.5">
+              <Copy className="h-3.5 w-3.5" /> {copied ? 'Message copié' : 'Copier le message'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Salle de visioconférence PERMANENTE du formateur : l'adresse porte son nom et ne change
+ * jamais, il peut donc la diffuser une fois pour toutes. Deux liens bien distincts :
+ *  - le lien public, à partager aux apprenants ;
+ *  - son lien animateur (?h=...), strictement personnel, qui lui donne le droit d'admettre
+ *    les participants depuis la salle d'attente. S'il diffuse celui-là, n'importe qui devient
+ *    animateur : d'où l'avertissement explicite.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function MyRoomTab({ trainer }: { trainer: Trainer }) {
+  const [copied, setCopied] = useState<'public' | 'host' | null>(null);
+  const copy = async (what: 'public' | 'host', text: string) => {
+    try { await navigator.clipboard.writeText(text); setCopied(what); setTimeout(() => setCopied(null), 2000); } catch { /* refusé */ }
+  };
+  if (!trainer.visio) return <section className="rounded-2xl bg-[#181A20] border border-white/10 p-5"><p className="text-[13px] text-white/50">Salle en cours de création, rechargez la page.</p></section>;
+  const { link, hostLink } = trainer.visio;
+  return (
+    <div className="space-y-4">
+      <section className="rounded-2xl bg-[#181A20] border border-white/10 p-5">
+        <h2 className="text-[15px] font-bold mb-1 flex items-center gap-2"><Video className="h-4 w-4" style={{ color: BLUE }} /> Ma salle permanente</h2>
+        <p className="text-[12.5px] text-white/55 mb-4">Votre adresse de réunion à votre nom. Elle ne change jamais : partagez-la une fois dans le groupe WhatsApp, elle servira pour toutes vos sessions.</p>
+
+        <div className="rounded-xl bg-[#0E0F13] border border-white/10 p-3 mb-3">
+          <div className="text-[11px] uppercase tracking-wide text-white/40 font-semibold mb-1">Lien à partager aux apprenants</div>
+          <div className="text-[14px] font-semibold break-all mb-2" style={{ color: BLUE }}>{link}</div>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => copy('public', link)} className="px-3.5 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-[13px] font-semibold inline-flex items-center gap-1.5"><Copy className="h-3.5 w-3.5" /> {copied === 'public' ? 'Copié' : 'Copier le lien'}</button>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-[#E5B567]/30 bg-[#E5B567]/5 p-3">
+          <div className="text-[11px] uppercase tracking-wide text-[#E5B567] font-semibold mb-1">Votre accès animateur - à ne jamais partager</div>
+          <p className="text-[12.5px] text-white/55 mb-2">Ouvrez toujours vos sessions avec CE lien : il vous identifie comme formateur et vous permet d'accepter les apprenants qui patientent en salle d'attente.</p>
+          <div className="flex flex-wrap gap-2">
+            <a href={hostLink} target="_blank" rel="noreferrer" className="px-3.5 py-2 rounded-lg text-white text-[13px] font-semibold inline-flex items-center gap-1.5" style={{ background: BLUE }}><Video className="h-3.5 w-3.5" /> Ouvrir ma salle</a>
+            <button onClick={() => copy('host', hostLink)} className="px-3.5 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-[13px] font-semibold inline-flex items-center gap-1.5"><Copy className="h-3.5 w-3.5" /> {copied === 'host' ? 'Copié' : 'Copier mon accès'}</button>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl bg-[#181A20] border border-white/10 p-5">
+        <h3 className="text-[14px] font-bold mb-2">Comment ça marche</h3>
+        <ol className="space-y-2 text-[13px] text-white/65 list-decimal pl-4">
+          <li>Vous ouvrez la salle avec votre accès animateur, quelques minutes avant le cours.</li>
+          <li>Les apprenants cliquent sur le lien public : ils arrivent en <span className="text-white/90 font-semibold">salle d'attente</span>, personne n'entre sans vous.</li>
+          <li>Vous voyez leur nom s'afficher en haut de la salle et vous cliquez sur <span className="text-white/90 font-semibold">Admettre</span>.</li>
+          <li>Pendant la session, vous pouvez partager votre écran et échanger par messages.</li>
+        </ol>
+      </section>
+    </div>
+  );
+}
+
+/**
+ * Le formateur appelle le client avant la formation : si les dates bougent, il les reporte ici.
+ * L'enregistrement remplace ses créneaux, réarme les rappels et envoie un email à Delivery
+ * Digital avec l'avant / après et le motif.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function RescheduleBlock({ s, authJson, onChanged, startOpen }: { s: Session; authJson: () => any; onChanged: () => void; startOpen?: boolean }) {
+  type Slot = { date: string; from: string; to: string; mode: string };
+  const [open, setOpen] = useState(false);
+  const [rows, setRows] = useState<Slot[]>([]);
+  // Ouvert d'emblée quand l'étape « Confirmer les dates » l'appelle.
+  useEffect(() => { if (startOpen && !open) start(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [startOpen]);
+  const [reason, setReason] = useState('');
+  const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [done, setDone] = useState(false);
+  const start = () => {
+    const base = (s.days || []).map((d) => ({ date: d.date, from: d.from, to: d.to, mode: d.mode || 'visio' }));
+    setRows(base.length ? base : [{ date: s.sessionStart ? s.sessionStart.slice(0, 10) : '', from: '09:00', to: '10:00', mode: 'visio' }]);
+    setErr(''); setDone(false); setOpen(true);
+  };
+  const set = (i: number, patch: Partial<Slot>) => setRows((p) => p.map((r, k) => k === i ? { ...r, ...patch } : r));
+  const save = async () => {
+    if (rows.some((r) => !r.date || r.from >= r.to)) { setErr('Vérifiez les dates et horaires (fin après début).'); return; }
+    setBusy(true); setErr('');
+    try {
+      const r = await fetch(`/api/trainer/self/sessions/${s._id}/reschedule`, { method: 'POST', headers: authJson(), body: JSON.stringify({ days: rows, reason }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || j.ok === false) { setErr(j.error === 'session_closed' ? 'Ce cours n’est plus modifiable.' : 'Échec de l’enregistrement.'); return; }
+      setDone(true); setOpen(false); onChanged();
+    } catch { setErr('Réseau indisponible.'); }
+    finally { setBusy(false); }
+  };
+  const inp = 'px-2.5 py-1.5 rounded-lg bg-[#0E0F13] border border-white/10 text-[13px] text-white outline-none';
+  if (!open) return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button onClick={start} className="px-3.5 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-[13px] font-semibold inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" /> Modifier les dates avec le client</button>
+      {done && <span className="text-[12.5px] text-[#3DD68C] inline-flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Delivery Digital a été informé</span>}
+      {(s.reschedules || []).length > 0 && <span className="text-[12px] text-white/40">{(s.reschedules || []).length} modification{(s.reschedules || []).length > 1 ? 's' : ''} enregistrée{(s.reschedules || []).length > 1 ? 's' : ''}</span>}
+    </div>
+  );
+  return (
+    <div className="rounded-xl border border-white/10 bg-[#0E0F13] p-3 space-y-2">
+      <div className="text-[13px] font-semibold">Nouvelles dates convenues avec le client</div>
+      {rows.map((r, i) => (
+        <div key={i} className="flex flex-wrap items-center gap-2">
+          <input type="date" value={r.date} onChange={(e) => set(i, { date: e.target.value })} className={inp} />
+          <input type="time" value={r.from} onChange={(e) => set(i, { from: e.target.value })} className={inp} />
+          <span className="text-[12px] text-white/40">→</span>
+          <input type="time" value={r.to} onChange={(e) => set(i, { to: e.target.value })} className={inp} />
+          <select value={r.mode} onChange={(e) => set(i, { mode: e.target.value })} className={inp}>
+            <option value="visio" className="bg-[#181A20]">Visioconférence</option>
+            <option value="presentiel" className="bg-[#181A20]">Présentiel</option>
+            <option value="afest" className="bg-[#181A20]">Situation de travail</option>
+          </select>
+          <button onClick={() => setRows(rows.filter((_, k) => k !== i))} className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/8"><X className="h-3.5 w-3.5" /></button>
+        </div>
+      ))}
+      <button onClick={() => setRows([...rows, { ...(rows[rows.length - 1] || { from: '09:00', to: '10:00', mode: 'visio' }), date: '' }])} className="px-3 py-1.5 rounded-lg bg-white/8 hover:bg-white/12 text-[12.5px] font-semibold">+ Ajouter une journée</button>
+      <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Motif (ex : indisponibilité du client la semaine du 10)" className="w-full px-3 py-2 rounded-lg bg-[#181A20] border border-white/10 text-[13px] text-white placeholder-white/30 outline-none" />
+      {err && <p className="text-[12.5px] text-[#FF6B6B]">{err}</p>}
+      <div className="flex items-center gap-2">
+        <button onClick={save} disabled={busy} className="px-4 py-2 rounded-lg text-white text-[13px] font-semibold disabled:opacity-60" style={{ background: BLUE }}>{busy ? '…' : 'Enregistrer et informer Delivery Digital'}</button>
+        <button onClick={() => setOpen(false)} className="px-4 py-2 rounded-lg bg-white/8 text-[13px] font-semibold">Annuler</button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Salle de visioconférence du cours + message d'accueil pré-rédigé : le formateur copie le
+ * message (lien inclus) et le colle dans le groupe WhatsApp des apprenants. Le jour J il
+ * ouvre la salle depuis ce même bloc et y partage son écran.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function MeetingBlock({ s, trainerName }: { s: Session; trainerName: string }) {
+  const [copied, setCopied] = useState<'link' | 'msg' | null>(null);
+  // Le formateur entre par son lien animateur (droit d'admettre) ; les apprenants par le lien nu.
+  const hostLink = s.hostKey ? `${s.meetingLink}${s.meetingLink?.includes('?') ? '&' : '?'}h=${s.hostKey}` : s.meetingLink;
+  const copy = async (what: 'link' | 'msg', text: string) => {
+    try { await navigator.clipboard.writeText(text); setCopied(what); setTimeout(() => setCopied(null), 2000); } catch { /* clipboard refusé */ }
+  };
+  const message = buildWelcomeMessage(s, trainerName);
+  return (
+    <div className="rounded-xl border border-[#0066CC]/30 bg-[#0066CC]/5 p-3">
+      <div className="flex items-center gap-2 text-[13px] font-semibold mb-2"><Video className="h-4 w-4" style={{ color: BLUE }} /> Salle de visioconférence</div>
+      <p className="text-[12.5px] text-white/55 mb-2">Partagez ce lien dans le groupe WhatsApp avec votre message d'accueil. Les apprenants patientent en salle d'attente : vous les admettez un par un. Le jour J, ouvrez la salle et partagez votre écran.</p>
+      <div className="flex flex-wrap items-center gap-2 mb-2">
+        <a href={hostLink} target="_blank" rel="noreferrer" className="px-3.5 py-2 rounded-lg text-white text-[13px] font-semibold inline-flex items-center gap-1.5" style={{ background: BLUE }}><Video className="h-3.5 w-3.5" /> Ouvrir la salle</a>
+        <button onClick={() => copy('link', s.meetingLink || '')} className="px-3.5 py-2 rounded-lg bg-white/8 hover:bg-white/12 text-[13px] font-semibold inline-flex items-center gap-1.5"><Copy className="h-3.5 w-3.5" /> {copied === 'link' ? 'Lien copié' : 'Copier le lien'}</button>
+        <button onClick={() => copy('msg', message)} className="px-3.5 py-2 rounded-lg bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#25D366] text-[13px] font-semibold inline-flex items-center gap-1.5"><MessageCircle className="h-3.5 w-3.5" /> {copied === 'msg' ? 'Message copié' : "Copier le message d'accueil"}</button>
+      </div>
+      <p className="text-[11.5px] text-white/40 break-all">{s.meetingLink}</p>
+    </div>
+  );
+}
+
 function Info({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="bg-[#0E0F13] rounded-lg px-3 py-2">
@@ -391,17 +1402,17 @@ function DispoTab({ auth, authJson, trainer, onChanged }: { auth: () => any; aut
     } finally { setSavingRec(false); }
   };
   const load = useCallback(async () => {
-    const j = await fetch('/api/trainer/self/availability', { headers: auth() }).then((r) => r.json());
+    const j = await fetch('/api/trainer/self/available-days', { headers: auth() }).then((r) => r.json());
     setDays((j.days || []).map((d: any) => ({ ...d, kind: d.kind || 'full', hours: d.hours || [] })));
   }, [auth]);
   useEffect(() => { load(); }, [load]);
   const byDay = useMemo(() => { const m: Record<string, Unav> = {}; days.forEach((d) => { m[d.day] = d; }); return m; }, [days]);
 
   const save = async (iso: string, kind: Unav['kind'], hours: Slot[]) => {
-    await fetch('/api/trainer/self/availability', { method: 'POST', headers: authJson(), body: JSON.stringify({ day: iso, kind, hours }) });
+    await fetch('/api/trainer/self/available-days', { method: 'POST', headers: authJson(), body: JSON.stringify({ day: iso, kind, hours }) });
     await load();
   };
-  const remove = async (id: string) => { await fetch(`/api/trainer/self/availability/${id}`, { method: 'DELETE', headers: auth() }); await load(); };
+  const remove = async (id: string) => { await fetch(`/api/trainer/self/available-days/${id}`, { method: 'DELETE', headers: auth() }); await load(); };
 
   // grille du mois
   const first = new Date(cursor.y, cursor.m, 1);
@@ -446,13 +1457,13 @@ function DispoTab({ auth, authJson, trainer, onChanged }: { auth: () => any; aut
             <button onClick={() => setCursor((c) => { const m = c.m + 1; return m > 11 ? { y: c.y + 1, m: 0 } : { y: c.y, m }; })} className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10"><ChevronRight className="h-4 w-4" /></button>
           </div>
         </div>
-        <p className="text-[12.5px] text-white/55 mb-3">Cliquez sur un jour pour définir votre indisponibilité : <span className="text-white/80 font-semibold">journée entière, matin, après-midi ou créneaux horaires</span>. On ne vous assignera pas de cours sur ces périodes.</p>
+        <p className="text-[12.5px] text-white/55 mb-3">Cliquez sur un jour pour déclarer que vous êtes <span className="text-white/80 font-semibold">disponible</span> : journée entière, matin, après-midi ou créneaux horaires précis. <span className="text-white/80 font-semibold">On ne vous assigne des cours que sur les jours déclarés.</span></p>
         {/* légende */}
         <div className="flex items-center gap-3 mb-4 text-[11px] text-white/55 flex-wrap">
-          <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded bg-[#FF6B6B]" /> Journée</span>
-          <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded bg-gradient-to-b from-[#FF6B6B] from-50% to-[#0E0F13] to-50%" /> Matin</span>
-          <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded bg-gradient-to-t from-[#FF6B6B] from-50% to-[#0E0F13] to-50%" /> Après-midi</span>
-          <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded bg-[#E5B567]" /> Créneaux</span>
+          <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded bg-[#3DD68C]" /> Journée entière</span>
+          <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded bg-gradient-to-b from-[#3DD68C] from-50% to-[#0E0F13] to-50%" /> Matin</span>
+          <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded bg-gradient-to-t from-[#3DD68C] from-50% to-[#0E0F13] to-50%" /> Après-midi</span>
+          <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded bg-[#E5B567]" /> Créneaux horaires</span>
         </div>
         <div className="grid grid-cols-7 gap-1.5 text-center">
           {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <div key={i} className="text-[11px] text-white/40 font-semibold py-1">{d}</div>)}
@@ -462,15 +1473,15 @@ function DispoTab({ auth, authJson, trainer, onChanged }: { auth: () => any; aut
             const u = byDay[dayIso];
             const isPast = dayIso < todayIso;
             let bg = 'bg-[#0E0F13] hover:bg-white/10 text-white/80';
-            if (u?.kind === 'full') bg = 'bg-[#FF6B6B] text-white';
+            if (u?.kind === 'full') bg = 'bg-[#3DD68C] text-black font-semibold';
             else if (u?.kind === 'am') bg = 'text-white';
             else if (u?.kind === 'pm') bg = 'text-white';
             else if (u?.kind === 'hours') bg = 'bg-[#E5B567]/15 text-white border border-[#E5B567]/40';
             return (
               <button key={i} disabled={isPast} onClick={() => setEditDay({ iso: dayIso, current: u || null })}
                 className={`relative aspect-square rounded-lg text-[13px] font-medium overflow-hidden transition-colors ${isPast ? 'text-white/20 cursor-not-allowed bg-[#0E0F13]' : bg}`}>
-                {u?.kind === 'am' && <span className="absolute inset-x-0 top-0 h-1/2 bg-[#FF6B6B]" />}
-                {u?.kind === 'pm' && <span className="absolute inset-x-0 bottom-0 h-1/2 bg-[#FF6B6B]" />}
+                {u?.kind === 'am' && <span className="absolute inset-x-0 top-0 h-1/2 bg-[#3DD68C]" />}
+                {u?.kind === 'pm' && <span className="absolute inset-x-0 bottom-0 h-1/2 bg-[#3DD68C]" />}
                 <span className="relative z-10">{c}</span>
                 {u?.kind === 'hours' && <span className="absolute bottom-0.5 inset-x-0 text-[8px] leading-none text-[#E5B567] font-semibold z-10">{(u.hours || []).length}h</span>}
               </button>
@@ -479,8 +1490,8 @@ function DispoTab({ auth, authJson, trainer, onChanged }: { auth: () => any; aut
         </div>
       </section>
       <section className="rounded-2xl bg-[#181A20] border border-white/10 p-5">
-        <h3 className="text-[14px] font-bold mb-3">Indisponibilités</h3>
-        {days.length === 0 ? <p className="text-[13px] text-white/45">Aucune indisponibilité. Vous êtes disponible par défaut.</p> : (
+        <h3 className="text-[14px] font-bold mb-3">Mes jours déclarés</h3>
+        {days.length === 0 ? <p className="text-[13px] text-[#E5B567]">Aucune disponibilité déclarée. Tant que votre calendrier est vide, aucun cours ne peut vous être assigné.</p> : (
           <div className="space-y-1.5 max-h-[420px] overflow-auto">
             {[...days].sort((a, b) => a.day.localeCompare(b.day)).map((d) => (
               <div key={d.id} className="flex items-center justify-between gap-2 text-[13px] bg-[#0E0F13] rounded-lg px-3 py-2">
@@ -490,7 +1501,7 @@ function DispoTab({ auth, authJson, trainer, onChanged }: { auth: () => any; aut
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button onClick={() => setEditDay({ iso: d.day, current: d })} className="text-white/50 text-[12px] hover:text-white">Modifier</button>
-                  <button onClick={() => remove(d.id)} className="text-[#FF6B6B] text-[12px] hover:underline">Retirer</button>
+                  <button onClick={() => remove(d.id)} className="text-[#FF6B6B] text-[12px] hover:underline">Supprimer</button>
                 </div>
               </div>
             ))}
@@ -869,42 +1880,36 @@ function FactureModal({ trainer, session, authJson, onDone, onClose }: { trainer
 }
 
 /* ============================ Instructions ============================ */
-function InstructionsTab({ auth }: { auth: () => any }) {
-  const [items, setItems] = useState<{ id: string; title: string; body: string; icon: string }[] | null>(null);
-  useEffect(() => { (async () => { const j = await fetch('/api/trainer/self/instructions', { headers: auth() }).then((r) => r.json()); setItems(j.instructions || []); })(); }, [auth]);
-  if (!items) return <Loading />;
-  if (!items.length) return <Empty icon={<MessageCircle className="h-7 w-7" />} text="Les instructions seront publiées prochainement." />;
-  return (
-    <div className="space-y-3">
-      <div className="rounded-2xl bg-[#0066CC]/10 border border-[#0066CC]/30 p-5">
-        <h2 className="text-[15px] font-bold mb-1">À faire quand un cours est prévu</h2>
-        <p className="text-[13px] text-white/60">Suivez ces étapes pour chaque formation avec les apprenants d'un client.</p>
-      </div>
-      {items.map((it, i) => (
-        <section key={it.id} className="rounded-2xl bg-[#181A20] border border-white/10 p-5">
-          <div className="flex items-start gap-3">
-            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-[13px] font-bold shrink-0" style={{ background: BLUE }}>{i + 1}</span>
-            <div className="min-w-0">
-              <h3 className="text-[15px] font-semibold mb-1">{it.title}</h3>
-              <p className="text-[13.5px] text-white/65 leading-relaxed whitespace-pre-wrap">{it.body}</p>
-            </div>
-          </div>
-        </section>
-      ))}
-    </div>
-  );
-}
-
-/* ============================ Mon compte (onboarding) ============================ */
-const COUNTRIES = [['FR', 'France'], ['BE', 'Belgique'], ['LU', 'Luxembourg'], ['CH', 'Suisse'], ['MA', 'Maroc'], ['DZ', 'Algérie'], ['TN', 'Tunisie'], ['QA', 'Qatar'], ['SA', 'Arabie Saoudite'], ['AE', 'Émirats']];
-
 function ProfilTab({ trainer, authJson, auth, onChanged }: { trainer: Trainer; authJson: () => any; auth: () => any; onChanged: () => void }) {
   return (
     <div className="space-y-4">
+      <PhoneForm trainer={trainer} authJson={authJson} onChanged={onChanged} />
       <CompanyForm trainer={trainer} authJson={authJson} onChanged={onChanged} />
       <RibForm trainer={trainer} authJson={authJson} onChanged={onChanged} />
       <ContractForm trainer={trainer} authJson={authJson} onChanged={onChanged} />
     </div>
+  );
+}
+
+/**
+ * Numéro WhatsApp du formateur dans son profil : c'est avec ce numéro que le responsable
+ * pédagogique l'ajoute au groupe des apprenants, donc il doit pouvoir le corriger seul.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function PhoneForm({ trainer, authJson, onChanged }: { trainer: Trainer; authJson: () => any; onChanged: () => void }) {
+  const [phone, setPhone] = useState(trainer.phone || '');
+  const [busy, setBusy] = useState(false); const [saved, setSaved] = useState(false);
+  const save = async () => { setBusy(true); try { await fetch('/api/trainer/self/phone', { method: 'POST', headers: authJson(), body: JSON.stringify({ phone }) }); setSaved(true); onChanged(); setTimeout(() => setSaved(false), 2000); } finally { setBusy(false); } };
+  const inp = 'w-full px-3 py-2.5 rounded-xl bg-[#0E0F13] border border-white/10 text-[14px] text-white placeholder-white/30 outline-none';
+  return (
+    <section className="rounded-2xl bg-[#181A20] border border-white/10 p-5">
+      <h2 className="text-[15px] font-bold mb-1 flex items-center gap-2"><Phone className="h-4 w-4" style={{ color: BLUE }} /> Numéro WhatsApp</h2>
+      <p className="text-[12.5px] text-white/55 mb-4">Le responsable pédagogique vous ajoute au groupe des apprenants avec ce numéro. Gardez-le à jour.</p>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Field label="Téléphone / WhatsApp"><input className={inp} value={phone} placeholder="+33 6 12 34 56 78" onChange={(e) => setPhone(e.target.value)} /></Field>
+      </div>
+      <button onClick={save} disabled={busy} className="mt-4 px-5 py-2.5 rounded-full text-white text-[14px] font-semibold disabled:opacity-60" style={{ background: BLUE }}>{busy ? '…' : saved ? '✓ Enregistré' : 'Enregistrer'}</button>
+    </section>
   );
 }
 
@@ -1038,10 +2043,14 @@ function TrainerContractModal({ trainer, authJson, onClose, onSigned }: { traine
       <div className="w-full max-w-3xl my-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-2">
           <p className="text-white text-[13px] font-semibold inline-flex items-center gap-1.5"><FileText className="h-4 w-4" /> Contrat de prestation de formation</p>
-          <button onClick={onClose} className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white"><X className="h-4 w-4" /></button>
+          <div className="flex items-center gap-2 no-print">
+            {/* Le contrat signé doit pouvoir être conservé par le formateur. @Rabah 2026-07-20 */}
+            {signed && <button onClick={() => window.print()} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-[12.5px] font-semibold"><Download className="h-3.5 w-3.5" /> Télécharger / Imprimer</button>}
+            <button onClick={onClose} className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 text-white"><X className="h-4 w-4" /></button>
+          </div>
         </div>
-        {/* Feuille du contrat */}
-        <div className="bg-white text-[#1D1D1F] rounded-xl shadow-2xl px-8 py-8 sm:px-12 sm:py-10">
+        {/* Feuille du contrat (id ciblé par l'impression pour un PDF propre) */}
+        <div id="contrat-print" className="bg-white text-[#1D1D1F] rounded-xl shadow-2xl px-8 py-8 sm:px-12 sm:py-10">
           <div className="flex items-center justify-between border-b border-black/10 pb-4">
             <div><p className="text-[10px] uppercase tracking-[0.2em] text-[#86868B] font-bold">Delivery Digital</p><h1 className="text-[18px] font-extrabold mt-1">Contrat de prestation de formation</h1><p className="text-[11.5px] text-[#86868B]">Formateur indépendant - organisme certifié QUALIOPI</p></div>
             <img src={LOGO_URL} alt="Delivery Digital" className="h-9 w-auto" />
@@ -1059,9 +2068,10 @@ function TrainerContractModal({ trainer, authJson, onClose, onSigned }: { traine
           <C n={4} title="Versement">Les versements sont effectués sur le RIB validé du Formateur. La Société tient à jour, dans l&apos;espace formateur, l&apos;état des sessions et l&apos;historique des paiements.</C>
           <C n={5} title="Durée">Le contrat prend effet à sa signature électronique pour une durée d&apos;<strong>un (1) an</strong>, renouvelable par tacite reconduction. Chaque partie peut y mettre fin moyennant un préavis écrit de <strong>trente (30) jours</strong>, sans incidence sur les prestations déjà réalisées.</C>
           <C n={6} title="Confidentialité et données">Le Formateur s&apos;engage à préserver la confidentialité des informations échangées et à traiter les données personnelles des apprenants conformément au RGPD.</C>
-          <C n={7} title="Non-concurrence et non-sollicitation">Pendant la durée du contrat et pendant <strong>douze (12) mois</strong> après son terme, le Formateur s&apos;interdit de <strong>solliciter ou démarcher directement les clients, prospects et apprenants de Delivery Digital</strong> rencontrés dans le cadre de ses missions, ainsi que d&apos;exploiter les méthodes, contenus, outils et données de la Société. Les clients demeurent la clientèle de Delivery Digital.</C>
-          <C n={8} title="Indépendance">Le Formateur agit en toute indépendance. Le présent contrat ne crée aucun lien de subordination ni société de fait entre les parties.</C>
-          <C n={9} title="Validation">La signature électronique du Formateur est soumise à la validation de Delivery Digital, qui vérifie ses informations, son RIB et le présent contrat avant activation du compte.</C>
+          <C n={7} title="Liberté d&apos;exercice et propriété de la clientèle">Le Formateur <strong>reste libre d&apos;exercer son activité pour d&apos;autres organismes de formation</strong> : le présent contrat n&apos;emporte aucune exclusivité d&apos;activité ni interdiction de concurrence. En revanche, les <strong>clients, prospects et apprenants de Delivery Digital sont et demeurent la clientèle exclusive de la Société</strong>. <strong>Sans limitation de durée</strong>, et en dehors des sessions qui lui sont confiées par la Société, le Formateur n&apos;est <strong>pas autorisé à les contacter, solliciter ou démarcher</strong>, à quelque titre et sous quelque forme que ce soit, ni directement ni par personne interposée. Lors de ses interventions, il se présente <strong>exclusivement au nom de Delivery Digital</strong>.</C>
+          <C n={8} title="Supports, méthodes et propriété intellectuelle">L&apos;ensemble des <strong>supports pédagogiques</strong> (diaporamas, exercices, ressources, trames, fiches, évaluations) ainsi que les <strong>méthodes de travail</strong>, procédures, outils et savoir-faire de Delivery Digital demeurent sa <strong>propriété exclusive</strong>. Le Formateur s&apos;interdit, <strong>sans limitation de durée</strong> et sauf <strong>autorisation écrite préalable</strong> de Delivery Digital, de les reproduire, diffuser, partager, publier, adapter, commercialiser ou les utiliser <strong>en dehors des sessions confiées par la Société et en dehors de ses clients</strong>. Toute utilisation non autorisée engage sa responsabilité et pourra donner lieu à réparation.</C>
+          <C n={9} title="Indépendance">Le Formateur agit en toute indépendance. Le présent contrat ne crée aucun lien de subordination ni société de fait entre les parties.</C>
+          <C n={10} title="Validation">La signature électronique du Formateur est soumise à la validation de Delivery Digital, qui vérifie ses informations, son RIB et le présent contrat avant activation du compte.</C>
 
           {/* Blocs de signature */}
           <div className="mt-8 grid sm:grid-cols-2 gap-6 border-t border-black/10 pt-6">
@@ -1108,6 +2118,7 @@ function TrainerContractModal({ trainer, authJson, onClose, onSigned }: { traine
           )}
         </div>
       </div>
+      <style>{`@media print { body * { visibility: hidden; } #contrat-print, #contrat-print * { visibility: visible; } #contrat-print { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; } .no-print { display: none; } }`}</style>
     </div>
   );
 }

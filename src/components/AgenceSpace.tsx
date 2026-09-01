@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, Fragment } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo, Fragment } from 'react';
 import { Building2, Loader2, LogOut, Copy, Eye, EyeOff, KeyRound, Plus, FileText, ShieldCheck, Users, FolderCheck, Search, Wallet, X, Stamp, PenLine, Download, ExternalLink, Clock, Mail, Send, CheckCircle2, ArrowRight, Inbox, Trash2, Cpu, ChevronDown, Calculator } from 'lucide-react';
 import FormationWizardModal from './FormationWizardModal';
 import type { TransmitPayload, WizardEmployer } from './FormationWizardModal';
@@ -392,9 +392,141 @@ function Dashboard({ token, onLogout, preview }: { token: string; onLogout: () =
   const [pyemesSignBusy, setPyemesSignBusy] = useState(false);
   // Feuille de route Pyemes (avant mise en ligne) : taches partagees DD <-> agence, import d'une
   // checklist et fil de messages. @author Rabah Ziane - 2026-08-31
-  type RoadTache = { id: string; from: 'dd' | 'agence'; titre: string; detail?: string; statut: 'a_faire' | 'en_cours' | 'fait'; source?: string; createdAt?: string; doneAt?: string | null };
+  type RoadTache = { id: string; from: 'dd' | 'agence'; titre: string; detail?: string; statut: 'a_faire' | 'en_cours' | 'fait' | 'standby'; source?: string; createdAt?: string; doneAt?: string | null; phase?: string; echeance?: string; resp?: 'PY' | 'NG' | 'MIX' | ''; critere?: string; ref?: string; ordre?: number | null };
+
+  // Responsables de la check-list de lancement. PY = equipe Pyemes, NG = Nova Growth, MIX = les deux.
+  const RESP_LIB: Record<string, string> = { PY: 'Pyemes', NG: 'Nova', MIX: 'Les deux' };
+  const RESP_STYLE: Record<string, { background: string; color: string }> = {
+    PY: { background: 'rgba(99,91,255,0.22)', color: '#B9B4FF' },
+    NG: { background: 'rgba(61,214,140,0.18)', color: '#8FE7BC' },
+    MIX: { background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' },
+  };
   type RoadMsg = { id: string; from: 'dd' | 'agence'; auteur?: string; texte: string; image?: string; at?: string };
   const [roadTaches, setRoadTaches] = useState<RoadTache[]>([]);
+  // Repli par phase : tout est ouvert par defaut, l'utilisateur referme ce qu'il a traite.
+  const [phasesOuvertes, setPhasesOuvertes] = useState<Record<string, boolean>>({});
+  // Glisser-deposer : on retient la ligne saisie, et on reordonne au lacher dans la meme phase.
+  const [dragId, setDragId] = useState<string | null>(null);
+
+  // IDENTIFIANTS DES RESEAUX SOCIAUX (action #8) : Pyemes ouvre les comptes, Nova les anime. Le mot
+  // de passe n'arrive JAMAIS avec la liste - il se demande ligne par ligne. @Rabah 2026-09-01
+  type Reseau = { id: string; reseau: string; compte?: string; identifiant: string; aSecret: boolean; note?: string; majPar?: string; majLe?: string };
+  const RESEAUX_LIB: Record<string, string> = { linkedin: 'LinkedIn', tiktok: 'TikTok', instagram: 'Instagram', x: 'X', facebook: 'Facebook', youtube: 'YouTube', autre: 'Autre' };
+  const [reseaux, setReseaux] = useState<Reseau[]>([]);
+  const [resForm, setResForm] = useState({ reseau: 'linkedin', compte: '', identifiant: '', motDePasse: '', note: '' });
+  const [resBusy, setResBusy] = useState(false);
+  const [secrets, setSecrets] = useState<Record<string, string>>({});
+
+  const chargerReseaux = useCallback(async () => {
+    const r = await fetch('/api/agency/self/pyemes/reseaux', { headers: auth() }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) setReseaux(r.reseaux || []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const ajouterReseau = async () => {
+    if (!resForm.identifiant.trim() || resBusy) return;
+    setResBusy(true);
+    const r = await fetch('/api/agency/self/pyemes/reseaux', {
+      method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify(resForm),
+    }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) { setReseaux(r.reseaux || []); setResForm({ reseau: 'linkedin', compte: '', identifiant: '', motDePasse: '', note: '' }); }
+    setResBusy(false);
+  };
+
+  const voirSecret = async (id: string) => {
+    if (secrets[id]) { setSecrets((p) => { const n = { ...p }; delete n[id]; return n; }); return; }
+    const r = await fetch(`/api/agency/self/pyemes/reseaux/${id}/secret`, { headers: auth() }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) setSecrets((p) => ({ ...p, [id]: r.motDePasse || '(vide)' }));
+  };
+
+  const supprimerReseau = async (id: string) => {
+    const r = await fetch(`/api/agency/self/pyemes/reseaux/${id}`, { method: 'DELETE', headers: auth() }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) setReseaux(r.reseaux || []);
+  };
+
+  // RETOURS CLIENTS (action #4) : la colonne partagee de la fenetre de test. Les trois personnes
+  // du projet voient et alimentent la MEME liste. @author Rabah Ziane - 2026-09-01
+  type Retour = { id: string; from: 'dd' | 'agence'; auteur?: string; client?: string; texte: string;
+    gravite: 'bloquant' | 'genant' | 'idee'; statut: 'nouveau' | 'en_cours' | 'traite' | 'ecarte';
+    reponse?: string; createdAt?: string };
+  const GRAVITE_LIB: Record<string, string> = { bloquant: 'Bloquant', genant: 'Gênant', idee: 'Idée' };
+  const GRAVITE_STYLE: Record<string, { background: string; color: string }> = {
+    bloquant: { background: 'rgba(255,59,48,0.18)', color: '#FF8A80' },
+    genant: { background: 'rgba(255,193,7,0.16)', color: '#F5C86B' },
+    idee: { background: 'rgba(99,91,255,0.20)', color: '#B9B4FF' },
+  };
+  const [retours, setRetours] = useState<Retour[]>([]);
+  const [retourTexte, setRetourTexte] = useState('');
+  const [retourClient, setRetourClient] = useState('');
+  const [retourGravite, setRetourGravite] = useState<'bloquant' | 'genant' | 'idee'>('genant');
+  const [retourBusy, setRetourBusy] = useState(false);
+
+  const chargerRetours = useCallback(async () => {
+    const r = await fetch('/api/agency/self/pyemes/retours', { headers: auth() }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) setRetours(r.retours || []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const ajouterRetour = async () => {
+    const texte = retourTexte.trim();
+    if (!texte || retourBusy) return;
+    setRetourBusy(true);
+    const r = await fetch('/api/agency/self/pyemes/retours', {
+      method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texte, client: retourClient.trim(), gravite: retourGravite }),
+    }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) { setRetours(r.retours || []); setRetourTexte(''); setRetourClient(''); }
+    setRetourBusy(false);
+  };
+
+  const changerStatutRetour = async (id: string, statut: string) => {
+    const r = await fetch(`/api/agency/self/pyemes/retours/${id}`, {
+      method: 'PATCH', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify({ statut }),
+    }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) setRetours(r.retours || []);
+  };
+  // Reordonnancement persiste : on envoie les identifiants dans le nouvel ordre. @Rabah 2026-09-01
+  const deposerSur = async (cible: RoadTache, taches: RoadTache[]) => {
+    if (!dragId || dragId === cible.id) { setDragId(null); return; }
+    const src = taches.findIndex((t) => t.id === dragId);
+    const dst = taches.findIndex((t) => t.id === cible.id);
+    if (src < 0 || dst < 0) { setDragId(null); return; }
+    const ordonnees = taches.slice();
+    ordonnees.splice(dst, 0, ordonnees.splice(src, 1)[0]);
+    setDragId(null);
+    const ids = ordonnees.map((t) => t.id);
+    // Mise a jour optimiste : la liste bouge tout de suite, le serveur confirme ensuite.
+    setRoadTaches((prev) => {
+      const rang = new Map(ids.map((id, i) => [id, i + 1]));
+      return prev.map((t) => (rang.has(t.id) ? { ...t, ordre: rang.get(t.id)! } : t));
+    });
+    const r = await fetch('/api/agency/self/pyemes/roadmap-ordre', {
+      method: 'PATCH', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }),
+    }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) setRoadTaches(r.taches || []);
+  };
+  // Regroupement par phase, dans l'ordre du plan (les taches ajoutees a la main, sans phase,
+  // tombent dans « Autres demandes »).
+  const phasesRoadmap = useMemo(() => {
+    const groupes = new Map<string, RoadTache[]>();
+    for (const t of roadTaches) {
+      const cle = t.phase || 'Autres demandes';
+      if (!groupes.has(cle)) groupes.set(cle, []);
+      groupes.get(cle)!.push(t);
+    }
+    return Array.from(groupes.entries())
+      .sort((a, b) => (a[0] === 'Autres demandes' ? 1 : b[0] === 'Autres demandes' ? -1 : a[0].localeCompare(b[0], 'fr')))
+      .map(([phase, taches]) => ({
+        phase,
+        // Dans chaque categorie : ce qui reste a faire d'abord (dans l'ordre du plan), puis ce qui
+        // est en attente, puis ce qui est FAIT, en bas. On garde ainsi sous les yeux ce qui reste.
+        // @author Rabah Ziane - 2026-09-01
+        taches: taches.slice().sort((a, b) => {
+          const rang = (t: RoadTache) => (t.statut === 'fait' ? 2 : t.statut === 'standby' ? 1 : 0);
+          return rang(a) - rang(b) || (a.ordre ?? 1e9) - (b.ordre ?? 1e9);
+        }),
+        faites: taches.filter((t) => t.statut === 'fait').length,
+        actives: taches.filter((t) => t.statut !== 'standby').length,
+      }));
+  }, [roadTaches]);
   const [roadMsgs, setRoadMsgs] = useState<RoadMsg[]>([]);
   const [roadTitre, setRoadTitre] = useState('');
   const [roadMsg, setRoadMsg] = useState('');
@@ -566,6 +698,9 @@ function Dashboard({ token, onLogout, preview }: { token: string; onLogout: () =
   }, [pitchName]);
   // Suppression d'un envoi (ou de tout l'historique) : l'agence garde la main sur ses tests. @Rabah 2026-08-01
   // La feuille de route se charge avec l'onglet Pyemes. @Rabah 2026-08-31
+  useEffect(() => { chargerRetours(); const t = setInterval(chargerRetours, 8000); return () => clearInterval(t); }, [chargerRetours]);
+  useEffect(() => { chargerReseaux(); }, [chargerReseaux]);
+
   // Feuille de route en TEMPS REEL tant que l'onglet Pyemes est ouvert : les messages de Delivery
   // Digital arrivent tout seuls (avant, il fallait recharger la page). Meme cadence que le support
   // Pyemes. Les publications changent moins souvent : toutes les 10 s. @author Rabah Ziane - 2026-08-31
@@ -2037,7 +2172,7 @@ function Dashboard({ token, onLogout, preview }: { token: string; onLogout: () =
               <div className="flex items-center justify-between gap-3 mb-1">
                 <p className="text-[13px] font-bold text-white">Feuille de route · avant mise en ligne</p>
                 <span className="text-[11px] text-white/40">
-                  {roadTaches.filter((t) => t.statut === 'fait').length}/{roadTaches.length} fait
+                  {roadTaches.filter((t) => t.statut === 'fait').length}/{roadTaches.filter((t) => t.statut !== 'standby').length} fait
                 </span>
               </div>
               <p className="text-[12px] text-white/50">
@@ -2072,36 +2207,210 @@ function Dashboard({ token, onLogout, preview }: { token: string; onLogout: () =
               {roadInfo && <p className="text-[11.5px] text-white/60 mt-2">{roadInfo}</p>}
               <p className="text-[11px] text-white/30 mt-1">PDF, texte, CSV ou Markdown - une ligne = une tâche (les cases déjà cochées arrivent en « fait »).</p>
 
-              {/* Liste des taches */}
+              {/* Liste des taches, GROUPEE PAR PHASE : une check-list de lancement se pilote par
+                  phase et par responsable, pas comme une liste a plat de 116 lignes. Chaque phase
+                  affiche son avancement et se replie. @author Rabah Ziane - 2026-09-01 */}
               {roadTaches.length === 0 ? (
                 <p className="text-[12.5px] text-white/40 mt-3">Aucune tâche pour l'instant.</p>
               ) : (
-                <ul className="mt-3 space-y-1.5">
-                  {roadTaches.map((t) => {
-                    const fait = t.statut === 'fait';
+                <div className="mt-3 space-y-2">
+                  {phasesRoadmap.map(({ phase, taches, faites, actives }) => {
+                    const ouverte = phasesOuvertes[phase] !== false;
+                    const pct = actives ? Math.round((faites / actives) * 100) : 0;
                     return (
-                      <li key={t.id} className="flex items-start gap-3 rounded-lg border border-white/8 bg-black/20 px-3 py-2">
+                      <div key={phase} className="rounded-lg border border-white/8 bg-black/15 overflow-hidden">
                         <button
-                          onClick={() => changerStatutTache(t.id, fait ? 'a_faire' : 'fait')}
-                          aria-label={fait ? 'Marquer à faire' : 'Marquer fait'}
-                          className="mt-0.5 h-4 w-4 rounded border shrink-0"
-                          style={{ borderColor: fait ? '#3DD68C' : 'rgba(255,255,255,0.25)', background: fait ? '#3DD68C' : 'transparent' }}
-                        />
-                        <span className="flex-1 min-w-0">
-                          <span className={`block text-[12.5px] ${fait ? 'text-white/40 line-through' : 'text-white/85'}`}>{t.titre}</span>
-                          <span className="block text-[10.5px] text-white/35 mt-0.5">
-                            {t.from === 'dd' ? 'Demandé par Delivery Digital' : 'Demandé par vous'}
-                            {t.source && t.source.startsWith('import') ? ` · ${t.source}` : ''}
+                          onClick={() => setPhasesOuvertes((p) => ({ ...p, [phase]: !ouverte }))}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-white/[0.03]"
+                        >
+                          <span className={`text-white/30 text-[10px] transition-transform ${ouverte ? 'rotate-90' : ''}`}>▶</span>
+                          <span className="flex-1 min-w-0 text-[12.5px] font-semibold text-white/85 truncate">{phase}</span>
+                          <span className="h-1 w-20 rounded-full bg-white/10 overflow-hidden shrink-0">
+                            <span className="block h-full rounded-full" style={{ width: `${pct}%`, background: pct === 100 ? '#3DD68C' : '#635BFF' }} />
                           </span>
-                        </span>
-                        {t.from === 'agence' && (
-                          <button onClick={() => supprimerTache(t.id)} aria-label="Retirer" className="text-[11px] text-white/30 hover:text-white/60">✕</button>
+                          <span className="text-[11px] text-white/40 tabular-nums shrink-0">{faites}/{actives}</span>
+                        </button>
+                        {ouverte && (
+                          <ul className="px-2 pb-2 space-y-1">
+                            {taches.map((t) => {
+                              const fait = t.statut === 'fait';
+                              const attente = t.statut === 'standby';
+                              return (
+                                <li
+                                  key={t.id}
+                                  draggable
+                                  onDragStart={() => setDragId(t.id)}
+                                  onDragOver={(e) => e.preventDefault()}
+                                  onDrop={() => deposerSur(t, taches)}
+                                  onDragEnd={() => setDragId(null)}
+                                  className={`flex items-start gap-2.5 rounded-lg border px-3 py-2 cursor-grab active:cursor-grabbing ${dragId === t.id ? 'opacity-40' : ''}`}
+                                  style={{ borderColor: 'rgba(255,255,255,0.08)', background: attente ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.2)' }}
+                                >
+                                  <span className="mt-1 text-white/20 text-[11px] leading-none select-none shrink-0" aria-hidden>⠿</span>
+                                  <button
+                                    onClick={() => changerStatutTache(t.id, fait ? 'a_faire' : 'fait')}
+                                    aria-label={fait ? 'Marquer à faire' : 'Marquer fait'}
+                                    className="mt-0.5 h-4 w-4 rounded border shrink-0"
+                                    style={{ borderColor: fait ? '#3DD68C' : 'rgba(255,255,255,0.25)', background: fait ? '#3DD68C' : 'transparent' }}
+                                  />
+                                  <span className="flex-1 min-w-0">
+                                    <span className="flex items-center gap-2 flex-wrap">
+                                      {t.ordre ? <span className="text-[10px] font-bold text-white/30 tabular-nums">#{t.ordre}</span> : null}
+                                      {t.echeance && <span className="text-[10px] font-semibold text-white/45 tabular-nums">{t.echeance}</span>}
+                                      {t.resp && (
+                                        <span className="text-[9.5px] font-bold px-1.5 py-[1px] rounded" style={RESP_STYLE[t.resp]}>{RESP_LIB[t.resp]}</span>
+                                      )}
+                                      {t.ref && <span className="text-[9.5px] text-white/30">{t.ref}</span>}
+                                      {attente && <span className="text-[9.5px] font-bold px-1.5 py-[1px] rounded" style={{ background: 'rgba(255,193,7,0.16)', color: '#F5C86B' }}>En attente</span>}
+                                    </span>
+                                    <span className={`block text-[12.5px] mt-0.5 ${fait ? 'text-white/40 line-through' : attente ? 'text-white/45' : 'text-white/85'}`}>{t.titre}</span>
+                                    {t.critere && <span className="block text-[10.5px] text-white/35 mt-0.5">C'est fait quand : {t.critere}</span>}
+                                    {!t.critere && (
+                                      <span className="block text-[10.5px] text-white/35 mt-0.5">
+                                        {t.from === 'dd' ? 'Demandé par Delivery Digital' : 'Demandé par vous'}
+                                      </span>
+                                    )}
+                                  </span>
+                                  <button
+                                    onClick={() => changerStatutTache(t.id, attente ? 'a_faire' : 'standby')}
+                                    title={attente ? 'Remettre à faire' : 'Mettre en attente'}
+                                    aria-label={attente ? 'Remettre à faire' : 'Mettre en attente'}
+                                    className="text-[11px] shrink-0 mt-0.5"
+                                    style={{ color: attente ? '#F5C86B' : 'rgba(255,255,255,0.25)' }}
+                                  >
+                                    {attente ? '▶' : '⏸'}
+                                  </button>
+                                  {t.from === 'agence' && !t.ordre && (
+                                    <button onClick={() => supprimerTache(t.id)} aria-label="Retirer" className="text-[11px] text-white/30 hover:text-white/60 mt-0.5">✕</button>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
                         )}
-                      </li>
+                      </div>
                     );
                   })}
-                </ul>
+                </div>
               )}
+
+              {/* IDENTIFIANTS DES RESEAUX SOCIAUX (action #8) : Pyemes ouvre les comptes, Nova les
+                  anime. @author Rabah Ziane - 2026-09-01 */}
+              <div className="mt-4 pt-3 border-t border-white/8">
+                <p className="text-[12.5px] font-semibold text-white/80">Comptes réseaux sociaux</p>
+                <p className="text-[11.5px] text-white/45 mb-2">
+                  Les accès aux comptes que Nova anime. Le mot de passe reste chiffré et ne s&apos;affiche qu&apos;à la demande, ligne par ligne.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+                  <select value={resForm.reseau} onChange={(e) => setResForm((p) => ({ ...p, reseau: e.target.value }))}
+                    className="h-9 px-2 rounded-lg bg-black/30 border border-white/10 text-[12.5px] text-white">
+                    {Object.entries(RESEAUX_LIB).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                  </select>
+                  <input value={resForm.compte} onChange={(e) => setResForm((p) => ({ ...p, compte: e.target.value }))} placeholder="@compte"
+                    className="sm:w-32 h-9 px-3 rounded-lg bg-black/30 border border-white/10 text-[12.5px] text-white placeholder:text-white/30" />
+                  <input value={resForm.identifiant} onChange={(e) => setResForm((p) => ({ ...p, identifiant: e.target.value }))} placeholder="E-mail de connexion"
+                    className="flex-1 min-w-[160px] h-9 px-3 rounded-lg bg-black/30 border border-white/10 text-[12.5px] text-white placeholder:text-white/30" />
+                  <input value={resForm.motDePasse} onChange={(e) => setResForm((p) => ({ ...p, motDePasse: e.target.value }))} placeholder="Mot de passe" type="password" autoComplete="new-password"
+                    className="sm:w-40 h-9 px-3 rounded-lg bg-black/30 border border-white/10 text-[12.5px] text-white placeholder:text-white/30" />
+                  <button onClick={ajouterReseau} disabled={resBusy || !resForm.identifiant.trim()}
+                    className="h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white disabled:opacity-40" style={{ background: '#635BFF' }}>Ajouter</button>
+                </div>
+                <input value={resForm.note} onChange={(e) => setResForm((p) => ({ ...p, note: e.target.value }))}
+                  placeholder="Note : double authentification, numéro associé, qui a créé le compte…"
+                  className="w-full h-9 px-3 mt-2 rounded-lg bg-black/30 border border-white/10 text-[12.5px] text-white placeholder:text-white/30" />
+
+                {reseaux.length === 0 ? (
+                  <p className="text-[12px] text-white/35 mt-3">Aucun compte enregistré.</p>
+                ) : (
+                  <ul className="mt-3 space-y-1.5">
+                    {reseaux.map((r) => (
+                      <li key={r.id} className="rounded-lg border border-white/8 bg-black/20 px-3 py-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] font-bold px-1.5 py-[1px] rounded" style={{ background: 'rgba(99,91,255,0.20)', color: '#B9B4FF' }}>{RESEAUX_LIB[r.reseau] || r.reseau}</span>
+                          {r.compte && <span className="text-[11.5px] text-white/70">{r.compte}</span>}
+                          <span className="text-[11.5px] text-white/55">{r.identifiant}</span>
+                          <span className="flex-1" />
+                          {r.aSecret && (
+                            <button onClick={() => voirSecret(r.id)} className="text-[11px] text-white/50 hover:text-white/80">
+                              {secrets[r.id] ? 'Masquer' : 'Voir le mot de passe'}
+                            </button>
+                          )}
+                          <button onClick={() => supprimerReseau(r.id)} className="text-[11px] text-white/30 hover:text-white/60">✕</button>
+                        </div>
+                        {secrets[r.id] && <p className="text-[12.5px] font-mono text-white/85 mt-1 select-all">{secrets[r.id]}</p>}
+                        {r.note && <p className="text-[10.5px] text-white/35 mt-1">{r.note}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* RETOURS CLIENTS : la colonne partagee de la fenetre de test (action #4 du plan).
+                  @author Rabah Ziane - 2026-09-01 */}
+              <div className="mt-4 pt-3 border-t border-white/8">
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <p className="text-[12.5px] font-semibold text-white/80">Retours clients</p>
+                  <span className="text-[11px] text-white/40">
+                    {retours.filter((r) => r.statut === 'nouveau' || r.statut === 'en_cours').length} à traiter · {retours.length} au total
+                  </span>
+                </div>
+                <p className="text-[11.5px] text-white/45 mb-2">
+                  Ce que remontent les testeurs, au fil de l&apos;eau. Delivery Digital et Pyemes voient la même liste et répondent ici.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input value={retourClient} onChange={(e) => setRetourClient(e.target.value)}
+                    placeholder="Qui ? (prénom ou e-mail)"
+                    className="sm:w-48 h-9 px-3 rounded-lg bg-black/30 border border-white/10 text-[12.5px] text-white placeholder:text-white/30" />
+                  <input value={retourTexte} onChange={(e) => setRetourTexte(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') ajouterRetour(); }}
+                    placeholder="Ce qu'il a dit…"
+                    className="flex-1 h-9 px-3 rounded-lg bg-black/30 border border-white/10 text-[12.5px] text-white placeholder:text-white/30" />
+                  <select value={retourGravite} onChange={(e) => setRetourGravite(e.target.value as 'bloquant' | 'genant' | 'idee')}
+                    className="h-9 px-2 rounded-lg bg-black/30 border border-white/10 text-[12.5px] text-white">
+                    <option value="bloquant">Bloquant</option>
+                    <option value="genant">Gênant</option>
+                    <option value="idee">Idée</option>
+                  </select>
+                  <button onClick={ajouterRetour} disabled={retourBusy || !retourTexte.trim()}
+                    className="h-9 px-4 rounded-lg text-[12.5px] font-semibold text-white disabled:opacity-40" style={{ background: '#635BFF' }}>
+                    Ajouter
+                  </button>
+                </div>
+
+                {retours.length === 0 ? (
+                  <p className="text-[12px] text-white/35 mt-3">Aucun retour pour l&apos;instant.</p>
+                ) : (
+                  <ul className="mt-3 space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                    {retours.map((r) => {
+                      const clos = r.statut === 'traite' || r.statut === 'ecarte';
+                      return (
+                        <li key={r.id} className="rounded-lg border border-white/8 bg-black/20 px-3 py-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[9.5px] font-bold px-1.5 py-[1px] rounded" style={GRAVITE_STYLE[r.gravite]}>{GRAVITE_LIB[r.gravite]}</span>
+                            {r.client && <span className="text-[10.5px] text-white/55">{r.client}</span>}
+                            <span className="text-[10px] text-white/30">
+                              {r.from === 'dd' ? 'Delivery Digital' : (r.auteur || 'Vous')}
+                              {r.createdAt ? ` · ${new Date(r.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}` : ''}
+                            </span>
+                            <span className="flex-1" />
+                            <select value={r.statut} onChange={(e) => changerStatutRetour(r.id, e.target.value)}
+                              className="h-6 px-1 rounded bg-black/30 border border-white/10 text-[10.5px] text-white/70">
+                              <option value="nouveau">Nouveau</option>
+                              <option value="en_cours">En cours</option>
+                              <option value="traite">Traité</option>
+                              <option value="ecarte">Écarté</option>
+                            </select>
+                          </div>
+                          <p className={`text-[12.5px] mt-1 ${clos ? 'text-white/40' : 'text-white/85'}`}>{r.texte}</p>
+                          {r.reponse && <p className="text-[11px] text-white/45 mt-1">Réponse : {r.reponse}</p>}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
 
               {/* Fil de discussion avec Delivery Digital */}
               <div className="mt-4 pt-3 border-t border-white/8">

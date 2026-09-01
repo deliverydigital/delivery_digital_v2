@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, Fragment } from 'react';
+import { useEffect, useState, useCallback, useMemo, Fragment } from 'react';
 import { Building2, Loader2, Plus, RefreshCw, Copy, KeyRound, Eye, EyeOff, X, Mail, Trash2, FileSignature, Send, Check, Clock } from 'lucide-react';
 import DossierTasks, { type DossierTask } from './DossierTasks';
 import { FORMATIONS } from '../lib/formationCatalog';
@@ -74,10 +74,78 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
   const [pyemesSaving, setPyemesSaving] = useState(false);
   // Feuille de route Pyemes partagee avec l'agence : DD ajoute ses demandes, coche l'avancement et
   // repond dans le fil. Meme donnee que celle affichee cote agence. @author Rabah Ziane - 2026-08-31
-  type RoadTache = { id: string; from: 'dd' | 'agence'; titre: string; statut: 'a_faire' | 'en_cours' | 'fait'; source?: string; createdAt?: string };
+  type RoadTache = { id: string; from: 'dd' | 'agence'; titre: string; statut: 'a_faire' | 'en_cours' | 'fait' | 'standby'; source?: string; createdAt?: string; phase?: string; echeance?: string; resp?: 'PY' | 'NG' | 'MIX' | ''; critere?: string; ref?: string; ordre?: number | null };
+  // Responsables de la check-list de lancement : PY = equipe Pyemes, NG = Nova Growth, MIX = les deux.
+  const RESP_LIB: Record<string, string> = { PY: 'Pyemes', NG: 'Nova', MIX: 'Les deux' };
+  const RESP_STYLE: Record<string, { background: string; color: string }> = {
+    PY: { background: 'rgba(99,91,255,0.12)', color: '#4B45C6' },
+    NG: { background: 'rgba(52,199,89,0.12)', color: '#248A3D' },
+    MIX: { background: '#F0F0F2', color: '#6E6E73' },
+  };
   type RoadMsg = { id: string; from: 'dd' | 'agence'; auteur?: string; texte: string; image?: string; at?: string };
   const [roadAgence, setRoadAgence] = useState<{ id: string; name: string } | null>(null);
   const [roadTaches, setRoadTaches] = useState<RoadTache[]>([]);
+  const [phasesOuvertes, setPhasesOuvertes] = useState<Record<string, boolean>>({});
+  const [dragId, setDragId] = useState<string | null>(null);
+
+  // RETOURS CLIENTS : meme liste que celle de l'espace agence (action #4). @Rabah 2026-09-01
+  type Retour = { id: string; from: 'dd' | 'agence'; auteur?: string; client?: string; texte: string;
+    gravite: 'bloquant' | 'genant' | 'idee'; statut: 'nouveau' | 'en_cours' | 'traite' | 'ecarte';
+    reponse?: string; createdAt?: string };
+  const GRAVITE_LIB: Record<string, string> = { bloquant: 'Bloquant', genant: 'Gênant', idee: 'Idée' };
+  const GRAVITE_STYLE: Record<string, { background: string; color: string }> = {
+    bloquant: { background: '#FFE9E7', color: '#B3261E' },
+    genant: { background: '#FFF4DC', color: '#9A6B00' },
+    idee: { background: 'rgba(99,91,255,0.10)', color: '#4B45C6' },
+  };
+  const [retours, setRetours] = useState<Retour[]>([]);
+  const [retourTexte, setRetourTexte] = useState('');
+  const [retourClient, setRetourClient] = useState('');
+  const [retourGravite, setRetourGravite] = useState<'bloquant' | 'genant' | 'idee'>('genant');
+
+  async function chargerRetoursAdmin(id: string) {
+    const j = await fetch(`/api/admin/agencies/${id}/pyemes/retours`, { headers: headers() }).then((r) => r.json()).catch(() => null);
+    if (j?.ok) setRetours(j.retours || []);
+  }
+  async function ajouterRetourAdmin() {
+    if (!roadAgence || !retourTexte.trim()) return;
+    const j = await fetch(`/api/admin/agencies/${roadAgence.id}/pyemes/retours`, {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({ texte: retourTexte.trim(), client: retourClient.trim(), gravite: retourGravite }),
+    }).then((r) => r.json()).catch(() => null);
+    if (j?.ok) { setRetours(j.retours || []); setRetourTexte(''); setRetourClient(''); }
+  }
+  async function statutRetourAdmin(rid: string, statut: string) {
+    if (!roadAgence) return;
+    const j = await fetch(`/api/admin/agencies/${roadAgence.id}/pyemes/retours/${rid}`, {
+      method: 'PATCH', headers: headers(), body: JSON.stringify({ statut }),
+    }).then((r) => r.json()).catch(() => null);
+    if (j?.ok) setRetours(j.retours || []);
+  }
+  // Meme regroupement par phase que du cote agence : les deux ecrans lisent la MEME liste et
+  // doivent la presenter pareil. @author Rabah Ziane - 2026-09-01
+  const phasesRoadmap = useMemo(() => {
+    const groupes = new Map<string, RoadTache[]>();
+    for (const t of roadTaches) {
+      const cle = t.phase || 'Autres demandes';
+      if (!groupes.has(cle)) groupes.set(cle, []);
+      groupes.get(cle)!.push(t);
+    }
+    return Array.from(groupes.entries())
+      .sort((a, b) => (a[0] === 'Autres demandes' ? 1 : b[0] === 'Autres demandes' ? -1 : a[0].localeCompare(b[0], 'fr')))
+      .map(([phase, taches]) => ({
+        phase,
+        // Dans chaque categorie : ce qui reste a faire d'abord (dans l'ordre du plan), puis ce qui
+        // est en attente, puis ce qui est FAIT, en bas. On garde ainsi sous les yeux ce qui reste.
+        // @author Rabah Ziane - 2026-09-01
+        taches: taches.slice().sort((a, b) => {
+          const rang = (t: RoadTache) => (t.statut === 'fait' ? 2 : t.statut === 'standby' ? 1 : 0);
+          return rang(a) - rang(b) || (a.ordre ?? 1e9) - (b.ordre ?? 1e9);
+        }),
+        faites: taches.filter((t) => t.statut === 'fait').length,
+        actives: taches.filter((t) => t.statut !== 'standby').length,
+      }));
+  }, [roadTaches]);
   const [roadMsgs, setRoadMsgs] = useState<RoadMsg[]>([]);
   const [roadTitre, setRoadTitre] = useState('');
   const [roadMsg, setRoadMsg] = useState('');
@@ -97,6 +165,7 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
   }, [roadAgence]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function ouvrirRoadmap(id: string, name: string) {
+    chargerRetoursAdmin(id);
     setRoadAgence({ id, name }); setRoadTaches([]); setRoadMsgs([]);
     const j = await fetch(`/api/admin/agencies/${id}/pyemes/roadmap`, { headers: headers() }).then((r) => r.json()).catch(() => null);
     appliquerRoad(j);
@@ -110,6 +179,26 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
   async function statutTacheAdmin(tid: string, statut: string) {
     if (!roadAgence) return;
     const j = await fetch(`/api/admin/agencies/${roadAgence.id}/pyemes/roadmap/${tid}`, { method: 'PATCH', headers: headers(), body: JSON.stringify({ statut }) }).then((r) => r.json()).catch(() => null);
+    appliquerRoad(j);
+  }
+  // Glisser-deposer : reordonne dans la phase, met a jour tout de suite, puis persiste.
+  // @author Rabah Ziane - 2026-09-01
+  async function deposerSurAdmin(cible: RoadTache, taches: RoadTache[]) {
+    if (!roadAgence || !dragId || dragId === cible.id) { setDragId(null); return; }
+    const src = taches.findIndex((t) => t.id === dragId);
+    const dst = taches.findIndex((t) => t.id === cible.id);
+    if (src < 0 || dst < 0) { setDragId(null); return; }
+    const ordonnees = taches.slice();
+    ordonnees.splice(dst, 0, ordonnees.splice(src, 1)[0]);
+    setDragId(null);
+    const ids = ordonnees.map((t) => t.id);
+    setRoadTaches((prev) => {
+      const rang = new Map(ids.map((id, i) => [id, i + 1]));
+      return prev.map((t) => (rang.has(t.id) ? { ...t, ordre: rang.get(t.id)! } : t));
+    });
+    const j = await fetch(`/api/admin/agencies/${roadAgence.id}/pyemes/roadmap-ordre`, {
+      method: 'PATCH', headers: headers(), body: JSON.stringify({ ids }),
+    }).then((r) => r.json()).catch(() => null);
     appliquerRoad(j);
   }
   async function supprimerTacheAdmin(tid: string) {
@@ -691,24 +780,129 @@ export default function AgencyAdmin({ secret }: { secret: string | null }) {
               <button onClick={ajouterTacheAdmin} disabled={roadBusy || !roadTitre.trim()} className="px-4 h-10 rounded-lg bg-[#635BFF] text-white text-[13px] font-semibold disabled:opacity-50">Ajouter</button>
             </div>
 
+            {/* RETOURS CLIENTS : la meme colonne que cote agence (action #4). @Rabah 2026-09-01 */}
+            <div className="mt-4 pt-4 border-t border-black/8">
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <p className="text-[13px] font-semibold text-[#1D1D1F]">Retours clients</p>
+                <span className="text-[12px] text-[#86868B]">
+                  {retours.filter((r) => r.statut === 'nouveau' || r.statut === 'en_cours').length} à traiter · {retours.length} au total
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                <input value={retourClient} onChange={(e) => setRetourClient(e.target.value)} placeholder="Qui ?" className="sm:w-40 h-9 px-3 rounded-lg border border-black/15 text-[13px]" />
+                <input value={retourTexte} onChange={(e) => setRetourTexte(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') ajouterRetourAdmin(); }} placeholder="Ce qu'il a dit…" className="flex-1 h-9 px-3 rounded-lg border border-black/15 text-[13px]" />
+                <select value={retourGravite} onChange={(e) => setRetourGravite(e.target.value as 'bloquant' | 'genant' | 'idee')} className="h-9 px-2 rounded-lg border border-black/15 text-[13px]">
+                  <option value="bloquant">Bloquant</option>
+                  <option value="genant">Gênant</option>
+                  <option value="idee">Idée</option>
+                </select>
+                <button onClick={ajouterRetourAdmin} disabled={!retourTexte.trim()} className="px-4 h-9 rounded-lg bg-[#635BFF] text-white text-[13px] font-semibold disabled:opacity-50">Ajouter</button>
+              </div>
+              {retours.length === 0 ? (
+                <p className="text-[13px] text-[#86868B] mt-3">Aucun retour pour l&apos;instant.</p>
+              ) : (
+                <ul className="mt-3 space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                  {retours.map((r) => {
+                    const clos = r.statut === 'traite' || r.statut === 'ecarte';
+                    return (
+                      <li key={r.id} className="rounded-lg border border-black/8 px-3 py-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] font-bold px-1.5 py-[1px] rounded" style={GRAVITE_STYLE[r.gravite]}>{GRAVITE_LIB[r.gravite]}</span>
+                          {r.client && <span className="text-[11.5px] text-[#1D1D1F]">{r.client}</span>}
+                          <span className="text-[11px] text-[#A1A1A6]">
+                            {r.from === 'dd' ? 'Delivery Digital' : (r.auteur || "L'agence")}
+                            {r.createdAt ? ` · ${new Date(r.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}` : ''}
+                          </span>
+                          <span className="flex-1" />
+                          <select value={r.statut} onChange={(e) => statutRetourAdmin(r.id, e.target.value)} className="h-6 px-1 rounded border border-black/10 text-[11px]">
+                            <option value="nouveau">Nouveau</option>
+                            <option value="en_cours">En cours</option>
+                            <option value="traite">Traité</option>
+                            <option value="ecarte">Écarté</option>
+                          </select>
+                        </div>
+                        <p className={`text-[13px] mt-1 ${clos ? 'text-[#86868B]' : 'text-[#1D1D1F]'}`}>{r.texte}</p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+
             {roadTaches.length === 0 ? (
               <p className="text-[13px] text-[#86868B] mt-4">Aucune tâche pour l'instant.</p>
             ) : (
-              <ul className="mt-4 space-y-1.5">
-                {roadTaches.map((t) => {
-                  const fait = t.statut === 'fait';
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center gap-3">
+                  <span className="h-1.5 flex-1 rounded-full bg-black/8 overflow-hidden">
+                    <span className="block h-full rounded-full" style={{ width: `${roadTaches.filter((t) => t.statut !== 'standby').length ? Math.round((roadTaches.filter((t) => t.statut === 'fait').length / roadTaches.filter((t) => t.statut !== 'standby').length) * 100) : 0}%`, background: '#635BFF' }} />
+                  </span>
+                  <span className="text-[12px] text-[#86868B] tabular-nums shrink-0">
+                    {roadTaches.filter((t) => t.statut === 'fait').length}/{roadTaches.filter((t) => t.statut !== 'standby').length} fait
+                  </span>
+                </div>
+                {phasesRoadmap.map(({ phase, taches, faites, actives }) => {
+                  const ouverte = phasesOuvertes[phase] !== false;
+                  const pct = actives ? Math.round((faites / actives) * 100) : 0;
                   return (
-                    <li key={t.id} className="flex items-start gap-3 rounded-lg border border-black/8 px-3 py-2">
-                      <input type="checkbox" checked={fait} onChange={() => statutTacheAdmin(t.id, fait ? 'a_faire' : 'fait')} className="mt-1" />
-                      <span className="flex-1 min-w-0">
-                        <span className={`block text-[13px] ${fait ? 'text-[#86868B] line-through' : 'text-[#1D1D1F]'}`}>{t.titre}</span>
-                        <span className="block text-[11px] text-[#A1A1A6] mt-0.5">{t.from === 'dd' ? 'Demandé par Delivery Digital' : "Demandé par l'agence"}{t.source && t.source.startsWith('import') ? ` · ${t.source}` : ''}</span>
-                      </span>
-                      {t.from === 'dd' && <button onClick={() => supprimerTacheAdmin(t.id)} className="text-[12px] text-[#A1A1A6] hover:text-[#FF3B30]">✕</button>}
-                    </li>
+                    <div key={phase} className="rounded-lg border border-black/8 overflow-hidden">
+                      <button onClick={() => setPhasesOuvertes((p) => ({ ...p, [phase]: !ouverte }))} className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-black/[0.02]">
+                        <span className={`text-[#C7C7CC] text-[10px] transition-transform ${ouverte ? 'rotate-90' : ''}`}>▶</span>
+                        <span className="flex-1 min-w-0 text-[13px] font-semibold text-[#1D1D1F] truncate">{phase}</span>
+                        <span className="h-1 w-20 rounded-full bg-black/8 overflow-hidden shrink-0">
+                          <span className="block h-full rounded-full" style={{ width: `${pct}%`, background: pct === 100 ? '#34C759' : '#635BFF' }} />
+                        </span>
+                        <span className="text-[11.5px] text-[#A1A1A6] tabular-nums shrink-0">{faites}/{actives}</span>
+                      </button>
+                      {ouverte && (
+                        <ul className="px-2 pb-2 space-y-1">
+                          {taches.map((t) => {
+                            const fait = t.statut === 'fait';
+                            const attente = t.statut === 'standby';
+                            return (
+                              <li
+                                key={t.id}
+                                draggable
+                                onDragStart={() => setDragId(t.id)}
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={() => deposerSurAdmin(t, taches)}
+                                onDragEnd={() => setDragId(null)}
+                                className={`flex items-start gap-2.5 rounded-lg border border-black/8 px-3 py-2 cursor-grab active:cursor-grabbing ${dragId === t.id ? 'opacity-40' : ''}`}
+                                style={{ background: attente ? '#FAFAFB' : 'transparent' }}
+                              >
+                                <span className="mt-1 text-[#C7C7CC] text-[11px] leading-none select-none shrink-0" aria-hidden>⠿</span>
+                                <input type="checkbox" checked={fait} onChange={() => statutTacheAdmin(t.id, fait ? 'a_faire' : 'fait')} className="mt-1" />
+                                <span className="flex-1 min-w-0">
+                                  <span className="flex items-center gap-2 flex-wrap">
+                                    {t.ordre ? <span className="text-[10.5px] font-bold text-[#C7C7CC] tabular-nums">#{t.ordre}</span> : null}
+                                    {t.echeance && <span className="text-[10.5px] font-semibold text-[#86868B] tabular-nums">{t.echeance}</span>}
+                                    {t.resp && <span className="text-[10px] font-bold px-1.5 py-[1px] rounded" style={RESP_STYLE[t.resp]}>{RESP_LIB[t.resp]}</span>}
+                                    {t.ref && <span className="text-[10px] text-[#C7C7CC]">{t.ref}</span>}
+                                    {attente && <span className="text-[10px] font-bold px-1.5 py-[1px] rounded" style={{ background: '#FFF4DC', color: '#9A6B00' }}>En attente</span>}
+                                  </span>
+                                  <span className={`block text-[13px] mt-0.5 ${fait ? 'text-[#86868B] line-through' : attente ? 'text-[#86868B]' : 'text-[#1D1D1F]'}`}>{t.titre}</span>
+                                  {t.critere
+                                    ? <span className="block text-[11px] text-[#A1A1A6] mt-0.5">C'est fait quand : {t.critere}</span>
+                                    : <span className="block text-[11px] text-[#A1A1A6] mt-0.5">{t.from === 'dd' ? 'Demandé par Delivery Digital' : "Demandé par l'agence"}</span>}
+                                </span>
+                                <button
+                                  onClick={() => statutTacheAdmin(t.id, attente ? 'a_faire' : 'standby')}
+                                  title={attente ? 'Remettre à faire' : 'Mettre en attente'}
+                                  className="text-[12px] shrink-0 mt-0.5"
+                                  style={{ color: attente ? '#9A6B00' : '#C7C7CC' }}
+                                >
+                                  {attente ? '▶' : '⏸'}
+                                </button>
+                                {t.from === 'dd' && !t.ordre && <button onClick={() => supprimerTacheAdmin(t.id)} className="text-[12px] text-[#A1A1A6] hover:text-[#FF3B30] mt-0.5">✕</button>}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
                   );
                 })}
-              </ul>
+              </div>
             )}
 
             <div className="mt-5 pt-4 border-t border-black/8">

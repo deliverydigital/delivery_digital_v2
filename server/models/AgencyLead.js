@@ -4,6 +4,20 @@
  */
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
+// Tâche collaborative (agence <-> DDN) portée par le CLIENT : dispo dès le lead, sans dossier OPCO.
+// Même forme que AgencyDossier.tasks (sync via leadId côté admin). @author Rabah Ziane - 2026-07-02
+const taskSchema = new Schema({
+  step: { type: String, default: 'transmis' },
+  label: String,
+  assignedTo: { type: String, enum: ['agence', 'ddn'], default: 'agence' },
+  comment: String,
+  done: { type: Boolean, default: false },
+  doneBy: String,
+  doneAt: Date,
+  createdBy: String,
+  intervenantName: String,   // intervenant tagué sur la tâche
+  intervenantEmail: String,  // email de l'intervenant notifié
+}, { timestamps: true });
 const schema = new Schema({
   agencyId: { type: Schema.Types.ObjectId, ref: 'User', index: true, required: true },
   agencyName: String,
@@ -28,7 +42,11 @@ const schema = new Schema({
   // Nombre de salaries de l'ENTREPRISE cliente (distinct de dossier.salaries = stagiaires inscrits).
   companyEmployees: { type: Number },
   status: { type: String, enum: ['new', 'verified', 'dossier', 'converted', 'lost'], default: 'new', index: true },
+  rdvAt: Date,                 // RDV de finalisation confirmé au client (email de confirmation, avant montage du dossier)
+  confirmationEmailSentAt: Date, // date d'envoi de l'email de confirmation (déroulé + RDV) - même sans dossier
   notes: String,
   hidden: { type: Boolean, default: false }, // suppression douce (masqué de la liste)
+  // Tâches collaboratives agence <-> DDN, disponibles dès le client (sans dossier). @Rabah 2026-07-02
+  tasks: { type: [taskSchema], default: [] },
 }, { timestamps: true });
 export default mongoose.models.AgencyLead || mongoose.model('AgencyLead', schema);

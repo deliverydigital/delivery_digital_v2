@@ -19,6 +19,7 @@ const quickQuoteSchema = new Schema({
     company: { type: String, trim: true },
     phone: { type: String, trim: true },
     address: { type: String, trim: true },
+    siret: { type: String, trim: true }, // SIRET client (assistance recherche entreprise). @Rabah 2026-06-23
   },
 
   prospectId: { type: Schema.Types.ObjectId, ref: 'Prospect' },
@@ -95,6 +96,7 @@ const quickQuoteSchema = new Schema({
     reason: { type: String },
     rejectedAt: { type: Date },
     ip: { type: String },
+    by: { type: String }, // 'admin' (enregistre cote admin) ou 'client' (refus depuis la page publique). @Rabah 2026-06-23
   },
   // Facture d'acompte auto-emise a la signature. Trace pour badge "Facture envoyee" cote admin.
   // @author Rabah Ziane - 2026-05-11
@@ -104,6 +106,17 @@ const quickQuoteSchema = new Schema({
     currency: { type: String },
     sentAt: { type: Date },
     sentTo: { type: String },
+  },
+
+  // Commission agence sur un devis IT (devis avec agencyId). Cycle calque sur les dossiers OPCO :
+  // 1) DD encaisse le client -> clientPaid ; 2) l'agence demande l'encaissement -> encashRequestedAt ;
+  // 3) DD verse la commission -> paidAt. @author Rabah Ziane - 2026-06-23
+  agencyCommission: {
+    clientPaid: { type: Boolean, default: false }, // DD a recu le paiement du client
+    clientPaidAt: { type: Date },
+    encashRequestedAt: { type: Date }, // l'agence a demande l'encaissement de sa commission
+    paidAt: { type: Date }, // DD a verse la commission a l'agence
+    invoiceNumber: { type: String },
   },
 }, { timestamps: true });
 

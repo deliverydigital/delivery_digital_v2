@@ -38,6 +38,7 @@ type Session = {
   hours?: number; hourlyRate?: number; payAmount?: number; status: string; sessionStart?: string; sessionEnd?: string;
   location?: string; addr?: string;
   doneAt?: string; invoiceNumber?: string; learners?: any[]; whatsappGroupCreated?: boolean;
+  clientContactName?: string; clientPhone?: string; days?: { date: string; from: string; to: string; mode?: string }[];
 };
 
 export default function TrainerAdmin({ secret }: { secret: string }) {
@@ -273,7 +274,7 @@ function SessionsAdmin({ hdr, hdrJson }: { hdr: any; hdrJson: any }) {
       {sessions.length === 0 ? <Empty text="Aucun cours. Assignez un formateur à un dossier OPCO ou créez une session." /> : view === 'calendar' ? (
         <SessionsCalendar sessions={sessions} onOpen={(s) => setDetailId(s._id)} onManage={(s) => setManage(s)} />
       ) : (
-        <div className="space-y-2">{sessions.map((s) => <SessionAdminRow key={s._id} s={s} hdrJson={hdrJson} onChanged={load} onOpen={() => setDetailId(s._id)} onManage={() => setManage(s)} />)}</div>
+        <div className="space-y-2">{sessions.map((s) => <SessionAdminRow key={s._id} s={s} trainerPhone={trainers.find((t) => t._id === s.trainerId)?.phone} hdrJson={hdrJson} onChanged={load} onOpen={() => setDetailId(s._id)} onManage={() => setManage(s)} />)}</div>
       )}
 
       {assign && <AssignModal trainers={trainers} dossiers={dossiers} formations={formations} hdrJson={hdrJson} onClose={() => setAssign(false)} onDone={() => { setAssign(false); load(); }} />}
@@ -516,7 +517,7 @@ function SessionDetailModal({ id, hdr, onClose }: { id: string; hdr: any; onClos
   );
 }
 
-function SessionAdminRow({ s, hdrJson, onChanged, onOpen, onManage }: { s: Session; hdrJson: any; onChanged: () => void; onOpen: () => void; onManage: () => void }) {
+function SessionAdminRow({ s, trainerPhone, hdrJson, onChanged, onOpen, onManage }: { s: Session; trainerPhone?: string; hdrJson: any; onChanged: () => void; onOpen: () => void; onManage: () => void }) {
   const [busy, setBusy] = useState(false);
   const sm = STATUS_META[s.status] || STATUS_META.scheduled;
   const markDone = async (done: boolean) => { setBusy(true); try { await fetch(`/api/admin/trainers/sessions/${s._id}/done`, { method: 'POST', headers: hdrJson, body: JSON.stringify({ done }) }); onChanged(); } finally { setBusy(false); } };
@@ -537,6 +538,14 @@ function SessionAdminRow({ s, hdrJson, onChanged, onOpen, onManage }: { s: Sessi
         </div>
       </button>
       <div className="flex items-center gap-2 shrink-0">
+        {/* Le responsable pédagogique peut confirmer les dates au client lui-même. @Rabah 2026-07-20 */}
+        {s.status === 'scheduled' && s.clientPhone && (
+          <a href={`https://wa.me/${waDigits(s.clientPhone)}?text=${encodeURIComponent(clientConfirmMessage(s, trainerPhone))}`} target="_blank" rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-black text-[12.5px] font-semibold" style={{ background: '#25D366' }}
+            title={`Confirmer les dates à ${s.clientContactName || 'le client'} sur WhatsApp`}>
+            <MessageCircle className="h-3.5 w-3.5" /> Confirmer au client
+          </a>
+        )}
         {(s.status === 'scheduled' || s.status === 'cancelled') && <button onClick={onManage} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#F5F5F7] text-[#1D1D1F] text-[12.5px] font-semibold"><CalendarClock className="h-3.5 w-3.5" /> Reporter / Annuler</button>}
         {s.status === 'scheduled' && <button onClick={() => markDone(true)} disabled={busy} className="px-4 py-1.5 rounded-full bg-[#34C759] text-white text-[12.5px] font-semibold disabled:opacity-60">Marquer réalisée</button>}
         {s.status === 'done' && <button onClick={() => markDone(false)} disabled={busy} className="px-4 py-1.5 rounded-full bg-black/5 text-[#86868B] text-[12.5px] font-semibold">Annuler « réalisée »</button>}
@@ -546,27 +555,320 @@ function SessionAdminRow({ s, hdrJson, onChanged, onOpen, onManage }: { s: Sessi
   );
 }
 
+/**
+ * Message de confirmation des dates envoyé au client par le RESPONSABLE PÉDAGOGIQUE (nous),
+ * en complément de l'appel du formateur : il annonce nommément le formateur qui interviendra,
+ * pour que le client sache qui va le contacter et animer la session.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function clientConfirmMessage(s: Session, trainerPhone?: string) {
+  const planning = (s.days || [])
+    .map((d) => `- ${new Date(`${d.date}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} de ${d.from} à ${d.to}`)
+    .join('\n');
+  return [
+    `Bonjour${s.clientContactName ? ` ${s.clientContactName}` : ''},`,
+    ``,
+    `Je suis Ziane Rabah, responsable pédagogique Delivery Digital pour « ${s.formationTitle || 'la formation'} ».`,
+    s.trainerName ? `Votre formateur sera ${s.trainerName}.` : '',
+    planning ? `Je vous confirme les dates prévues :\n${planning}` : `Je vous contacte pour confirmer les dates de la formation.`,
+    ``,
+    s.trainerName
+      ? `Est-ce que ces créneaux vous conviennent ? Si besoin, vous pouvez les adapter directement avec ${s.trainerName}, en fonction de vos plannings respectifs${trainerPhone ? ` : ${trainerPhone}` : ''}.`
+      : `Est-ce que ces créneaux vous conviennent ? Si besoin nous pouvons les adapter ensemble.`,
+    ``,
+    `À noter : tous les apprenants inscrits recevront par email, avant le démarrage, deux questionnaires à compléter (expression des attentes et évaluation du positionnement). À l'issue de la formation, chacun recevra un questionnaire de satisfaction et son attestation de fin de formation.`,
+    ``,
+    `Je reste disponible dans ce groupe tout au long de la formation, n'hésitez pas si vous avez la moindre question.`,
+    ``,
+    `Bien cordialement,`,
+    `Ziane Rabah - Responsable pédagogique Delivery Digital`,
+  ].filter((l) => l !== '').join('\n');
+}
+
+const waDigits = (phone?: string) => {
+  const d = String(phone || '').replace(/\D/g, '');
+  if (!d) return '';
+  if (d.startsWith('33')) return d;
+  if (d.startsWith('0')) return `33${d.slice(1)}`;
+  return d;
+};
+
+/* ===================== Planification sur les dispos du formateur ===================== */
+
+type PlanSlot = { date: string; from: string; to: string; mode: 'visio' | 'presentiel' | 'afest' };
+type Availability = {
+  recurring: { days: number[]; slots: { from: string; to: string }[] };
+  blocked: { day: string; kind: string; hours: { from: string; to: string }[]; label: string }[];
+  // Jours que le formateur a déclarés disponibles : hors de cette liste, on ne l'assigne pas.
+  available: { day: string; kind: string; hours: { from: string; to: string }[] }[];
+  busy: { day: string; from: string; to: string; label: string }[];
+};
+const DAY_NAMES = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+const MODE_LABEL: Record<PlanSlot['mode'], string> = { visio: 'Visioconférence', presentiel: 'Présentiel', afest: 'Situation de travail (AFEST)' };
+const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+const addHours = (t: string, h: number) => { const m = Math.min(23 * 60 + 59, toMin(t) + Math.round(h * 60)); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; };
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const fmtDayLong = (day: string) => day ? new Date(`${day}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
+
+/**
+ * Vérifie un créneau contre les dispos du formateur : jour bloqué, hors créneaux récurrents,
+ * ou chevauchement avec un autre cours déjà assigné. Renvoie null si tout va bien.
+ * @author Rabah Ziane · 2026-07-20
+ */
+function slotIssue(s: PlanSlot, av: Availability | null): { level: 'error' | 'warn'; text: string } | null {
+  if (!s.date) return { level: 'error', text: 'Date manquante' };
+  if (toMin(s.from) >= toMin(s.to)) return { level: 'error', text: 'Fin avant début' };
+  if (!av) return null;
+  // Règle principale : le formateur n'intervient que sur les jours qu'il a déclarés.
+  const avail = av.available.find((a) => a.day === s.date);
+  if (!avail) return { level: 'error', text: 'Jour non déclaré disponible par le formateur' };
+  if (avail.kind === 'am' && toMin(s.to) > 12 * 60) return { level: 'error', text: 'Disponible le matin uniquement' };
+  if (avail.kind === 'pm' && toMin(s.from) < 12 * 60) return { level: 'error', text: 'Disponible l\'après-midi uniquement' };
+  if (avail.kind === 'hours' && !avail.hours.some((h) => toMin(s.from) >= toMin(h.from) && toMin(s.to) <= toMin(h.to))) {
+    return { level: 'error', text: `Hors créneaux déclarés (${avail.hours.map((h) => `${h.from}-${h.to}`).join(', ')})` };
+  }
+  const blk = av.blocked.find((b) => b.day === s.date);
+  if (blk) {
+    if (blk.kind === 'full') return { level: 'error', text: `Jour bloqué${blk.label ? ' - ' + blk.label : ''}` };
+    if (blk.kind === 'am' && toMin(s.from) < 12 * 60) return { level: 'error', text: 'Matinée bloquée' };
+    if (blk.kind === 'pm' && toMin(s.to) > 12 * 60) return { level: 'error', text: 'Après-midi bloqué' };
+    if (blk.kind === 'hours' && blk.hours.some((h) => toMin(s.from) < toMin(h.to) && toMin(s.to) > toMin(h.from))) return { level: 'error', text: 'Créneau bloqué' };
+  }
+  const clash = av.busy.find((b) => b.day === s.date && toMin(s.from) < toMin(b.to) && toMin(s.to) > toMin(b.from));
+  if (clash) return { level: 'error', text: `Déjà pris - ${clash.label}` };
+  const wd = new Date(`${s.date}T12:00:00`).getDay();
+  if (av.recurring.days.length && !av.recurring.days.includes(wd)) return { level: 'warn', text: `${DAY_NAMES[wd]} hors jours habituels` };
+  if (av.recurring.slots.length && !av.recurring.slots.some((r) => toMin(s.from) >= toMin(r.from) && toMin(s.to) <= toMin(r.to))) return { level: 'warn', text: 'Hors créneaux habituels' };
+  return null;
+}
+
+/**
+ * Première date >= `after` qui tombe sur un jour habituel du formateur, non bloquée et
+ * sans cours déjà posé : sert à pré-remplir les journées suivantes en un clic.
+ */
+function nextFreeDate(av: Availability | null, after: string, taken: string[]): string {
+  const start = new Date(`${after || iso(new Date())}T12:00:00`);
+  for (let i = 1; i <= 120; i++) {
+    const d = new Date(start.getTime() + i * 864e5);
+    const day = iso(d);
+    if (taken.includes(day)) continue;
+    if (!av) return day;
+    if (!av.available.some((a) => a.day === day)) continue;   // uniquement les jours déclarés
+    if (av.blocked.some((b) => b.day === day && b.kind === 'full')) continue;
+    return day;
+  }
+  return iso(new Date(start.getTime() + 864e5));
+}
+
+/**
+ * Calendrier mensuel des disponibilités du formateur, repris à l'identique de son espace
+ * (journée / matin / après-midi / créneaux). Deux usages en un clic :
+ *  - mode "Planifier" : on pose les journées du cours sur les jours réellement libres ;
+ *  - mode "Bloquer"   : on pose une indisponibilité pour lui (accord pris au téléphone).
+ * @author Rabah Ziane · 2026-07-20
+ */
+function AvailabilityCalendar({ av, slots, defaultFrom, onToggleDay, onBlock, onUnblock }: {
+  av: Availability | null; slots: PlanSlot[]; defaultFrom: string;
+  onToggleDay: (day: string) => void; onBlock: (day: string) => void; onUnblock: (day: string) => void;
+}) {
+  const today = new Date();
+  const [cursor, setCursor] = useState({ y: today.getFullYear(), m: today.getMonth() });
+  const [mode, setMode] = useState<'plan' | 'block'>('plan');
+  const todayIso = iso(today);
+  const monthName = new Date(cursor.y, cursor.m, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+  // Grille lundi -> dimanche, cases vides avant le 1er du mois.
+  const cells = useMemo(() => {
+    const first = new Date(cursor.y, cursor.m, 1);
+    const shift = (first.getDay() + 6) % 7;
+    const nb = new Date(cursor.y, cursor.m + 1, 0).getDate();
+    return [...Array(shift).fill(null), ...Array.from({ length: nb }, (_, i) => i + 1)];
+  }, [cursor]);
+
+  const blockedBy = useMemo(() => Object.fromEntries((av?.blocked || []).map((b) => [b.day, b])), [av]);
+  const availableBy = useMemo(() => Object.fromEntries((av?.available || []).map((a) => [a.day, a])), [av]);
+  const busyBy = useMemo(() => {
+    const m: Record<string, string[]> = {};
+    for (const b of av?.busy || []) (m[b.day] ||= []).push(`${b.from}-${b.to} ${b.label}`);
+    return m;
+  }, [av]);
+  const picked = useMemo(() => new Set(slots.map((s) => s.date)), [slots]);
+
+  return (
+    <div className="rounded-xl bg-white p-3">
+      <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+        <div className="flex gap-1">
+          <button type="button" onClick={() => setMode('plan')} className={`px-2.5 py-1 rounded-full text-[12px] font-semibold ${mode === 'plan' ? 'bg-[#1D1D1F] text-white' : 'bg-[#F5F5F7] text-[#86868B]'}`}>Planifier</button>
+          <button type="button" onClick={() => setMode('block')} className={`px-2.5 py-1 rounded-full text-[12px] font-semibold ${mode === 'block' ? 'bg-[#FF3B30] text-white' : 'bg-[#F5F5F7] text-[#86868B]'}`}>Bloquer</button>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button type="button" onClick={() => setCursor((c) => c.m === 0 ? { y: c.y - 1, m: 11 } : { y: c.y, m: c.m - 1 })} className="p-1 rounded-lg bg-[#F5F5F7]"><ChevronLeft className="h-3.5 w-3.5" /></button>
+          <span className="text-[12.5px] font-semibold capitalize w-[120px] text-center">{monthName}</span>
+          <button type="button" onClick={() => setCursor((c) => c.m === 11 ? { y: c.y + 1, m: 0 } : { y: c.y, m: c.m + 1 })} className="p-1 rounded-lg bg-[#F5F5F7]"><ChevronRight className="h-3.5 w-3.5" /></button>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 mb-2 text-[10.5px] text-[#86868B] flex-wrap">
+        <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-[#0066CC]" /> Journée du cours</span>
+        <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-[#34C759]/40" /> Déclaré disponible</span>
+        <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-[#FF3B30]" /> Indisponible</span>
+        <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-[#E5B567]" /> Créneaux bloqués</span>
+        <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-[#86868B]/40" /> Autre cours</span>
+        <span className="inline-flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-[#F5F5F7] border border-black/10" /> Non déclaré</span>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <div key={i} className="text-[10.5px] text-[#86868B] font-semibold py-0.5">{d}</div>)}
+        {cells.map((c, i) => {
+          if (c == null) return <div key={i} />;
+          const day = `${cursor.y}-${String(cursor.m + 1).padStart(2, '0')}-${String(c).padStart(2, '0')}`;
+          const blk = blockedBy[day];
+          const avail = availableBy[day];
+          const busy = busyBy[day];
+          const isPicked = picked.has(day);
+          const isPast = day < todayIso;
+
+          // Non déclaré = non assignable : c'est l'état par défaut, volontairement effacé.
+          let cls = 'bg-[#F5F5F7] text-[#C7C7CC]';
+          if (avail) cls = 'bg-[#34C759]/20 text-[#1D1D1F] hover:bg-[#34C759]/30';
+          if (busy) cls = 'bg-[#86868B]/20 text-[#1D1D1F]';
+          if (blk?.kind === 'hours') cls = 'bg-[#E5B567]/25 text-[#1D1D1F]';
+          else if (blk) cls = 'bg-[#FF3B30] text-white';
+          if (isPicked) cls = 'bg-[#0066CC] text-white';
+
+          const dispoLabel = avail ? ({ full: 'journée entière', am: 'matin', pm: 'après-midi', hours: (avail.hours || []).map((h) => `${h.from}-${h.to}`).join(', ') }[avail.kind] || avail.kind) : '';
+          const title = [
+            avail ? `Déclaré disponible : ${dispoLabel}` : 'Non déclaré disponible',
+            blk ? `Indisponible (${{ full: 'journée', am: 'matin', pm: 'après-midi', hours: 'créneaux' }[blk.kind] || blk.kind})` : '',
+            busy ? `Déjà pris : ${busy.join(', ')}` : '',
+            mode === 'block' ? (blk ? 'Cliquer pour débloquer' : 'Cliquer pour bloquer la journée') : 'Cliquer pour ajouter au cours',
+          ].filter(Boolean).join(' · ');
+
+          return (
+            <button key={i} type="button" title={title} disabled={isPast}
+              onClick={() => { if (mode === 'block') { blk ? onUnblock(day) : onBlock(day); } else { onToggleDay(day); } }}
+              className={`relative aspect-square rounded-lg text-[12px] font-medium overflow-hidden transition-colors ${isPast ? 'bg-[#F5F5F7] text-[#C7C7CC] cursor-not-allowed' : cls}`}>
+              {blk?.kind === 'am' && <span className="absolute inset-x-0 top-0 h-1/2 bg-[#FF3B30]" />}
+              {blk?.kind === 'pm' && <span className="absolute inset-x-0 bottom-0 h-1/2 bg-[#FF3B30]" />}
+              <span className="relative z-10">{c}</span>
+              {isPicked && <span className="absolute bottom-0.5 inset-x-0 text-[8px] leading-none font-bold z-10">{slots.find((s) => s.date === day)?.from || defaultFrom}</span>}
+            </button>
+          );
+        })}
+      </div>
+      <p className="text-[11px] text-[#86868B] mt-2">
+        {mode === 'plan' ? 'Cliquez sur les jours à réserver, puis ajustez les horaires ci-dessous.' : 'Cliquez sur un jour pour le rendre indisponible (journée entière). Recliquez pour le libérer.'}
+      </p>
+    </div>
+  );
+}
+
 function AssignModal({ trainers, dossiers, formations, hdrJson, onClose, onDone }: { trainers: Trainer[]; dossiers: Dossier[]; formations: Formation[]; hdrJson: any; onClose: () => void; onDone: () => void }) {
   const [mode, setMode] = useState<'opco' | 'manual'>('opco');
   const [trainerId, setTrainerId] = useState('');
   const [dossierId, setDossierId] = useState('');
   const [pedagoName, setPedagoName] = useState(''); const [pedagoPhone, setPedagoPhone] = useState('');
+  const [meetingLink, setMeetingLink] = useState('');
+  const [clientContactName, setClientContactName] = useState(''); const [clientPhone, setClientPhone] = useState('');
   const [m, setM] = useState({ formationKey: '', formationTitle: '', hours: '', clientName: '', clientEmail: '', location: 'Présentiel', addr: '', startAt: '', endAt: '' });
   const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
   const inp = 'w-full px-3 py-2.5 rounded-xl bg-[#F5F5F7] text-[14px] text-[#1D1D1F] outline-none';
+
+  /* Dispos du formateur : chargées dès qu'il est choisi, pour caler les créneaux du cours. @Rabah 2026-07-20 */
+  const [av, setAv] = useState<Availability | null>(null);
+  const [avLoading, setAvLoading] = useState(false);
+  const [slots, setSlots] = useState<PlanSlot[]>([]);
+  useEffect(() => {
+    if (!trainerId) { setAv(null); return; }
+    let alive = true; setAvLoading(true);
+    fetch(`/api/admin/trainers/${trainerId}/availability`, { headers: hdrJson })
+      .then((r) => r.json()).then((j) => { if (alive && j.ok) setAv({ recurring: j.recurring, blocked: j.blocked || [], available: j.available || [], busy: j.busy || [] }); })
+      .catch(() => { if (alive) setAv(null); })
+      .finally(() => { if (alive) setAvLoading(false); });
+    return () => { alive = false; };
+  }, [trainerId, hdrJson]);
+
+  // Date de référence : celle du dossier OPCO choisi, sinon le début saisi, sinon aujourd'hui.
+  const refDate = useMemo(() => {
+    const d = dossiers.find((x) => x._id === dossierId);
+    if (mode === 'opco' && d?.sessionStart) return iso(new Date(d.sessionStart));
+    return m.startAt || iso(new Date());
+  }, [mode, dossierId, dossiers, m.startAt]);
+
+  const defaultSlot = (date: string): PlanSlot => {
+    const from = av?.recurring.slots[0]?.from || '09:00';
+    return { date, from, to: addHours(from, 1), mode: 'visio' };
+  };
+  const addSlot = () => setSlots((prev) => {
+    if (prev.length === 0) return [defaultSlot(refDate)];
+    const last = prev[prev.length - 1];
+    return [...prev, { date: nextFreeDate(av, last.date, prev.map((s) => s.date)), from: last.from, to: last.to, mode: last.mode }];
+  });
+  // Raccourci du cas courant : N journées disponibles, X h encadrées par jour.
+  const fillDays = (n: number, hoursPerDay: number) => {
+    const out: PlanSlot[] = [];
+    let cursor = '';
+    for (let i = 0; i < n; i++) {
+      const date = i === 0 ? refDate : nextFreeDate(av, cursor, out.map((s) => s.date));
+      cursor = date;
+      const from = av?.recurring.slots[0]?.from || '09:00';
+      out.push({ date, from, to: addHours(from, hoursPerDay), mode: 'visio' });
+    }
+    setSlots(out);
+  };
+  const setSlot = (i: number, patch: Partial<PlanSlot>) => setSlots((prev) => prev.map((s, k) => k === i ? { ...s, ...patch } : s));
+
+  /* --- Calendrier : sélection des journées + blocage d'indisponibilités --- */
+  const toggleDay = (day: string) => setSlots((prev) => {
+    if (prev.some((s) => s.date === day)) return prev.filter((s) => s.date !== day);
+    const last = prev[prev.length - 1];
+    const from = last?.from || av?.recurring.slots[0]?.from || '09:00';
+    const to = last?.to || addHours(from, 1);
+    return [...prev, { date: day, from, to, mode: last?.mode || 'visio' }].sort((a, b) => a.date.localeCompare(b.date));
+  });
+  // Écriture immédiate côté serveur + mise à jour locale, pour que le calendrier reste juste.
+  const blockDay = async (day: string) => {
+    setAv((p) => p ? { ...p, blocked: [...p.blocked, { day, kind: 'full', hours: [], label: '' }] } : p);
+    setSlots((prev) => prev.filter((s) => s.date !== day));
+    await fetch(`/api/admin/trainers/${trainerId}/unavailability`, { method: 'POST', headers: hdrJson, body: JSON.stringify({ day, kind: 'full' }) }).catch(() => {});
+  };
+  const unblockDay = async (day: string) => {
+    setAv((p) => p ? { ...p, blocked: p.blocked.filter((b) => b.day !== day) } : p);
+    await fetch(`/api/admin/trainers/${trainerId}/unavailability/${day}`, { method: 'DELETE', headers: hdrJson }).catch(() => {});
+  };
+  const plannedHours = useMemo(() => Math.round(slots.reduce((n, s) => n + Math.max(0, toMin(s.to) - toMin(s.from)) / 60, 0) * 100) / 100, [slots]);
+  const blockingIssue = slots.some((s) => slotIssue(s, av)?.level === 'error');
+  /**
+   * Le modal fermait même quand le serveur refusait la création (400 invalid_trainer,
+   * 404 dossier_not_found, 401 session admin expirée...) : on croyait le cours assigné
+   * alors que rien n'était créé et que l'espace formateur restait vide.
+   * On vérifie donc la réponse et on affiche l'erreur au lieu de fermer.
+   * @author Rabah Ziane · 2026-07-20
+   */
+  const post = async (url: string, payload: any) => {
+    let r: Response;
+    try { r = await fetch(url, { method: 'POST', headers: hdrJson, body: JSON.stringify(payload) }); }
+    catch { throw new Error('Réseau indisponible - le cours n’a pas été créé.'); }
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || j.ok === false) throw new Error(j.error === 'invalid_trainer' ? 'Formateur introuvable ou compte non formateur.' : j.error === 'dossier_not_found' ? 'Dossier OPCO introuvable.' : r.status === 401 || r.status === 403 ? 'Session admin expirée - reconnectez-vous.' : `Échec (${r.status}) : ${j.error || 'erreur serveur'}`);
+    return j;
+  };
   const submit = async () => {
     if (!trainerId) { setErr('Choisissez un formateur.'); return; }
+    if (blockingIssue) { setErr('Un créneau est en conflit avec les disponibilités du formateur. Corrigez-le avant d’assigner.'); return; }
     setBusy(true); setErr('');
     try {
       if (mode === 'opco') {
-        if (!dossierId) { setErr('Choisissez un dossier OPCO.'); setBusy(false); return; }
-        await fetch('/api/admin/trainers/sessions/from-dossier', { method: 'POST', headers: hdrJson, body: JSON.stringify({ trainerId, dossierId, pedagoName, pedagoPhone }) });
+        if (!dossierId) { setErr('Choisissez un dossier OPCO.'); return; }
+        await post('/api/admin/trainers/sessions/from-dossier', { trainerId, dossierId, pedagoName, pedagoPhone, meetingLink, clientContactName, clientPhone, days: slots });
       } else {
         const sel = formations.find((f) => f.program_id === m.formationKey);
-        await fetch('/api/admin/trainers/sessions', { method: 'POST', headers: hdrJson, body: JSON.stringify({ trainerId, formationKey: m.formationKey, formationTitle: m.formationTitle || sel?.title, hours: m.hours ? Number(m.hours) : (sel?.duration_hours || 0), clientName: m.clientName, clientEmail: m.clientEmail, location: m.location, addr: m.addr, startAt: m.startAt || undefined, endAt: m.endAt || undefined, pedagoName, pedagoPhone }) });
+        if (!m.formationKey && !m.formationTitle.trim()) { setErr('Choisissez une formation ou saisissez un titre.'); return; }
+        await post('/api/admin/trainers/sessions', { trainerId, formationKey: m.formationKey, formationTitle: m.formationTitle || sel?.title, hours: m.hours ? Number(m.hours) : (sel?.duration_hours || 0), clientName: m.clientName, clientEmail: m.clientEmail, location: m.location, addr: m.addr, startAt: m.startAt || undefined, endAt: m.endAt || undefined, pedagoName, pedagoPhone, meetingLink, clientContactName, clientPhone, days: slots });
       }
       onDone();
-    } finally { setBusy(false); }
+    } catch (e: any) { setErr(e?.message || 'Échec de l’assignation.'); }
+    finally { setBusy(false); }
   };
   return (
     <Modal onClose={onClose} title="Assigner un cours" wide>
@@ -598,6 +900,75 @@ function AssignModal({ trainers, dossiers, formations, hdrJson, onClose, onDone 
             <label className="block"><span className="text-[11px] text-[#86868B]">Fin</span><input className={inp} type="date" value={m.endAt} onChange={(e) => setM({ ...m, endAt: e.target.value })} /></label>
           </div>
         )}
+        {/* Planification sur les disponibilités réelles du formateur. @Rabah 2026-07-20 */}
+        {trainerId && (
+          <div className="rounded-2xl bg-[#F5F5F7] p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <span className="text-[13px] font-semibold text-[#1D1D1F] inline-flex items-center gap-1.5"><CalendarClock className="h-4 w-4" /> Créneaux du cours</span>
+              {avLoading ? <span className="text-[12px] text-[#86868B] inline-flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> dispos…</span>
+                : av && <span className="text-[12px] text-[#86868B]">
+                    {av.recurring.days.length ? av.recurring.days.map((d) => DAY_NAMES[d].slice(0, 3)).join(', ') : 'Tous les jours'}
+                    {av.recurring.slots.length ? ' · ' + av.recurring.slots.map((s) => `${s.from}-${s.to}`).join(', ') : ''}
+                  </span>}
+            </div>
+
+            <AvailabilityCalendar av={av} slots={slots} defaultFrom={av?.recurring.slots[0]?.from || '09:00'}
+              onToggleDay={toggleDay} onBlock={blockDay} onUnblock={unblockDay} />
+
+            {slots.length === 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[12.5px] text-[#86868B]">Modèle rapide :</span>
+                <button type="button" onClick={() => fillDays(3, 1)} className="px-3 py-1.5 rounded-full bg-white text-[12.5px] font-semibold text-[#1D1D1F]">3 jours × 1 h</button>
+                <button type="button" onClick={() => fillDays(3, 2)} className="px-3 py-1.5 rounded-full bg-white text-[12.5px] font-semibold text-[#1D1D1F]">3 jours × 2 h</button>
+                <button type="button" onClick={() => fillDays(1, 7)} className="px-3 py-1.5 rounded-full bg-white text-[12.5px] font-semibold text-[#1D1D1F]">1 jour × 7 h</button>
+              </div>
+            )}
+
+            {slots.map((s, i) => {
+              const issue = slotIssue(s, av);
+              return (
+                <div key={i} className="rounded-xl bg-white p-2.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[12px] font-semibold text-[#86868B] w-14 shrink-0">Jour {i + 1}</span>
+                    <input type="date" value={s.date} onChange={(e) => setSlot(i, { date: e.target.value })} className="px-2.5 py-1.5 rounded-lg bg-[#F5F5F7] text-[13px] text-[#1D1D1F] outline-none" />
+                    <input type="time" value={s.from} onChange={(e) => setSlot(i, { from: e.target.value, to: addHours(e.target.value, Math.max(0.25, (toMin(s.to) - toMin(s.from)) / 60)) })} className="px-2.5 py-1.5 rounded-lg bg-[#F5F5F7] text-[13px] text-[#1D1D1F] outline-none" />
+                    <span className="text-[12px] text-[#86868B]">→</span>
+                    <input type="time" value={s.to} onChange={(e) => setSlot(i, { to: e.target.value })} className="px-2.5 py-1.5 rounded-lg bg-[#F5F5F7] text-[13px] text-[#1D1D1F] outline-none" />
+                    <select value={s.mode} onChange={(e) => setSlot(i, { mode: e.target.value as PlanSlot['mode'] })} className="px-2.5 py-1.5 rounded-lg bg-[#F5F5F7] text-[13px] text-[#1D1D1F] outline-none">
+                      {(Object.keys(MODE_LABEL) as PlanSlot['mode'][]).map((k) => <option key={k} value={k}>{MODE_LABEL[k]}</option>)}
+                    </select>
+                    <button type="button" onClick={() => setSlots(slots.filter((_, k) => k !== i))} className="ml-auto p-1.5 rounded-lg text-[#86868B] hover:bg-[#F5F5F7]"><Trash2 className="h-3.5 w-3.5" /></button>
+                  </div>
+                  <div className="mt-1.5 text-[12px] pl-14">
+                    {issue
+                      ? <span className={issue.level === 'error' ? 'text-[#FF3B30] inline-flex items-center gap-1' : 'text-[#b5740a] inline-flex items-center gap-1'}><Ban className="h-3 w-3" /> {issue.text}</span>
+                      : <span className="text-[#1a8a3b] inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> {fmtDayLong(s.date)} - disponible</span>}
+                  </div>
+                </div>
+              );
+            })}
+
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <button type="button" onClick={addSlot} className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white text-[13px] font-semibold text-[#1D1D1F]"><Plus className="h-3.5 w-3.5" /> Ajouter une journée</button>
+              {slots.length > 0 && <span className="text-[12.5px] text-[#86868B]">{slots.length} journée{slots.length > 1 ? 's' : ''} · <strong className="text-[#1D1D1F]">{plannedHours} h</strong> encadrées{m.hours || dossierId ? ' (durée pédagogique totale inchangée)' : ''}</span>}
+            </div>
+            {slots.length === 0 && <p className="text-[12px] text-[#86868B]">Sans créneau, le cours reprend les dates brutes du dossier.</p>}
+          </div>
+        )}
+
+        {/* Salle de visio partagée dans le groupe WhatsApp ; générée si laissée vide. @Rabah 2026-07-20 */}
+        <label className="block">
+          <span className="text-[12px] font-semibold text-[#1D1D1F]">Lien de visioconférence</span>
+          <input className={inp} placeholder="Laisser vide = salle créée automatiquement (partage d'écran inclus)" value={meetingLink} onChange={(e) => setMeetingLink(e.target.value)} />
+          <span className="text-[11px] text-[#86868B] mt-1 block">Collez votre lien Meet / Zoom / Teams, ou laissez vide : le formateur recevra une salle dédiée à partager dans le groupe WhatsApp.</span>
+        </label>
+
+        {/* Interlocuteur client : le formateur l'appelle avant la formation pour caler les dates. @Rabah 2026-07-20 */}
+        <div className="grid grid-cols-2 gap-3">
+          <input className={inp} placeholder="Contact client (nom)" value={clientContactName} onChange={(e) => setClientContactName(e.target.value)} />
+          <input className={inp} placeholder="Tél. contact client" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} />
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <input className={inp} placeholder="Responsable pédagogique" value={pedagoName} onChange={(e) => setPedagoName(e.target.value)} />
           <input className={inp} placeholder="Tél. responsable pédago" value={pedagoPhone} onChange={(e) => setPedagoPhone(e.target.value)} />
