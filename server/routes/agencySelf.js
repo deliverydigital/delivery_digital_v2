@@ -832,6 +832,7 @@ const vueRoadmap = (u) => ({
     id: String(t._id), from: t.from || 'dd', titre: t.titre || '', detail: t.detail || '',
     statut: t.statut || 'a_faire', source: t.source || '', createdAt: t.createdAt, doneAt: t.doneAt || null,
     phase: t.phase || '', echeance: t.echeance || '', resp: t.resp || '', critere: t.critere || '', ref: t.ref || '', ordre: t.ordre ?? null,
+    commentaire: t.commentaire || '', commentaireAt: t.commentaireAt || null, commentairePar: t.commentairePar || '',
   })),
   messages: (u.pyemesMessages || []).map((m) => ({
     id: String(m._id), from: m.from || 'dd', auteur: m.auteur || '', texte: m.texte || '', image: m.image || '', at: m.at,
@@ -851,6 +852,26 @@ router.post('/pyemes/roadmap', async (req, res) => {
   if (!titre) return res.status(400).json({ ok: false, error: 'titre_requis' });
   const tache = { from: 'agence', titre: titre.slice(0, 200), detail: String(req.body?.detail || '').trim().slice(0, 2000), statut: 'a_faire', source: 'manuel', createdAt: new Date() };
   await User.updateOne({ _id: c.agencyId }, { $push: { pyemesRoadmap: tache } });
+  const u = await User.findById(c.agencyId, { pyemesRoadmap: 1, pyemesMessages: 1 }).lean();
+  res.json({ ok: true, ...vueRoadmap(u) });
+});
+
+/**
+ * COMMENTAIRE d'une action, ecrit depuis l'espace agence. La feuille de route est commune : si
+ * seule Pyemes pouvait commenter, Nova lirait sans pouvoir repondre, et l'echange repartirait dans
+ * la messagerie - c'est-a-dire loin de l'action concernee. @author Rabah Ziane - 2026-09-02
+ */
+router.post('/pyemes/roadmap/:id/commentaire', async (req, res) => {
+  const c = await ctx(req);
+  const texte = String(req.body?.commentaire ?? '').slice(0, 2000);
+  await User.updateOne(
+    { _id: c.agencyId, 'pyemesRoadmap._id': String(req.params.id) },
+    { $set: {
+      'pyemesRoadmap.$.commentaire': texte,
+      'pyemesRoadmap.$.commentaireAt': texte ? new Date() : null,
+      'pyemesRoadmap.$.commentairePar': texte ? (c.name || 'Agence') : '',
+    } },
+  );
   const u = await User.findById(c.agencyId, { pyemesRoadmap: 1, pyemesMessages: 1 }).lean();
   res.json({ ok: true, ...vueRoadmap(u) });
 });

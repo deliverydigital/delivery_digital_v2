@@ -91,6 +91,14 @@ const userSchema = new Schema({
     // @author Rabah Ziane - 2026-09-01
     statut: { type: String, enum: ['a_faire', 'en_cours', 'fait', 'standby'], default: 'a_faire' },
     source: String,                                                  // 'manuel' ou 'import: <fichier>'
+    // COMMENTAIRE LIBRE sur l action. Une feuille de route de 116 lignes se pilote a trois (Pyemes,
+    // Nova, Delivery Digital) : sans un endroit ou ecrire « bloque tant que le compte Stripe n est
+    // pas valide » ou « fait a moitie, reste la page tarifs », l information circule par messages et
+    // se perd. Le commentaire est visible et modifiable des trois cotes, comme le reste de la liste.
+    // @author Rabah Ziane - 2026-09-02
+    commentaire: { type: String, default: '', maxlength: 2000 },
+    commentaireAt: Date,
+    commentairePar: String,                                          // qui a ecrit en dernier
     createdAt: { type: Date, default: Date.now },
     doneAt: Date,
   }],

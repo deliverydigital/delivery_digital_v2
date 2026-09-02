@@ -906,6 +906,7 @@ const vueRoadmapAdmin = (u) => ({
     id: String(t._id), from: t.from || 'dd', titre: t.titre || '', detail: t.detail || '',
     statut: t.statut || 'a_faire', source: t.source || '', createdAt: t.createdAt, doneAt: t.doneAt || null,
     phase: t.phase || '', echeance: t.echeance || '', resp: t.resp || '', critere: t.critere || '', ref: t.ref || '', ordre: t.ordre ?? null,
+    commentaire: t.commentaire || '', commentaireAt: t.commentaireAt || null, commentairePar: t.commentairePar || '',
   })),
   messages: (u?.pyemesMessages || []).map((m) => ({
     id: String(m._id), from: m.from || 'dd', auteur: m.auteur || '', texte: m.texte || '', image: m.image || '', at: m.at,
@@ -1166,6 +1167,35 @@ router.post('/pyemes/roadmap/statut', async (req, res) => {
   await User.updateOne(
     { _id: ag._id, 'pyemesRoadmap._id': String(req.body?.tid || '') },
     { $set: { 'pyemesRoadmap.$.statut': statut, 'pyemesRoadmap.$.doneAt': statut === 'fait' ? new Date() : null } },
+  );
+  const u = await User.findById(ag._id, { pyemesRoadmap: 1 }).lean();
+  res.json({ ok: true, ...vueRoadmapAdmin(u) });
+});
+
+/**
+ * COMMENTAIRE d'une action de la feuille de route, ecrit depuis l'admin Pyemes.
+ *
+ * La liste se pilote a trois - Pyemes, Nova, Delivery Digital - et jusqu'ici il n'y avait aucun
+ * endroit pour ecrire « bloque tant que le compte Stripe n'est pas valide » ou « fait a moitie,
+ * reste la page tarifs ». L'information passait par messages et se perdait. Le commentaire vit sur
+ * l'action elle-meme : les trois espaces le voient.
+ * @author Rabah Ziane - 2026-09-02
+ */
+router.post('/pyemes/roadmap/commentaire', async (req, res) => {
+  const secret = req.headers['x-admin-secret'] || '';
+  if (!secret || secret !== (process.env.ADMIN_SECRET || '')) return res.status(401).json({ error: 'unauthorized' });
+  const ag = await User.findOne({ role: 'agence', pyemesCode: String(req.body?.code || '').toUpperCase() }, { _id: 1 }).lean();
+  if (!ag) return res.status(404).json({ error: 'agence_introuvable' });
+  const texte = String(req.body?.commentaire ?? '').slice(0, 2000);
+  await User.updateOne(
+    { _id: ag._id, 'pyemesRoadmap._id': String(req.body?.tid || '') },
+    { $set: {
+      'pyemesRoadmap.$.commentaire': texte,
+      // On garde QUI et QUAND : un commentaire sans auteur ni date, sur une liste partagee entre
+      // trois equipes, ne dit pas s'il est encore d'actualite.
+      'pyemesRoadmap.$.commentaireAt': texte ? new Date() : null,
+      'pyemesRoadmap.$.commentairePar': texte ? String(req.body?.par || 'Pyemes').slice(0, 60) : '',
+    } },
   );
   const u = await User.findById(ag._id, { pyemesRoadmap: 1 }).lean();
   res.json({ ok: true, ...vueRoadmapAdmin(u) });
