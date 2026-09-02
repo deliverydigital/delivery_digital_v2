@@ -342,6 +342,17 @@ function FormationHero() {
         <p className="subhead text-[17px] sm:text-[26px] text-[var(--ink-700)] max-w-[720px] mx-auto">
           Organisme certifié Qualiopi. Profitez du financement OPCO.
         </p>
+        {/* Le certificat lui-meme, consultable. Une certification qu'on ne peut pas verifier ne
+            rassure personne : un OPCO ou un client qui monte un dossier de financement demande le
+            document, pas la mention. @author Rabah Ziane - 2026-09-02 */}
+        <a
+          href="/certificat-qualiopi-delivery-digital.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 mt-5 text-[13px] font-semibold text-[var(--ink-700)] underline underline-offset-4 hover:text-[var(--ink-900)]"
+        >
+          Consulter notre certificat Qualiopi (n° 252411-3)
+        </a>
       </div>
     </section>
   );

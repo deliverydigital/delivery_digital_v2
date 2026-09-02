@@ -152,6 +152,17 @@ const Footer = () => {
         <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
             <span className="text-white/45">© {currentYear} DELIVERY Digital Nice. Tous droits réservés.</span>
+            {/* Certificat Qualiopi accessible depuis TOUTES les pages : c'est la premiere chose
+                qu'un OPCO ou un financeur cherche, et il ne passe pas forcement par la page
+                Formation. @author Rabah Ziane - 2026-09-02 */}
+            <a
+              href="/certificat-qualiopi-delivery-digital.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/55 hover:text-white hover:underline"
+            >
+              Certificat Qualiopi n° 252411-3
+            </a>
           </div>
 
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
