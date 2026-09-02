@@ -901,6 +901,16 @@ router.post('/pyemes/verser', requireAdmin, async (req, res) => {
    ajoute ses demandes, coche l'avancement et repond dans le fil. Les routes cote agence sont dans
    agencySelf.js. @author Rabah Ziane - 2026-08-31 */
 
+const vueProspects = (u) => ({
+  prospects: (u?.pyemesProspects || []).map((p) => ({
+    id: String(p._id), from: p.from || 'dd',
+    nom: p.nom || '', fonction: p.fonction || '', societe: p.societe || '', siren: p.siren || '',
+    telephone: p.telephone || '', email: p.email || '',
+    echanges: p.echanges || '', statut: p.statut || 'nouveau', retour: p.retour || '',
+    majPar: p.majPar || '', majAt: p.majAt || null, createdAt: p.createdAt,
+  })),
+});
+
 const vueRoadmapAdmin = (u) => ({
   taches: (u?.pyemesRoadmap || []).map((t) => ({
     id: String(t._id), from: t.from || 'dd', titre: t.titre || '', detail: t.detail || '',
@@ -1253,6 +1263,74 @@ router.post('/pyemes/roadmap/resp', async (req, res) => {
   );
   const u = await User.findById(ag._id, { pyemesRoadmap: 1 }).lean();
   res.json({ ok: true, ...vueRoadmapAdmin(u) });
+});
+
+/**
+ * CLIENTS POTENTIELS confies a l'agence. Pyemes depose le contact et les echanges deja eus ;
+ * l'agence fait avancer le statut depuis son espace. Sans cet endroit commun, les contacts
+ * circulaient par capture d'ecran et personne ne savait lesquels avaient ete repris.
+ * @author Rabah Ziane - 2026-09-02
+ */
+const STATUTS_PROSPECT = ['nouveau', 'pris_en_charge', 'interesse', 'devis_envoye', 'signe', 'perdu'];
+
+const agenceParCode = async (code) =>
+  User.findOne({ role: 'agence', pyemesCode: String(code || '').toUpperCase() }, { _id: 1 }).lean();
+
+router.get('/pyemes/prospects/:code', async (req, res) => {
+  const secret = req.headers['x-admin-secret'] || '';
+  if (!secret || secret !== (process.env.ADMIN_SECRET || '')) return res.status(401).json({ error: 'unauthorized' });
+  const ag = await agenceParCode(req.params.code);
+  if (!ag) return res.status(404).json({ error: 'agence_introuvable' });
+  const u = await User.findById(ag._id, { pyemesProspects: 1 }).lean();
+  res.json({ ok: true, ...vueProspects(u) });
+});
+
+router.post('/pyemes/prospects', async (req, res) => {
+  const secret = req.headers['x-admin-secret'] || '';
+  if (!secret || secret !== (process.env.ADMIN_SECRET || '')) return res.status(401).json({ error: 'unauthorized' });
+  const ag = await agenceParCode(req.body?.code);
+  if (!ag) return res.status(404).json({ error: 'agence_introuvable' });
+  const b = req.body || {};
+  const nom = String(b.nom || '').trim();
+  const societe = String(b.societe || '').trim();
+  // Un contact sans nom NI societe n'est pas rappelable : on refuse plutot que de remplir la liste
+  // de lignes vides que personne ne saura traiter.
+  if (!nom && !societe) return res.status(400).json({ error: 'nom_ou_societe_requis' });
+  await User.updateOne({ _id: ag._id }, { $push: { pyemesProspects: {
+    from: 'dd',
+    nom: nom.slice(0, 120), fonction: String(b.fonction || '').trim().slice(0, 120),
+    societe: societe.slice(0, 160), siren: String(b.siren || '').replace(/\D/g, '').slice(0, 9),
+    telephone: String(b.telephone || '').trim().slice(0, 40), email: String(b.email || '').trim().toLowerCase().slice(0, 160),
+    echanges: String(b.echanges || '').slice(0, 8000),
+    statut: 'nouveau', createdAt: new Date(),
+  } } });
+  const u = await User.findById(ag._id, { pyemesProspects: 1 }).lean();
+  res.json({ ok: true, ...vueProspects(u) });
+});
+
+router.post('/pyemes/prospects/statut', async (req, res) => {
+  const secret = req.headers['x-admin-secret'] || '';
+  if (!secret || secret !== (process.env.ADMIN_SECRET || '')) return res.status(401).json({ error: 'unauthorized' });
+  const statut = String(req.body?.statut || '');
+  if (!STATUTS_PROSPECT.includes(statut)) return res.status(400).json({ error: 'statut_invalide' });
+  const ag = await agenceParCode(req.body?.code);
+  if (!ag) return res.status(404).json({ error: 'agence_introuvable' });
+  await User.updateOne(
+    { _id: ag._id, 'pyemesProspects._id': String(req.body?.pid || '') },
+    { $set: { 'pyemesProspects.$.statut': statut, 'pyemesProspects.$.majPar': 'Pyemes', 'pyemesProspects.$.majAt': new Date() } },
+  );
+  const u = await User.findById(ag._id, { pyemesProspects: 1 }).lean();
+  res.json({ ok: true, ...vueProspects(u) });
+});
+
+router.delete('/pyemes/prospects/:code/:pid', async (req, res) => {
+  const secret = req.headers['x-admin-secret'] || '';
+  if (!secret || secret !== (process.env.ADMIN_SECRET || '')) return res.status(401).json({ error: 'unauthorized' });
+  const ag = await agenceParCode(req.params.code);
+  if (!ag) return res.status(404).json({ error: 'agence_introuvable' });
+  await User.updateOne({ _id: ag._id }, { $pull: { pyemesProspects: { _id: req.params.pid } } });
+  const u = await User.findById(ag._id, { pyemesProspects: 1 }).lean();
+  res.json({ ok: true, ...vueProspects(u) });
 });
 
 export default router;

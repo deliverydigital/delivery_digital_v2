@@ -394,6 +394,25 @@ function Dashboard({ token, onLogout, preview }: { token: string; onLogout: () =
   // checklist et fil de messages. @author Rabah Ziane - 2026-08-31
   type RoadTache = { id: string; from: 'dd' | 'agence'; titre: string; detail?: string; statut: 'a_faire' | 'en_cours' | 'fait' | 'standby'; source?: string; createdAt?: string; doneAt?: string | null; phase?: string; echeance?: string; resp?: 'PY' | 'NG' | 'MIX' | ''; critere?: string; ref?: string; ordre?: number | null; commentaire?: string; commentaireAt?: string | null; commentairePar?: string };
 
+  type Prospect = {
+    id: string; from: 'dd' | 'agence'; nom: string; fonction: string; societe: string; siren: string;
+    telephone: string; email: string; echanges: string; retour: string;
+    statut: 'nouveau' | 'pris_en_charge' | 'interesse' | 'devis_envoye' | 'signe' | 'perdu';
+    majPar?: string; majAt?: string | null; createdAt?: string;
+  };
+  const PROSPECT_LIB: Record<string, string> = {
+    nouveau: 'Nouveau', pris_en_charge: 'Pris en charge', interesse: 'Intéressé',
+    devis_envoye: 'Devis envoyé', signe: 'Signé', perdu: 'Perdu',
+  };
+  const PROSPECT_STYLE: Record<string, { background: string; color: string }> = {
+    nouveau:        { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.65)' },
+    pris_en_charge: { background: 'rgba(96,165,250,0.20)', color: '#9EC5FF' },
+    interesse:      { background: 'rgba(245,197,107,0.20)', color: '#F5C86B' },
+    devis_envoye:   { background: 'rgba(167,139,250,0.20)', color: '#C4B5FD' },
+    signe:          { background: 'rgba(61,214,140,0.20)', color: '#8FE7BC' },
+    perdu:          { background: 'rgba(255,107,107,0.16)', color: '#FF9B9B' },
+  };
+
   // Responsables de la check-list de lancement. PY = equipe Pyemes, NG = Nova Growth, MIX = les deux.
   const RESP_LIB: Record<string, string> = { PY: 'Pyemes', NG: 'Nova', MIX: 'Les deux' };
   const RESP_STYLE: Record<string, { background: string; color: string }> = {
@@ -408,6 +427,12 @@ function Dashboard({ token, onLogout, preview }: { token: string; onLogout: () =
   // Glisser-deposer : on retient la ligne saisie, et on reordonne au lacher dans la meme phase.
   const [dragId, setDragId] = useState<string | null>(null);
   const [commOuvert, setCommOuvert] = useState<string | null>(null);   // action dont le commentaire est deplie
+  // CLIENTS POTENTIELS confies par Pyemes. C'est l'agence qui sait ou en est chaque discussion :
+  // Pyemes depose le contact, elle fait avancer le statut et ecrit son retour.
+  // @author Rabah Ziane - 2026-09-02
+  const [prospects, setProspects] = useState<Prospect[]>([]);
+  const [pRetour, setPRetour] = useState<Record<string, string>>({});
+  const [pBusy, setPBusy] = useState('');
   const [commTexte, setCommTexte] = useState<Record<string, string>>({});
   const [commBusy, setCommBusy] = useState('');
 
@@ -639,6 +664,19 @@ function Dashboard({ token, onLogout, preview }: { token: string; onLogout: () =
     appliquerRoadmap(r);
   }
 
+  async function chargerProspects() {
+    const r = await fetch('/api/agency/self/pyemes/prospects', { headers: auth() }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) setProspects(r.prospects || []);
+  }
+  async function majProspect(pid: string, corps: Record<string, unknown>) {
+    setPBusy(pid);
+    const r = await fetch(`/api/agency/self/pyemes/prospects/${pid}`, {
+      method: 'PATCH', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify(corps),
+    }).then((x) => x.json()).catch(() => null);
+    if (r?.ok) setProspects(r.prospects || []);
+    setPBusy('');
+  }
+
   async function supprimerTache(id: string) {
     const r = await fetch(`/api/agency/self/pyemes/roadmap/${id}`, { method: 'DELETE', headers: auth() }).then((x) => x.json()).catch(() => null);
     appliquerRoadmap(r);
@@ -721,7 +759,7 @@ function Dashboard({ token, onLogout, preview }: { token: string; onLogout: () =
   // Pyemes. Les publications changent moins souvent : toutes les 10 s. @author Rabah Ziane - 2026-08-31
   useEffect(() => {
     if (project !== 'pyemes') return;
-    chargerRoadmap(); chargerPublications();
+    chargerRoadmap(); chargerPublications(); chargerProspects();
     const t1 = setInterval(chargerRoadmap, 2000);
     const t2 = setInterval(chargerPublications, 10000);
     return () => { clearInterval(t1); clearInterval(t2); };
@@ -2403,6 +2441,80 @@ function Dashboard({ token, onLogout, preview }: { token: string; onLogout: () =
                         </div>
                         {secrets[r.id] && <p className="text-[12.5px] font-mono text-white/85 mt-1 select-all">{secrets[r.id]}</p>}
                         {r.note && <p className="text-[10.5px] text-white/35 mt-1">{r.note}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* CLIENTS POTENTIELS confies par Pyemes. Places AVANT les retours de test : un
+                  contact qui attend d'etre rappele passe avant un bug remonte.
+                  @author Rabah Ziane - 2026-09-02 */}
+              <div className="mt-4 pt-3 border-t border-white/8">
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <p className="text-[12.5px] font-semibold text-white/80">Clients potentiels</p>
+                  <span className="text-[11px] text-white/40">
+                    {prospects.filter((p) => p.statut === 'signe').length} signé · {prospects.length} au total
+                  </span>
+                </div>
+                <p className="text-[11px] text-white/40 mb-2">
+                  Les contacts que Pyemes vous confie. Faites avancer le statut et laissez votre retour : ils le voient de leur côté.
+                </p>
+
+                {prospects.length === 0 ? (
+                  <p className="text-[11.5px] text-white/35">Aucun contact confié pour l&apos;instant.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {prospects.map((p) => (
+                      <li key={p.id} className="rounded-lg px-3 py-2" style={{ background: 'rgba(0,0,0,0.22)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <div className="flex items-start gap-2 flex-wrap">
+                          <span className="flex-1 min-w-0">
+                            <span className="block text-[12.5px] font-semibold text-white/85">
+                              {p.nom || '(sans nom)'}{p.fonction ? ` · ${p.fonction}` : ''}
+                            </span>
+                            {p.societe && (
+                              <span className="block text-[11px] text-white/45">
+                                {p.societe}{p.siren ? ` · SIREN ${p.siren}` : ''}
+                              </span>
+                            )}
+                          </span>
+                          <select
+                            value={p.statut}
+                            onChange={(e) => majProspect(p.id, { statut: e.target.value })}
+                            disabled={pBusy === p.id}
+                            className="text-[11px] font-bold rounded px-1.5 py-[2px] outline-none disabled:opacity-50"
+                            style={PROSPECT_STYLE[p.statut]}
+                          >
+                            {Object.entries(PROSPECT_LIB).map(([k, v]) => <option key={k} value={k} style={{ color: '#111' }}>{v}</option>)}
+                          </select>
+                        </div>
+
+                        <div className="text-[11px] text-white/50 mt-0.5 flex flex-wrap gap-x-3">
+                          {p.telephone && <a href={`tel:${p.telephone}`} className="hover:text-white/80 hover:underline">{p.telephone}</a>}
+                          {p.email && <a href={`mailto:${p.email}`} className="hover:text-white/80 hover:underline">{p.email}</a>}
+                        </div>
+
+                        {p.echanges && (
+                          <p className="text-[11px] text-white/60 mt-1.5 whitespace-pre-wrap rounded px-2 py-1.5" style={{ background: 'rgba(0,0,0,0.25)' }}>
+                            {p.echanges}
+                          </p>
+                        )}
+
+                        {/* Le retour de l'agence, enregistre a la sortie du champ. */}
+                        <textarea
+                          value={pRetour[p.id] ?? p.retour ?? ''}
+                          onChange={(e) => setPRetour((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                          onBlur={() => { const v = pRetour[p.id]; if (v !== undefined && v !== (p.retour ?? '')) void majProspect(p.id, { retour: v }); }}
+                          placeholder="Votre retour : où en est ce contact, ce qu'il attend…"
+                          rows={2}
+                          className="w-full mt-1.5 text-[11.5px] rounded-lg px-2 py-1.5 outline-none resize-y"
+                          style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.9)' }}
+                        />
+                        {p.majAt && (
+                          <span className="block text-[10px] text-white/30 mt-0.5">
+                            {p.majPar || 'Agence'} · {new Date(p.majAt).toLocaleDateString('fr-FR')}
+                          </span>
+                        )}
                       </li>
                     ))}
                   </ul>

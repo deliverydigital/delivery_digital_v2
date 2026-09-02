@@ -106,6 +106,40 @@ const userSchema = new Schema({
     createdAt: { type: Date, default: Date.now },
     doneAt: Date,
   }],
+  /**
+   * CLIENTS POTENTIELS confies a l'agence.
+   *
+   * Pyemes apporte des contacts - un dirigeant rencontre, une demande entrante, un echange par
+   * mail - et l'agence les travaille. Sans endroit commun, ces contacts circulaient par capture
+   * d'ecran et par message : personne ne savait lesquels avaient ete repris, ni ou ils en etaient.
+   *
+   * Le prospect porte ses COORDONNEES (ce qu'il faut pour l'appeler et le retrouver au registre),
+   * les ECHANGES deja eus (le mail recu, ce qui a ete dit au telephone) et un STATUT que l'agence
+   * fait avancer. La trace de qui a mis a jour et quand evite la question « c'est encore d'actualite
+   * ce truc ? ». @author Rabah Ziane - 2026-09-02
+   */
+  pyemesProspects: [{
+    from: { type: String, enum: ['dd', 'agence'], default: 'dd' },   // qui a apporte le contact
+    nom: String,                                                      // « Lahouari Benaceur »
+    fonction: String,                                                 // « President »
+    societe: String,                                                  // « BENFO TECHNOLOGIES »
+    siren: String,
+    telephone: String,
+    email: String,
+    // Les echanges deja eus : le mail recu, le compte rendu d'appel. Colle tel quel, on ne
+    // demande pas de mise en forme.
+    echanges: { type: String, default: '', maxlength: 8000 },
+    statut: {
+      type: String,
+      enum: ['nouveau', 'pris_en_charge', 'interesse', 'devis_envoye', 'signe', 'perdu'],
+      default: 'nouveau',
+    },
+    // Retour de l'agence sur ce contact : pourquoi il n'avance pas, ce qu'il attend.
+    retour: { type: String, default: '', maxlength: 4000 },
+    majPar: String,
+    majAt: Date,
+    createdAt: { type: Date, default: Date.now },
+  }],
   // IDENTIFIANTS DES COMPTES RESEAUX SOCIAUX (action #8 du plan). Pyemes cree les comptes, Nova les
   // anime : sans un endroit commun, les mots de passe circulent en clair par messagerie et personne
   // ne sait lequel est a jour. Le mot de passe est CHIFFRE en base (AES-256-GCM, cle derivee du

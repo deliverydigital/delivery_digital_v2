@@ -827,6 +827,16 @@ export function lignesEnTaches(texte, source) {
   return taches;
 }
 
+const vueProspects = (u) => ({
+  prospects: (u?.pyemesProspects || []).map((p) => ({
+    id: String(p._id), from: p.from || 'dd',
+    nom: p.nom || '', fonction: p.fonction || '', societe: p.societe || '', siren: p.siren || '',
+    telephone: p.telephone || '', email: p.email || '',
+    echanges: p.echanges || '', statut: p.statut || 'nouveau', retour: p.retour || '',
+    majPar: p.majPar || '', majAt: p.majAt || null, createdAt: p.createdAt,
+  })),
+});
+
 const vueRoadmap = (u) => ({
   taches: (u.pyemesRoadmap || []).map((t) => ({
     id: String(t._id), from: t.from || 'dd', titre: t.titre || '', detail: t.detail || '',
@@ -874,6 +884,33 @@ router.post('/pyemes/roadmap/:id/commentaire', async (req, res) => {
   );
   const u = await User.findById(c.agencyId, { pyemesRoadmap: 1, pyemesMessages: 1 }).lean();
   res.json({ ok: true, ...vueRoadmap(u) });
+});
+
+/**
+ * CLIENTS POTENTIELS : l'agence lit les contacts que Pyemes lui confie, et fait avancer le statut.
+ * C'est elle qui sait ou en est chaque discussion - Pyemes ne peut que constater.
+ * @author Rabah Ziane - 2026-09-02
+ */
+router.get('/pyemes/prospects', async (req, res) => {
+  const c = await ctx(req);
+  const u = await User.findById(c.agencyId, { pyemesProspects: 1 }).lean();
+  res.json({ ok: true, ...vueProspects(u || {}) });
+});
+
+router.patch('/pyemes/prospects/:pid', async (req, res) => {
+  const c = await ctx(req);
+  const set = { 'pyemesProspects.$.majPar': c.name || 'Agence', 'pyemesProspects.$.majAt': new Date() };
+  const statut = String(req.body?.statut || '');
+  if (statut) {
+    if (!['nouveau', 'pris_en_charge', 'interesse', 'devis_envoye', 'signe', 'perdu'].includes(statut)) {
+      return res.status(400).json({ ok: false, error: 'statut_invalide' });
+    }
+    set['pyemesProspects.$.statut'] = statut;
+  }
+  if (req.body?.retour !== undefined) set['pyemesProspects.$.retour'] = String(req.body.retour).slice(0, 4000);
+  await User.updateOne({ _id: c.agencyId, 'pyemesProspects._id': String(req.params.pid) }, { $set: set });
+  const u = await User.findById(c.agencyId, { pyemesProspects: 1 }).lean();
+  res.json({ ok: true, ...vueProspects(u) });
 });
 
 // Avancement d'une tache : chacun peut cocher, la feuille de route est commune.
