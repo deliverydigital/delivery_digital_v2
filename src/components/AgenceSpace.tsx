@@ -392,7 +392,7 @@ function Dashboard({ token, onLogout, preview }: { token: string; onLogout: () =
   const [pyemesSignBusy, setPyemesSignBusy] = useState(false);
   // Feuille de route Pyemes (avant mise en ligne) : taches partagees DD <-> agence, import d'une
   // checklist et fil de messages. @author Rabah Ziane - 2026-08-31
-  type RoadTache = { id: string; from: 'dd' | 'agence'; titre: string; detail?: string; statut: 'a_faire' | 'en_cours' | 'fait' | 'standby'; source?: string; createdAt?: string; doneAt?: string | null; phase?: string; echeance?: string; resp?: 'PY' | 'NG' | 'MIX' | ''; critere?: string; ref?: string; ordre?: number | null };
+  type RoadTache = { id: string; from: 'dd' | 'agence'; titre: string; detail?: string; statut: 'a_faire' | 'en_cours' | 'fait' | 'standby'; source?: string; createdAt?: string; doneAt?: string | null; phase?: string; echeance?: string; resp?: 'PY' | 'NG' | 'MIX' | ''; critere?: string; ref?: string; ordre?: number | null; commentaire?: string; commentaireAt?: string | null; commentairePar?: string };
 
   // Responsables de la check-list de lancement. PY = equipe Pyemes, NG = Nova Growth, MIX = les deux.
   const RESP_LIB: Record<string, string> = { PY: 'Pyemes', NG: 'Nova', MIX: 'Les deux' };
@@ -407,6 +407,9 @@ function Dashboard({ token, onLogout, preview }: { token: string; onLogout: () =
   const [phasesOuvertes, setPhasesOuvertes] = useState<Record<string, boolean>>({});
   // Glisser-deposer : on retient la ligne saisie, et on reordonne au lacher dans la meme phase.
   const [dragId, setDragId] = useState<string | null>(null);
+  const [commOuvert, setCommOuvert] = useState<string | null>(null);   // action dont le commentaire est deplie
+  const [commTexte, setCommTexte] = useState<Record<string, string>>({});
+  const [commBusy, setCommBusy] = useState('');
 
   // IDENTIFIANTS DES RESEAUX SOCIAUX (action #8) : Pyemes ouvre les comptes, Nova les anime. Le mot
   // de passe n'arrive JAMAIS avec la liste - il se demande ligne par ligne. @Rabah 2026-09-01
@@ -624,6 +627,18 @@ function Dashboard({ token, onLogout, preview }: { token: string; onLogout: () =
     const r = await fetch(`/api/agency/self/pyemes/roadmap/${id}`, { method: 'PATCH', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify({ statut }) }).then((x) => x.json()).catch(() => null);
     appliquerRoadmap(r);
   }
+  // COMMENTAIRE PAR ACTION, REPLIE par defaut. Une liste de 116 actions deviendrait illisible avec
+  // 116 zones de texte ouvertes : on n'ouvre que celle qu'on veut ecrire, et une action deja
+  // commentee le montre dans son bouton. Ce qui est ecrit ici se lit aussi cote Pyemes et cote
+  // admin Delivery Digital : la feuille de route est commune. @author Rabah Ziane - 2026-09-02
+  async function enregistrerCommentaire(id: string, texte: string) {
+    const r = await fetch(`/api/agency/self/pyemes/roadmap/${id}/commentaire`, {
+      method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ commentaire: texte }),
+    }).then((x) => x.json()).catch(() => null);
+    appliquerRoadmap(r);
+  }
+
   async function supprimerTache(id: string) {
     const r = await fetch(`/api/agency/self/pyemes/roadmap/${id}`, { method: 'DELETE', headers: auth() }).then((x) => x.json()).catch(() => null);
     appliquerRoadmap(r);
@@ -2270,6 +2285,54 @@ function Dashboard({ token, onLogout, preview }: { token: string; onLogout: () =
                                         {t.from === 'dd' ? 'Demandé par Delivery Digital' : 'Demandé par vous'}
                                       </span>
                                     )}
+
+                                    {/* COMMENTAIRE, REPLIE. 116 zones de texte ouvertes rendraient la
+                                        liste illisible : on n'ouvre que celle qu'on ecrit. Le bouton
+                                        montre s'il y a deja un commentaire, pour ne pas avoir a
+                                        deplier chaque ligne pour le savoir.
+                                        @author Rabah Ziane - 2026-09-02 */}
+                                    <span className="block mt-1">
+                                      {commOuvert === t.id ? (
+                                        <span className="block">
+                                          <textarea
+                                            autoFocus
+                                            value={commTexte[t.id] ?? t.commentaire ?? ''}
+                                            onChange={(e) => setCommTexte((p) => ({ ...p, [t.id]: e.target.value }))}
+                                            onClick={(e) => e.stopPropagation()}
+                                            placeholder="Votre commentaire sur cette action…"
+                                            rows={3}
+                                            className="w-full text-[11.5px] rounded-lg px-2 py-1.5 outline-none resize-y"
+                                            style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.9)' }}
+                                          />
+                                          <span className="flex items-center gap-2 mt-1">
+                                            <button
+                                              onClick={async (e) => { e.stopPropagation(); setCommBusy(t.id); await enregistrerCommentaire(t.id, commTexte[t.id] ?? t.commentaire ?? ''); setCommBusy(''); setCommOuvert(null); }}
+                                              disabled={commBusy === t.id}
+                                              className="text-[11px] font-semibold px-2.5 h-7 rounded-full disabled:opacity-50"
+                                              style={{ background: '#3DD68C', color: '#05271A' }}
+                                            >
+                                              {commBusy === t.id ? 'Enregistrement…' : 'Enregistrer'}
+                                            </button>
+                                            <button
+                                              onClick={(e) => { e.stopPropagation(); setCommOuvert(null); }}
+                                              className="text-[11px] text-white/45 hover:text-white/80"
+                                            >
+                                              Annuler
+                                            </button>
+                                          </span>
+                                        </span>
+                                      ) : (
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); setCommOuvert(t.id); }}
+                                          className="text-[10.5px] text-left"
+                                          style={{ color: t.commentaire ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.35)' }}
+                                        >
+                                          {t.commentaire
+                                            ? `💬 ${t.commentaire.length > 70 ? t.commentaire.slice(0, 70) + '…' : t.commentaire}`
+                                            : '+ Ajouter un commentaire'}
+                                        </button>
+                                      )}
+                                    </span>
                                   </span>
                                   <button
                                     onClick={() => changerStatutTache(t.id, attente ? 'a_faire' : 'standby')}

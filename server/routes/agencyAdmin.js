@@ -942,6 +942,36 @@ router.patch('/:id/pyemes/roadmap/:tid', requireAdmin, async (req, res) => {
   res.json({ ok: true, ...vueRoadmapAdmin(u) });
 });
 
+/**
+ * COMMENTAIRE et ATTRIBUTION d'une action, depuis l'admin Delivery Digital. La liste est la meme
+ * pour les trois espaces : ce qui est ecrit ici se lit cote Pyemes et cote agence.
+ * @author Rabah Ziane - 2026-09-02
+ */
+router.post('/:id/pyemes/roadmap/:tid/commentaire', requireAdmin, async (req, res) => {
+  const texte = String(req.body?.commentaire ?? '').slice(0, 2000);
+  await User.updateOne(
+    { _id: req.params.id, 'pyemesRoadmap._id': req.params.tid },
+    { $set: {
+      'pyemesRoadmap.$.commentaire': texte,
+      'pyemesRoadmap.$.commentaireAt': texte ? new Date() : null,
+      'pyemesRoadmap.$.commentairePar': texte ? 'Delivery Digital' : '',
+    } },
+  );
+  const u = await User.findById(req.params.id, { pyemesRoadmap: 1, pyemesMessages: 1 }).lean();
+  res.json({ ok: true, ...vueRoadmapAdmin(u) });
+});
+
+router.post('/:id/pyemes/roadmap/:tid/resp', requireAdmin, async (req, res) => {
+  const resp = String(req.body?.resp || '');
+  if (!['PY', 'NG', 'MIX', ''].includes(resp)) return res.status(400).json({ error: 'resp_invalide' });
+  await User.updateOne(
+    { _id: req.params.id, 'pyemesRoadmap._id': req.params.tid },
+    { $set: { 'pyemesRoadmap.$.resp': resp, 'pyemesRoadmap.$.respAt': new Date(), 'pyemesRoadmap.$.respPar': 'Delivery Digital' } },
+  );
+  const u = await User.findById(req.params.id, { pyemesRoadmap: 1, pyemesMessages: 1 }).lean();
+  res.json({ ok: true, ...vueRoadmapAdmin(u) });
+});
+
 // Reordonnancement (glisser-deposer) cote admin : les identifiants arrivent dans le NOUVEL ordre.
 // La liste etant partagee, l'ordre choisi ici est celui que voit aussi l'agence.
 // @author Rabah Ziane - 2026-09-01
