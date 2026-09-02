@@ -96,6 +96,10 @@ const userSchema = new Schema({
     // pas valide » ou « fait a moitie, reste la page tarifs », l information circule par messages et
     // se perd. Le commentaire est visible et modifiable des trois cotes, comme le reste de la liste.
     // @author Rabah Ziane - 2026-09-02
+    // Trace de l'ATTRIBUTION : la repartition Pyemes / Nova bouge en cours de route, et une
+    // reattribution silencieuse sur une liste partagee est une source de malentendu.
+    respAt: Date,
+    respPar: String,
     commentaire: { type: String, default: '', maxlength: 2000 },
     commentaireAt: Date,
     commentairePar: String,                                          // qui a ecrit en dernier

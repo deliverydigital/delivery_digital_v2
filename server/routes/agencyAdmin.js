@@ -907,6 +907,7 @@ const vueRoadmapAdmin = (u) => ({
     statut: t.statut || 'a_faire', source: t.source || '', createdAt: t.createdAt, doneAt: t.doneAt || null,
     phase: t.phase || '', echeance: t.echeance || '', resp: t.resp || '', critere: t.critere || '', ref: t.ref || '', ordre: t.ordre ?? null,
     commentaire: t.commentaire || '', commentaireAt: t.commentaireAt || null, commentairePar: t.commentairePar || '',
+    respAt: t.respAt || null, respPar: t.respPar || '',
   })),
   messages: (u?.pyemesMessages || []).map((m) => ({
     id: String(m._id), from: m.from || 'dd', auteur: m.auteur || '', texte: m.texte || '', image: m.image || '', at: m.at,
@@ -1196,6 +1197,29 @@ router.post('/pyemes/roadmap/commentaire', async (req, res) => {
       'pyemesRoadmap.$.commentaireAt': texte ? new Date() : null,
       'pyemesRoadmap.$.commentairePar': texte ? String(req.body?.par || 'Pyemes').slice(0, 60) : '',
     } },
+  );
+  const u = await User.findById(ag._id, { pyemesRoadmap: 1 }).lean();
+  res.json({ ok: true, ...vueRoadmapAdmin(u) });
+});
+
+/**
+ * ATTRIBUER une action : qui la fait, de Pyemes ou de Nova (ou les deux).
+ *
+ * Le responsable etait fige a l'import de la check-list : on le LISAIT sans pouvoir le corriger,
+ * alors que la repartition bouge en cours de route. Chaque changement laisse une trace de qui l'a
+ * decide et quand - sur une liste partagee, une reattribution silencieuse est une source de
+ * malentendu. @author Rabah Ziane - 2026-09-02
+ */
+router.post('/pyemes/roadmap/resp', async (req, res) => {
+  const secret = req.headers['x-admin-secret'] || '';
+  if (!secret || secret !== (process.env.ADMIN_SECRET || '')) return res.status(401).json({ error: 'unauthorized' });
+  const resp = String(req.body?.resp || '');
+  if (!['PY', 'NG', 'MIX', ''].includes(resp)) return res.status(400).json({ error: 'resp_invalide' });
+  const ag = await User.findOne({ role: 'agence', pyemesCode: String(req.body?.code || '').toUpperCase() }, { _id: 1 }).lean();
+  if (!ag) return res.status(404).json({ error: 'agence_introuvable' });
+  await User.updateOne(
+    { _id: ag._id, 'pyemesRoadmap._id': String(req.body?.tid || '') },
+    { $set: { 'pyemesRoadmap.$.resp': resp, 'pyemesRoadmap.$.respAt': new Date(), 'pyemesRoadmap.$.respPar': String(req.body?.par || 'Pyemes').slice(0, 60) } },
   );
   const u = await User.findById(ag._id, { pyemesRoadmap: 1 }).lean();
   res.json({ ok: true, ...vueRoadmapAdmin(u) });
